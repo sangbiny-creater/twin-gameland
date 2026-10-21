@@ -670,7 +670,7 @@ document.querySelectorAll('.char').forEach((b) => b.addEventListener('click', ()
 }));
 
 // ---------- layout ----------
-// Touch devices (phones): portrait only — a phone held sideways shows the portrait game centred with a hint.
+// Phones: portrait only — if the phone is held sideways the game is rotated so it still shows in portrait.
 // PC (mouse/keyboard): use the whole window in landscape.
 const isTouch = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
 function resize() {
@@ -678,18 +678,24 @@ function resize() {
   const vw = Math.round(vv ? vv.width : window.innerWidth), vh = Math.round(vv ? vv.height : window.innerHeight);
   const s = $('safe').getBoundingClientRect();
   const inset = { t: s.top, l: s.left, r: vw - s.right, b: vh - s.bottom };
-  if (isTouch) { W = 540; H = Math.round(clamp(W * vh / vw, 860, 1240)); }
+  const rotated = isTouch && vw > vh;
+  const sw = rotated ? vh : vw, sh = rotated ? vw : vh; // screen size in game orientation
+  if (isTouch) { W = 540; H = Math.round(clamp(W * sh / sw, 860, 1240)); }
   else { H = 960; W = Math.round(clamp(H * vw / vh, 540, 2400)); }
-  scale = Math.min(vw / W, vh / H);
+  scale = Math.min(sw / W, sh / H);
   dpr = Math.min(window.devicePixelRatio || 1, 3);
   root.style.width = W + 'px'; root.style.height = H + 'px';
   root.classList.toggle('wide', W > 700);
-  const ox = (vw - W * scale) / 2, oy = (vh - H * scale) / 2;
-  root.style.transform = `translate(${ox}px, ${oy}px) scale(${scale})`;
-  root.style.setProperty('--safe-t', Math.max(0, (inset.t - oy) / scale) + 'px');
-  root.style.setProperty('--safe-b', Math.max(0, (inset.b - oy) / scale) + 'px');
+  const ox = (sw - W * scale) / 2, oy = (sh - H * scale) / 2;
+  // rotate(-90deg): game top → screen left, game bottom → screen right
+  root.style.transform = rotated
+    ? `translate(${oy}px, ${vh - ox}px) rotate(-90deg) scale(${scale})`
+    : `translate(${ox}px, ${oy}px) scale(${scale})`;
+  const insT = rotated ? inset.l : inset.t, insB = rotated ? inset.r : inset.b;
+  root.style.setProperty('--safe-t', Math.max(0, (insT - oy) / scale) + 'px');
+  root.style.setProperty('--safe-b', Math.max(0, (insB - oy) / scale) + 'px');
   canvas.width = Math.round(W * scale * dpr); canvas.height = Math.round(H * scale * dpr);
-  $('rotateHint').classList.toggle('hidden', !(isTouch && vw > vh));
+  $('rotateHint').classList.add('hidden');
 }
 window.addEventListener('resize', resize);
 window.addEventListener('orientationchange', () => setTimeout(resize, 200));

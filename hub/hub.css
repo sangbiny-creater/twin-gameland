@@ -180,3 +180,30 @@ i.star { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .shop-preview div span { font-size: 38px; }
 .shop-preview div::after { content: '🔒'; position: absolute; right: 4px; top: 2px; font-size: 16px; }
 .toast { position: absolute; left: 50%; bottom: calc(30px + var(--safe-b, 0px)); transform: translateX(-50%); background: rgba(24,40,62,.88); color: #fff; padding: 10px 20px; border-radius: 18px; font-size: 19px; z-index: 20; white-space: nowrap; }
+
+/* ---------- 폰 세로 화면 ---------- */
+#root.portrait .logo { font-size: 50px; margin-top: 30px; }
+#root.portrait .logo small { font-size: 24px; }
+#root.portrait .char-grid { align-content: center; gap: 18px; }
+#root.portrait .char-card { width: 200px; height: 240px; }
+#root.portrait .char-card img { width: 130px; height: 130px; }
+#root.portrait .hub-foot { margin-bottom: 20px; }
+#root.portrait .top-bar { flex-wrap: wrap; row-gap: 10px; }
+#root.portrait #scrLobby .top-actions, #root.portrait #scrRecords .top-actions { width: 100%; justify-content: flex-end; }
+#root.portrait .game-grid { flex-wrap: wrap; align-content: center; overflow-y: auto; touch-action: pan-y; gap: 16px; padding: 6px 0; }
+#root.portrait .game-card { width: 238px; }
+#root.portrait .soon-card { width: 238px; }
+#root.portrait .soon-thumb { height: 132px; }
+#root.portrait .map-title { flex: 1; font-size: 24px; }
+#root.portrait .map-scroll { overflow-x: hidden; overflow-y: auto; margin: 10px calc(-22px - var(--safe-r, 0px)) 0 calc(-22px - var(--safe-l, 0px)); }
+#root.portrait .map-track { width: 100%; }
+#root.portrait .world .w-name { left: 16px; top: 12px; }
+#root.portrait .map-hint { padding: 0 10px; }
+#root.portrait .rec-body { flex-direction: column; }
+#root.portrait .rec-summary { flex: none; }
+#root.portrait .rec-history { flex: 1; min-height: 240px; }
+#root.portrait .panel { min-width: 0; width: calc(100% - 36px); padding: 20px 18px; }
+#root.portrait .looks { gap: 12px; }
+#root.portrait .look { width: 140px; }
+#root.portrait .name-row input { width: 200px; }
+#root.portrait .shop-preview { flex-wrap: wrap; }

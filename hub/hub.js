@@ -170,41 +170,50 @@ $('fltFav').addEventListener('click', () => {
 });
 
 // ---------- 3. 스카이훅 징검다리 ----------
+// 가로 화면: 왼쪽 → 오른쪽으로 이어지는 길 / 폰 세로 화면: 아래 → 위로 올라가는 길
 const STONE_GAP = 150, WORLD_GAP = 60, PAD = 110;
-function stonePos(i) {
-  const w = Math.floor(i / Hub.GAMES.skyhook.perWorld);
-  return { x: PAD + i * STONE_GAP + w * WORLD_GAP, y: 0.55 + Math.sin(i * 1.1) * 0.22 };
+let portraitNow = false;
+function mapLayout(N, K, view) {
+  const along = (i) => PAD + i * STONE_GAP + Math.floor(i / K) * WORLD_GAP; // distance along the path
+  const len = along(N - 1) + PAD + 60;
+  const wave = (i) => Math.sin(i * 1.1);
+  if (portraitNow) {
+    const w = view.w;
+    return { width: w, height: len, pos: (i) => ({ x: (0.5 + wave(i) * 0.27) * w, y: len - along(i) }) };
+  }
+  const h = view.h;
+  return { width: len, height: h, pos: (i) => ({ x: along(i), y: (0.55 + wave(i) * 0.22) * h }) };
 }
 function renderMap() {
   const c = Hub.active(), N = Hub.GAMES.skyhook.stages, K = Hub.GAMES.skyhook.perWorld;
   $('mapFace').src = face(c); $('mapCoins').textContent = c.coins;
   $('mapProg').textContent = `${Hub.skyhookCleared(c)} / ${N} 클리어 · ⭐ ${Hub.starsTotal(c)}`;
-  const track = $('mapTrack'); track.innerHTML = '';
-  const width = stonePos(N - 1).x + PAD + 60;
-  track.style.width = width + 'px';
-  const h = $('mapScroll').clientHeight || 380;
-  // worlds
+  const scroller = $('mapScroll'), track = $('mapTrack'); track.innerHTML = '';
+  const L = mapLayout(N, K, { w: scroller.clientWidth || 500, h: scroller.clientHeight || 380 });
+  track.style.width = L.width + 'px'; track.style.height = L.height + 'px';
+  // worlds (colored zones)
   Hub.GAMES.skyhook.worlds.forEach((name, w) => {
-    const a = stonePos(w * K).x - 80, b = stonePos(w * K + K - 1).x + 80;
+    const p0 = L.pos(w * K), p1 = L.pos(w * K + K - 1);
     const d = document.createElement('div'); d.className = `world w${w}`;
-    d.style.left = a + 'px'; d.style.width = (b - a) + 'px';
+    if (portraitNow) { d.style.cssText = `left:10px;right:10px;top:${p1.y - 80}px;height:${p0.y - p1.y + 160}px;bottom:auto`; }
+    else { d.style.left = (p0.x - 80) + 'px'; d.style.width = (p1.x - p0.x + 160) + 'px'; }
     d.innerHTML = `<span class="w-name">${w + 1}. ${name}</span>`;
     track.appendChild(d);
   });
   // dashed path
-  const pts = []; for (let i = 0; i < N; i++) { const p = stonePos(i); pts.push(`${p.x},${p.y * h}`); }
+  const pts = []; for (let i = 0; i < N; i++) { const p = L.pos(i); pts.push(`${p.x},${p.y}`); }
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('class', 'map-path'); svg.setAttribute('width', width); svg.setAttribute('height', h);
+  svg.setAttribute('class', 'map-path'); svg.setAttribute('width', L.width); svg.setAttribute('height', L.height);
   svg.innerHTML = `<polyline points="${pts.join(' ')}" fill="none" stroke="#fff" stroke-width="8" stroke-dasharray="4 16" stroke-linecap="round" opacity=".9"/>`;
   track.appendChild(svg);
   const next = Hub.skyhookNext(c);
   const allClear = Hub.skyhookCleared(c) === N;
   for (let i = 0; i < N; i++) {
-    const p = stonePos(i), st = Hub.skyhookStage(i, c), open = Hub.skyhookUnlocked(i, c);
+    const p = L.pos(i), st = Hub.skyhookStage(i, c), open = Hub.skyhookUnlocked(i, c);
     const b = document.createElement('button');
     const cls = st.cleared ? 'cleared' : open ? 'current' : 'locked';
     b.className = 'stone ' + cls;
-    b.style.left = p.x + 'px'; b.style.top = p.y * h + 'px';
+    b.style.left = p.x + 'px'; b.style.top = p.y + 'px';
     const stars = st.cleared ? '⭐'.repeat(st.stars) + '☆'.repeat(3 - st.stars) : '';
     b.innerHTML = open ? `<span class="sl">${Hub.stageLabel(i)}</span><span class="ss">${stars}</span>` : '<span class="lock">🔒</span><span class="ss">' + Hub.stageLabel(i) + '</span>';
     b.addEventListener('click', () => {
@@ -214,13 +223,18 @@ function renderMap() {
     track.appendChild(b);
   }
   const goal = document.createElement('div'); goal.className = 'goal-flag'; goal.textContent = '🏁';
-  const gp = stonePos(N - 1); goal.style.left = (gp.x + 80) + 'px'; goal.style.top = (gp.y * h) + 'px';
+  const gp = L.pos(N - 1);
+  if (portraitNow) { goal.style.left = (gp.x + 20) + 'px'; goal.style.top = (gp.y - 40) + 'px'; }
+  else { goal.style.left = (gp.x + 80) + 'px'; goal.style.top = gp.y + 'px'; }
   track.appendChild(goal);
   const me = document.createElement('div'); me.className = 'map-me';
-  const mp = stonePos(allClear ? N - 1 : next);
-  me.style.backgroundImage = `url(${face(c)})`; me.style.left = mp.x + 'px'; me.style.top = mp.y * h + 'px';
+  const mp = L.pos(allClear ? N - 1 : next);
+  me.style.backgroundImage = `url(${face(c)})`; me.style.left = mp.x + 'px'; me.style.top = mp.y + 'px';
   track.appendChild(me);
-  requestAnimationFrame(() => { $('mapScroll').scrollLeft = Math.max(0, mp.x - $('mapScroll').clientWidth * 0.4); });
+  requestAnimationFrame(() => {
+    if (portraitNow) scroller.scrollTop = Math.max(0, mp.y - scroller.clientHeight * 0.6);
+    else scroller.scrollLeft = Math.max(0, mp.x - scroller.clientWidth * 0.4);
+  });
 }
 let stageSel = 0;
 function openStage(i) {
@@ -268,40 +282,41 @@ $('btnDelete').addEventListener('click', () => {
 });
 $('cfOk').addEventListener('click', () => { const c = Hub.active(); Hub.remove(c.id); toast('캐릭터를 지웠어요.'); go('select'); });
 
-// drag-to-scroll for the map (works the same when the page is rotated on an upright phone)
+// drag-to-scroll for the map (also works when the page is rotated on an upright phone)
 let rotatedNow = false, scaleNow = 1;
 (function dragScroll() {
   const el = $('mapScroll');
   let sx = 0, sy = 0, start = 0, dragging = false, moved = false;
-  el.addEventListener('pointerdown', (e) => { dragging = true; moved = false; sx = e.clientX; sy = e.clientY; start = el.scrollLeft; });
+  el.addEventListener('pointerdown', (e) => { dragging = true; moved = false; sx = e.clientX; sy = e.clientY; start = portraitNow ? el.scrollTop : el.scrollLeft; });
   window.addEventListener('pointermove', (e) => {
     if (!dragging) return;
-    const d = (rotatedNow ? e.clientY - sy : e.clientX - sx) / scaleNow;
+    const d = (portraitNow || rotatedNow ? e.clientY - sy : e.clientX - sx) / scaleNow;
     if (Math.abs(d) > 8) moved = true;
-    el.scrollLeft = start - d;
+    if (portraitNow) el.scrollTop = start - d; else el.scrollLeft = start - d;
   });
   window.addEventListener('pointerup', () => { dragging = false; });
   el.addEventListener('click', (e) => { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
 })();
 
-// ---------- layout: same full-screen fit as the games (upright phones rotate 90°) ----------
+// ---------- layout ----------
+// 폰 세로: 세로 전용 배치 (논리 폭 540) / 폰 가로·PC: 가로 배치 (논리 높이 540)
 const isTouch = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
 function resize() {
-  const H = 540;
   const vv = window.visualViewport;
   const vw = Math.round(vv ? vv.width : window.innerWidth), vh = Math.round(vv ? vv.height : window.innerHeight);
   const s = $('safe').getBoundingClientRect();
   const inset = { t: s.top, l: s.left, r: vw - s.right, b: vh - s.bottom };
-  const rotated = isTouch && vh > vw;
-  const sw = rotated ? vh : vw, sh = rotated ? vw : vh;
-  const W = Math.round(H * Math.max(sw / sh, 16 / 9));
-  const scale = Math.min(sw / W, sh / H);
-  rotatedNow = rotated; scaleNow = scale;
+  portraitNow = isTouch && vh > vw;
+  let W, H;
+  if (portraitNow) { W = 540; H = Math.round(Math.max(W * vh / vw, 860)); }
+  else { H = 540; W = Math.round(H * Math.max(vw / vh, 16 / 9)); }
+  const scale = Math.min(vw / W, vh / H);
+  rotatedNow = false; scaleNow = scale;
   root.style.width = W + 'px'; root.style.height = H + 'px';
-  const ox = (sw - W * scale) / 2, oy = (sh - H * scale) / 2;
-  root.style.transform = rotated ? `translate(${vw - oy}px, ${ox}px) rotate(90deg) scale(${scale})` : `translate(${ox}px, ${oy}px) scale(${scale})`;
-  const ins = rotated ? { l: inset.t, r: inset.b, t: inset.r, b: inset.l } : inset;
-  for (const k of ['l', 'r', 't', 'b']) root.style.setProperty('--safe-' + k, Math.max(0, ins[k] / scale - (k === 'l' || k === 'r' ? ox : oy) / scale) + 'px');
+  root.classList.toggle('portrait', portraitNow);
+  const ox = (vw - W * scale) / 2, oy = (vh - H * scale) / 2;
+  root.style.transform = `translate(${ox}px, ${oy}px) scale(${scale})`;
+  for (const k of ['l', 'r', 't', 'b']) root.style.setProperty('--safe-' + k, Math.max(0, inset[k] / scale - (k === 'l' || k === 'r' ? ox : oy) / scale) + 'px');
   if (!$('scrMap').classList.contains('hidden')) renderMap();
 }
 window.addEventListener('resize', resize);
