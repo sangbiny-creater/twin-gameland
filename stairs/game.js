@@ -4,9 +4,10 @@
 //  · 방향 전환: 반대 방향으로 몸을 돌리면서 한 칸 올라감 (무한의 계단과 같은 규칙)
 //  · 시간이 계속 줄고, 계단을 오르면 조금씩 늘어남. 0이 되거나 헛디디면 끝
 //  · 처음엔 목숨이 없고, 하트를 먹으면 목숨(이어하기)이 생김 (최대 3개)
-// Logical width is fixed at 540 (portrait); height follows the screen.
+// 폰: 세로 화면 전용 (논리 폭 540, 높이는 화면 비율대로)
+// PC: 창 전체를 쓰는 가로 화면 (논리 높이 960, 폭은 화면 비율대로)
 
-const W = 540;
+let W = 540;
 const CFG = {
   stepDX: 62, stepDY: 58, blockW: 86,
   time0: 20, timeMax: 30,
@@ -44,11 +45,12 @@ const rand = (a, b) => a + (b - a) * Math.random();
 const $ = (id) => document.getElementById(id);
 
 // ---------- sprites ----------
+const ASSET_V = '20261022c'; // bump when assets change so phones don't mix old cached files
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
-fetch('assets/sprites.json').then((r) => r.json()).then((j) => {
+fetch(`assets/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
   SP.img.onload = () => { SP.ready = true; renderBuffs(); };
-  SP.img.src = 'assets/sprites.webp';
+  SP.img.src = `assets/sprites.webp?v=${ASSET_V}`;
 });
 for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg_${i}.jpg`; SP.bg.push(im); }
 // draw sprite with its width scaled to w; anchor: 'c' center, 'b' bottom-center
@@ -411,17 +413,26 @@ function drawBg(th, alpha) {
   const img = SP.bg[th.bg];
   ctx.globalAlpha = alpha;
   if (img.complete && img.naturalWidth) {
-    const s = Math.max(W / img.naturalWidth, H / img.naturalHeight) * 1.08;
+    const s = Math.max(W / img.naturalWidth, H / img.naturalHeight) * 1.08 > (H / img.naturalHeight) * 1.6
+      ? (H / img.naturalHeight) * 1.08 // wide screen: keep the picture's size and repeat it sideways
+      : Math.max(W / img.naturalWidth, H / img.naturalHeight) * 1.08;
     const bw = img.naturalWidth * s, bh = img.naturalHeight * s;
-    // slow vertical parallax as you climb (mirrored tiles so edges match)
+    // slow vertical parallax as you climb; tiles are mirrored so their edges match
     const off = ((-G.cam.y * 0.06) % (bh * 2) + bh * 2) % (bh * 2);
+    const cols = Math.ceil((W / bw - 1) / 2) + 1; // tiles each side of the centre one
     for (let k = -1; k < 2; k++) {
       const y = H - bh + off - k * bh;
-      const flip = ((k % 2) + 2) % 2 === 1;
-      ctx.save();
-      if (flip) { ctx.translate(0, y + bh); ctx.scale(1, -1); ctx.drawImage(img, (W - bw) / 2, 0, bw, bh); }
-      else ctx.drawImage(img, (W - bw) / 2, y, bw, bh);
-      ctx.restore();
+      const flipY = ((k % 2) + 2) % 2 === 1;
+      for (let c = -cols; c <= cols; c++) {
+        const x = (W - bw) / 2 + c * bw;
+        if (x > W || x + bw < 0) continue;
+        const flipX = ((c % 2) + 2) % 2 === 1;
+        ctx.save();
+        ctx.translate(x + (flipX ? bw : 0), y + (flipY ? bh : 0));
+        ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
+        ctx.drawImage(img, 0, 0, bw, bh);
+        ctx.restore();
+      }
     }
   } else { ctx.fillStyle = '#9fd3f5'; ctx.fillRect(0, 0, W, H); }
   ctx.globalAlpha = 1;
@@ -477,15 +488,16 @@ function render() {
   // player
   const pp = toScreen(G.pos.x, G.pos.y);
   const who = Save.data.char;
-  let frame, flip = false;
+  // 시트의 좌/우 라벨과 실제 방향이 달라서, 오른쪽을 보는 프레임 하나씩 골라 왼쪽이면 뒤집는다
   const facingRight = G.dir > 0;
-  if (G.state === 'ready') frame = 'idle';
-  else if (G.state === 'fall' || G.state === 'cont' || (G.state === 'result' && G.fallReason !== 'time')) {
-    frame = G.state === 'result' ? 'dead' : G.fallReason === 'spike' ? 'hurt' : G.fallReason === 'time' ? 'dizzy' : (facingRight ? 'fall_r' : 'fall_l');
-  } else if (G.state === 'result') frame = 'dizzy';
-  else if (G.poseT > 0 && G.pose === 'jump') frame = facingRight ? 'jump_r' : 'jump_l';
-  else if (G.poseT > 0 && G.pose === 'ready') frame = 'ready';
-  else { frame = 'side'; flip = !facingRight; }
+  let frame, flip = !facingRight;
+  if (G.state === 'ready') { frame = 'idle'; flip = false; }
+  else if (G.state === 'result') { frame = G.fallReason === 'time' ? 'dizzy' : 'dead'; flip = false; }
+  else if (G.state === 'fall' || G.state === 'cont') {
+    frame = G.fallReason === 'spike' ? 'hurt' : G.fallReason === 'time' ? 'dizzy' : 'fall_l';
+    if (frame !== 'fall_l') flip = false;
+  } else if (G.poseT > 0 && G.pose === 'jump') frame = 'jump_l';
+  else frame = 'ready';
   const feetY = pp.y - 22; // top surface of the block
   if (G.shield && G.state === 'play') { ctx.save(); ctx.globalAlpha = 0.35 + Math.sin(G.t * 8) * 0.1; ctx.strokeStyle = '#6FC0FF'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(pp.x, feetY - 50, 62, 0, 7); ctx.stroke(); ctx.restore(); }
   if (G.wing > 0 && G.state === 'play') spr(ctx, 'wing', pp.x - (facingRight ? 26 : -26), feetY - 66, 56, { flip: !facingRight, alpha: 0.9 });
@@ -654,17 +666,21 @@ document.querySelectorAll('.char').forEach((b) => b.addEventListener('click', ()
   Audio.unlock(); Audio.sfx('ui'); Save.data.char = b.dataset.char; Save.store(); refreshHome();
 }));
 
-// ---------- layout: portrait only. Wide screens (PC, phone held sideways) show the portrait game centred ----------
+// ---------- layout ----------
+// Touch devices (phones): portrait only — a phone held sideways shows the portrait game centred with a hint.
+// PC (mouse/keyboard): use the whole window in landscape.
 const isTouch = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
 function resize() {
   const vv = window.visualViewport;
   const vw = Math.round(vv ? vv.width : window.innerWidth), vh = Math.round(vv ? vv.height : window.innerHeight);
   const s = $('safe').getBoundingClientRect();
   const inset = { t: s.top, l: s.left, r: vw - s.right, b: vh - s.bottom };
-  H = Math.round(clamp(W * vh / vw, 860, 1240));
+  if (isTouch) { W = 540; H = Math.round(clamp(W * vh / vw, 860, 1240)); }
+  else { H = 960; W = Math.round(clamp(H * vw / vh, 540, 2400)); }
   scale = Math.min(vw / W, vh / H);
   dpr = Math.min(window.devicePixelRatio || 1, 3);
   root.style.width = W + 'px'; root.style.height = H + 'px';
+  root.classList.toggle('wide', W > 700);
   const ox = (vw - W * scale) / 2, oy = (vh - H * scale) / 2;
   root.style.transform = `translate(${ox}px, ${oy}px) scale(${scale})`;
   root.style.setProperty('--safe-t', Math.max(0, (inset.t - oy) / scale) + 'px');
@@ -695,6 +711,7 @@ if (HUB) {
   $('btnHomeR').textContent = '메인으로'; $('btnHomeP').textContent = '메인으로';
   startRun();
 } else setState('home');
+requestAnimationFrame(frame);
 
 // debug/test hook
 window.__stairs = { G, CFG, act, step, DT, startRun, setState, ensureSteps };

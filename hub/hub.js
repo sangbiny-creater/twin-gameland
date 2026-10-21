@@ -124,7 +124,7 @@ const GAME_CARDS = [
     sub: (c, r) => (r.plays ? `BEST ${r.best}m · ${r.plays}번 비행` : '아직 안 해봤어요'),
     rec: (c, r) => `BEST <b>${r.best}m</b> · ${r.plays}번 비행<br>모은 코인 <b>${r.coins}</b>` },
   { id: 'stairs', name: '계단 오르기', thumb: 'stairs/assets/keyart.jpg', thumbPos: 'center 30%', open: () => { location.href = Hub.GAMES.stairs.path; }, portrait: true,
-    sub: (c, r) => (r.plays ? `BEST ${r.best}m · ${r.plays}번 도전` : '세로로 하는 게임이에요'),
+    sub: (c, r) => (r.plays ? `BEST ${r.best}m · ${r.plays}번 도전` : '폰은 세로로 해요'),
     rec: (c, r) => `BEST <b>${r.best}m</b> · ${r.plays}번 도전<br>모은 코인 <b>${r.coins}</b>` },
 ];
 function renderLobby() {
@@ -141,7 +141,7 @@ function renderLobby() {
   for (const { g, fav } of list) {
     const card = document.createElement('div');
     card.className = 'game-card' + (fav ? ' fav' : ''); card.setAttribute('role', 'button'); card.tabIndex = 0;
-    card.innerHTML = `<div class="thumb" style="background-image:url(${g.thumb});${g.thumbPos ? `background-position:${g.thumbPos}` : ''}">${g.portrait ? '<span class="tag">📱 세로</span>' : ''}</div>
+    card.innerHTML = `<div class="thumb" style="background-image:url(${g.thumb});${g.thumbPos ? `background-position:${g.thumbPos}` : ''}">${g.portrait ? '<span class="tag">📱 폰은 세로</span>' : ''}</div>
       <button class="fav-btn" aria-label="즐겨찾기">${fav ? '★' : '☆'}</button>
       <div class="g-name"></div><div class="g-sub"></div>`;
     card.querySelector('.g-name').textContent = g.name;

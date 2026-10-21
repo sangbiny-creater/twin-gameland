@@ -108,3 +108,8 @@ button:active { transform: translateY(3px); }
 .btn-gray { background: linear-gradient(#A9B1BA, #737D88); box-shadow: 0 5px 0 #4E5761; }
 
 #rotateHint { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); background: rgba(24,40,62,.88); color: #fff; padding: 12px 20px; border-radius: 16px; font-size: 20px; pointer-events: none; white-space: nowrap; z-index: 5; }
+
+/* PC 가로 화면: 버튼·HUD를 화면 양 끝에, 그림자 테두리 없음 */
+#root.wide { box-shadow: none; }
+#root.wide .controls { padding: 0 60px; }
+#root.wide .hud-top, #root.wide .hud-sub { left: 30px; right: 30px; }
