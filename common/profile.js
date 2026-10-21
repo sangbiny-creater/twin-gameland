@@ -31,6 +31,43 @@
     stairs: (r) => Math.floor(r.dist / 50) * 5,
   };
 
+  // ---------- 아이템샵 카탈로그 ----------
+  // 배경 스킨: 게임마다 따로 사고, 산 스킨 중 하나를 '적용'하면 그 게임 내내 그 배경으로 플레이
+  const SKINS = [
+    { id: 'default', name: '기본 하늘', price: 0 },
+    { id: 'forest', name: '숲 속 마을', price: 200 },
+    { id: 'park', name: '놀이공원', price: 300 },
+    { id: 'winter', name: '겨울 왕국', price: 300 },
+    { id: 'sunset', name: '석양의 항구', price: 300 },
+    { id: 'night', name: '야경 도시', price: 300 },
+    { id: 'space', name: '우주 여행', price: 300 },
+    { id: 'desert', name: '사막 오아시스', price: 300 },
+  ];
+  // 게임 부스트: 1개씩 사서 모아 두고, '사용중'으로 켜 둔 것만 게임을 시작할 때 1개씩 쓰임
+  const BOOSTS = {
+    skyhook: [
+      { id: 'life', name: '추가 목숨', desc: '하트 4개로 시작', price: 300 },
+      { id: 'shield', name: '1회 보호', desc: '처음 한 번 안 다쳐요', price: 300 },
+      { id: 'magnet', name: '코인 흡수', desc: '처음 20초 자석', price: 300 },
+      { id: 'x2', name: '코인 2배', desc: '처음 30초 코인 2배', price: 300 },
+    ],
+    helicopter: [
+      { id: 'life', name: '추가 목숨', desc: '하트 4개로 시작', price: 300 },
+      { id: 'shield', name: '1회 보호', desc: '처음 한 번 안 다쳐요', price: 200 },
+      { id: 'dash', name: '스타트 대시', desc: '출발 3초 슝~ 무적', price: 200 },
+      { id: 'magnet', name: '코인 흡수', desc: '처음 20초 자석', price: 300 },
+      { id: 'x2', name: '코인 2배', desc: '처음 30초 코인 2배', price: 300 },
+    ],
+    stairs: [
+      { id: 'life', name: '추가 목숨', desc: '시작할 때 목숨 +1', price: 300 },
+      { id: 'time', name: '시작 시간 증가', desc: '시작 시간 +10초', price: 200 },
+      { id: 'shield', name: '1회 보호', desc: '한 번 떨어져도 OK', price: 300 },
+      { id: 'wing', name: '날개', desc: '처음 15칸 무적', price: 200 },
+      { id: 'magnet', name: '코인 흡수', desc: '처음 20초 자석', price: 300 },
+      { id: 'x2', name: '코인 2배', desc: '처음 20초 코인 2배', price: 300 },
+    ],
+  };
+
   // 캐릭터 추가 가격: 3번째 300, 4번째 600, 5번째 900 ...
   const slotPrice = (n) => 300 * (n - FREE_SLOTS);
 
@@ -52,8 +89,54 @@
     return c.games[g];
   }
 
+  function shopOf(c) {
+    if (!c.shop) c.shop = { skins: {}, equipped: {}, boosts: {}, using: {} };
+    return c.shop;
+  }
+
   const Hub = {
-    GAMES, FREE_SLOTS, MAX_CHARS,
+    GAMES, FREE_SLOTS, MAX_CHARS, SKINS, BOOSTS,
+
+    // ----- 아이템샵 -----
+    ownsSkin(game, id, c = this.active()) { return id === 'default' || !!(c && shopOf(c).skins[game] && shopOf(c).skins[game].includes(id)); },
+    equippedSkin(game, c = this.active()) { return (c && shopOf(c).equipped[game]) || 'default'; },
+    buySkin(game, id, c = this.active()) {
+      const sk = SKINS.find((s) => s.id === id);
+      if (!c || !sk || this.ownsSkin(game, id, c)) return { ok: false, why: 'owned' };
+      if (c.coins < sk.price) return { ok: false, why: 'coins' };
+      c.coins -= sk.price;
+      const sh = shopOf(c); (sh.skins[game] = sh.skins[game] || []).push(id);
+      sh.equipped[game] = id; // 사면 바로 적용
+      save(); return { ok: true };
+    },
+    equipSkin(game, id, c = this.active()) { if (c && this.ownsSkin(game, id, c)) { shopOf(c).equipped[game] = id; save(); } },
+    boostCount(game, id, c = this.active()) { return (c && shopOf(c).boosts[game] && shopOf(c).boosts[game][id]) || 0; },
+    isUsing(game, id, c = this.active()) { return !!(c && shopOf(c).using[game] && shopOf(c).using[game][id]); },
+    buyBoost(game, id, c = this.active()) {
+      const b = (BOOSTS[game] || []).find((x) => x.id === id);
+      if (!c || !b) return { ok: false };
+      if (c.coins < b.price) return { ok: false, why: 'coins' };
+      c.coins -= b.price;
+      const sh = shopOf(c); sh.boosts[game] = sh.boosts[game] || {}; sh.boosts[game][id] = (sh.boosts[game][id] || 0) + 1;
+      sh.using[game] = sh.using[game] || {}; sh.using[game][id] = true; // 사면 '사용중'으로
+      save(); return { ok: true };
+    },
+    setUsing(game, id, on, c = this.active()) {
+      if (!c) return; const sh = shopOf(c); sh.using[game] = sh.using[game] || {}; sh.using[game][id] = !!on; save();
+    },
+    // 게임 시작 때 부름: '사용중'이고 1개 이상 있는 부스트를 1개씩 꺼내 쓰고, 쓴 부스트 id 목록을 돌려줌
+    takeBoosts(game) {
+      reload();
+      const c = this.active(); if (!c) return [];
+      const sh = shopOf(c), have = sh.boosts[game] || {}, use = sh.using[game] || {};
+      const used = [];
+      for (const b of BOOSTS[game] || []) {
+        if (use[b.id] && have[b.id] > 0) { have[b.id]--; used.push(b.id); if (!have[b.id]) use[b.id] = false; }
+      }
+      if (used.length) save();
+      return used;
+    },
+    boostName(game, id) { const b = (BOOSTS[game] || []).find((x) => x.id === id); return b ? b.name : id; },
     get settings() { return data.settings; },
     setSound(on) { data.settings.sound = !!on; save(); },
     reload,

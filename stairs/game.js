@@ -16,6 +16,8 @@ const CFG = {
   themeEvery: 100,
 };
 
+// 아이템샵 스킨 → 이 게임에 있는 배경 그림 번호 (없는 스킨은 common/skins.js가 그림)
+const SKIN_BG = { forest: 1, park: 2, winter: 3, sunset: 4 };
 const THEMES = [
   { name: '하늘도시', bg: 0, block: 'st_basic' },
   { name: '숲속 마을', bg: 1, block: 'st_grass' },
@@ -215,6 +217,16 @@ function resetRun() {
   const p = worldOf(0, 0); G.pos = { x: p.x, y: p.y };
   G.cam.x = p.x; G.cam.y = p.y;
   G.deco = []; for (let i = 0; i < 6; i++) G.deco.push(makeDeco(rand(-H * 0.2, H)));
+  // 아이템샵: 적용한 배경 스킨 + '사용중' 부스트 (메인 화면에서 들어왔을 때만)
+  G.skin = HUB ? HUB.equippedSkin('stairs') : 'default';
+  const boosts = HUB ? HUB.takeBoosts('stairs') : [];
+  if (boosts.includes('life')) G.hearts = 1;
+  if (boosts.includes('time')) G.time += 10;
+  if (boosts.includes('shield')) G.shield = true;
+  if (boosts.includes('wing')) G.wing = 15;
+  if (boosts.includes('magnet')) G.magnetT = 20;
+  if (boosts.includes('x2')) G.x2T = 20;
+  if (boosts.length) banner('부스트: ' + boosts.map((b) => HUB.boostName('stairs', b)).join(' · '));
   renderHearts(); renderBuffs(); updateTurnBtn();
   $('hudBest').textContent = Save.data.best;
 }
@@ -446,7 +458,11 @@ function render() {
   // camera
   const ty = G.pos.y, tx = G.pos.x;
   G.cam.x = lerp(G.cam.x, tx, 0.2); G.cam.y = lerp(G.cam.y, Math.min(ty, G.cam.y + 30), 0.2); // falling: camera lags behind
-  if (G.themeFade < 1) { drawBg(THEMES[G.prevTheme], 1); drawBg(THEMES[G.themeIdx], G.themeFade); } else drawBg(THEMES[G.themeIdx], 1);
+  // 배경 스킨을 적용했으면 그 배경으로 고정 (계단 블록은 높이에 따라 그대로 바뀜)
+  const skinBg = SKIN_BG[G.skin];
+  if (skinBg != null) drawBg({ bg: skinBg }, 1);
+  else if (G.skin && G.skin !== 'default' && window.Skins && window.Skins.has(G.skin)) window.Skins.draw(ctx, G.skin, W, H, G.cam.x, -G.cam.y, G.t);
+  else if (G.themeFade < 1) { drawBg(THEMES[G.prevTheme], 1); drawBg(THEMES[G.themeIdx], G.themeFade); } else drawBg(THEMES[G.themeIdx], 1);
   // soft veil so stairs pop from the busy background
   const veil = ctx.createLinearGradient(0, 0, 0, H);
   veil.addColorStop(0, 'rgba(255,255,255,0.05)'); veil.addColorStop(0.6, 'rgba(255,255,255,0.12)'); veil.addColorStop(1, 'rgba(24,40,62,0.35)');

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1E3A78">
+<title>아이템 샵 · 트윈 게임랜드</title>
+<link rel="manifest" href="../hub/manifest.json">
+<link rel="apple-touch-icon" href="../hub/icon-180.png">
+<link rel="icon" href="../hub/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shop.css?v=20261022h">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="../index.html#lobby"><span class="home-ico">🏠</span><span>트윈 게임랜드</span></a>
+  <nav class="nav">
+    <a href="../index.html#lobby">🎮 <span>게임 선택</span></a>
+    <a class="on" href="#">🛒 <span>아이템 샵</span></a>
+    <a href="#" id="navMine">🎒 <span>내 아이템</span></a>
+  </nav>
+  <div class="me">
+    <div class="coin-pill"><img src="../helicopter/assets/coin.png" alt=""><b id="myCoins">0</b></div>
+    <img id="myFace" class="face" alt="">
+  </div>
+</header>
+
+<main>
+  <section class="banner">
+    <img class="wide" src="assets/banner_wide.jpg" alt="아이템 샵 — 게임을 더 재미있게! 나만의 스타일로 꾸며보세요!">
+    <img class="narrow" src="assets/banner_mobile.jpg" alt="아이템 샵">
+  </section>
+
+  <section id="gameCards" class="game-cards"></section>
+
+  <section class="panel">
+    <div class="tabs-row">
+      <div class="tabs" role="tablist">
+        <button class="tab on" data-tab="skins">🖼️ <span>배경 스킨</span></button>
+        <button class="tab" data-tab="boosts">🚀 <span>게임 부스트</span></button>
+        <button class="tab" data-tab="owned">🎒 <span>보유 아이템</span></button>
+      </div>
+      <button id="btnGuide" class="guide">❓ <span>아이템 샵 이용 안내</span></button>
+    </div>
+    <div class="sec-head">
+      <div class="sec-title"><b id="secTitle">배경 스킨</b><span id="secDesc">게임의 배경을 바꿔서 새로운 분위기에서 플레이해보세요!</span></div>
+      <label class="game-pick"><img id="pickImg" alt=""><select id="gameSelect"></select></label>
+    </div>
+    <div id="content"></div>
+  </section>
+</main>
+
+<div id="modal" class="modal hidden">
+  <div class="mpanel">
+    <div class="m-title" id="mTitle"></div>
+    <div class="m-body" id="mBody"></div>
+    <div class="m-row">
+      <button class="btn gray" id="mCancel">취소</button>
+      <button class="btn pink" id="mOk">구매</button>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast hidden"></div>
+
+<script src="../common/profile.js?v=20261022h"></script>
+<script src="shop.js?v=20261022h"></script>
+</body>
+</html>

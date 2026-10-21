@@ -159,6 +159,8 @@ const G = {
 };
 const input = { down: false, pressed: false }; // pressed: a tap shorter than one frame still counts
 
+// 아이템샵 스킨 → 이 게임에 있는 배경 그림 번호 (없는 스킨은 common/skins.js가 그림)
+const SKIN_THEME = { forest: 1, park: 2, winter: 3, sunset: 4 };
 function themeAt(m) { return Math.floor(m / CFG.themeEvery) % THEMES.length; }
 
 function newHeli() {
@@ -173,6 +175,16 @@ function resetRun() {
   G.themeIdx = 0; G.prevTheme = 0; G.themeFade = 1;
   G.magnetT = 0; G.shield = false; G.boostT = 0; G.newBest = false; G.shake = 0; G.crashT = 0;
   for (let i = 0; i < 4; i++) G.deco.push(makeDeco(rand(0, W * 1.5)));
+  // 아이템샵: 적용한 배경 스킨 + '사용중' 부스트 (메인 화면에서 들어왔을 때만)
+  G.skin = HUB ? HUB.equippedSkin('helicopter') : 'default';
+  G.x2T = 0;
+  const boosts = HUB ? HUB.takeBoosts('helicopter') : [];
+  if (boosts.includes('life')) G.hp = CFG.hpMax;
+  if (boosts.includes('shield')) G.shield = true;
+  if (boosts.includes('dash')) G.boostT = 3;
+  if (boosts.includes('magnet')) G.magnetT = 20;
+  if (boosts.includes('x2')) G.x2T = 30;
+  if (boosts.length) banner('부스트: ' + boosts.map((b) => HUB.boostName('helicopter', b)).join(' · '));
   renderHearts(); renderBuffs();
   $('hudBest').textContent = Save.data.best;
   $('hudProgFace').style.backgroundImage = `url(assets/face_${Save.data.char}.png)`;
@@ -275,6 +287,7 @@ function step(dt) {
   h.rot = lerp(h.rot, clamp(h.vy / 1500, -0.22, 0.3), Math.min(1, dt * 10));
   h.inv -= dt; h.hurtT -= dt;
   if (G.magnetT > 0) { G.magnetT -= dt; if (G.magnetT <= 0) renderBuffs(); }
+  if (G.x2T > 0) { G.x2T -= dt; if (G.x2T <= 0) renderBuffs(); }
   if (G.boostT > 0) { G.boostT -= dt; if (G.boostT <= 0) renderBuffs(); }
 
   // smoke trail while lifting (classic heli feel)
@@ -372,13 +385,14 @@ function damage(kind) {
 function collect(it) {
   it.got = true;
   const sx = it.x - G.dist + HELI_SX();
-  if (it.type === 'coin') { G.coins++; Audio.sfx('coin'); burst(sx, it.y, 'fx_star', 1, 30); }
-  else if (it.type === 'gem_blue') { G.coins += 5; Audio.sfx('gem'); popText('+5', sx, it.y - 30, '#3D8BFF'); burst(sx, it.y, 'fx_sparkle', 1, 70); }
-  else if (it.type === 'gem_pink') { G.coins += 10; Audio.sfx('gem'); popText('+10', sx, it.y - 30, '#FF5C9A'); burst(sx, it.y, 'fx_sparkle', 1, 70); }
+  const mult = G.x2T > 0 ? 2 : 1; // 코인 2배 부스트
+  if (it.type === 'coin') { G.coins += mult; Audio.sfx('coin'); burst(sx, it.y, 'fx_star', 1, 30); }
+  else if (it.type === 'gem_blue') { G.coins += 5 * mult; Audio.sfx('gem'); popText('+5', sx, it.y - 30, '#3D8BFF'); burst(sx, it.y, 'fx_sparkle', 1, 70); }
+  else if (it.type === 'gem_pink') { G.coins += 10 * mult; Audio.sfx('gem'); popText('+10', sx, it.y - 30, '#FF5C9A'); burst(sx, it.y, 'fx_sparkle', 1, 70); }
   else if (it.type === 'heart') {
     Audio.sfx('item');
     if (G.hp < CFG.hpMax) { G.hp++; renderHearts(true); popText('♥ +1', sx, it.y - 30, '#FF5C7A'); }
-    else { G.coins += 5; popText('+5', sx, it.y - 30, '#FF9F2E'); }
+    else { G.coins += 5 * mult; popText('+5', sx, it.y - 30, '#FF9F2E'); }
   } else if (it.type === 'magnet') { G.magnetT = 7; Audio.sfx('item'); popText('자석!', sx, it.y - 30, '#E84A5F'); renderBuffs(); }
   else if (it.type === 'shield') { G.shield = true; Audio.sfx('item'); popText('쉴드!', sx, it.y - 30, '#3D8BFF'); renderBuffs(); }
   else if (it.type === 'bolt') { G.boostT = 3; Audio.sfx('item'); popText('스피드!', sx, it.y - 30, '#FF9F2E'); renderBuffs(); }
@@ -456,9 +470,14 @@ function render() {
     drawSkyTheme(THEMES[0], 1);
     return;
   }
-  if (G.themeFade < 1) { drawSkyTheme(THEMES[G.prevTheme], 1); drawSkyTheme(th, G.themeFade); }
+  // 배경 스킨을 적용했으면 그 배경으로 고정 (파이프는 거리에 따라 그대로 바뀜)
+  const skinTh = SKIN_THEME[G.skin] != null ? THEMES[SKIN_THEME[G.skin]] : null;
+  const drawn = !skinTh && G.skin !== 'default' && window.Skins && window.Skins.has(G.skin);
+  if (drawn) window.Skins.draw(ctx, G.skin, W, H, G.dist, 0, G.t);
+  else if (skinTh) drawSkyTheme(skinTh, 1);
+  else if (G.themeFade < 1) { drawSkyTheme(THEMES[G.prevTheme], 1); drawSkyTheme(th, G.themeFade); }
   else drawSkyTheme(th, 1);
-  if (th.snow) {
+  if ((skinTh || th).snow && !drawn) {
     ctx.fillStyle = 'rgba(255,255,255,.9)';
     for (let i = 0; i < 40; i++) {
       const sx = ((i * 97 - G.dist * 0.5 + Math.sin(G.t + i) * 20) % W + W) % W;
@@ -584,6 +603,7 @@ function renderBuffs() {
   if (G.shield) add('shield', '쉴드');
   if (G.magnetT > 0) add('magnet', '자석');
   if (G.boostT > 0) add('bolt', '스피드');
+  if (G.x2T > 0) add('star', '코인 2배');
 }
 
 // ---------- screens ----------

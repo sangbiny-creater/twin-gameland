@@ -1,5 +1,5 @@
 'use strict';
-// 트윈 게임랜드 메인 화면: 캐릭터 만들기·선택 → 게임 고르기 → (스카이훅) 징검다리 지도 / 기록 / 아이템샵(오픈 예정)
+// 트윈 게임랜드 메인 화면: 캐릭터 만들기·선택 → 게임 고르기 → (스카이훅) 징검다리 지도 / 기록 / 아이템샵(shop/)
 const $ = (id) => document.getElementById(id);
 const root = $('root');
 const face = (c) => `skyhook/assets/${c.look}_base.jpg`;
@@ -41,7 +41,11 @@ function closeModals() { document.querySelectorAll('.modal').forEach((m) => m.cl
 document.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => { blip(500); closeModals(); }));
 document.querySelectorAll('.modal').forEach((m) => m.addEventListener('click', (e) => { if (e.target === m) closeModals(); }));
 document.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => { blip(); go(b.dataset.go); }));
-document.querySelectorAll('[data-open="shop"]').forEach((b) => b.addEventListener('click', () => { blip(); openModal('popShop'); }));
+document.querySelectorAll('[data-open="shop"]').forEach((b) => b.addEventListener('click', () => {
+  blip();
+  if (!Hub.active()) { toast('캐릭터를 먼저 골라요!'); return; }
+  location.href = 'shop/index.html';
+}));
 
 // ---------- 1. 캐릭터 선택 ----------
 function renderSelect() {

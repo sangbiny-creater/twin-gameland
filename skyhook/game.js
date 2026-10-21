@@ -557,12 +557,26 @@ function startStage(si) {
   G.cam.x = G.p.x - W * 0.28; G.cam.y = 0; G.cam.shake = 0;
   G.t = 0; G.coins = 0; G.stars = 0; G.combo = 0; G.comboT = 0; G.hp = 3; G.fx = []; G.texts = [];
   G.endT = 0; G.cleared = false; G.speedMul = 1; G.magnetT = 0;
-  getBG(STAGES[si].theme);
+  // 아이템샵: 적용한 배경 스킨 + '사용중' 부스트 (메인 화면에서 들어왔을 때만)
+  G.skin = HUB ? HUB.equippedSkin('skyhook') : 'default';
+  G.hpMax = 3; G.shield = false; G.x2T = 0;
+  const boosts = HUB ? HUB.takeBoosts('skyhook') : [];
+  if (boosts.includes('life')) { G.hpMax = 4; G.hp = 4; }
+  if (boosts.includes('shield')) G.shield = true;
+  if (boosts.includes('magnet')) G.magnetT = 20;
+  if (boosts.includes('x2')) G.x2T = 30;
+  if (boosts.length) popText('부스트: ' + boosts.map((b) => HUB.boostName('skyhook', b)).join(' · '), G.p.x + 60, G.p.y - 120, '#3D8BFF', 24);
+  getBG(skinTheme() || STAGES[si].theme);
   setState('play');
   renderHearts();
   $('hudProgFace').style.backgroundImage = `url(assets/${Save.data.char}_base.jpg)`;
   Audio.startBgm();
 }
+
+// 스킨 → 이 게임에 원래 있는 테마로 그릴 수 있으면 그 테마, 아니면 공용 스킨 렌더러(common/skins.js)
+const SKIN_THEME = { forest: 'forest', winter: 'winter', sunset: 'sunset' };
+function skinTheme() { return SKIN_THEME[G.skin] || null; }
+function skinDrawn() { return G.skin && G.skin !== 'default' && !skinTheme() && window.Skins && window.Skins.has(G.skin); }
 
 // ---------- physics ----------
 function runSpeedNow() {
@@ -627,6 +641,11 @@ function releaseHook(boost = true) {
 function hurt(kind) {
   const p = G.p;
   if (kind === 'hit' && p.inv > 0) return;
+  if (G.shield) { // 1회 보호 부스트
+    G.shield = false; popText('보호막!', p.x, p.y - 80, '#3D8BFF', 28); Audio.sfx('item');
+    if (kind === 'fall') respawn(); else { p.inv = CFG.invincible; if (p.hook) releaseHook(false); p.vy = -380; }
+    return;
+  }
   G.hp--;
   G.combo = 0;
   renderHearts();
@@ -686,6 +705,7 @@ function step(dt) {
   p.blinkT -= dt; if (p.blinkT < -0.12) p.blinkT = 2 + Math.random() * 2;
   if (G.comboT > 0) { G.comboT -= dt; if (G.comboT <= 0) G.combo = 0; }
   if (G.magnetT > 0) G.magnetT -= dt;
+  if (G.x2T > 0) G.x2T -= dt;
   G.speedMul = lerp(G.speedMul, 1, dt * 0.25);
 
   if (p.onGround) p.coyote = CFG.coyote; else p.coyote -= dt;
@@ -797,12 +817,13 @@ function step(dt) {
 function collect(it) {
   it.got = true;
   const p = G.p;
-  if (it.type === 'coin') { G.coins++; Audio.sfx('coin'); burst(it.x, it.y, 4, ['#FFE08A', '#FFF'], 'spark'); }
-  else if (it.type === 'star') { G.stars++; G.coins += 5; Audio.sfx('star'); burst(it.x, it.y, 14, ['#FFD54A', '#FFF7C2', '#FFB45A'], 'star'); popText('+5', it.x, it.y - 30, '#FF9F2E', 26); p.happyT = 0.6; haptic(10); }
+  const mult = G.x2T > 0 ? 2 : 1; // 코인 2배 부스트
+  if (it.type === 'coin') { G.coins += mult; Audio.sfx('coin'); burst(it.x, it.y, 4, ['#FFE08A', '#FFF'], 'spark'); }
+  else if (it.type === 'star') { G.stars++; G.coins += 5 * mult; Audio.sfx('star'); burst(it.x, it.y, 14, ['#FFD54A', '#FFF7C2', '#FFB45A'], 'star'); popText('+5', it.x, it.y - 30, '#FF9F2E', 26); p.happyT = 0.6; haptic(10); }
   else if (it.type === 'heart') {
     Audio.sfx('item');
-    if (G.hp < 3) { G.hp++; renderHearts(true); popText('♥ +1', it.x, it.y - 30, '#FF5C7A', 26); }
-    else { G.coins += 5; popText('+5', it.x, it.y - 30, '#FF9F2E', 26); }
+    if (G.hp < (G.hpMax || 3)) { G.hp++; renderHearts(true); popText('♥ +1', it.x, it.y - 30, '#FF5C7A', 26); }
+    else { G.coins += 5 * mult; popText('+5', it.x, it.y - 30, '#FF9F2E', 26); }
     burst(it.x, it.y, 10, ['#FF8FAB', '#FFF'], 'heart');
   } else if (it.type === 'magnet') { G.magnetT = 7; Audio.sfx('item'); popText('자석!', it.x, it.y - 30, '#E84A5F', 26); burst(it.x, it.y, 10, ['#FF6B6B', '#FFF'], 'spark'); }
 }
@@ -984,11 +1005,16 @@ function render() {
     drawSky(THEMES.city);
     return;
   }
-  const L = G.level, p = G.p, bg = getBG(st.theme);
-  drawSky(th);
-  drawLayer(bg.far, 0.15, 0);
-  drawLayer(bg.mid, 0.4, 60);
-  if (th.snow) {
+  const L = G.level, p = G.p;
+  const bgKey = skinTheme() || st.theme, bgTh = THEMES[bgKey];
+  if (skinDrawn()) window.Skins.draw(ctx, G.skin, W, H, G.cam.x, -G.cam.y, G.t);
+  else {
+    const bg = getBG(bgKey);
+    drawSky(bgTh);
+    drawLayer(bg.far, 0.15, 0);
+    drawLayer(bg.mid, 0.4, 60);
+  }
+  if (bgTh.snow && !skinDrawn()) {
     ctx.fillStyle = 'rgba(255,255,255,.9)';
     for (let i = 0; i < 40; i++) {
       const sx = ((i * 97 - G.cam.x * 0.6 + Math.sin(G.t + i) * 20) % W + W) % W;
@@ -1081,9 +1107,14 @@ function render() {
   ctx.globalAlpha = 1;
   ctx.restore();
 
-  if (G.magnetT > 0) {
-    ctx.fillStyle = 'rgba(232,74,95,.85)'; ctx.font = '18px Jua, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-    ctx.fillText(`자석 ${Math.ceil(G.magnetT)}초`, 18, 66);
+  const buffs = [];
+  if (G.magnetT > 0) buffs.push(`자석 ${Math.ceil(G.magnetT)}초`);
+  if (G.x2T > 0) buffs.push(`코인2배 ${Math.ceil(G.x2T)}초`);
+  if (G.shield) buffs.push('보호막');
+  if (buffs.length) {
+    ctx.font = '18px Jua, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.strokeText(buffs.join(' · '), 18, 66);
+    ctx.fillStyle = 'rgba(232,74,95,.95)'; ctx.fillText(buffs.join(' · '), 18, 66);
   }
   if (G.state === 'result' && !G.cleared) { ctx.fillStyle = 'rgba(80,90,110,.25)'; ctx.fillRect(0, 0, W, H); }
 }
@@ -1109,7 +1140,7 @@ function updateHud() {
 }
 function renderHearts(pop) {
   const el = $('hudHearts'); el.innerHTML = '';
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < (G.hpMax || 3); i++) {
     const d = document.createElement('div');
     d.className = 'heart' + (i >= G.hp ? ' empty' : '') + (pop && i === G.hp - 1 ? ' pop' : '');
     el.appendChild(d);
