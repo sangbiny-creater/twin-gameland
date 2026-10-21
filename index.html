@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="게임랜드">
+<meta name="theme-color" content="#5CA9E6">
+<title>트윈 게임랜드</title>
+<link rel="manifest" href="hub/manifest.json">
+<link rel="apple-touch-icon" href="hub/icon-180.png">
+<link rel="icon" href="hub/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="hub/hub.css">
+</head>
+<body>
+<div id="safe"></div>
+<div id="root">
+
+  <!-- 1. 캐릭터 선택 (첫 페이지) -->
+  <section id="scrSelect" class="screen">
+    <header class="hub-head">
+      <div class="logo">트윈 게임랜드<small>누구로 놀까요?</small></div>
+    </header>
+    <div id="charGrid" class="char-grid"></div>
+    <footer class="hub-foot">
+      <button class="btn-sub shop-btn" data-open="shop"><span class="soon">오픈 예정</span>👗 아이템샵</button>
+      <button id="btnSound" class="round" aria-label="소리"><span class="ico-sound"></span></button>
+    </footer>
+  </section>
+
+  <!-- 2. 로비 (게임 고르기) -->
+  <section id="scrLobby" class="screen hidden">
+    <header class="top-bar">
+      <div class="me"><img id="meFace" alt=""><div><b id="meName"></b><span class="pill"><i class="coin"></i><b id="meCoins">0</b></span><span class="pill"><i class="star"></i><b id="meStars">0</b></span></div></div>
+      <div class="top-actions">
+        <button class="btn-sub small" data-go="records">📒 기록</button>
+        <button class="btn-sub small" data-go="select">캐릭터 바꾸기</button>
+      </div>
+    </header>
+    <div class="game-grid">
+      <button class="game-card" id="cardSkyhook">
+        <div class="thumb" style="background-image:url(skyhook/assets/keyart.jpg)"></div>
+        <div class="g-name">Sky Hook Runner</div>
+        <div class="g-sub" id="subSkyhook">징검다리 0 / 12</div>
+      </button>
+      <button class="game-card" id="cardHeli">
+        <div class="thumb" style="background-image:url(helicopter/assets/keyart.jpg)"></div>
+        <div class="g-name">Twin Helicopter</div>
+        <div class="g-sub" id="subHeli">BEST 0m</div>
+      </button>
+      <div class="game-card soon-card">
+        <div class="thumb soon-thumb">?</div>
+        <div class="g-name">다음 게임</div>
+        <div class="g-sub">곧 나와요!</div>
+      </div>
+    </div>
+    <footer class="hub-foot">
+      <button class="btn-sub shop-btn" data-open="shop"><span class="soon">오픈 예정</span>👗 아이템샵</button>
+    </footer>
+  </section>
+
+  <!-- 3. 스카이훅 징검다리 -->
+  <section id="scrMap" class="screen hidden">
+    <header class="top-bar">
+      <button class="btn-sub small" data-go="lobby">← 게임 고르기</button>
+      <div class="map-title">Sky Hook Runner<small id="mapProg">0 / 12 클리어</small></div>
+      <div class="me mini"><img id="mapFace" alt=""><span class="pill"><i class="coin"></i><b id="mapCoins">0</b></span></div>
+    </header>
+    <div id="mapScroll" class="map-scroll"><div id="mapTrack" class="map-track"></div></div>
+    <div class="map-hint">앞 스테이지를 깨면 다음 돌다리가 열려요. 깬 스테이지는 다시 할 수 있어요!</div>
+  </section>
+
+  <!-- 4. 기록 -->
+  <section id="scrRecords" class="screen hidden">
+    <header class="top-bar">
+      <button class="btn-sub small" data-go="lobby">← 뒤로</button>
+      <div class="map-title" id="recTitle">기록</div>
+      <div class="top-actions">
+        <button class="btn-sub small" id="btnRename">이름 바꾸기</button>
+        <button class="btn-sub small danger" id="btnDelete">캐릭터 삭제</button>
+      </div>
+    </header>
+    <div class="rec-body">
+      <div id="recSummary" class="rec-summary"></div>
+      <div class="rec-history"><div class="rec-h">최근 기록</div><ol id="recList"></ol></div>
+    </div>
+  </section>
+
+  <!-- 팝업들 -->
+  <div id="popCreate" class="modal hidden">
+    <div class="panel">
+      <div class="p-title">새 캐릭터 만들기</div>
+      <div class="looks">
+        <button class="look" data-look="eunyu"><img src="skyhook/assets/eunyu_base.jpg" alt=""><span>은유 스타일</span></button>
+        <button class="look" data-look="eungyeol"><img src="skyhook/assets/eungyeol_base.jpg" alt=""><span>은결 스타일</span></button>
+      </div>
+      <label class="name-row">이름 <input id="inName" maxlength="8" autocomplete="off" placeholder="이름 (8글자까지)"></label>
+      <div class="p-note">옷 갈아입히기는 아이템샵이 열리면 할 수 있어요!</div>
+      <div class="row">
+        <button class="btn-sub" data-close>취소</button>
+        <button id="btnCreate" class="btn-main">만들기</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="popBuy" class="modal hidden">
+    <div class="panel">
+      <div class="p-title">캐릭터 자리 늘리기</div>
+      <div class="p-note big">새 캐릭터를 만들려면 <b id="buyPrice">300</b> 코인이 필요해요.<br>누구 코인으로 살까요?</div>
+      <div id="buyList" class="buy-list"></div>
+      <div class="row"><button class="btn-sub" data-close>닫기</button></div>
+    </div>
+  </div>
+
+  <div id="popStage" class="modal hidden">
+    <div class="panel">
+      <div class="p-title" id="stTitle">1-1 하늘도시 1</div>
+      <div class="st-stars" id="stStars"></div>
+      <div class="p-note big" id="stInfo"></div>
+      <div class="row">
+        <button class="btn-sub" data-close>닫기</button>
+        <button id="btnPlayStage" class="btn-main">출발!</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="popShop" class="modal hidden">
+    <div class="panel">
+      <div class="p-title">👗 아이템샵 <span class="soon inline">오픈 예정</span></div>
+      <div class="shop-preview">
+        <div><span>👕</span>옷</div><div><span>🧢</span>모자</div><div><span>🐶</span>펫</div><div><span>🚁</span>헬리콥터</div>
+      </div>
+      <div class="p-note big">곧 코인으로 은유·은결의 옷과 꾸미기 아이템을 살 수 있어요.<br>지금부터 게임으로 코인을 모아 두세요!</div>
+      <div class="row"><button class="btn-main" data-close>알겠어요</button></div>
+    </div>
+  </div>
+
+  <div id="popConfirm" class="modal hidden">
+    <div class="panel">
+      <div class="p-title" id="cfTitle">정말요?</div>
+      <div class="p-note big" id="cfText"></div>
+      <div class="row">
+        <button class="btn-sub" data-close>취소</button>
+        <button id="cfOk" class="btn-main danger">삭제</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+</div>
+<script src="common/profile.js"></script>
+<script src="hub/hub.js"></script>
+</body>
+</html>

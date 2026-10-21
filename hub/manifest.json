@@ -1,0 +1,21 @@
+{
+  "name": "트윈 게임랜드",
+  "short_name": "게임랜드",
+  "start_url": "../index.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#8cc9f0",
+  "theme_color": "#5CA9E6",
+  "icons": [
+    {
+      "src": "icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
