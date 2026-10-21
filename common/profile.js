@@ -89,7 +89,7 @@
     stageLabel(i) { const k = GAMES.skyhook.perWorld; return `${Math.floor(i / k) + 1}-${(i % k) + 1}`; },
     stageName(i) { const k = GAMES.skyhook.perWorld; return `${GAMES.skyhook.worlds[Math.floor(i / k)]} ${(i % k) + 1}`; },
 
-    // 즐겨찾기 (캐릭터마다 따로)
+    // 즐겨찾기 (캐릭터마다 따로). favs 순서 = 별을 누른 순서 → 로비는 최근 누른 게임부터
     isFav(game, c = this.active()) { return !!(c && c.favs && c.favs.includes(game)); },
     toggleFav(game, c = this.active()) {
       if (!c) return false;
@@ -97,7 +97,6 @@
       if (c.favs.includes(game)) c.favs = c.favs.filter((g) => g !== game); else c.favs.push(game);
       save(); return c.favs.includes(game);
     },
-    setFavOnly(on, c = this.active()) { if (c) { c.favOnly = !!on; save(); } },
 
     rec(game, c = this.active()) { return c ? gameRec(c, game) : null; },
     starsTotal(c) { const r = c.games.skyhook; return r ? Object.values(r.stages).reduce((s, x) => s + (x.stars || 0), 0) : 0; },

@@ -3,7 +3,7 @@
   "short_name": "게임랜드",
   "start_url": "../index.html",
   "display": "fullscreen",
-  "orientation": "landscape",
+  "orientation": "any",
   "background_color": "#8cc9f0",
   "theme_color": "#5CA9E6",
   "icons": [
@@ -17,5 +17,7 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ]
+  ],
+  "scope": "../",
+  "id": "../index.html"
 }

@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="hub/hub.css?v=20261022f">
+<link rel="stylesheet" href="hub/hub.css?v=20261022g">
 </head>
 <body>
 <div id="safe"></div>
@@ -42,10 +42,6 @@
         <button class="btn-sub small" data-go="select">캐릭터 바꾸기</button>
       </div>
     </header>
-    <div class="filter-row">
-      <button id="fltAll" class="chip on">전체 게임</button>
-      <button id="fltFav" class="chip">★ 즐겨찾기</button>
-    </div>
     <div id="gameGrid" class="game-grid"></div>
     <footer class="hub-foot">
       <button class="btn-sub shop-btn" data-open="shop"><span class="soon">오픈 예정</span>👗 아이템샵</button>
@@ -139,9 +135,14 @@
     </div>
   </div>
 
+  <div id="installTip" class="install-tip hidden">
+    <span>📲 <b>홈 화면에 추가</b>하면 주소창 없이 화면이 꽉 차요!<small>Safari 공유 버튼 <i class="share-ico"></i> → '홈 화면에 추가'</small></span>
+    <button id="btnTipClose" aria-label="닫기">✕</button>
+  </div>
+
   <div id="toast" class="toast hidden"></div>
 </div>
-<script src="common/profile.js?v=20261022f"></script>
-<script src="hub/hub.js?v=20261022f"></script>
+<script src="common/profile.js?v=20261022g"></script>
+<script src="hub/hub.js?v=20261022g"></script>
 </body>
 </html>

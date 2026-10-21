@@ -131,12 +131,11 @@ function renderLobby() {
   const c = Hub.active();
   $('meFace').src = face(c); $('meName').textContent = c.name;
   $('meCoins').textContent = c.coins; $('meStars').textContent = Hub.starsTotal(c);
-  const favOnly = !!c.favOnly && GAME_CARDS.some((g) => Hub.isFav(g.id, c));
-  $('fltAll').classList.toggle('on', !favOnly); $('fltFav').classList.toggle('on', favOnly);
-  // 즐겨찾기한 게임이 앞으로
-  const list = GAME_CARDS.map((g, i) => ({ g, i, fav: Hub.isFav(g.id, c) }))
-    .filter((x) => !favOnly || x.fav)
-    .sort((a, b) => (b.fav - a.fav) || (a.i - b.i));
+  // 즐겨찾기한 게임이 앞으로 — 별을 가장 최근에 누른 게임이 맨 앞
+  const favs = c.favs || [];
+  const list = GAME_CARDS.map((g, i) => ({ g, i, fav: favs.indexOf(g.id) }))
+    .sort((a, b) => (b.fav - a.fav) || (a.i - b.i))
+    .map((x) => ({ g: x.g, fav: x.fav >= 0 }));
   const grid = $('gameGrid'); grid.innerHTML = '';
   for (const { g, fav } of list) {
     const card = document.createElement('div');
@@ -151,24 +150,15 @@ function renderLobby() {
     card.querySelector('.fav-btn').addEventListener('click', (e) => {
       e.stopPropagation();
       const on = Hub.toggleFav(g.id, c); blip(on ? 1046 : 500);
-      toast(on ? `${g.name} 즐겨찾기에 추가했어요 ★` : '즐겨찾기에서 뺐어요');
+      toast(on ? `${g.name} 즐겨찾기! 맨 앞으로 옮겼어요 ★` : '즐겨찾기에서 뺐어요');
       renderLobby();
     });
     grid.appendChild(card);
   }
-  if (!favOnly) {
-    const soon = document.createElement('div'); soon.className = 'game-card soon-card';
-    soon.innerHTML = '<div class="thumb soon-thumb">?</div><div class="g-name">다음 게임</div><div class="g-sub">곧 나와요!</div>';
-    grid.appendChild(soon);
-  }
+  const soon = document.createElement('div'); soon.className = 'game-card soon-card';
+  soon.innerHTML = '<div class="thumb soon-thumb">?</div><div class="g-name">다음 게임</div><div class="g-sub">곧 나와요!</div>';
+  grid.appendChild(soon);
 }
-$('fltAll').addEventListener('click', () => { blip(); Hub.setFavOnly(false); renderLobby(); });
-$('fltFav').addEventListener('click', () => {
-  blip();
-  if (!GAME_CARDS.some((g) => Hub.isFav(g.id))) { toast('게임 카드 오른쪽 위 ☆를 눌러 즐겨찾기를 추가해요!'); return; }
-  Hub.setFavOnly(true); renderLobby();
-});
-
 // ---------- 3. 스카이훅 징검다리 ----------
 // 가로 화면: 왼쪽 → 오른쪽으로 이어지는 길 / 폰 세로 화면: 아래 → 위로 올라가는 길
 const STONE_GAP = 150, WORLD_GAP = 60, PAD = 110;
@@ -296,6 +286,20 @@ let rotatedNow = false, scaleNow = 1;
   });
   window.addEventListener('pointerup', () => { dragging = false; });
   el.addEventListener('click', (e) => { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+})();
+
+// ---------- 홈 화면 추가 안내 (아이폰 Safari에서만) ----------
+// Safari는 웹페이지가 주소창·탭 막대를 숨기지 못하게 해서, 꽉 찬 화면은 '홈 화면에 추가'로만 가능
+const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isStandalone = navigator.standalone === true || window.matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches;
+(function installTip() {
+  let hidden = false; try { hidden = localStorage.getItem('twin_tip_closed') === '1'; } catch (e) { /* ignore */ }
+  if (!isIOS || isStandalone || hidden) return;
+  $('installTip').classList.remove('hidden');
+  $('btnTipClose').addEventListener('click', () => {
+    $('installTip').classList.add('hidden');
+    try { localStorage.setItem('twin_tip_closed', '1'); } catch (e) { /* ignore */ }
+  });
 })();
 
 // ---------- layout ----------
