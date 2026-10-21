@@ -490,7 +490,8 @@ function render() {
   // player
   const pp = toScreen(G.pos.x, G.pos.y);
   const who = Save.data.char;
-  // 시트의 좌/우 라벨과 실제 방향이 달라서, 오른쪽을 보는 프레임 하나씩 골라 왼쪽이면 뒤집는다
+  // 시트의 좌/우 라벨과 실제 방향이 달라서, 오른쪽을 보는 프레임(ready / jump_l / fall_l)만 골라
+  // 진행 방향이 왼쪽이면 뒤집는다 → 얼굴은 항상 진행 방향, 방향 전환 버튼 화살표는 그 반대
   const facingRight = G.dir > 0;
   let frame, flip = !facingRight;
   if (G.state === 'ready') { frame = 'idle'; flip = false; }
@@ -499,7 +500,7 @@ function render() {
     frame = G.fallReason === 'spike' ? 'hurt' : G.fallReason === 'time' ? 'dizzy' : 'fall_l';
     if (frame !== 'fall_l') flip = false;
   } else if (G.poseT > 0 && G.pose === 'jump') frame = 'jump_l';
-  else { frame = 'ready'; flip = facingRight; } // 서 있는 프레임은 원래 왼쪽을 봄
+  else frame = 'ready';
   const feetY = pp.y - 22; // top surface of the block
   if (G.shield && G.state === 'play') { ctx.save(); ctx.globalAlpha = 0.35 + Math.sin(G.t * 8) * 0.1; ctx.strokeStyle = '#6FC0FF'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(pp.x, feetY - 50, 62, 0, 7); ctx.stroke(); ctx.restore(); }
   if (G.wing > 0 && G.state === 'play') spr(ctx, 'wing', pp.x - (facingRight ? 26 : -26), feetY - 66, 56, { flip: !facingRight, alpha: 0.9 });
