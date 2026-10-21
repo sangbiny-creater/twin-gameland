@@ -2,7 +2,13 @@
 
 은유·은결 캐릭터로 여러 미니게임을 하는 모음집입니다. 캐릭터·코인·기록은 **이 기기(브라우저)에 저장**됩니다.
 
-## 실행
+## 바로 플레이
+
+**https://sangbiny-creater.github.io/twin-gameland/** — 아이폰 Safari에서 열고 공유 → '홈 화면에 추가' 하면 앱처럼 전체화면으로 실행돼요.
+
+고친 뒤 `git push` 하면 1~2분 안에 위 주소에 반영돼요.
+
+## 로컬 실행
 
 ```bash
 cd /Users/choisangbin/Documents/minigame
