@@ -53,6 +53,8 @@ fetch(`assets/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.img.src = `assets/sprites.webp?v=${ASSET_V}`;
 });
 for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg_${i}.jpg`; SP.bg.push(im); }
+// preload both arrows so the turn button never blinks while switching
+const ARROWS = ['btn_left', 'btn_right'].map((n) => { const im = new Image(); im.src = `assets/${n}.png`; return im; });
 // draw sprite with its width scaled to w; anchor: 'c' center, 'b' bottom-center
 function spr(g, name, x, y, w, { rot = 0, alpha = 1, flip = false, anchor = 'c' } = {}) {
   if (!SP.ready || !SP.f[name]) return 0;
@@ -497,7 +499,7 @@ function render() {
     frame = G.fallReason === 'spike' ? 'hurt' : G.fallReason === 'time' ? 'dizzy' : 'fall_l';
     if (frame !== 'fall_l') flip = false;
   } else if (G.poseT > 0 && G.pose === 'jump') frame = 'jump_l';
-  else frame = 'ready';
+  else { frame = 'ready'; flip = facingRight; } // 서 있는 프레임은 원래 왼쪽을 봄
   const feetY = pp.y - 22; // top surface of the block
   if (G.shield && G.state === 'play') { ctx.save(); ctx.globalAlpha = 0.35 + Math.sin(G.t * 8) * 0.1; ctx.strokeStyle = '#6FC0FF'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(pp.x, feetY - 50, 62, 0, 7); ctx.stroke(); ctx.restore(); }
   if (G.wing > 0 && G.state === 'play') spr(ctx, 'wing', pp.x - (facingRight ? 26 : -26), feetY - 66, 56, { flip: !facingRight, alpha: 0.9 });
