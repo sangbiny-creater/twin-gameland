@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="hub/hub.css">
+<link rel="stylesheet" href="hub/hub.css?v=20261022a">
 </head>
 <body>
 <div id="safe"></div>
@@ -42,23 +42,11 @@
         <button class="btn-sub small" data-go="select">캐릭터 바꾸기</button>
       </div>
     </header>
-    <div class="game-grid">
-      <button class="game-card" id="cardSkyhook">
-        <div class="thumb" style="background-image:url(skyhook/assets/keyart.jpg)"></div>
-        <div class="g-name">Sky Hook Runner</div>
-        <div class="g-sub" id="subSkyhook">징검다리 0 / 12</div>
-      </button>
-      <button class="game-card" id="cardHeli">
-        <div class="thumb" style="background-image:url(helicopter/assets/keyart.jpg)"></div>
-        <div class="g-name">Twin Helicopter</div>
-        <div class="g-sub" id="subHeli">BEST 0m</div>
-      </button>
-      <div class="game-card soon-card">
-        <div class="thumb soon-thumb">?</div>
-        <div class="g-name">다음 게임</div>
-        <div class="g-sub">곧 나와요!</div>
-      </div>
+    <div class="filter-row">
+      <button id="fltAll" class="chip on">전체 게임</button>
+      <button id="fltFav" class="chip">★ 즐겨찾기</button>
     </div>
+    <div id="gameGrid" class="game-grid"></div>
     <footer class="hub-foot">
       <button class="btn-sub shop-btn" data-open="shop"><span class="soon">오픈 예정</span>👗 아이템샵</button>
     </footer>
@@ -153,7 +141,7 @@
 
   <div id="toast" class="toast hidden"></div>
 </div>
-<script src="common/profile.js"></script>
-<script src="hub/hub.js"></script>
+<script src="common/profile.js?v=20261022a"></script>
+<script src="hub/hub.js?v=20261022a"></script>
 </body>
 </html>

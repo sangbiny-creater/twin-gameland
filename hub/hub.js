@@ -115,16 +115,59 @@ function openBuy() {
 }
 
 // ---------- 2. 로비 ----------
+// 게임 목록: 새 게임은 여기에 한 줄 추가 (썸네일, 열기, 로비/기록에 보일 문구)
+const GAME_CARDS = [
+  { id: 'skyhook', name: 'Sky Hook Runner', thumb: 'skyhook/assets/keyart.jpg', open: () => go('map'),
+    sub: (c) => `징검다리 ${Hub.skyhookCleared(c)} / ${Hub.GAMES.skyhook.stages} · 다음 ${Hub.stageLabel(Hub.skyhookNext(c))}`,
+    rec: (c, r) => `징검다리 <b>${Hub.skyhookCleared(c)} / ${Hub.GAMES.skyhook.stages}</b> · ${r.plays}번 도전<br>최고 거리 <b>${r.best}m</b> · 모은 코인 <b>${r.coins}</b>` },
+  { id: 'helicopter', name: 'Twin Helicopter', thumb: 'helicopter/assets/keyart.jpg', open: () => { location.href = Hub.GAMES.helicopter.path; },
+    sub: (c, r) => (r.plays ? `BEST ${r.best}m · ${r.plays}번 비행` : '아직 안 해봤어요'),
+    rec: (c, r) => `BEST <b>${r.best}m</b> · ${r.plays}번 비행<br>모은 코인 <b>${r.coins}</b>` },
+  { id: 'stairs', name: '계단 오르기', thumb: 'stairs/assets/keyart.jpg', thumbPos: 'center 30%', open: () => { location.href = Hub.GAMES.stairs.path; }, portrait: true,
+    sub: (c, r) => (r.plays ? `BEST ${r.best}m · ${r.plays}번 도전` : '세로로 하는 게임이에요'),
+    rec: (c, r) => `BEST <b>${r.best}m</b> · ${r.plays}번 도전<br>모은 코인 <b>${r.coins}</b>` },
+];
 function renderLobby() {
   const c = Hub.active();
   $('meFace').src = face(c); $('meName').textContent = c.name;
   $('meCoins').textContent = c.coins; $('meStars').textContent = Hub.starsTotal(c);
-  $('subSkyhook').textContent = `징검다리 ${Hub.skyhookCleared(c)} / ${Hub.GAMES.skyhook.stages} · 다음 ${Hub.stageLabel(Hub.skyhookNext(c))}`;
-  const h = Hub.rec('helicopter', c);
-  $('subHeli').textContent = h && h.plays ? `BEST ${h.best}m · ${h.plays}번 비행` : '아직 안 해봤어요';
+  const favOnly = !!c.favOnly && GAME_CARDS.some((g) => Hub.isFav(g.id, c));
+  $('fltAll').classList.toggle('on', !favOnly); $('fltFav').classList.toggle('on', favOnly);
+  // 즐겨찾기한 게임이 앞으로
+  const list = GAME_CARDS.map((g, i) => ({ g, i, fav: Hub.isFav(g.id, c) }))
+    .filter((x) => !favOnly || x.fav)
+    .sort((a, b) => (b.fav - a.fav) || (a.i - b.i));
+  const grid = $('gameGrid'); grid.innerHTML = '';
+  for (const { g, fav } of list) {
+    const card = document.createElement('div');
+    card.className = 'game-card' + (fav ? ' fav' : ''); card.setAttribute('role', 'button'); card.tabIndex = 0;
+    card.innerHTML = `<div class="thumb" style="background-image:url(${g.thumb});${g.thumbPos ? `background-position:${g.thumbPos}` : ''}">${g.portrait ? '<span class="tag">📱 세로</span>' : ''}</div>
+      <button class="fav-btn" aria-label="즐겨찾기">${fav ? '★' : '☆'}</button>
+      <div class="g-name"></div><div class="g-sub"></div>`;
+    card.querySelector('.g-name').textContent = g.name;
+    card.querySelector('.g-sub').textContent = g.sub(c, Hub.rec(g.id, c));
+    card.addEventListener('click', () => { blip(880); g.open(); });
+    card.addEventListener('keydown', (e) => { if (e.key === 'Enter') g.open(); });
+    card.querySelector('.fav-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const on = Hub.toggleFav(g.id, c); blip(on ? 1046 : 500);
+      toast(on ? `${g.name} 즐겨찾기에 추가했어요 ★` : '즐겨찾기에서 뺐어요');
+      renderLobby();
+    });
+    grid.appendChild(card);
+  }
+  if (!favOnly) {
+    const soon = document.createElement('div'); soon.className = 'game-card soon-card';
+    soon.innerHTML = '<div class="thumb soon-thumb">?</div><div class="g-name">다음 게임</div><div class="g-sub">곧 나와요!</div>';
+    grid.appendChild(soon);
+  }
 }
-$('cardSkyhook').addEventListener('click', () => { blip(880); go('map'); });
-$('cardHeli').addEventListener('click', () => { blip(880); location.href = Hub.GAMES.helicopter.path; });
+$('fltAll').addEventListener('click', () => { blip(); Hub.setFavOnly(false); renderLobby(); });
+$('fltFav').addEventListener('click', () => {
+  blip();
+  if (!GAME_CARDS.some((g) => Hub.isFav(g.id))) { toast('게임 카드 오른쪽 위 ☆를 눌러 즐겨찾기를 추가해요!'); return; }
+  Hub.setFavOnly(true); renderLobby();
+});
 
 // ---------- 3. 스카이훅 징검다리 ----------
 const STONE_GAP = 150, WORLD_GAP = 60, PAD = 110;
@@ -198,20 +241,16 @@ function fmtDate(t) { const d = new Date(t); return `${d.getMonth() + 1}/${d.get
 function renderRecords() {
   const c = Hub.active();
   $('recTitle').textContent = `${c.name}의 기록`;
-  const sk = Hub.rec('skyhook', c), he = Hub.rec('helicopter', c);
-  $('recSummary').innerHTML = `
-    <div class="rec-card total"><div class="v">지금 코인 <b>${c.coins}</b> · 지금까지 모은 코인 <b>${c.earned}</b> · 별 <b>${Hub.starsTotal(c)}</b></div></div>
-    <div class="rec-card"><div class="thumb" style="background-image:url(skyhook/assets/keyart.jpg)"></div>
-      <div><div class="t">Sky Hook Runner</div><div class="v">징검다리 <b>${Hub.skyhookCleared(c)} / ${Hub.GAMES.skyhook.stages}</b> · ${sk.plays}번 도전<br>최고 거리 <b>${sk.best}m</b> · 모은 코인 <b>${sk.coins}</b></div></div></div>
-    <div class="rec-card"><div class="thumb" style="background-image:url(helicopter/assets/keyart.jpg)"></div>
-      <div><div class="t">Twin Helicopter</div><div class="v">BEST <b>${he.best}m</b> · ${he.plays}번 비행<br>모은 코인 <b>${he.coins}</b></div></div></div>`;
+  $('recSummary').innerHTML = `<div class="rec-card total"><div class="v">지금 코인 <b>${c.coins}</b> · 지금까지 모은 코인 <b>${c.earned}</b> · 별 <b>${Hub.starsTotal(c)}</b></div></div>`
+    + GAME_CARDS.map((g) => `<div class="rec-card"><div class="thumb" style="background-image:url(${g.thumb});${g.thumbPos ? `background-position:${g.thumbPos}` : ''}"></div>
+      <div><div class="t">${g.name}${Hub.isFav(g.id, c) ? ' <span class="star-on">★</span>' : ''}</div><div class="v">${g.rec(c, Hub.rec(g.id, c))}</div></div></div>`).join('');
   const list = $('recList'); list.innerHTML = '';
   if (!c.history.length) list.innerHTML = '<li><span>아직 기록이 없어요. 게임을 해봐요!</span></li>';
   for (const h of c.history) {
     const li = document.createElement('li');
     const what = h.game === 'skyhook'
       ? `스카이훅 ${Hub.stageLabel(h.stage)} <span class="${h.cleared ? 'ok' : 'no'}">${h.cleared ? '클리어 ' + '⭐'.repeat(h.stars) : '실패'}</span>`
-      : `헬리콥터 <span class="ok">${h.dist}m</span>`;
+      : `${h.game === 'stairs' ? '계단 오르기' : '헬리콥터'} <span class="ok">${h.dist}m</span>`;
     li.innerHTML = `<span>${what}</span><span>+${h.earned} <i class="coin"></i><span class="when">${fmtDate(h.at)}</span></span>`;
     list.appendChild(li);
   }

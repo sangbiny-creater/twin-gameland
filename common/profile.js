@@ -19,6 +19,7 @@
     // 4개 월드 × 3스테이지 = 12스테이지 (1-1 ~ 4-3)
     skyhook: { name: 'Sky Hook Runner', path: 'skyhook/index.html', stages: 12, worlds: ['하늘도시', '숲속 나무마을', '겨울왕국', '석양의 항구'], perWorld: 3 },
     helicopter: { name: 'Twin Helicopter', path: 'helicopter/index.html' },
+    stairs: { name: '계단 오르기', path: 'stairs/index.html' },
   };
 
   const COIN_RULES = {
@@ -26,6 +27,8 @@
     skyhook: (r, first) => (r.cleared ? 20 + r.stage * 10 + r.stars * 5 + (first ? 30 : 0) : 0),
     // 100m 마다 +5 (멀리 갈수록 어려워지므로 거리 = 난이도)
     helicopter: (r) => Math.floor(r.dist / 100) * 5,
+    // 50계단(m) 마다 +5
+    stairs: (r) => Math.floor(r.dist / 50) * 5,
   };
 
   // 캐릭터 추가 가격: 3번째 300, 4번째 600, 5번째 900 ...
@@ -85,6 +88,16 @@
 
     stageLabel(i) { const k = GAMES.skyhook.perWorld; return `${Math.floor(i / k) + 1}-${(i % k) + 1}`; },
     stageName(i) { const k = GAMES.skyhook.perWorld; return `${GAMES.skyhook.worlds[Math.floor(i / k)]} ${(i % k) + 1}`; },
+
+    // 즐겨찾기 (캐릭터마다 따로)
+    isFav(game, c = this.active()) { return !!(c && c.favs && c.favs.includes(game)); },
+    toggleFav(game, c = this.active()) {
+      if (!c) return false;
+      c.favs = c.favs || [];
+      if (c.favs.includes(game)) c.favs = c.favs.filter((g) => g !== game); else c.favs.push(game);
+      save(); return c.favs.includes(game);
+    },
+    setFavOnly(on, c = this.active()) { if (c) { c.favOnly = !!on; save(); } },
 
     rec(game, c = this.active()) { return c ? gameRec(c, game) : null; },
     starsTotal(c) { const r = c.games.skyhook; return r ? Object.values(r.stages).reduce((s, x) => s + (x.stars || 0), 0) : 0; },
