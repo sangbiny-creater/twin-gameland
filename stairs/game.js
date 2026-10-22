@@ -313,7 +313,13 @@ function afterFall() {
     popText('보호막!', G.pos.x, G.pos.y - 120, '#3D8BFF');
     respawn(); return;
   }
-  if (G.hearts > 0) { showContinue(G.fallReason === 'time' ? '시간이 다 됐어요!' : '앗, 떨어졌어요!'); return; }
+  // 하트가 남아 있으면 묻지 않고 하나 쓰고 바로 이어서 (헬리콥터처럼), 다 쓰면 끝
+  if (G.hearts > 0) {
+    G.hearts--; renderHearts();
+    respawn();
+    popText(`하트 -1 (남은 하트 ${G.hearts})`, G.pos.x, G.pos.y - 140, '#FF5C7A');
+    return;
+  }
   gameOver();
 }
 function respawn() {
