@@ -412,6 +412,7 @@ function damage(kind) {
 }
 
 function collect(it) {
+  if (GOD() && (it.type === 'coin' || it.type === 'gem_blue' || it.type === 'gem_pink' || it.type === 'star')) return; // 무적: 코인 못 먹음
   it.got = true;
   const sx = it.x - G.dist + HELI_SX();
   const mult = G.x2T > 0 ? 2 : 1; // 코인 2배 부스트
@@ -421,7 +422,7 @@ function collect(it) {
   else if (it.type === 'heart') {
     Audio.sfx('item');
     if (G.hp < CFG.hpMax) { G.hp++; renderHearts(true); popText('♥ +1', sx, it.y - 30, '#FF5C7A'); }
-    else { G.coins += 5 * mult; popText('+5', sx, it.y - 30, '#FF9F2E'); }
+    else if (!GOD()) { G.coins += 5 * mult; popText('+5', sx, it.y - 30, '#FF9F2E'); }
   } else if (it.type === 'magnet') { G.magnetT = 7; Audio.sfx('item'); popText('자석!', sx, it.y - 30, '#E84A5F'); renderBuffs(); }
   else if (it.type === 'shield') { G.shield = true; Audio.sfx('item'); popText('쉴드!', sx, it.y - 30, '#3D8BFF'); renderBuffs(); }
   else if (it.type === 'bolt') { G.boostT = 3; Audio.sfx('item'); popText('스피드!', sx, it.y - 30, '#FF9F2E'); renderBuffs(); }

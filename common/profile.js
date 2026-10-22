@@ -157,7 +157,7 @@
       let el = document.getElementById('godBadge');
       if (!data.settings.god) { if (el) el.remove(); return; }
       if (!el) {
-        el = document.createElement('div'); el.id = 'godBadge'; el.textContent = '🦸 무적';
+        el = document.createElement('div'); el.id = 'godBadge'; el.textContent = '🦸 무적 · 기록·코인 없음';
         el.style.cssText = 'position:fixed;left:50%;top:calc(4px + env(safe-area-inset-top));transform:translateX(-50%);z-index:99999;pointer-events:none;background:rgba(214,52,76,.88);color:#fff;font:15px Jua,system-ui,sans-serif;padding:2px 10px;border-radius:10px;';
         document.body.appendChild(el);
       }
@@ -172,7 +172,7 @@
     ownsCostume(id, c = this.active()) { return !!(c && (c.costumes || []).includes(id)); },
     costume(c = this.active()) { return (c && c.costume) || null; }, // 입은 옷 id (없으면 기본 옷)
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
-    costumeImg(c = this.active(), base = '') { const id = this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.png?v=20261023f` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.png?v=20261023j` : null; },
     buyCostume(id, c = this.active()) {
       const it = COSTUMES.find((x) => x.id === id);
       if (!c || !it || this.ownsCostume(id, c)) return { ok: false };
@@ -332,6 +332,8 @@
       reload(); // 다른 탭/게임에서 바뀌었을 수 있음
       const c = this.active();
       if (!c) return null;
+      // 무적 모드(테스트용) 판은 기록·코인을 남기지 않음
+      if (data.settings.god) return { earned: 0, bonus: 0, newBest: false, firstClear: false, coins: c.coins, god: true };
       const g = gameRec(c, game);
       g.plays++; g.last = Date.now();
       let first = false, newBest = false;

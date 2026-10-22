@@ -975,6 +975,7 @@ function step(dt) {
 }
 
 function collect(it) {
+  if (GOD() && (it.type === 'coin' || it.type === 'star')) return; // 무적: 코인 못 먹음
   it.got = true;
   const p = G.p;
   const mult = G.x2T > 0 ? 2 : 1; // 코인 2배 부스트
@@ -983,7 +984,7 @@ function collect(it) {
   else if (it.type === 'heart') {
     Audio.sfx('item');
     if (G.hp < (G.hpMax || 3)) { G.hp++; renderHearts(true); popText('♥ +1', it.x, it.y - 30, '#FF5C7A', 26); }
-    else { G.coins += 5 * mult; popText('+5', it.x, it.y - 30, '#FF9F2E', 26); }
+    else if (!GOD()) { G.coins += 5 * mult; popText('+5', it.x, it.y - 30, '#FF9F2E', 26); }
     burst(it.x, it.y, 10, ['#FF8FAB', '#FFF'], 'heart');
   } else if (it.type === 'magnet') { G.magnetT = 7; Audio.sfx('item'); popText('자석!', it.x, it.y - 30, '#E84A5F', 26); burst(it.x, it.y, 10, ['#FF6B6B', '#FFF'], 'spark'); }
 }

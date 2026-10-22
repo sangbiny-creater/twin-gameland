@@ -338,7 +338,7 @@ function collect(item, s) {
   const p = worldOf(G.steps.indexOf(s), s.col);
   const x = p.x, y = p.y - 70;
   const mult = G.x2T > 0 ? 2 : 1;
-  const coins = (n) => { G.coins += n * mult; };
+  const coins = (n) => { if (!GOD()) G.coins += n * mult; }; // 무적: 코인 0
   switch (item) {
     case 'coin': coins(1); Audio.sfx('coin'); fxAt('fx_coin', x, y, 50, 0.35); break;
     case 'coin_big': coins(5); Audio.sfx('gem'); fxAt('fx_coin', x, y, 70, 0.4); popText(`+${5 * mult}`, x, y - 20, '#FF9F2E'); break;

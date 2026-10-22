@@ -278,7 +278,7 @@ function removePair(a, b, path, byBomb = false) {
   if (!byBomb && G.elapsed - G.lastMatchT <= COMBO_WINDOW) G.combo++; else G.combo = 1;
   G.lastMatchT = G.elapsed; G.maxCombo = Math.max(G.maxCombo, G.combo);
   const bonus = G.combo >= 2 ? (G.comboX2 ? 2 : 1) : 0;
-  G.coins += 2 + bonus;
+  if (!GOD()) G.coins += 2 + bonus; // 무적: 코인 0
   const pa = cellCenter(a), pb = cellCenter(b);
   G.fx.push({ name: 'fx_remove', x: pa.x, y: pa.y, w: tileW() * 1.4, t: 0, life: 0.5 }, { name: 'fx_remove', x: pb.x, y: pb.y, w: tileW() * 1.4, t: 0, life: 0.5 });
   if (G.combo >= 2) G.texts.push({ combo: G.combo, x: (pa.x + pb.x) / 2, y: Math.min(pa.y, pb.y) - 30, t: 0, life: 0.9 });
@@ -329,7 +329,7 @@ function clearStage() {
   let reward = [];
   if (HUB) {
     earn = HUB.record('shisen', { stage: G.si, cleared: true, dist: 0, coins: G.coins, stars: st, time: Math.round(G.elapsed) });
-    reward = clearReward(st, earn.firstClear);
+    reward = earn.god ? [] : clearReward(st, earn.firstClear);
   } else { Save.data.cleared[G.si] = true; Save.store(); }
   setTimeout(() => showResult(true, st, earn, reward), 900);
 }
