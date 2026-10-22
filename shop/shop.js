@@ -1,10 +1,10 @@
 'use strict';
 // 트윈 게임랜드 아이템 샵 v2
-//  · 위쪽 게임 카드로 게임을 고르면 그 게임의 배경 스킨 / 게임 부스트 / 보유 아이템이 아래에 한꺼번에 보임
-//  · 배경 스킨: 한 번 사면 계속 내 것, '적용하기'로 그 게임 배경을 바꿈
+//  · 배경 스킨: 모든 게임 공통. 한 번 사면 계속 내 것, '적용하기'로 모든 게임 배경을 바꿈
+//  · 게임 카드(스크롤해도 고정)로 게임을 고르면 그 게임의 게임 부스트 / 보유 아이템이 보임
 //  · 게임 부스트: 1개씩 사서 모음. 수량은 구매·게임 보상·게임에서 사용 모두 같은 숫자(common/profile.js)
 const $ = (id) => document.getElementById(id);
-const V = '?v=20261022z'; // bump when images change so phones don't show old cached ones
+const V = '?v=20261023a'; // bump when images change so phones don't show old cached ones
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 
 const GAMES = [
@@ -19,7 +19,7 @@ const GAMES = [
 // 부스트 그림: 새 아이콘이 있으면 그것, 없으면 예전 아이콘
 const NEW_ICON = { hint: 'boost_hint', shuffle: 'boost_shuffle', time: 'boost_time', bomb: 'boost_bomb', find: 'boost_find', combo: 'boost_combo' };
 const boostIcon = (id) => (NEW_ICON[id] ? `assets/v2/${NEW_ICON[id]}.png${V}` : `assets/icons/${id}.png${V}`);
-const skinThumb = (id) => `assets/skins/${game === 'shisen' ? 'shisen_' : ''}${id}.jpg${V}`;
+const skinThumb = (id) => `assets/skins/${id}.jpg${V}`;
 const COIN = `assets/v2/coin.png${V}`;
 
 let game = 'skyhook';
@@ -81,8 +81,8 @@ function renderGames() {
 // ---------- 배경 스킨 ----------
 function renderSkins() {
   const row = $('skinRow'); row.innerHTML = '';
-  for (const s of Hub.skinsFor(game)) {
-    const owned = Hub.ownsSkin(game, s.id), eq = Hub.equippedSkin(game) === s.id;
+  for (const s of Hub.SKINS) {
+    const owned = Hub.ownsSkin(s.id), eq = Hub.equippedSkin() === s.id;
     const d = document.createElement('div'); d.className = 'skin' + (eq ? ' on' : '');
     const btn = eq ? '<button class="sbtn green" disabled>적용중</button>'
       : owned ? '<button class="sbtn gold" data-act="equip">적용하기</button>'
@@ -102,11 +102,11 @@ function lack(price) {
 function gameName() { return GAMES.find((g) => g.id === game).name; }
 function buySkin(s) {
   if (lack(s.price)) return;
-  confirmBox('배경 스킨 구매', `<img class="mthumb" src="${skinThumb(s.id)}" alt=""><b>${gameName()}</b> 배경을<br><b>${s.name}</b>(으)로 바꿀까요?<br>${coinImg} ${s.price} 코인`, '구매', () => {
-    if (Hub.buySkin(game, s.id).ok) { ching(); toast(`${s.name} 적용! 다음 ${gameName()}부터 바뀌어요`); renderHeader(true); renderAll(); }
+  confirmBox('배경 스킨 구매', `<img class="mthumb" src="${skinThumb(s.id)}" alt="">모든 게임 배경을<br><b>${s.name}</b>(으)로 바꿀까요?<br>${coinImg} ${s.price} 코인`, '구매', () => {
+    if (Hub.buySkin(s.id).ok) { ching(); toast(`${s.name} 적용! 모든 게임 배경이 바뀌어요`); renderHeader(true); renderAll(); }
   });
 }
-function equipSkin(s) { Hub.equipSkin(game, s.id); blip(900); toast(`${s.name} 적용!`); renderAll(); }
+function equipSkin(s) { Hub.equipSkin(s.id); blip(900); toast(`${s.name} 적용! 모든 게임에 바뀌어요`); renderAll(); }
 
 // ---------- 게임 부스트 (사기) ----------
 function renderBoosts() {
@@ -237,35 +237,18 @@ $('couponInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') use
 
 function renderAll() { renderGames(); renderSkins(); renderBoosts(); renderOwned(); renderDressEntry(); }
 
-// ---------- 탭 (해당 칸으로 이동) ----------
-document.querySelectorAll('[data-sec]').forEach((t) => {
-  t.onclick = () => {
-    blip();
-    document.querySelectorAll('[data-sec]').forEach((x) => x.classList.toggle('on', x.dataset.sec === t.dataset.sec));
-    $('sec-' + t.dataset.sec).scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-});
-// 스크롤하면 지금 보이는 칸의 탭에 불이 들어옴
-let tabLock = 0;
-document.querySelectorAll('[data-sec]').forEach((t) => t.addEventListener('click', () => { tabLock = Date.now() + 800; }));
-const io = 'IntersectionObserver' in window ? new IntersectionObserver((ents) => {
-  if (Date.now() < tabLock) return;
-  const vis = ents.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-  if (!vis) return;
-  const sec = vis.target.id.replace('sec-', '');
-  document.querySelectorAll('[data-sec]').forEach((x) => x.classList.toggle('on', x.dataset.sec === sec));
-}, { rootMargin: '-140px 0px -45% 0px' }) : null;
-if (io) ['skins', 'boosts', 'owned'].forEach((k) => io.observe($('sec-' + k)));
 document.querySelectorAll('[data-scroll]').forEach((b) => {
   b.onclick = () => { const el = $(b.dataset.scroll); el.scrollBy({ left: el.clientWidth * 0.8, behavior: 'smooth' }); };
 });
-document.querySelectorAll('[data-help]').forEach((b) => {
-  b.onclick = () => confirmBox('아이템 샵 이용 안내', `<div style="text-align:left">
-    🎮 위쪽 <b>게임 카드</b>를 누르면 그 게임의 아이템이 나와요.<br><br>
-    🖼️ <b>배경 스킨</b> — 한 번 사면 계속 내 것! '적용하기'를 누른 스킨으로 그 게임 배경이 바뀌어요.<br><br>
-    🚀 <b>게임 부스트</b> — 1개씩 사서 모아요. 사천성 힌트·섞기처럼 게임 화면 버튼으로 쓰는 것도 있고, '사용중'으로 켜 두면 게임 시작 때 1개씩 쓰이는 것도 있어요.<br><br>
-    🪙 코인과 아이템은 캐릭터마다 따로예요.</div>`, '알겠어요', () => {}, false);
-});
+// 게임 선택 줄이 위에 붙으면 작게
+(() => {
+  const wrap = document.querySelector('.games-wrap');
+  const onScroll = () => {
+    const top = parseFloat(getComputedStyle(wrap).top) || 0;
+    wrap.classList.toggle('stuck', wrap.getBoundingClientRect().top <= top + 1 && window.scrollY > 0);
+  };
+  window.addEventListener('scroll', onScroll, { passive: true }); window.addEventListener('resize', onScroll); onScroll();
+})();
 
 // ---------- start ----------
 Hub.starterKit('shisen'); // 사천성 기본 아이템을 아직 안 받았으면 지금 지급 (게임과 같은 수량을 보여 주려고)

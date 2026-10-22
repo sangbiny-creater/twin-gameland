@@ -14,60 +14,38 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shop.css?v=20261022z">
+<link rel="stylesheet" href="shop.css?v=20261023a">
 </head>
 <body>
 <header class="topbar">
   <a class="brand" href="../index.html#lobby"><span class="home">🏠</span><span>트윈 게임랜드</span></a>
   <div class="me">
-    <div class="coin-pill"><img src="assets/v2/coin.png?v=20261022z" alt=""><b id="myCoins">0</b></div>
+    <div class="coin-pill"><img src="assets/v2/coin.png?v=20261023a" alt=""><b id="myCoins">0</b></div>
     <img id="myFace" class="face" alt="">
   </div>
 </header>
 
 <div class="layout">
-  <!-- PC: 왼쪽 메뉴 -->
-  <aside class="side">
-    <button class="stab on" data-sec="skins"><i>🖼️</i>배경 스킨</button>
-    <button class="stab" data-sec="boosts"><i>🚀</i>게임 부스트</button>
-    <button class="stab" data-sec="owned"><i>🎒</i>보유 아이템</button>
-    <button class="stab dress" data-dress><i>👗</i>캐릭터 꾸미기</button>
-    <div class="side-line"></div>
-    <button class="help" data-help aria-label="아이템 샵 이용 안내">?</button>
-  </aside>
-
   <main>
     <section class="banner">
-      <img src="assets/v2/banner.jpg?v=20261022z" alt="아이템 샵 — 게임을 더 재미있게! 나만의 스타일로 꾸며보세요!">
+      <img src="assets/v2/banner.jpg?v=20261023a" alt="아이템 샵 — 게임을 더 재미있게! 나만의 스타일로 꾸며보세요!">
     </section>
 
-    <section class="games-wrap">
-      <div id="games" class="games"></div>
-      <button class="row-arrow" data-scroll="games" aria-label="더 보기">›</button>
-    </section>
-
-    <!-- 캐릭터 꾸미기 입구 -->
-    <section class="dress-entry">
-      <button id="btnDress" class="dress-btn">
-        <span class="dress-faces"><img id="dressFace1" alt=""><img id="dressFace2" alt=""></span>
-        <b>캐릭터 꾸미기</b><span class="new">NEW</span><span class="arr">›</span>
-      </button>
-      <div id="dressStrip" class="dress-strip"></div>
-    </section>
-
-    <!-- 폰: 가로 탭 -->
-    <nav class="mtabs">
-      <button class="mtab on" data-sec="skins"><i>🖼️</i>배경 스킨</button>
-      <button class="mtab" data-sec="boosts"><i>🚀</i>게임 부스트</button>
-      <button class="mtab" data-sec="owned"><i>🎒</i>보유 아이템</button>
-      <button class="help" data-help aria-label="아이템 샵 이용 안내">?</button>
-    </nav>
-
+    <!-- 배경 스킨: 모든 게임 공통 -->
     <section id="sec-skins" class="sec skins">
-      <div class="sec-head"><span class="sec-ico">🖼️</span><b>배경 스킨</b><span class="sec-desc">게임의 배경을 더 예쁘게 꾸며보세요!</span></div>
+      <div class="sec-head"><span class="sec-ico">🖼️</span><b>배경 스킨</b><span class="sec-desc">한 번 사면 모든 게임 배경이 함께 바뀌어요!</span></div>
       <div class="row-wrap">
         <div id="skinRow" class="skin-row"></div>
         <button class="row-arrow" data-scroll="skinRow" aria-label="더 보기">›</button>
+      </div>
+    </section>
+
+    <!-- 게임 선택: 스크롤해도 위에 고정, 아래 부스트·보유 아이템에만 적용 -->
+    <section class="games-wrap">
+      <div class="games-lbl">🎮 게임을 골라 부스트를 사세요</div>
+      <div class="games-row">
+        <div id="games" class="games"></div>
+        <button class="row-arrow" data-scroll="games" aria-label="더 보기">›</button>
       </div>
     </section>
 
@@ -82,6 +60,15 @@
       </section>
     </div>
 
+    <!-- 캐릭터 꾸미기 입구 -->
+    <section class="dress-entry">
+      <button id="btnDress" class="dress-btn">
+        <span class="dress-faces"><img id="dressFace1" alt=""><img id="dressFace2" alt=""></span>
+        <b>캐릭터 꾸미기</b><span class="new">NEW</span><span class="arr">›</span>
+      </button>
+      <div id="dressStrip" class="dress-strip"></div>
+    </section>
+
     <section class="coupon-wrap">
       <button id="btnCoupon" class="coupon-btn">🎟️ 쿠폰 입력하기</button>
     </section>
@@ -93,7 +80,7 @@
   <header class="dress-top">
     <button id="dressClose" class="dclose" aria-label="닫기">✕</button>
     <b>캐릭터 꾸미기</b>
-    <div class="coin-pill small"><img src="assets/v2/coin.png?v=20261022z" alt=""><b id="dressCoins">0</b></div>
+    <div class="coin-pill small"><img src="assets/v2/coin.png?v=20261023a" alt=""><b id="dressCoins">0</b></div>
   </header>
   <div class="dress-body">
     <div id="dressWho" class="dress-who"></div>
@@ -143,7 +130,7 @@
 </div>
 <div id="toast" class="toast hidden"></div>
 
-<script src="../common/profile.js?v=20261022z"></script>
-<script src="shop.js?v=20261022z"></script>
+<script src="../common/profile.js?v=20261023a"></script>
+<script src="shop.js?v=20261023a"></script>
 </body>
 </html>

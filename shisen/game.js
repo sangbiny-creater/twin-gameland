@@ -24,7 +24,7 @@ function tilePool(si) {
   const themed = w >= 4 ? Array.from({ length: 14 }, (_, k) => `w${w + 1}_${k}`).filter((n) => !(w === 4 && (n === 'w5_2' || n === 'w5_3'))) : [];
   return ['t_eunyu', 't_eungyeol', ...shuffleArr(themed), ...shuffleArr(BASE_TILES.slice())];
 }
-const SKIN_BG = { autumn: 1, winter: 2, night: 3, moon: 4 };      // 아이템샵 배경 스킨 (assets/bg_*.jpg)
+const SKIN_BG = { forest: 1, sunset: 1, winter: 2, night: 3, space: 4 }; // 공통 배경 스킨 → assets/bg_*.jpg (나머지는 skins.js로 그림)
 const COMBO_WINDOW = 4;  // 초: 이 안에 다음 짝을 없애면 콤보
 const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
@@ -406,8 +406,10 @@ function cellFromPoint(px, py) {
 
 // ---------- render ----------
 function drawBg() {
+  const drawn = SKIN_BG[G.skin] == null && G.skin && G.skin !== 'default' && window.Skins && window.Skins.has(G.skin);
   const img = SKIN_BG[G.skin] != null ? SP.bg[SKIN_BG[G.skin]] : SP.world[Math.floor(G.si / PER_WORLD)];
-  if (img && img.complete && img.naturalWidth) {
+  if (drawn) window.Skins.draw(ctx, G.skin, W, H, 0, 0, G.t);
+  else if (img && img.complete && img.naturalWidth) {
     const s = Math.max(W / img.naturalWidth, H / img.naturalHeight);
     const bw = img.naturalWidth * s, bh = img.naturalHeight * s;
     ctx.drawImage(img, (W - bw) / 2, (H - bh) / 2, bw, bh);

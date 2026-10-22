@@ -37,7 +37,7 @@
   };
 
   // ---------- 아이템샵 카탈로그 ----------
-  // 배경 스킨: 게임마다 따로 사고, 산 스킨 중 하나를 '적용'하면 그 게임 내내 그 배경으로 플레이
+  // 배경 스킨: 한 번 사서 '적용'하면 모든 게임 배경이 함께 바뀐다 (게임마다 자기 그림으로 그림)
   const SKINS = [
     { id: 'default', name: '기본 하늘', price: 0 },
     { id: 'forest', name: '숲 속 마을', price: 200 },
@@ -48,17 +48,9 @@
     { id: 'space', name: '우주 여행', price: 300 },
     { id: 'desert', name: '사막 오아시스', price: 300 },
   ];
-  // 게임마다 배경이 다르면 여기에 따로 (없으면 위 SKINS를 씀)
-  const SKINS_BY_GAME = {
-    shisen: [
-      { id: 'default', name: '기본 정원', price: 0 },
-      { id: 'autumn', name: '가을 단풍', price: 200 },
-      { id: 'winter', name: '겨울 마을', price: 300 },
-      { id: 'night', name: '야경 도시', price: 300 },
-      { id: 'moon', name: '달빛 사원', price: 300 },
-    ],
-  };
-  const skinsFor = (game) => SKINS_BY_GAME[game] || SKINS;
+  const skinsFor = () => SKINS; // 예전 코드 호환용
+  // 예전(게임별) 스킨 id → 공통 id
+  const OLD_SKIN = { autumn: 'forest', moon: 'space' };
   // 게임 부스트: 1개씩 사서 모아 두고, '사용중'으로 켜 둔 것만 게임을 시작할 때 1개씩 쓰임
   const BOOSTS = {
     skyhook: [
@@ -140,7 +132,16 @@
 
   function shopOf(c) {
     if (!c.shop) c.shop = { skins: {}, equipped: {}, boosts: {}, using: {} };
-    return c.shop;
+    const sh = c.shop;
+    if (!Array.isArray(sh.skinAll)) { // 게임별로 샀던 스킨을 공통 스킨으로 옮기기
+      const own = new Set();
+      for (const g in sh.skins || {}) for (const id of sh.skins[g] || []) own.add(OLD_SKIN[id] || id);
+      sh.skinAll = [...own].filter((id) => SKINS.some((k) => k.id === id));
+      const eq = sh.equipped || {};
+      const pick = [eq.skyhook, eq.stairs, eq.helicopter, eq.shisen].map((id) => OLD_SKIN[id] || id).find((id) => id && id !== 'default' && sh.skinAll.includes(id));
+      sh.skinOn = pick || 'default';
+    }
+    return sh;
   }
 
   const Hub = {
@@ -150,7 +151,7 @@
     ownsCostume(id, c = this.active()) { return !!(c && (c.costumes || []).includes(id)); },
     costume(c = this.active()) { return (c && c.costume) || null; }, // 입은 옷 id (없으면 기본 옷)
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
-    costumeImg(c = this.active(), base = '') { const id = this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.png?v=20261022z` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.png?v=20261023a` : null; },
     buyCostume(id, c = this.active()) {
       const it = COSTUMES.find((x) => x.id === id);
       if (!c || !it || this.ownsCostume(id, c)) return { ok: false };
@@ -171,18 +172,19 @@
     },
 
     // ----- 아이템샵 -----
-    ownsSkin(game, id, c = this.active()) { return id === 'default' || !!(c && shopOf(c).skins[game] && shopOf(c).skins[game].includes(id)); },
-    equippedSkin(game, c = this.active()) { return (c && shopOf(c).equipped[game]) || 'default'; },
-    buySkin(game, id, c = this.active()) {
-      const sk = skinsFor(game).find((s) => s.id === id);
-      if (!c || !sk || this.ownsSkin(game, id, c)) return { ok: false, why: 'owned' };
+    // 배경 스킨은 모든 게임 공통 (game 인자는 예전 코드 호환용이라 무시)
+    ownsSkin(id, c = this.active()) { return id === 'default' || !!(c && shopOf(c).skinAll.includes(id)); },
+    equippedSkin(game, c = this.active()) { return (c && shopOf(c).skinOn) || 'default'; },
+    buySkin(id, c = this.active()) {
+      const sk = SKINS.find((s) => s.id === id);
+      if (!c || !sk || this.ownsSkin(id, c)) return { ok: false, why: 'owned' };
       if (c.coins < sk.price) return { ok: false, why: 'coins' };
       c.coins -= sk.price;
-      const sh = shopOf(c); (sh.skins[game] = sh.skins[game] || []).push(id);
-      sh.equipped[game] = id; // 사면 바로 적용
+      const sh = shopOf(c); sh.skinAll.push(id);
+      sh.skinOn = id; // 사면 바로 적용
       save(); return { ok: true };
     },
-    equipSkin(game, id, c = this.active()) { if (c && this.ownsSkin(game, id, c)) { shopOf(c).equipped[game] = id; save(); } },
+    equipSkin(id, c = this.active()) { if (c && this.ownsSkin(id, c)) { shopOf(c).skinOn = id; save(); } },
     boostCount(game, id, c = this.active()) { return (c && shopOf(c).boosts[game] && shopOf(c).boosts[game][id]) || 0; },
     isUsing(game, id, c = this.active()) { return !!(c && shopOf(c).using[game] && shopOf(c).using[game][id]); },
     buyBoost(game, id, c = this.active()) {

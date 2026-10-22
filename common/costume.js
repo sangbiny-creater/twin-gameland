@@ -1,6 +1,7 @@
 'use strict';
 // 캐릭터 꾸미기: 입은 옷 그림을 게임 화면에 그리는 공용 도우미.
-// 옷마다 그림이 한 장(정면 포즈)이라, 동작은 흔들기·기울이기·통통 튀기로 표현한다.
+// 옷마다 큰 그림 한 장(기본 포즈) + 달리기 프레임 2장(_run0, _run1)이 있다.
+// 달리기·점프는 달리기 프레임으로, 나머지 동작은 큰 그림을 흔들기·기울이기로 표현한다.
 // 사용: Costume.ready() 가 true면 Costume.draw(ctx, pose, t, { h, flip }) — (0,0)이 발 위치
 (function () {
   const Hub = window.Hub;
@@ -9,6 +10,10 @@
   const img = new Image();
   let ok = false;
   if (src) { img.onload = () => { ok = true; }; img.src = src; }
+  // 달리기 프레임: 두 장 다 불러와야 쓴다 (없으면 큰 그림으로 대신)
+  const run = [new Image(), new Image()];
+  let runOk = 0;
+  if (src) run.forEach((im, i) => { im.onload = () => { runOk++; }; im.src = src.replace(/\.png/, `_run${i}.png`); });
 
   const Costume = {
     id: c ? Hub.costume(c) : null,
@@ -18,6 +23,7 @@
     // pose: idle | run | jump | fall | swing | hit | land | happy | cheer | dizzy | dead
     draw(g, pose, t, o = {}) {
       if (!ok) return false;
+      if (runOk === 2 && (pose === 'run' || pose === 'jump')) return drawRun(g, pose, t, o);
       const h = o.h || 118, w = h * img.naturalWidth / img.naturalHeight;
       let dx = 0, dy = 0, rot = 0, sx = 1, sy = 1, hang = false;
       switch (pose) {
@@ -49,5 +55,19 @@
       return true;
     },
   };
+  // 달리기 프레임 그리기: 9fps로 두 장을 번갈아, 발 디딜 때마다 살짝 튄다
+  function drawRun(g, pose, t, o) {
+    const k = pose === 'jump' ? 1 : Math.floor(t * 9) % 2;
+    const im = run[k], h = (o.h || 118) * 0.94, w = h * im.naturalWidth / im.naturalHeight;
+    const ph = (t * 9) % 1;
+    const dy = pose === 'jump' ? 0 : -Math.sin(ph * Math.PI) * 4;
+    g.save();
+    g.translate(0, dy);
+    if (o.flip) g.scale(-1, 1);
+    g.rotate(pose === 'jump' ? -0.1 : 0.04);
+    g.drawImage(im, -w / 2, -h, w, h);
+    g.restore();
+    return true;
+  }
   window.Costume = Costume;
 })();
