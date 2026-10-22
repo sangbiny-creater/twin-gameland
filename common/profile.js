@@ -151,7 +151,7 @@
     ownsCostume(id, c = this.active()) { return !!(c && (c.costumes || []).includes(id)); },
     costume(c = this.active()) { return (c && c.costume) || null; }, // 입은 옷 id (없으면 기본 옷)
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
-    costumeImg(c = this.active(), base = '') { const id = this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.png?v=20261023a` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.png?v=20261023c` : null; },
     buyCostume(id, c = this.active()) {
       const it = COSTUMES.find((x) => x.id === id);
       if (!c || !it || this.ownsCostume(id, c)) return { ok: false };

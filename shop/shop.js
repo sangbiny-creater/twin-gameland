@@ -4,7 +4,7 @@
 //  · 게임 카드(스크롤해도 고정)로 게임을 고르면 그 게임의 게임 부스트 / 보유 아이템이 보임
 //  · 게임 부스트: 1개씩 사서 모음. 수량은 구매·게임 보상·게임에서 사용 모두 같은 숫자(common/profile.js)
 const $ = (id) => document.getElementById(id);
-const V = '?v=20261023b'; // bump when images change so phones don't show old cached ones
+const V = '?v=20261023c'; // bump when images change so phones don't show old cached ones
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 
 const GAMES = [
@@ -146,7 +146,7 @@ function renderOwned() {
 }
 // ---------- 캐릭터 꾸미기 ----------
 const COS_IMG = (look, id) => (id ? `../common/costumes/${look}_${id}.png${V}` : `../skyhook/assets/${look === 'eungyeol' ? 'eungyeol' : 'eunyu'}_base.jpg`);
-const BASE_FULL = (look) => `../stairs/assets/${look}_idle.png${V}`; // 기본 옷 전신 그림
+const BASE_FULL = (look) => `../common/costumes/${look}_base.png${V}`; // 기본 옷 전신 그림
 const faceOf = (c) => Hub.costumeImg(c, '../') || `../skyhook/assets/${c.look}_base.jpg`;
 const fullOf = (look, id) => (id ? COS_IMG(look, id) : BASE_FULL(look));
 const DRESS_LIST = [{ id: null, name: '기본 옷', price: 0, desc: '처음 입고 있던 옷이에요' }, ...Hub.COSTUMES];

@@ -11,9 +11,11 @@
   let ok = false;
   if (src) { img.onload = () => { ok = true; }; img.src = src; }
   // 달리기 프레임: 두 장 다 불러와야 쓴다 (없으면 큰 그림으로 대신)
+  // 큰 그림과 색이 달라서 달리기 프레임을 안 쓰는 옷
+  const NO_RUN = ['eunyu_dino', 'eungyeol_raincoat'];
   const run = [new Image(), new Image()];
   let runOk = 0;
-  if (src) run.forEach((im, i) => { im.onload = () => { runOk++; }; im.src = src.replace(/\.png/, `_run${i}.png`); });
+  if (src && !NO_RUN.some((k) => src.includes(`/${k}.png`))) run.forEach((im, i) => { im.onload = () => { runOk++; }; im.src = src.replace(/\.png/, `_run${i}.png`); });
 
   const Costume = {
     id: c ? Hub.costume(c) : null,
