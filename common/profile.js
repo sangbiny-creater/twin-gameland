@@ -110,6 +110,8 @@
     // 게임 테스트용 무적 (모든 캐릭터·모든 게임에 적용, 끌 때까지 유지)
     supermanon: { god: true, once: false, msg: '무적 모드 ON! 이제 안 죽어요' },
     supermanoff: { god: false, once: false, msg: '무적 모드 OFF' },
+    // 모든 게임의 모든 스테이지 자물쇠 풀기 (모든 캐릭터, 계속 유지)
+    openeverything: { openAll: true, once: false, msg: '모든 스테이지 자물쇠가 풀렸어요!' },
   };
 
   // 캐릭터 추가 가격: 3번째 300, 4번째 600, 5번째 900 ...
@@ -169,7 +171,7 @@
     ownsCostume(id, c = this.active()) { return !!(c && (c.costumes || []).includes(id)); },
     costume(c = this.active()) { return (c && c.costume) || null; }, // 입은 옷 id (없으면 기본 옷)
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
-    costumeImg(c = this.active(), base = '') { const id = this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.png?v=20261023d` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.png?v=20261023e` : null; },
     buyCostume(id, c = this.active()) {
       const it = COSTUMES.find((x) => x.id === id);
       if (!c || !it || this.ownsCostume(id, c)) return { ok: false };
@@ -187,6 +189,7 @@
       if (cp.once && c.coupons.includes(key)) return { ok: false, msg: '이미 사용한 쿠폰이에요' };
       c.coins += cp.coins || 0; c.earned += cp.coins || 0; c.coupons.push(key);
       if (cp.god != null) { data.settings.god = cp.god; godBadge(); }
+      if (cp.openAll != null) data.settings.openAll = cp.openAll;
       save(); return { ok: true, msg: cp.msg, coins: c.coins };
     },
 
@@ -308,7 +311,7 @@
 
     // 징검다리(스테이지) 게임: 앞 스테이지를 깨야 다음이 열린다
     stage(game, i, c = this.active()) { const r = this.rec(game, c); return (r && r.stages[i]) || { cleared: false, stars: 0, best: 0, plays: 0 }; },
-    stageUnlocked(game, i, c = this.active()) { return i === 0 || this.stage(game, i - 1, c).cleared; },
+    stageUnlocked(game, i, c = this.active()) { return i === 0 || !!data.settings.openAll || this.stage(game, i - 1, c).cleared; },
     stageNext(game, c = this.active()) {
       for (let i = 0; i < GAMES[game].stages; i++) if (!this.stage(game, i, c).cleared) return i;
       return GAMES[game].stages - 1;
