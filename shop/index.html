@@ -14,60 +14,79 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shop.css?v=20261022w">
+<link rel="stylesheet" href="shop.css?v=20261022y">
 </head>
 <body>
 <header class="topbar">
-  <a class="brand" href="../index.html#lobby"><span class="home-ico">🏠</span><span>트윈 게임랜드</span></a>
-  <nav class="nav">
-    <a href="../index.html#lobby">🎮 <span>게임 선택</span></a>
-    <a class="on" href="#">🛒 <span>아이템 샵</span></a>
-    <a href="#" id="navMine">🎒 <span>내 아이템</span></a>
-  </nav>
+  <a class="brand" href="../index.html#lobby"><span class="home">🏠</span><span>트윈 게임랜드</span></a>
   <div class="me">
-    <div class="coin-pill"><img src="../helicopter/assets/coin.png" alt=""><b id="myCoins">0</b></div>
+    <div class="coin-pill"><img src="assets/v2/coin.png?v=20261022y" alt=""><b id="myCoins">0</b></div>
     <img id="myFace" class="face" alt="">
   </div>
 </header>
 
-<main>
-  <section class="banner">
-    <img class="wide" src="assets/banner_wide.jpg" alt="아이템 샵 — 게임을 더 재미있게! 나만의 스타일로 꾸며보세요!">
-    <img class="narrow" src="assets/banner_mobile.jpg" alt="아이템 샵">
-  </section>
+<div class="layout">
+  <!-- PC: 왼쪽 메뉴 -->
+  <aside class="side">
+    <button class="stab on" data-sec="skins"><i>🖼️</i>배경 스킨</button>
+    <button class="stab" data-sec="boosts"><i>🚀</i>게임 부스트</button>
+    <button class="stab" data-sec="owned"><i>🎒</i>보유 아이템</button>
+    <div class="side-line"></div>
+    <button class="help" data-help aria-label="아이템 샵 이용 안내">?</button>
+  </aside>
 
-  <section id="gameCards" class="game-cards"></section>
+  <main>
+    <section class="banner">
+      <img src="assets/v2/banner.jpg?v=20261022y" alt="아이템 샵 — 게임을 더 재미있게! 나만의 스타일로 꾸며보세요!">
+    </section>
 
-  <section class="panel">
-    <div class="tabs-row">
-      <div class="tabs" role="tablist">
-        <button class="tab on" data-tab="skins"><i>🖼️</i> <span>배경 스킨</span></button>
-        <button class="tab" data-tab="boosts"><i>🚀</i> <span>게임 부스트</span></button>
-        <button class="tab" data-tab="owned"><i>🎒</i> <span>보유 아이템</span></button>
+    <section class="games-wrap">
+      <div id="games" class="games"></div>
+      <button class="row-arrow" data-scroll="games" aria-label="더 보기">›</button>
+    </section>
+
+    <!-- 폰: 가로 탭 -->
+    <nav class="mtabs">
+      <button class="mtab on" data-sec="skins"><i>🖼️</i>배경 스킨</button>
+      <button class="mtab" data-sec="boosts"><i>🚀</i>게임 부스트</button>
+      <button class="mtab" data-sec="owned"><i>🎒</i>보유 아이템</button>
+      <button class="help" data-help aria-label="아이템 샵 이용 안내">?</button>
+    </nav>
+
+    <section id="sec-skins" class="sec skins">
+      <div class="sec-head"><span class="sec-ico">🖼️</span><b>배경 스킨</b><span class="sec-desc">게임의 배경을 더 예쁘게 꾸며보세요!</span></div>
+      <div class="row-wrap">
+        <div id="skinRow" class="skin-row"></div>
+        <button class="row-arrow" data-scroll="skinRow" aria-label="더 보기">›</button>
       </div>
-      <button id="btnGuide" class="guide">❓ <span>아이템 샵 이용 안내</span></button>
+    </section>
+
+    <div class="split">
+      <section id="sec-boosts" class="sec boosts">
+        <div class="sec-head"><span class="sec-ico">🚀</span><b>게임 부스트</b><span class="sec-desc">게임을 더 쉽게! 다양한 부스트 아이템을 사용해보세요!</span></div>
+        <div id="boostGrid" class="bgrid"></div>
+      </section>
+      <section id="sec-owned" class="sec owned">
+        <div class="sec-head"><span class="sec-ico">🎒</span><b>보유 아이템</b><span class="sec-desc">이미 보유하고 있는 아이템이에요!</span></div>
+        <div id="ownedGrid" class="bgrid"></div>
+      </section>
     </div>
-    <div class="sec-head">
-      <div class="sec-title"><b id="secTitle">배경 스킨</b><span id="secDesc">게임의 배경을 바꿔서 새로운 분위기에서 플레이해보세요!</span></div>
-      <label class="game-pick"><img id="pickImg" alt=""><select id="gameSelect"></select></label>
-    </div>
-    <div id="content"></div>
-  </section>
-</main>
+  </main>
+</div>
 
 <div id="modal" class="modal hidden">
   <div class="mpanel">
     <div class="m-title" id="mTitle"></div>
     <div class="m-body" id="mBody"></div>
     <div class="m-row">
-      <button class="btn gray" id="mCancel">취소</button>
-      <button class="btn pink" id="mOk">구매</button>
+      <button class="mbtn gray" id="mCancel">취소</button>
+      <button class="mbtn gold" id="mOk">구매</button>
     </div>
   </div>
 </div>
 <div id="toast" class="toast hidden"></div>
 
-<script src="../common/profile.js?v=20261022w"></script>
-<script src="shop.js?v=20261022w"></script>
+<script src="../common/profile.js?v=20261022y"></script>
+<script src="shop.js?v=20261022y"></script>
 </body>
 </html>
