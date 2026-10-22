@@ -7,7 +7,7 @@ const U = 60;
 const H = 540;
 const CFG = {
   runSpeed: 6.0 * U,
-  runSpeedMax: 10.0 * U,
+  runSpeedMax: 9.0 * U,
   jumpVel: 8.2 * U,
   gravity: 22 * U,
   hookRange: 5.5 * U,
@@ -32,7 +32,8 @@ const PER_WORLD = 5;
     const i = w * PER_WORLD + k;
     // d: 0(1-1) → 1(10-5). 월드가 바뀔 때 한 번 더 확 올라가도록 월드 단계 + 판 단계를 섞는다
     const d = Math.min(1, (w + k / PER_WORLD * 0.8) / 9.8);
-    STAGES.push({ name: `${name} ${k + 1}`, label: `${w + 1}-${k + 1}`, world: w, seed: 11 + i * 13, len: 18000 + i * 400, speed: d * 2.0, d, theme });
+    // 속도는 조금만 올리고(예전과 같음), 난이도는 지형으로 올린다 (buildLevel 참고)
+    STAGES.push({ name: `${name} ${k + 1}`, label: `${w + 1}-${k + 1}`, world: w, k, seed: 11 + i * 13, len: 18000 + i * 400, speed: i * 0.03, d, theme });
   }
 });
 
@@ -205,24 +206,35 @@ function buildLevel(si) {
   const R = rng(st.seed * 7919);
   const rand = (a, b) => a + (b - a) * R();
   const L = { plats: [], anchors: [], items: [], obs: [], hints: [], goal: null, len: st.len };
-  // ----- 난이도 손잡이 (d: 0 → 1) -----
-  const d = st.d;
-  const D = {
-    jumpMin: lerp(110, 175, d), jumpMax: lerp(160, 250, d),       // 점프 간격
-    platMin: lerp(420, 230, d), platMax: lerp(760, 430, d),       // 발판 길이 (점점 짧게)
-    dy: lerp(42, 85, d),                                          // 발판 높낮이 차
-    hookMin: lerp(380, 440, d), hookMax: lerp(470, 560, d),       // 훅 간격
-    hookMove: d < 0.2 ? 0 : lerp(25, 70, d),                      // 훅 흔들림 (2월드부터)
-    cloud: lerp(0.15, 0.75, d),                                   // 먹구름 나올 확률
-    cloudMove: d < 0.3 ? 0 : lerp(20, 60, d),                     // 위아래로 움직이는 먹구름 (3~4월드부터)
-    chainMax: d < 0.35 ? 2 : d < 0.7 ? 3 : 4,                     // 연속 훅 개수
-    learn: si === 0 ? 0.18 : lerp(0.12, 0.04, d),                 // 쉬운 앞부분 길이
-    heart: d < 0.75,                                              // 마지막 두 월드는 하트 아이템 없음
+  const d = st.d, wd = st.world, k = st.k;
+
+  // ----- 월드마다 새 지형이 하나씩 늘어난다 (속도는 거의 그대로, 지형으로 어려워짐) -----
+  //  1 기본 점프·훅 / 2 징검다리 / 3 계단 / 4 위아래 움직이는 발판·흔들 훅 / 5 무너지는 발판
+  //  6 좌우 움직이는 발판 / 7 긴 연속 훅·무너지는 징검다리 / 8 움직이는 먹구름 / 9~10 모두 섞기
+  const F = {
+    stones: wd >= 1, stairs: wd >= 2, vmove: wd >= 3, crumble: wd >= 4, hmove: wd >= 5,
+    longChain: wd >= 6, cloudMove: wd >= 7,
   };
-  const plat = (x, y, w, upper = false) => { const p = { x, y, w, upper, deco: Math.floor(R() * 1e6) }; L.plats.push(p); return p; };
+  const NEW = ['', 'stones', 'stairs', 'vmove', 'crumble', 'hmove', 'longChain', 'cloudMove', '', ''][wd];
+  const D = {
+    jumpMin: lerp(110, 150, d), jumpMax: lerp(160, 215, d),
+    platMin: lerp(420, 300, d), platMax: lerp(760, 520, d),
+    stoneMin: lerp(250, 150, d), stoneMax: lerp(320, 210, d),   // 징검다리 폭
+    dy: lerp(40, 70, d),
+    hookMin: lerp(380, 420, d), hookMax: lerp(470, 530, d),
+    hookMove: F.vmove ? lerp(25, 60, d) : 0,
+    cloud: lerp(0.2, 0.6, d),
+    learn: si === 0 ? 0.18 : wd === 0 ? 0.1 : 0.05,
+    heart: wd < 8,
+  };
+  const plat = (x, y, w, upper = false, o = {}) => {
+    const p = { x, y, w, upper, deco: Math.floor(R() * 1e6), bx: x, by: y, dx: 0, dy: 0, ...o };
+    L.plats.push(p); return p;
+  };
   const anchor = (x, y, move = 0) => { const a = { x, y, bx: x, by: y, move, ph: R() * 6.28, used: false }; L.anchors.push(a); return a; };
   const item = (type, x, y) => L.items.push({ type, x, y, got: false, t: R() * 6 });
-  const cloud = (x, y, move = D.cloudMove * (R() < 0.6 ? 1 : 0)) => L.obs.push({ x, y, by: y, move, ph: R() * 6.28, hit: false });
+  const cloud = (x, y, move = F.cloudMove && R() < 0.6 ? lerp(25, 55, d) : 0) => L.obs.push({ x, y, by: y, move, ph: R() * 6.28, hit: false });
+  const hint = (x, y, text) => L.hints.push({ x, y, text });
   const coinArc = (x0, y0, x1, y1, h, n) => {
     for (let i = 0; i < n; i++) {
       const t = (i + 0.5) / n;
@@ -231,30 +243,33 @@ function buildLevel(si) {
   };
   const coinLine = (x0, y, n, gap = 46) => { for (let i = 0; i < n; i++) item('coin', x0 + i * gap, y); };
 
+  // 점프로 닿을 수 있는 거리 (판 시작 속도 기준, 높이 올라갈수록 짧아짐) — 못 깨는 간격은 안 만든다
+  const v0 = CFG.runSpeed + st.speed * U;
+  const reach = (up) => {
+    const disc = CFG.jumpVel * CFG.jumpVel - 2 * CFG.gravity * Math.max(0, up);
+    return disc <= 0 ? 0 : v0 * (CFG.jumpVel + Math.sqrt(disc)) / CFG.gravity * 0.78;
+  };
+
   let y = 420;
   plat(-500, y, 1500);
   coinLine(500, y - 60, 6);
   let x = 1000; // cursor: end of last platform
 
-  const nextY = (dy0, dy1) => clamp(y + rand(dy0, dy1) * D.dy / 42, 320, 475);
-  // 점프로 닿을 수 있는 최대 거리 (판 시작 속도 기준, 높은 발판일수록 짧아짐) → 못 깨는 간격은 안 만든다
-  const v0 = CFG.runSpeed + st.speed * U;
-  const reach = (up) => {
-    const disc = CFG.jumpVel * CFG.jumpVel - 2 * CFG.gravity * Math.max(0, up);
-    if (disc <= 0) return 0;
-    return v0 * (CFG.jumpVel + Math.sqrt(disc)) / CFG.gravity * 0.78;
-  };
+  const nextY = (dy0, dy1) => clamp(y + rand(dy0, dy1) * D.dy / 40, 320, 475);
+  const jumpTo = (ny, slack = 0) => Math.max(90, Math.min(rand(D.jumpMin, D.jumpMax), reach(y - ny) - slack));
+  const intro = {}; // 처음 나오는 지형엔 안내 글
+  const introHint = (key, hx, hy, text) => { if (k === 0 && NEW === key && !intro[key]) { intro[key] = true; hint(hx, hy, text); } };
 
   const jumpGap = (opt = {}) => {
     let ny = nextY(-40, 45);
-    if (y - ny > 70) ny = y - 70; // 너무 높은 계단은 점프로 힘듦
-    const gap = Math.min(rand(D.jumpMin, D.jumpMax), reach(y - ny));
+    if (y - ny > 70) ny = y - 70;
+    const gap = jumpTo(ny);
     coinArc(x - 30, y - 50, x + gap + 30, ny - 50, 90, 5);
     const w = rand(D.platMin, D.platMax);
     plat(x + gap, ny, w);
-    if (opt.cloud && w > 300) cloud(x + gap + w * 0.55, ny - 34);
+    if (opt.cloud && w > 320) cloud(x + gap + w * 0.55, ny - 34);
     else coinLine(x + gap + 120, ny - 60, Math.floor(w / 140));
-    if (opt.hint) L.hints.push({ x: x - 170, y: y - 150, text: '탭 / 스페이스 = 점프!' });
+    if (opt.hint) hint(x - 170, y - 150, '탭 / 스페이스 = 점프!');
     x += gap + w; y = ny;
   };
 
@@ -263,15 +278,14 @@ function buildLevel(si) {
     const ny = nextY(-50, 40);
     const ax = x + gap * 0.42, ay = Math.min(y, ny) - rand(195, 225);
     anchor(ax, ay, opt.move ? D.hookMove : 0);
-    // coins trace the swing arc under the anchor
     for (let i = 0; i < 7; i++) {
       const a = lerp(-0.9, 1.1, i / 6), r = 175;
       item(i === 3 && opt.star ? 'star' : 'coin', ax + Math.sin(a) * r, ay + Math.cos(a) * r);
     }
-    if (opt.hint) L.hints.push({ x: x - 120, y: ay + 20, text: '공중에서 꾹! = 훅 걸기' });
+    if (opt.hint) hint(x - 120, ay + 20, '공중에서 꾹! = 훅 걸기');
     const w = rand(D.platMin + 40, D.platMax + 20);
     plat(x + gap, ny, w);
-    if (opt.cloud && w > 320) cloud(x + gap + w * 0.6, ny - 34);
+    if (opt.cloud && w > 340) cloud(x + gap + w * 0.6, ny - 34);
     x += gap + w; y = ny;
   };
 
@@ -283,16 +297,73 @@ function buildLevel(si) {
     for (let i = 0; i < n; i++) {
       const ax = x + 180 + i * sp, ay = base + (i % 2 ? -18 : 12);
       anchor(ax, ay, move ? D.hookMove : 0);
-      for (let k = 0; k < 3; k++) item('coin', ax - 50 + k * 50, ay + 170 + (k === 1 ? 12 : 0));
+      for (let q = 0; q < 3; q++) item('coin', ax - 50 + q * 50, ay + 170 + (q === 1 ? 12 : 0));
     }
     if (R() < 0.5) item('star', x + 180 + sp * (n - 1) + 170, base + 40);
-    const w = rand(D.platMin + 80, D.platMax + 40);
+    const w = rand(D.platMin + 60, D.platMax + 40);
     plat(x + gap, ny, w);
     x += gap + w; y = ny;
   };
 
+  // 착지용 넓은 발판 (특수 지형 뒤에 숨 돌리기). slack/up: 직전 발판이 움직여서 더 멀어지거나 낮아지는 만큼
+  const landing = (slack = 0, up = 0) => {
+    let ny = nextY(-30, 40);
+    if (y - ny > 60) ny = y - 60;
+    const gap = jumpTo(ny - up, slack);
+    const w = rand(D.platMin, D.platMax);
+    plat(x + gap, ny, w);
+    coinLine(x + gap + 100, ny - 60, Math.floor(w / 160));
+    x += gap + w; y = ny;
+  };
+
+  // 징검다리: 짧은 발판 여러 개 (무너지거나 움직일 수도 있음)
+  //  좌우로 움직이는 발판은 한 묶음이 같이 움직여서 서로 간격은 그대로 → 들어갈 때·나올 때 타이밍만 맞추면 됨
+  //  위아래 발판은 번갈아 움직여 물결처럼 (높이 차까지 계산해서 항상 닿게)
+  const stones = (n, o = {}) => {
+    const sx = x;
+    const ampX = o.hmove ? lerp(40, 70, d) : 0, ampY = o.vmove ? lerp(30, 60, d) : 0;
+    const mvs = lerp(1.3, 1.9, d), ph = R() * 6.28;
+    for (let i = 0; i < n; i++) {
+      let ny = nextY(-35, 35);
+      if (y - ny > 50) ny = y - 50;
+      const slack = i === 0 ? ampX * 2 : 0;
+      const up = ampY * 2;
+      const gap = jumpTo(ny - up, slack);
+      const w = rand(D.stoneMin, D.stoneMax) + (ampX || ampY ? 30 : 0);
+      const ext = {};
+      if (o.crumble) ext.crumble = true;
+      if (ampX || ampY) Object.assign(ext, { mvx: ampX, mvy: ampY, mvs, mvp: ph + (ampY ? i * Math.PI : 0) });
+      // 좌우 발판 기준 위치는 왼쪽 끝(-ampX)에서 시작 → 오른쪽으로 ampX*2까지 움직임
+      const p = plat(x + gap + (i === 0 ? ampX : 0), ny, w, false, ext);
+      coinLine(p.x + w / 2 - 23, ny - 60, 2);
+      x = p.x + w; y = ny;
+    }
+    if (o.crumble) introHint('crumble', sx - 160, y - 170, '밟으면 무너져요! 멈추지 말고 건너요');
+    else if (o.vmove || o.hmove) introHint(o.hmove ? 'hmove' : 'vmove', sx - 160, y - 170, '움직이는 발판! 타이밍을 맞춰요');
+    else introHint('stones', sx - 160, y - 170, '징검다리! 리듬에 맞춰 톡톡');
+    x += ampX; // 마지막 발판이 가장 오른쪽까지 갔을 때 기준
+    landing(ampX * 2, ampY);
+  };
+
+  // 계단: 한 칸씩 올라갔다가 내려옴
+  const stairs = (n) => {
+    const sx = x;
+    const up = y > 400; // 낮은 곳에 있으면 올라가고, 높은 곳이면 내려감
+    for (let i = 0; i < n * 2; i++) {
+      const goingUp = (i < n) === up;
+      const ny = clamp(y + (goingUp ? -1 : 1) * rand(45, 58), 300, 478);
+      const gap = Math.max(90, Math.min(rand(100, 150 + d * 30), reach(y - ny)));
+      const w = rand(D.stoneMin + 20, D.stoneMax + 40);
+      const crumble = F.crumble && wd >= 6 && R() < 0.35;
+      plat(x + gap, ny, w, false, crumble ? { crumble: true } : {});
+      coinLine(x + gap + w / 2 - 23, ny - 60, 2);
+      x += gap + w; y = ny;
+    }
+    introHint('stairs', sx - 160, y - 200, '계단! 한 칸씩 점프');
+    landing();
+  };
+
   const upperPath = () => {
-    // 위험 경로(위) vs 안전 경로(아래) — 위 경로 보상이 1.5~2배
     const gap = rand(120, 150);
     const ny = nextY(-20, 30);
     const X0 = x + gap, w = 1300;
@@ -301,44 +372,57 @@ function buildLevel(si) {
     cloud(X0 + 1000, ny - 34);
     coinLine(X0 + 250, ny - 60, 4);
     anchor(X0 + 230, ny - 245);
-    const up = plat(X0 + 470, ny - 190, 560, true);
-    coinLine(up.x + 60, up.y - 55, 9, 50);
-    item(D.heart && R() < 0.35 ? 'heart' : 'star', up.x + up.w - 70, up.y - 95);
+    const upp = plat(X0 + 470, ny - 190, 560, true);
+    coinLine(upp.x + 60, upp.y - 55, 9, 50);
+    item(D.heart && R() < 0.35 ? 'heart' : 'star', upp.x + upp.w - 70, upp.y - 95);
     x += gap + w; y = ny;
   };
 
-  let first = true, introJump = true, introHook = true;
+  // 지형 고르기: 이 월드에서 새로 나온 지형이 판이 올라갈수록 더 자주 나옴
+  const boost = (key) => (NEW === key ? 1.4 + k * 0.45 : 1);
+  const pickPiece = (prog) => {
+    const late = wd >= 8; // 9~10월드: 섞어서 더 어렵게
+    const P = [
+      ['jump', 1.0 - d * 0.5], ['hook', 1.0 - d * 0.4],
+      ['stones', F.stones ? 0.8 * boost('stones') : 0],
+      ['stairs', F.stairs ? 0.55 * boost('stairs') : 0],
+      ['vstones', F.vmove ? 0.6 * boost('vmove') : 0],
+      ['crumble', F.crumble ? 0.6 * boost('crumble') : 0],
+      ['hstones', F.hmove ? 0.6 * boost('hmove') : 0],
+      ['chain', prog > 0.4 ? (F.longChain ? 0.5 * boost('longChain') : 0.3) : 0],
+      ['mixed', late ? 0.9 : 0],
+    ];
+    let sum = 0; for (const [, w] of P) sum += w;
+    let r = R() * sum;
+    for (const [id, w] of P) { r -= w; if (r <= 0) return id; }
+    return 'jump';
+  };
+  const nStones = () => 3 + Math.floor(R() * (2 + d * 3));
+
+  let first = true, introJump = true, introHook = true, upperDone = false;
   let magnetPlaced = false, heartsPlaced = 0;
   while (x < st.len) {
     const prog = x / st.len;
     if (prog < D.learn) {
-      // A. 학습: 넓은 플랫폼 + 고정 훅
-      if (first) { jumpGap({ hint: introJump }); introJump = false; first = false; continue; }
-      if (introHook) { hookGap({ hint: true }); introHook = false; continue; }
+      if (first) { jumpGap({ hint: introJump && si === 0 }); introJump = false; first = false; continue; }
+      if (introHook && si === 0) { hookGap({ hint: true }); introHook = false; continue; }
       R() < 0.5 ? jumpGap() : hookGap();
-    } else if (prog < 0.45) {
-      // B. 리듬: 짧은 발판, 코인 아치, 장애물 소개
-      const r = R();
-      if (!magnetPlaced) { item('magnet', x - 200, y - 110); magnetPlaced = true; }
-      if (r < 0.45) jumpGap({ cloud: R() < D.cloud });
-      else hookGap({ cloud: R() < D.cloud * 0.7, star: R() < 0.3, move: d >= 0.5 && R() < 0.5 });
-    } else if (prog < 0.68) {
-      // C. 선택: 상/하 경로
-      const r = R();
-      if (r < 0.4) upperPath();
-      else if (r < 0.7) hookGap({ star: true, move: d >= 0.2, cloud: R() < D.cloud * 0.5 });
-      else jumpGap({ cloud: true });
-    } else if (prog < 0.9) {
-      // D. 압박: 이동 훅, 먹구름, 연속 훅
-      const r = R();
-      if (D.heart && heartsPlaced < 1) { item('heart', x - 160, y - 120); heartsPlaced++; }
-      if (r < 0.45) chainGap(2 + Math.floor(R() * (D.chainMax - 1)), d >= 0.2);
-      else if (r < 0.7) hookGap({ move: true, cloud: true });
-      else jumpGap({ cloud: true });
-    } else {
-      // E. 피날레: 긴 연속 스윙
-      chainGap(Math.min(D.chainMax + 1, 4), d >= 0.6);
-      break;
+      continue;
+    }
+    if (prog > 0.9) { chainGap(F.longChain ? 3 + (R() < d ? 1 : 0) : 3, F.vmove && d > 0.5); break; }
+    if (!magnetPlaced && prog > 0.2) { item('magnet', x - 200, y - 110); magnetPlaced = true; }
+    if (D.heart && heartsPlaced < 1 && prog > 0.7) { item('heart', x - 160, y - 120); heartsPlaced++; }
+    if (!upperDone && prog > 0.45 && prog < 0.7 && R() < 0.5) { upperPath(); upperDone = true; continue; }
+    switch (pickPiece(prog)) {
+      case 'jump': jumpGap({ cloud: R() < D.cloud }); break;
+      case 'hook': hookGap({ cloud: R() < D.cloud * 0.6, star: R() < 0.3, move: F.vmove && R() < 0.3 + d * 0.4 }); break;
+      case 'stones': stones(nStones()); break;
+      case 'stairs': stairs(2 + Math.floor(R() * (1 + d * 2))); break;
+      case 'vstones': stones(nStones() - 1, { vmove: true }); break;
+      case 'crumble': stones(nStones(), { crumble: true }); break;
+      case 'hstones': stones(nStones() - 1, { hmove: true }); break;
+      case 'chain': chainGap(F.longChain ? 3 + (R() < 0.5 ? 1 : 0) : 2, F.vmove); break;
+      case 'mixed': stones(nStones(), { crumble: R() < 0.5, vmove: R() < 0.4, hmove: R() < 0.3 }); break;
     }
   }
   // goal
@@ -637,7 +721,7 @@ function skinDrawn() { return G.skin && G.skin !== 'default' && !skinTheme() && 
 function runSpeedNow() {
   const prog = clamp(G.p.x / G.level.len, 0, 1);
   const base = CFG.runSpeed + STAGES[G.si].speed * U;
-  return Math.min(CFG.runSpeedMax, lerp(base, base + 1.6 * U, prog)) * G.speedMul;
+  return Math.min(CFG.runSpeedMax, lerp(base, base + 2.2 * U, prog)) * G.speedMul;
 }
 
 function findHookTarget(p) {
@@ -724,7 +808,7 @@ function respawn() {
   // next platform ahead (the one we were trying to reach)
   let target = null;
   for (const pl of G.level.plats) {
-    if (pl.upper) continue;
+    if (pl.upper || pl.fall || pl.crumble || pl.mvx || pl.mvy) continue;
     if (pl.x + pl.w > p.x + 60 && (!target || pl.x < target.x)) target = pl;
   }
   if (!target) target = G.level.plats[G.level.plats.length - 1];
@@ -741,6 +825,23 @@ function step(dt) {
   // anchors / clouds motion
   for (const a of L.anchors) if (a.move) a.y = a.by + Math.sin(G.t * 1.7 + a.ph) * a.move;
   for (const o of L.obs) if (o.move) o.y = o.by + Math.sin(G.t * 2 + o.ph) * o.move;
+  // 움직이는 발판 / 무너지는 발판
+  for (const pl of L.plats) {
+    if (pl.mvx || pl.mvy) {
+      const a = G.t * pl.mvs + pl.mvp;
+      const nx = pl.bx + Math.sin(a) * pl.mvx, ny = pl.by + Math.sin(a) * pl.mvy;
+      pl.dx = nx - pl.x; pl.dy = ny - pl.y; pl.x = nx; pl.y = ny;
+    }
+    if (pl.crT > 0) {
+      pl.crT += dt;
+      if (pl.crT > 0.42) { pl.fall = true; pl.fvy = (pl.fvy || 0) + CFG.gravity * 0.7 * dt; pl.y += pl.fvy * dt; }
+    }
+  }
+  // 서 있는 발판이 움직이면 같이 움직임
+  if (p.onGround && p.gpl && !p.hook) {
+    if (p.gpl.fall) p.onGround = false;
+    else { p.x += p.gpl.dx; p.y += p.gpl.dy; }
+  }
 
   if (G.endT > 0) { // goal reached: cheer & slow down
     G.endT += dt;
@@ -827,6 +928,7 @@ function step(dt) {
     let landed = null;
     if (p.vy >= 0) {
       for (const pl of L.plats) {
+        if (pl.fall) continue;
         if (p.x < pl.x - 10 || p.x > pl.x + pl.w + 8) continue;
         if (prevFeet <= pl.y + 26 && feet >= pl.y && prevFeet <= feet + 1) { if (!landed || pl.y < landed.y) landed = pl; }
       }
@@ -838,8 +940,9 @@ function step(dt) {
         if (p.airT > 0.15) { Audio.sfx('land'); dust(p.x, landed.y, hard ? 8 : 4); p.squash = hard ? 1 : 0.5; }
         if (G.combo > 0 && p.airT > 0.3) G.comboT = CFG.comboTimeout;
       }
-      p.vy = 0; p.onGround = true; p.airT = 0;
-    } else p.onGround = false;
+      p.vy = 0; p.onGround = true; p.airT = 0; p.gpl = landed;
+      if (landed.crumble && !landed.crT) { landed.crT = 0.001; Audio.sfx('land'); }
+    } else { p.onGround = false; p.gpl = null; }
   }
 
   // dead zone
@@ -945,6 +1048,30 @@ function drawLayer(img, par, yOff) {
   let x = -((G.cam.x * par) % w); if (x > 0) x -= w;
   const y = yOff - G.cam.y * par;
   for (; x < W; x += w) ctx.drawImage(img, x, y);
+}
+// 특수 발판: 무너지는 발판은 금 간 모양 + 흔들림, 움직이는 발판은 아래에 작은 구름
+function drawPlat(pl, th) {
+  if (!pl.crumble && !pl.mvx && !pl.mvy) return drawPlatform(pl, th);
+  ctx.save();
+  if (pl.crT > 0 && !pl.fall) ctx.translate(Math.sin(G.t * 70) * 3, 0);
+  if (pl.fall) ctx.globalAlpha = Math.max(0, 1 - pl.crT * 0.9);
+  if (pl.mvx || pl.mvy) { // 받침 구름
+    ctx.fillStyle = 'rgba(255,255,255,.85)';
+    for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(pl.x + pl.w * (0.2 + i * 0.2), pl.y + 44, 22, 0, 7); ctx.fill(); }
+  }
+  drawPlatform({ ...pl, w: pl.w }, th);
+  if (pl.crumble) { // 금
+    ctx.strokeStyle = 'rgba(70,40,20,.75)'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    const R = rng(pl.deco + 7);
+    for (let i = 0; i < Math.max(2, pl.w / 70); i++) {
+      let cx = pl.x + 20 + R() * (pl.w - 40), cy = pl.y + 2;
+      ctx.beginPath(); ctx.moveTo(cx, cy);
+      for (let j = 0; j < 3; j++) { cx += (R() - 0.5) * 22; cy += 9 + R() * 8; ctx.lineTo(cx, cy); }
+      ctx.stroke();
+    }
+    ctx.fillStyle = 'rgba(120,80,50,.18)'; ctx.fillRect(pl.x, pl.y - 4, pl.w, 20);
+  }
+  ctx.restore();
 }
 function drawPlatform(pl, th) {
   const x = pl.x, y = pl.y, w = pl.w;
@@ -1112,7 +1239,7 @@ function render() {
   ctx.translate(-Math.round(G.cam.x) + sx, -Math.round(G.cam.y) + sy);
   const vx0 = G.cam.x - 200, vx1 = G.cam.x + W + 200;
 
-  for (const pl of L.plats) if (pl.x < vx1 && pl.x + pl.w > vx0) drawPlatform(pl, th);
+  for (const pl of L.plats) if (pl.x < vx1 && pl.x + pl.w > vx0 && pl.y < H + 400) drawPlat(pl, th);
   if (L.goal && L.goal.x > vx0 && L.goal.x < vx1) drawGoal(L.goal);
   if (G.si === 0) for (const h of L.hints) if (h.x > vx0 && h.x < vx1) drawHint(h);
 
