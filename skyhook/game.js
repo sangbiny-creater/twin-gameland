@@ -25,10 +25,13 @@ const CFG = {
 
 // 4개 월드 × 3스테이지 = 12스테이지 (1-1 ~ 4-3). 뒤로 갈수록 길고, 빠르고, 어려워진다.
 const STAGES = [];
-[['하늘도시', 'city'], ['숲속 나무마을', 'forest'], ['겨울왕국', 'winter'], ['석양의 항구', 'sunset']].forEach(([name, theme], w) => {
-  for (let k = 0; k < 3; k++) {
-    const i = w * 3 + k;
-    STAGES.push({ name: `${name} ${k + 1}`, label: `${w + 1}-${k + 1}`, seed: 11 + i * 13, len: 20000 + i * 1100, speed: i * 0.11, diff: i * 0.3, theme });
+// 10개 월드 × 5판 = 50판 (1-1 ~ 10-5). 뒤로 갈수록 길고, 빠르고, 어려워진다.
+const PER_WORLD = 5;
+[['하늘도시', 'city'], ['숲속 나무마을', 'forest'], ['겨울왕국', 'winter'], ['석양의 항구', 'sunset'], ['벚꽃마을', 'cherry'],
+  ['구름왕국', 'cloud'], ['바닷속도시', 'ocean'], ['마법숲', 'magic'], ['별빛우주', 'space'], ['황금성', 'golden']].forEach(([name, theme], w) => {
+  for (let k = 0; k < PER_WORLD; k++) {
+    const i = w * PER_WORLD + k;
+    STAGES.push({ name: `${name} ${k + 1}`, label: `${w + 1}-${k + 1}`, world: w, seed: 11 + i * 13, len: 18000 + i * 400, speed: i * 0.03, diff: i * 0.07, theme });
   }
 });
 
@@ -54,7 +57,35 @@ const THEMES = {
     roof: ['#6E4C74', '#7D5583', '#5E4166'], grass: '#C9A06A', grassDark: '#9C7446', dirt: '#B9804F', dirtDark: '#86552F',
     wood: true,
   },
+  // 월드 5~10: 월드 그림(common/worlds/wN.jpg)을 먼 배경으로 깔고, 발판 색만 테마에 맞춤
+  cherry: {
+    img: 5, sky: ['#F7A8C8', '#FCD3E2', '#FFF0F5'], far: '#F5C2D6', mid: ['#E99AB8', '#F2B3CA', '#D98AAE', '#F7C6D8'],
+    roof: ['#B44A6A', '#C9566E', '#8E3A58'], grass: '#FFC2D6', grassDark: '#E58AAE', dirt: '#C98B6A', dirtDark: '#9A5E44',
+  },
+  cloud: {
+    img: 6, sky: ['#7CC4F2', '#C9E8FB', '#F2FAFF'], far: '#DDEFFC', mid: ['#F7FBFF', '#E6F2FC', '#FFFFFF', '#D9EAF8'],
+    roof: ['#4F8FE0', '#E0B040', '#6FA8EA'], grass: '#FFFFFF', grassDark: '#C6DDF2', dirt: '#CFE4F6', dirtDark: '#94B6D8',
+  },
+  ocean: {
+    img: 7, sky: ['#0E4F8C', '#1E86C4', '#5CC8E8'], far: '#2E7FB8', mid: ['#1F6FA8', '#2A88C0', '#1A5E94', '#3496C8'],
+    roof: ['#38C4C8', '#5AD8C0', '#2AA6B8'], grass: '#5FD3C6', grassDark: '#2E9E96', dirt: '#E9D3A6', dirtDark: '#B89A6A', bubbles: true,
+  },
+  magic: {
+    img: 8, sky: ['#1E3A4A', '#2E6A5A', '#5FA878'], far: '#3A6A5A', mid: ['#2E5A48', '#3A7058', '#24503E', '#46805E'],
+    roof: ['#9B5CF0', '#F0A040', '#5CC8E8'], grass: '#5FC46A', grassDark: '#2F8A4A', dirt: '#7A5AA8', dirtDark: '#4E3A78', fireflies: true,
+  },
+  space: {
+    img: 9, sky: ['#0E0828', '#2A1766', '#5A3DB0'], far: '#3A2A7C', mid: ['#2A1F5E', '#3A2C78', '#24195A', '#46368C'],
+    roof: ['#C9A8FF', '#FFC2E0', '#A8E6FF'], grass: '#B9A8FF', grassDark: '#7A5CE0', dirt: '#4A3A7A', dirtDark: '#2E2456', stars: true,
+  },
+  golden: {
+    img: 10, sky: ['#FFC86B', '#FFE2A0', '#FFF6DC'], far: '#FFE0A0', mid: ['#F2C25A', '#E8B040', '#FFD27A', '#DDA036'],
+    roof: ['#C9820F', '#B5600F', '#E09A20'], grass: '#FFE07A', grassDark: '#D9A12E', dirt: '#E9B65A', dirtDark: '#B07E22',
+  },
 };
+// 월드 그림 (메인 화면 지도와 같은 그림)
+const WORLD_IMG = {};
+for (const th of Object.values(THEMES)) if (th.img && !WORLD_IMG[th.img]) { const im = new Image(); im.src = `../common/worlds/w${th.img}.jpg?v=20261022n`; WORLD_IMG[th.img] = im; }
 
 // ---------- save ----------
 const Save = {
@@ -566,7 +597,7 @@ function startStage(si) {
   if (boosts.includes('magnet')) G.magnetT = 20;
   if (boosts.includes('x2')) G.x2T = 30;
   if (boosts.length) popText('부스트: ' + boosts.map((b) => HUB.boostName('skyhook', b)).join(' · '), G.p.x + 60, G.p.y - 120, '#3D8BFF', 24);
-  getBG(skinTheme() || STAGES[si].theme);
+  if (!THEMES[skinTheme() || STAGES[si].theme].img) getBG(skinTheme() || STAGES[si].theme);
   setState('play');
   renderHearts();
   $('hudProgFace').style.backgroundImage = `url(assets/${Save.data.char}_base.jpg)`;
@@ -854,6 +885,23 @@ function drawSky(th) {
   const gr = ctx.createLinearGradient(0, 0, 0, H);
   gr.addColorStop(0, th.sky[0]); gr.addColorStop(0.6, th.sky[1]); gr.addColorStop(1, th.sky[2]);
   ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
+  const img = th.img && WORLD_IMG[th.img];
+  if (img && img.complete && img.naturalWidth) {
+    // world picture, tiled sideways (mirrored so the seams match) with a slow parallax
+    const sc = Math.max(W / img.naturalWidth, (H + 120) / img.naturalHeight), bw = img.naturalWidth * sc, bh = img.naturalHeight * sc;
+    const off = ((G.cam.x * 0.08) % (bw * 2) + bw * 2) % (bw * 2);
+    const y = (H - bh) / 2 - G.cam.y * 0.05 + 30;
+    for (let x = -off, k = 0; x < W; x += bw, k++) {
+      ctx.save();
+      if (k % 2) { ctx.translate(x + bw, 0); ctx.scale(-1, 1); ctx.drawImage(img, 0, y, bw, bh); } else ctx.drawImage(img, x, y, bw, bh);
+      ctx.restore();
+    }
+    // soft veil so platforms and items stay easy to read
+    const v = ctx.createLinearGradient(0, 0, 0, H);
+    v.addColorStop(0, 'rgba(255,255,255,0.10)'); v.addColorStop(1, 'rgba(255,255,255,0.28)');
+    ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+    return;
+  }
   // sun
   ctx.fillStyle = th.wood ? 'rgba(255,236,170,.95)' : 'rgba(255,255,240,.8)';
   ctx.beginPath(); ctx.arc(W * 0.78, th.wood ? 330 : 90, th.wood ? 60 : 40, 0, 7); ctx.fill();
@@ -1009,10 +1057,20 @@ function render() {
   const bgKey = skinTheme() || st.theme, bgTh = THEMES[bgKey];
   if (skinDrawn()) window.Skins.draw(ctx, G.skin, W, H, G.cam.x, -G.cam.y, G.t);
   else {
-    const bg = getBG(bgKey);
     drawSky(bgTh);
-    drawLayer(bg.far, 0.15, 0);
-    drawLayer(bg.mid, 0.4, 60);
+    if (!bgTh.img) { const bg = getBG(bgKey); drawLayer(bg.far, 0.15, 0); drawLayer(bg.mid, 0.4, 60); }
+  }
+  if (!skinDrawn() && (bgTh.bubbles || bgTh.fireflies || bgTh.stars)) {
+    for (let i = 0; i < 36; i++) {
+      const px = ((i * 113 - G.cam.x * 0.3 + Math.sin(G.t * 0.7 + i) * 18) % W + W) % W;
+      const py = bgTh.bubbles ? H - ((i * 71 + G.t * (24 + (i % 5) * 9)) % (H + 40)) : (i * 61 + Math.sin(G.t + i) * 14) % H;
+      const tw = 0.5 + 0.5 * Math.sin(G.t * 3 + i * 1.7);
+      ctx.globalAlpha = bgTh.bubbles ? 0.55 : 0.35 + tw * 0.6;
+      ctx.fillStyle = bgTh.bubbles ? 'rgba(220,250,255,.9)' : bgTh.fireflies ? '#FFF2A0' : '#FFFFFF';
+      ctx.beginPath(); ctx.arc(px, py, bgTh.bubbles ? 3 + (i % 4) : 1.6 + (i % 3) * 0.8, 0, 7); ctx.fill();
+      if (bgTh.bubbles) { ctx.globalAlpha = 0.8; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke(); }
+    }
+    ctx.globalAlpha = 1;
   }
   if (bgTh.snow && !skinDrawn()) {
     ctx.fillStyle = 'rgba(255,255,255,.9)';
@@ -1170,12 +1228,7 @@ function renderStageList() {
   const list = $('stageList'); list.innerHTML = '';
   STAGES.forEach((st, i) => {
     const b = document.createElement('button'); b.className = 'stage' + (i === G.si ? ' on' : '');
-    const th = THEMES[st.theme];
-    const c = document.createElement('canvas'); c.width = 380; c.height = 240;
-    const g = c.getContext('2d'); const gr = g.createLinearGradient(0, 0, 0, 240);
-    gr.addColorStop(0, th.sky[0]); gr.addColorStop(1, th.sky[2]); g.fillStyle = gr; g.fillRect(0, 0, 380, 240);
-    const bg = getBG(st.theme); g.drawImage(bg.far, 0, 0, 760, 540, 0, -20, 380, 270); g.drawImage(bg.mid, 0, 0, 760, 540, 0, 10, 380, 270);
-    b.innerHTML = `<div class="thumb" style="background-image:url(${c.toDataURL('image/jpeg', 0.8)})"><span class="num">${st.label}</span>${Save.data.cleared[i] ? '<span class="clear">CLEAR</span>' : ''}</div><div class="name">${st.name}</div><div class="best">최고 ${Save.data.best[i] || 0}m</div>`;
+    b.innerHTML = `<div class="thumb" style="background-image:url(../common/worlds/w${st.world + 1}.jpg)"><span class="num">${st.label}</span>${Save.data.cleared[i] ? '<span class="clear">CLEAR</span>' : ''}</div><div class="name">${st.name}</div><div class="best">최고 ${Save.data.best[i] || 0}m</div>`;
     b.addEventListener('click', () => { Audio.unlock(); Audio.sfx('ui'); startStage(i); });
     list.appendChild(b);
   });

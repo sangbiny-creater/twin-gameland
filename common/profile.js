@@ -15,24 +15,25 @@
   const FREE_SLOTS = 2;  // 처음엔 2명(은유, 은결)까지 무료
   const MAX_CHARS = 8;
 
+  // 징검다리 게임(스카이훅·사천성)이 같이 쓰는 10개 월드 × 5판 = 50판 (1-1 ~ 10-5)
+  // 배경 그림은 common/worlds/w1.jpg ~ w10.jpg
+  const WORLDS = ['하늘도시', '숲속 나무마을', '겨울왕국', '석양의 항구', '벚꽃마을', '구름왕국', '바닷속도시', '마법숲', '별빛우주', '황금성'];
   const GAMES = {
-    // 4개 월드 × 3스테이지 = 12스테이지 (1-1 ~ 4-3)
-    skyhook: { name: 'Sky Hook Runner', path: 'skyhook/index.html', stages: 12, worlds: ['하늘도시', '숲속 나무마을', '겨울왕국', '석양의 항구'], perWorld: 3 },
+    skyhook: { name: 'Sky Hook Runner', path: 'skyhook/index.html', stages: 50, worlds: WORLDS, perWorld: 5 },
     helicopter: { name: 'Twin Helicopter', path: 'helicopter/index.html' },
     stairs: { name: '계단 오르기', path: 'stairs/index.html' },
-    // 사천성도 스카이훅처럼 판을 깨면서 올라가는 징검다리 (4개 월드 × 3판)
-    shisen: { name: '사천성', path: 'shisen/index.html', stages: 12, worlds: ['꽃 정원', '가을 단풍', '겨울 마을', '달빛 사원'], perWorld: 3 },
+    shisen: { name: '사천성', path: 'shisen/index.html', stages: 50, worlds: WORLDS, perWorld: 5 },
   };
 
   const COIN_RULES = {
-    // 스테이지(0부터) 난이도에 비례: 1-1 클리어 +20, 4-3 클리어 +130. 첫 클리어 +30, 별 1개당 +5
-    skyhook: (r, first) => (r.cleared ? 20 + r.stage * 10 + r.stars * 5 + (first ? 30 : 0) : 0),
+    // 스테이지(0~49) 난이도에 비례: 1-1 클리어 +20 … 10-5 클리어 +167. 첫 클리어 +30, 별 1개당 +5
+    skyhook: (r, first) => (r.cleared ? 20 + r.stage * 3 + r.stars * 5 + (first ? 30 : 0) : 0),
     // 100m 마다 +5 (멀리 갈수록 어려워지므로 거리 = 난이도)
     helicopter: (r) => Math.floor(r.dist / 100) * 5,
     // 50계단(m) 마다 +5
     stairs: (r) => Math.floor(r.dist / 50) * 5,
     // 스카이훅과 같은 징검다리 규칙
-    shisen: (r, first) => (r.cleared ? 20 + r.stage * 10 + r.stars * 5 + (first ? 30 : 0) : 0),
+    shisen: (r, first) => (r.cleared ? 20 + r.stage * 3 + r.stars * 5 + (first ? 30 : 0) : 0),
   };
 
   // ---------- 아이템샵 카탈로그 ----------
@@ -118,7 +119,7 @@
   }
 
   const Hub = {
-    GAMES, FREE_SLOTS, MAX_CHARS, SKINS, BOOSTS, skinsFor,
+    GAMES, WORLDS, FREE_SLOTS, MAX_CHARS, SKINS, BOOSTS, skinsFor,
 
     // ----- 아이템샵 -----
     ownsSkin(game, id, c = this.active()) { return id === 'default' || !!(c && shopOf(c).skins[game] && shopOf(c).skins[game].includes(id)); },

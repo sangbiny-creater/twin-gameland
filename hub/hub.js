@@ -173,19 +173,16 @@ function renderLobby() {
   grid.appendChild(soon);
 }
 // ---------- 3. 스카이훅 징검다리 ----------
-// 가로 화면: 왼쪽 → 오른쪽으로 이어지는 길 / 폰 세로 화면: 아래 → 위로 올라가는 길
-const STONE_GAP = 150, WORLD_GAP = 60, PAD = 110;
+// 월드마다 배경 그림 카드 1장, 그 안에서 5개 돌다리가 아래 → 위로 올라감
+// 가로 화면: 카드가 옆으로 나란히 (좌우로 밀기) / 폰 세로 화면: 카드가 위아래로 (위아래로 밀기)
 let portraitNow = false;
-function mapLayout(N, K, view) {
-  const along = (i) => PAD + i * STONE_GAP + Math.floor(i / K) * WORLD_GAP; // distance along the path
-  const len = along(N - 1) + PAD + 60;
-  const wave = (i) => Math.sin(i * 1.1);
-  if (portraitNow) {
-    const w = view.w;
-    return { width: w, height: len, pos: (i) => ({ x: (0.5 + wave(i) * 0.27) * w, y: len - along(i) }) };
-  }
-  const h = view.h;
-  return { width: len, height: h, pos: (i) => ({ x: along(i), y: (0.55 + wave(i) * 0.22) * h }) };
+const WORLD_BG = (w) => `common/worlds/w${w + 1}.jpg?v=20261022n`;
+// 판 위치 (카드 안에서 %): 아래(1판) → 위(5판) 지그재그, 월드마다 조금씩 다르게
+function stoneSpot(w, k) {
+  const ys = [88, 72, 56, 40, 24];
+  const flip = w % 2 ? -1 : 1;
+  const xs = [56, 34, 62, 36, 54];
+  return { x: 50 + (xs[k] - 50) * flip, y: ys[k] };
 }
 function renderMap() {
   const GM = Hub.GAMES[mapGame], c = Hub.active(), N = GM.stages, K = GM.perWorld;
@@ -194,51 +191,48 @@ function renderMap() {
   const myStars = Object.values(Hub.rec(mapGame, c).stages).reduce((a, x) => a + (x.stars || 0), 0);
   $('mapProg').textContent = `${Hub.stageCleared(mapGame, c)} / ${N} 클리어 · ⭐ ${myStars}`;
   const scroller = $('mapScroll'), track = $('mapTrack'); track.innerHTML = '';
-  const L = mapLayout(N, K, { w: scroller.clientWidth || 500, h: scroller.clientHeight || 380 });
-  track.style.width = L.width + 'px'; track.style.height = L.height + 'px';
-  // worlds (colored zones)
+  track.className = 'map-track ' + (portraitNow ? 'vert' : 'horiz');
+  track.style.width = ''; track.style.height = '';
+  const next = Hub.stageNext(mapGame, c), allClear = Hub.stageCleared(mapGame, c) === N;
+  const meAt = allClear ? N - 1 : next;
+  let currentPanel = null;
   GM.worlds.forEach((name, w) => {
-    const p0 = L.pos(w * K), p1 = L.pos(w * K + K - 1);
-    const d = document.createElement('div'); d.className = `world ${mapGame} w${w}`;
-    if (portraitNow) { d.style.cssText = `left:10px;right:10px;top:${p1.y - 80}px;height:${p0.y - p1.y + 160}px;bottom:auto`; }
-    else { d.style.left = (p0.x - 80) + 'px'; d.style.width = (p1.x - p0.x + 160) + 'px'; }
-    d.innerHTML = `<span class="w-name">${w + 1}. ${name}</span>`;
-    track.appendChild(d);
+    const panel = document.createElement('div');
+    const worldOpen = Hub.stageUnlocked(mapGame, w * K, c);
+    panel.className = 'wpanel' + (worldOpen ? '' : ' locked');
+    panel.style.backgroundImage = `url(${WORLD_BG(w)})`;
+    panel.innerHTML = `<div class="wtitle w${w % 5}">${w + 1}. ${name}</div>`;
+    // dotted path through the 5 stones
+    const pts = []; for (let k = 0; k < K; k++) { const p = stoneSpot(w, k); pts.push(`${p.x},${p.y}`); }
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'wpath'); svg.setAttribute('viewBox', '0 0 100 100'); svg.setAttribute('preserveAspectRatio', 'none');
+    svg.innerHTML = `<polyline points="${pts.join(' ')}" fill="none" stroke="#fff" stroke-width="2.4" stroke-dasharray="0.1 5" stroke-linecap="round" vector-effect="non-scaling-stroke" opacity=".95"/>`;
+    panel.appendChild(svg);
+    for (let k = 0; k < K; k++) {
+      const i = w * K + k, p = stoneSpot(w, k), st = Hub.stage(mapGame, i, c), open = Hub.stageUnlocked(mapGame, i, c);
+      const b = document.createElement('button');
+      b.className = 'stone ' + (st.cleared ? 'cleared' : open ? 'current' : 'locked');
+      b.style.left = p.x + '%'; b.style.top = p.y + '%';
+      const stars = st.cleared ? '⭐'.repeat(st.stars) + '☆'.repeat(3 - st.stars) : '';
+      b.innerHTML = open ? `<span class="sl">${Hub.stageLabel(i, mapGame)}</span><span class="ss">${stars}</span>` : `<span class="lock">🔒</span><span class="ss">${Hub.stageLabel(i, mapGame)}</span>`;
+      b.addEventListener('click', () => {
+        if (!open) { blip(300); toast('앞 스테이지를 먼저 깨요!'); return; }
+        blip(); openStage(i);
+      });
+      panel.appendChild(b);
+      if (i === meAt) {
+        const me = document.createElement('div'); me.className = 'map-me';
+        me.style.backgroundImage = `url(${face(c)})`; me.style.left = p.x + '%'; me.style.top = p.y + '%';
+        panel.appendChild(me); currentPanel = panel;
+      }
+    }
+    if (w === GM.worlds.length - 1) { const g = document.createElement('div'); g.className = 'goal-flag'; g.textContent = '🏆'; panel.appendChild(g); }
+    track.appendChild(panel);
   });
-  // dashed path
-  const pts = []; for (let i = 0; i < N; i++) { const p = L.pos(i); pts.push(`${p.x},${p.y}`); }
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('class', 'map-path'); svg.setAttribute('width', L.width); svg.setAttribute('height', L.height);
-  svg.innerHTML = `<polyline points="${pts.join(' ')}" fill="none" stroke="#fff" stroke-width="8" stroke-dasharray="4 16" stroke-linecap="round" opacity=".9"/>`;
-  track.appendChild(svg);
-  const next = Hub.stageNext(mapGame, c);
-  const allClear = Hub.stageCleared(mapGame, c) === N;
-  for (let i = 0; i < N; i++) {
-    const p = L.pos(i), st = Hub.stage(mapGame, i, c), open = Hub.stageUnlocked(mapGame, i, c);
-    const b = document.createElement('button');
-    const cls = st.cleared ? 'cleared' : open ? 'current' : 'locked';
-    b.className = 'stone ' + cls;
-    b.style.left = p.x + 'px'; b.style.top = p.y + 'px';
-    const stars = st.cleared ? '⭐'.repeat(st.stars) + '☆'.repeat(3 - st.stars) : '';
-    b.innerHTML = open ? `<span class="sl">${Hub.stageLabel(i, mapGame)}</span><span class="ss">${stars}</span>` : '<span class="lock">🔒</span><span class="ss">' + Hub.stageLabel(i, mapGame) + '</span>';
-    b.addEventListener('click', () => {
-      if (!open) { blip(300); toast('앞 스테이지를 먼저 깨요!'); return; }
-      blip(); openStage(i);
-    });
-    track.appendChild(b);
-  }
-  const goal = document.createElement('div'); goal.className = 'goal-flag'; goal.textContent = '🏁';
-  const gp = L.pos(N - 1);
-  if (portraitNow) { goal.style.left = (gp.x + 20) + 'px'; goal.style.top = (gp.y - 40) + 'px'; }
-  else { goal.style.left = (gp.x + 80) + 'px'; goal.style.top = gp.y + 'px'; }
-  track.appendChild(goal);
-  const me = document.createElement('div'); me.className = 'map-me';
-  const mp = L.pos(allClear ? N - 1 : next);
-  me.style.backgroundImage = `url(${face(c)})`; me.style.left = mp.x + 'px'; me.style.top = mp.y + 'px';
-  track.appendChild(me);
   requestAnimationFrame(() => {
-    if (portraitNow) scroller.scrollTop = Math.max(0, mp.y - scroller.clientHeight * 0.6);
-    else scroller.scrollLeft = Math.max(0, mp.x - scroller.clientWidth * 0.4);
+    if (!currentPanel) return;
+    if (portraitNow) scroller.scrollTop = Math.max(0, currentPanel.offsetTop - 8);
+    else scroller.scrollLeft = Math.max(0, currentPanel.offsetLeft - (scroller.clientWidth - currentPanel.offsetWidth) / 2);
   });
 }
 let stageSel = 0;

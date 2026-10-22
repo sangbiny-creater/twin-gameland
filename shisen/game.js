@@ -6,21 +6,28 @@
 // 폰: 세로 화면 (가로로 들면 화면을 돌려서 세로 유지) / PC: 창 전체를 쓰는 가로 화면 (보드도 가로로 눕힘)
 
 let W = 540, H = 960;
-const TILE_TYPES = ['eunyu', 'eungyeol', 'strawberry', 'banana', 'grape', 'cherry', 'orange', 'peach', 'watermelon', 'carrot', 'corn', 'mushroom',
-  'clover', 'flower', 'star', 'heart', 'leaf', 'snowflake', 'sun', 'cloud', 'moon', 'cat', 'dog', 'paw'];
-// 스테이지 (세로 기준 가로칸 c × 세로칸 r, 그림 종류 t, 제한 시간 s초)
-const STAGES = [
-  { c: 4, r: 6, t: 6, s: 150 }, { c: 6, r: 6, t: 9, s: 160 }, { c: 6, r: 8, t: 12, s: 190 },
-  { c: 6, r: 8, t: 14, s: 180 }, { c: 8, r: 8, t: 16, s: 220 }, { c: 8, r: 10, t: 20, s: 260 },
-  { c: 8, r: 10, t: 22, s: 250 }, { c: 8, r: 12, t: 24, s: 300 }, { c: 10, r: 12, t: 24, s: 340 },
-  { c: 10, r: 12, t: 24, s: 320 }, { c: 10, r: 14, t: 24, s: 380 }, { c: 10, r: 14, t: 24, s: 360 },
-];
-const WORLDS = ['꽃 정원', '가을 단풍', '겨울 마을', '달빛 사원'];
-const WORLD_BG = [0, 1, 2, 4];                                    // 월드별 기본 배경 그림
-const SKIN_BG = { autumn: 1, winter: 2, night: 3, moon: 4 };      // 아이템샵 배경 스킨
+const BASE_TILES = ['strawberry', 'banana', 'grape', 'cherry', 'orange', 'peach', 'watermelon', 'carrot', 'corn', 'mushroom',
+  'clover', 'flower', 'star', 'heart', 'leaf', 'snowflake', 'sun', 'cloud', 'moon', 'cat', 'dog', 'paw'].map((n) => 't_' + n);
+// 10개 월드 × 5판 = 50판. 월드 5~10은 그 월드 전용 그림 타일(14종)을 먼저 쓰고, 은유·은결 얼굴 타일은 항상 들어감
+const WORLDS = ['하늘도시', '숲속 나무마을', '겨울왕국', '석양의 항구', '벚꽃마을', '구름왕국', '바닷속도시', '마법숲', '별빛우주', '황금성'];
+const PER_WORLD = 5;
+const SIZES = [[4, 6], [6, 6], [6, 8], [8, 8], [8, 10], [8, 12], [10, 12], [10, 14]];
+// 스테이지 i: 보드는 판이 갈수록 커지고(가로칸 c × 세로칸 r), 그림 종류 t가 늘고, 타일당 시간은 조금씩 줄어듦
+const STAGES = Array.from({ length: WORLDS.length * PER_WORLD }, (_, i) => {
+  const [c, r] = SIZES[Math.min(SIZES.length - 1, Math.floor(i / 6.5))];
+  const t = Math.min(24, 6 + Math.floor(i * 0.6));
+  const s = Math.round((c * r * (6.4 - i * 0.055)) / 10) * 10;
+  return { c, r, t, s };
+});
+function tilePool(si) {
+  const w = Math.floor(si / PER_WORLD);
+  const themed = w >= 4 ? Array.from({ length: 14 }, (_, k) => `w${w + 1}_${k}`).filter((n) => !(w === 4 && (n === 'w5_2' || n === 'w5_3'))) : [];
+  return ['t_eunyu', 't_eungyeol', ...shuffleArr(themed), ...shuffleArr(BASE_TILES.slice())];
+}
+const SKIN_BG = { autumn: 1, winter: 2, night: 3, moon: 4 };      // 아이템샵 배경 스킨 (assets/bg_*.jpg)
 const COMBO_WINDOW = 4;  // 초: 이 안에 다음 짝을 없애면 콤보
-const label = (i) => `${Math.floor(i / 3) + 1}-${(i % 3) + 1}`;
-const stageName = (i) => `${WORLDS[Math.floor(i / 3)]} ${(i % 3) + 1}`;
+const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
+const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
 const Save = {
@@ -41,10 +48,12 @@ const mmss = (t) => { t = Math.max(0, Math.ceil(t)); return `${String(Math.floor
 function shuffleArr(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 // ---------- sprites ----------
-const ASSET_V = '20261022j';
+const ASSET_V = '20261022n';
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
 fetch(`assets/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => { SP.f = j; SP.img.onload = () => { SP.ready = true; }; SP.img.src = `assets/sprites.webp?v=${ASSET_V}`; });
 for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg_${i}.jpg?v=${ASSET_V}`; SP.bg.push(im); }
+// 월드 배경 (메인 화면 지도와 같은 그림)
+SP.world = WORLDS.map((_, w) => { const im = new Image(); im.src = `../common/worlds/w${w + 1}.jpg?v=${ASSET_V}`; return im; });
 function spr(name, x, y, w, h, alpha = 1) {
   if (!SP.ready || !SP.f[name]) return;
   const [sx, sy, sw, sh] = SP.f[name];
@@ -187,8 +196,8 @@ function buildBoard(si) {
   const portrait = !wideLayout();
   G.cols = portrait ? st.c : st.r; G.rows = portrait ? st.r : st.c;
   const n = G.cols * G.rows, pairs = n / 2;
-  const types = shuffleArr([...Array(TILE_TYPES.length).keys()]).slice(0, st.t);
-  if (!types.includes(0)) types[0] = 0; if (!types.includes(1)) types[1 % types.length] = 1; // 은유·은결 얼굴 타일은 항상
+  G.pool = tilePool(si).slice(0, st.t);
+  const types = [...Array(G.pool.length).keys()];
   const tiles = [];
   for (let p = 0; p < pairs; p++) { const t = types[p % types.length]; tiles.push(t, t); }
   for (let tries = 0; tries < 60; tries++) {
@@ -360,8 +369,7 @@ function cellFromPoint(px, py) {
 
 // ---------- render ----------
 function drawBg() {
-  const idx = SKIN_BG[G.skin] != null ? SKIN_BG[G.skin] : WORLD_BG[Math.floor(G.si / 3)];
-  const img = SP.bg[idx];
+  const img = SKIN_BG[G.skin] != null ? SP.bg[SKIN_BG[G.skin]] : SP.world[Math.floor(G.si / PER_WORLD)];
   if (img && img.complete && img.naturalWidth) {
     const s = Math.max(W / img.naturalWidth, H / img.naturalHeight);
     const bw = img.naturalWidth * s, bh = img.naturalHeight * s;
@@ -397,12 +405,12 @@ function render() {
       ctx.fillStyle = sel ? 'rgba(255,211,77,.9)' : `rgba(111,211,255,${0.5 + pulse * 0.4})`;
       ctx.beginPath(); ctx.roundRect(c.x - BL.tw * 0.5, c.y - BL.th * 0.47 + lift, BL.tw, BL.th * 0.96, 10); ctx.fill(); ctx.restore();
     }
-    spr('t_' + TILE_TYPES[t], c.x, c.y + lift, BL.tw * 0.94, BL.th * 0.94);
+    spr(G.pool[t], c.x, c.y + lift, BL.tw * 0.94, BL.th * 0.94);
   }
   // tiles being removed: pop + fade
   for (const r of G.removing) {
     const c = cellCenter(r), k = r.t / 0.35;
-    spr('t_' + TILE_TYPES[r.type], c.x, c.y - k * 10, BL.tw * 0.94 * (1 + k * 0.25), BL.th * 0.94 * (1 + k * 0.25), 1 - k);
+    spr(G.pool[r.type], c.x, c.y - k * 10, BL.tw * 0.94 * (1 + k * 0.25), BL.th * 0.94 * (1 + k * 0.25), 1 - k);
   }
   // connect lines
   for (const l of G.lines) {
