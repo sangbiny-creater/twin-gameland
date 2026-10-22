@@ -1222,7 +1222,7 @@ function pauseGame() { if (G.state === 'play' && G.endT === 0) { setState('pause
 function resumeGame() { if (G.state === 'pause') { setState('play'); Audio.startBgm(); last = performance.now(); } }
 function goHome() {
   Audio.stopBgm();
-  if (HUB) location.href = '../index.html#map'; else setState('home');
+  if (HUB) location.href = '../index.html#map-skyhook'; else setState('home');
 }
 // 메인 화면에서 스테이지를 골라 들어오면: 출발 대기 화면부터 (첫 탭에 소리 켜짐)
 function showReady(si) {

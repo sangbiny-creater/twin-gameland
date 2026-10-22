@@ -26,15 +26,19 @@ function toast(text) {
 
 // ---------- routing ----------
 const SCREENS = { select: 'scrSelect', lobby: 'scrLobby', map: 'scrMap', records: 'scrRecords' };
+let mapGame = 'skyhook'; // 징검다리 지도에 보여 줄 게임 (스카이훅 / 사천성)
 function go(name) {
+  if (name.startsWith('map-')) { mapGame = name.slice(4); name = 'map'; }
   if (name !== 'select' && !Hub.active()) name = 'select';
-  if (location.hash !== '#' + name) history.replaceState(null, '', '#' + name);
+  const hash = name === 'map' ? 'map-' + mapGame : name;
+  if (location.hash !== '#' + hash) history.replaceState(null, '', '#' + hash);
   for (const [k, id] of Object.entries(SCREENS)) $(id).classList.toggle('hidden', k !== name);
   closeModals();
   ({ select: renderSelect, lobby: renderLobby, map: renderMap, records: renderRecords })[name]();
 }
-window.addEventListener('pageshow', () => { Hub.reload(); go((location.hash || '#select').slice(1) in SCREENS ? location.hash.slice(1) : 'select'); });
-window.addEventListener('hashchange', () => { const n = location.hash.slice(1); if (n in SCREENS) go(n); });
+const routeOk = (n) => n in SCREENS || (n.startsWith('map-') && Hub.GAMES[n.slice(4)] && Hub.GAMES[n.slice(4)].stages);
+window.addEventListener('pageshow', () => { Hub.reload(); const n = (location.hash || '#select').slice(1); go(routeOk(n) ? n : 'select'); });
+window.addEventListener('hashchange', () => { const n = location.hash.slice(1); if (routeOk(n)) go(n); });
 
 function openModal(id) { closeModals(); $(id).classList.remove('hidden'); }
 function closeModals() { document.querySelectorAll('.modal').forEach((m) => m.classList.add('hidden')); }
@@ -120,17 +124,22 @@ function openBuy() {
 
 // ---------- 2. 로비 ----------
 // 게임 목록: 새 게임은 여기에 한 줄 추가 (썸네일, 열기, 로비/기록에 보일 문구)
+const stageSub = (g, c) => `징검다리 ${Hub.stageCleared(g, c)} / ${Hub.GAMES[g].stages} · 다음 ${Hub.stageLabel(Hub.stageNext(g, c), g)}`;
 const GAME_CARDS = [
-  { id: 'skyhook', name: 'Sky Hook Runner', thumb: 'skyhook/assets/keyart.jpg', open: () => go('map'),
-    sub: (c) => `징검다리 ${Hub.skyhookCleared(c)} / ${Hub.GAMES.skyhook.stages} · 다음 ${Hub.stageLabel(Hub.skyhookNext(c))}`,
-    rec: (c, r) => `징검다리 <b>${Hub.skyhookCleared(c)} / ${Hub.GAMES.skyhook.stages}</b> · ${r.plays}번 도전<br>최고 거리 <b>${r.best}m</b> · 모은 코인 <b>${r.coins}</b>` },
-  { id: 'helicopter', name: 'Twin Helicopter', thumb: 'helicopter/assets/keyart.jpg', open: () => { location.href = Hub.GAMES.helicopter.path; },
+  { id: 'skyhook', name: 'Sky Hook Runner', thumb: 'hub/card_skyhook.jpg', open: () => go('map-skyhook'),
+    sub: (c) => stageSub('skyhook', c),
+    rec: (c, r) => `징검다리 <b>${Hub.stageCleared('skyhook', c)} / 12</b> · ${r.plays}번 도전<br>최고 거리 <b>${r.best}m</b> · 모은 코인 <b>${r.coins}</b>` },
+  { id: 'helicopter', name: 'Twin Helicopter', thumb: 'hub/card_helicopter.jpg', open: () => { location.href = Hub.GAMES.helicopter.path; },
     sub: (c, r) => (r.plays ? `BEST ${r.best}m · ${r.plays}번 비행` : '아직 안 해봤어요'),
     rec: (c, r) => `BEST <b>${r.best}m</b> · ${r.plays}번 비행<br>모은 코인 <b>${r.coins}</b>` },
-  { id: 'stairs', name: '계단 오르기', thumb: 'stairs/assets/keyart.jpg', thumbPos: 'center 30%', open: () => { location.href = Hub.GAMES.stairs.path; }, portrait: true,
+  { id: 'stairs', name: '계단 오르기', thumb: 'hub/card_stairs.jpg', open: () => { location.href = Hub.GAMES.stairs.path; }, portrait: true,
     sub: (c, r) => (r.plays ? `BEST ${r.best}m · ${r.plays}번 도전` : '폰은 세로로 해요'),
     rec: (c, r) => `BEST <b>${r.best}m</b> · ${r.plays}번 도전<br>모은 코인 <b>${r.coins}</b>` },
+  { id: 'shisen', name: '사천성', thumb: 'hub/card_shisen.jpg', open: () => go('map-shisen'), portrait: true,
+    sub: (c) => stageSub('shisen', c),
+    rec: (c, r) => `징검다리 <b>${Hub.stageCleared('shisen', c)} / 12</b> · ${r.plays}번 도전<br>모은 코인 <b>${r.coins}</b>` },
 ];
+const mmss = (t) => `${Math.floor(t / 60)}분 ${String(t % 60).padStart(2, '0')}초`;
 function renderLobby() {
   const c = Hub.active();
   $('meFace').src = face(c); $('meName').textContent = c.name;
@@ -179,16 +188,18 @@ function mapLayout(N, K, view) {
   return { width: len, height: h, pos: (i) => ({ x: along(i), y: (0.55 + wave(i) * 0.22) * h }) };
 }
 function renderMap() {
-  const c = Hub.active(), N = Hub.GAMES.skyhook.stages, K = Hub.GAMES.skyhook.perWorld;
+  const GM = Hub.GAMES[mapGame], c = Hub.active(), N = GM.stages, K = GM.perWorld;
+  $('mapName').textContent = GM.name;
   $('mapFace').src = face(c); $('mapCoins').textContent = c.coins;
-  $('mapProg').textContent = `${Hub.skyhookCleared(c)} / ${N} 클리어 · ⭐ ${Hub.starsTotal(c)}`;
+  const myStars = Object.values(Hub.rec(mapGame, c).stages).reduce((a, x) => a + (x.stars || 0), 0);
+  $('mapProg').textContent = `${Hub.stageCleared(mapGame, c)} / ${N} 클리어 · ⭐ ${myStars}`;
   const scroller = $('mapScroll'), track = $('mapTrack'); track.innerHTML = '';
   const L = mapLayout(N, K, { w: scroller.clientWidth || 500, h: scroller.clientHeight || 380 });
   track.style.width = L.width + 'px'; track.style.height = L.height + 'px';
   // worlds (colored zones)
-  Hub.GAMES.skyhook.worlds.forEach((name, w) => {
+  GM.worlds.forEach((name, w) => {
     const p0 = L.pos(w * K), p1 = L.pos(w * K + K - 1);
-    const d = document.createElement('div'); d.className = `world w${w}`;
+    const d = document.createElement('div'); d.className = `world ${mapGame} w${w}`;
     if (portraitNow) { d.style.cssText = `left:10px;right:10px;top:${p1.y - 80}px;height:${p0.y - p1.y + 160}px;bottom:auto`; }
     else { d.style.left = (p0.x - 80) + 'px'; d.style.width = (p1.x - p0.x + 160) + 'px'; }
     d.innerHTML = `<span class="w-name">${w + 1}. ${name}</span>`;
@@ -200,16 +211,16 @@ function renderMap() {
   svg.setAttribute('class', 'map-path'); svg.setAttribute('width', L.width); svg.setAttribute('height', L.height);
   svg.innerHTML = `<polyline points="${pts.join(' ')}" fill="none" stroke="#fff" stroke-width="8" stroke-dasharray="4 16" stroke-linecap="round" opacity=".9"/>`;
   track.appendChild(svg);
-  const next = Hub.skyhookNext(c);
-  const allClear = Hub.skyhookCleared(c) === N;
+  const next = Hub.stageNext(mapGame, c);
+  const allClear = Hub.stageCleared(mapGame, c) === N;
   for (let i = 0; i < N; i++) {
-    const p = L.pos(i), st = Hub.skyhookStage(i, c), open = Hub.skyhookUnlocked(i, c);
+    const p = L.pos(i), st = Hub.stage(mapGame, i, c), open = Hub.stageUnlocked(mapGame, i, c);
     const b = document.createElement('button');
     const cls = st.cleared ? 'cleared' : open ? 'current' : 'locked';
     b.className = 'stone ' + cls;
     b.style.left = p.x + 'px'; b.style.top = p.y + 'px';
     const stars = st.cleared ? '⭐'.repeat(st.stars) + '☆'.repeat(3 - st.stars) : '';
-    b.innerHTML = open ? `<span class="sl">${Hub.stageLabel(i)}</span><span class="ss">${stars}</span>` : '<span class="lock">🔒</span><span class="ss">' + Hub.stageLabel(i) + '</span>';
+    b.innerHTML = open ? `<span class="sl">${Hub.stageLabel(i, mapGame)}</span><span class="ss">${stars}</span>` : '<span class="lock">🔒</span><span class="ss">' + Hub.stageLabel(i, mapGame) + '</span>';
     b.addEventListener('click', () => {
       if (!open) { blip(300); toast('앞 스테이지를 먼저 깨요!'); return; }
       blip(); openStage(i);
@@ -233,16 +244,19 @@ function renderMap() {
 let stageSel = 0;
 function openStage(i) {
   stageSel = i;
-  const st = Hub.skyhookStage(i);
-  $('stTitle').textContent = `${Hub.stageLabel(i)} ${Hub.stageName(i)}`;
+  const st = Hub.stage(mapGame, i);
+  $('stTitle').textContent = `${Hub.stageLabel(i, mapGame)} ${Hub.stageName(i, mapGame)}`;
   $('stStars').innerHTML = [0, 1, 2].map((k) => `<span class="${k < st.stars ? '' : 'off'}">⭐</span>`).join('');
+  const shisen = mapGame === 'shisen';
+  const bestTxt = shisen ? (st.bestTime ? `가장 빨리 깬 기록 <b>${mmss(st.bestTime)}</b>` : '') : `최고 기록 <b>${st.best}m</b>`;
+  const starTip = shisen ? '시간이 많이 남을수록 별이 늘어요.' : '남은 하트가 많을수록 별이 늘어요.';
   $('stInfo').innerHTML = st.cleared
-    ? `클리어! 최고 기록 <b>${st.best}m</b> · ${st.plays}번 도전<br>남은 하트가 많을수록 별이 늘어요.`
-    : st.plays ? `아직 못 깼어요. 최고 <b>${st.best}m</b> · ${st.plays}번 도전<br>깨면 다음 돌다리가 열려요!` : '처음 도전하는 스테이지예요!<br>깨면 다음 돌다리가 열려요.';
+    ? `클리어! ${bestTxt} · ${st.plays}번 도전<br>${starTip}`
+    : st.plays ? `아직 못 깼어요. ${shisen ? '' : bestTxt + ' · '}${st.plays}번 도전<br>깨면 다음 돌다리가 열려요!` : '처음 도전하는 스테이지예요!<br>깨면 다음 돌다리가 열려요.';
   $('btnPlayStage').textContent = st.cleared ? '다시 하기' : '출발!';
   openModal('popStage');
 }
-$('btnPlayStage').addEventListener('click', () => { blip(880); location.href = `${Hub.GAMES.skyhook.path}?stage=${stageSel}`; });
+$('btnPlayStage').addEventListener('click', () => { blip(880); location.href = `${Hub.GAMES[mapGame].path}?stage=${stageSel}`; });
 
 // ---------- 4. 기록 ----------
 function fmtDate(t) { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; }
@@ -256,8 +270,8 @@ function renderRecords() {
   if (!c.history.length) list.innerHTML = '<li><span>아직 기록이 없어요. 게임을 해봐요!</span></li>';
   for (const h of c.history) {
     const li = document.createElement('li');
-    const what = h.game === 'skyhook'
-      ? `스카이훅 ${Hub.stageLabel(h.stage)} <span class="${h.cleared ? 'ok' : 'no'}">${h.cleared ? '클리어 ' + '⭐'.repeat(h.stars) : '실패'}</span>`
+    const what = (h.game === 'skyhook' || h.game === 'shisen')
+      ? `${h.game === 'shisen' ? '사천성' : '스카이훅'} ${Hub.stageLabel(h.stage, h.game)} <span class="${h.cleared ? 'ok' : 'no'}">${h.cleared ? '클리어 ' + '⭐'.repeat(h.stars) : '실패'}</span>`
       : `${h.game === 'stairs' ? '계단 오르기' : '헬리콥터'} <span class="ok">${h.dist}m</span>`;
     li.innerHTML = `<span>${what}</span><span>+${h.earned} <i class="coin"></i><span class="when">${fmtDate(h.at)}</span></span>`;
     list.appendChild(li);

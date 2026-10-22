@@ -1,0 +1,22 @@
+{
+  "name": "은유와 은결의 사천성",
+  "short_name": "사천성",
+  "start_url": "./index.html",
+  "scope": "../",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#3A2A5C",
+  "theme_color": "#3A2A5C",
+  "icons": [
+    {
+      "src": "assets/icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

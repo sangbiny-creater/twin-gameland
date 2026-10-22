@@ -20,6 +20,8 @@
     skyhook: { name: 'Sky Hook Runner', path: 'skyhook/index.html', stages: 12, worlds: ['하늘도시', '숲속 나무마을', '겨울왕국', '석양의 항구'], perWorld: 3 },
     helicopter: { name: 'Twin Helicopter', path: 'helicopter/index.html' },
     stairs: { name: '계단 오르기', path: 'stairs/index.html' },
+    // 사천성도 스카이훅처럼 판을 깨면서 올라가는 징검다리 (4개 월드 × 3판)
+    shisen: { name: '사천성', path: 'shisen/index.html', stages: 12, worlds: ['꽃 정원', '가을 단풍', '겨울 마을', '달빛 사원'], perWorld: 3 },
   };
 
   const COIN_RULES = {
@@ -29,6 +31,8 @@
     helicopter: (r) => Math.floor(r.dist / 100) * 5,
     // 50계단(m) 마다 +5
     stairs: (r) => Math.floor(r.dist / 50) * 5,
+    // 스카이훅과 같은 징검다리 규칙
+    shisen: (r, first) => (r.cleared ? 20 + r.stage * 10 + r.stars * 5 + (first ? 30 : 0) : 0),
   };
 
   // ---------- 아이템샵 카탈로그 ----------
@@ -43,6 +47,17 @@
     { id: 'space', name: '우주 여행', price: 300 },
     { id: 'desert', name: '사막 오아시스', price: 300 },
   ];
+  // 게임마다 배경이 다르면 여기에 따로 (없으면 위 SKINS를 씀)
+  const SKINS_BY_GAME = {
+    shisen: [
+      { id: 'default', name: '기본 정원', price: 0 },
+      { id: 'autumn', name: '가을 단풍', price: 200 },
+      { id: 'winter', name: '겨울 마을', price: 300 },
+      { id: 'night', name: '야경 도시', price: 300 },
+      { id: 'moon', name: '달빛 사원', price: 300 },
+    ],
+  };
+  const skinsFor = (game) => SKINS_BY_GAME[game] || SKINS;
   // 게임 부스트: 1개씩 사서 모아 두고, '사용중'으로 켜 둔 것만 게임을 시작할 때 1개씩 쓰임
   const BOOSTS = {
     skyhook: [
@@ -65,6 +80,14 @@
       { id: 'wing', name: '날개', desc: '처음 15칸 무적', price: 200 },
       { id: 'magnet', name: '코인 흡수', desc: '처음 20초 자석', price: 300 },
       { id: 'x2', name: '코인 2배', desc: '처음 20초 코인 2배', price: 300 },
+    ],
+    shisen: [
+      { id: 'hint', name: '힌트 +3', desc: '짝 하나를 알려줘요', price: 200 },
+      { id: 'shuffle', name: '섞기 +2', desc: '타일 위치를 섞어요', price: 200 },
+      { id: 'time', name: '시작 시간 +30초', desc: '제한 시간이 늘어요', price: 200 },
+      { id: 'bomb', name: '폭탄 +1', desc: '짝 하나를 바로 없애요', price: 300 },
+      { id: 'find', name: '자동 찾기', desc: '처음 20초 짝을 표시', price: 300 },
+      { id: 'combo', name: '콤보 보너스', desc: '콤보 코인 2배', price: 300 },
     ],
   };
 
@@ -95,13 +118,13 @@
   }
 
   const Hub = {
-    GAMES, FREE_SLOTS, MAX_CHARS, SKINS, BOOSTS,
+    GAMES, FREE_SLOTS, MAX_CHARS, SKINS, BOOSTS, skinsFor,
 
     // ----- 아이템샵 -----
     ownsSkin(game, id, c = this.active()) { return id === 'default' || !!(c && shopOf(c).skins[game] && shopOf(c).skins[game].includes(id)); },
     equippedSkin(game, c = this.active()) { return (c && shopOf(c).equipped[game]) || 'default'; },
     buySkin(game, id, c = this.active()) {
-      const sk = SKINS.find((s) => s.id === id);
+      const sk = skinsFor(game).find((s) => s.id === id);
       if (!c || !sk || this.ownsSkin(game, id, c)) return { ok: false, why: 'owned' };
       if (c.coins < sk.price) return { ok: false, why: 'coins' };
       c.coins -= sk.price;
@@ -169,8 +192,8 @@
       save();
     },
 
-    stageLabel(i) { const k = GAMES.skyhook.perWorld; return `${Math.floor(i / k) + 1}-${(i % k) + 1}`; },
-    stageName(i) { const k = GAMES.skyhook.perWorld; return `${GAMES.skyhook.worlds[Math.floor(i / k)]} ${(i % k) + 1}`; },
+    stageLabel(i, game = 'skyhook') { const k = GAMES[game].perWorld; return `${Math.floor(i / k) + 1}-${(i % k) + 1}`; },
+    stageName(i, game = 'skyhook') { const k = GAMES[game].perWorld; return `${GAMES[game].worlds[Math.floor(i / k)]} ${(i % k) + 1}`; },
 
     // 즐겨찾기 (캐릭터마다 따로). favs 순서 = 별을 누른 순서 → 로비는 최근 누른 게임부터
     isFav(game, c = this.active()) { return !!(c && c.favs && c.favs.includes(game)); },
@@ -182,20 +205,31 @@
     },
 
     rec(game, c = this.active()) { return c ? gameRec(c, game) : null; },
-    starsTotal(c) { const r = c.games.skyhook; return r ? Object.values(r.stages).reduce((s, x) => s + (x.stars || 0), 0) : 0; },
-
-    // 스카이훅 징검다리: 앞 스테이지를 깨야 다음이 열린다
-    skyhookStage(i, c = this.active()) { const r = this.rec('skyhook', c); return (r && r.stages[i]) || { cleared: false, stars: 0, best: 0, plays: 0 }; },
-    skyhookUnlocked(i, c = this.active()) { return i === 0 || this.skyhookStage(i - 1, c).cleared; },
-    skyhookNext(c = this.active()) {
-      for (let i = 0; i < GAMES.skyhook.stages; i++) if (!this.skyhookStage(i, c).cleared) return i;
-      return GAMES.skyhook.stages - 1;
+    // 별 = 징검다리 게임(스카이훅·사천성)에서 모은 별 합계
+    starsTotal(c) {
+      let n = 0;
+      for (const g of Object.keys(GAMES)) if (GAMES[g].stages && c.games[g]) n += Object.values(c.games[g].stages).reduce((s, x) => s + (x.stars || 0), 0);
+      return n;
     },
-    skyhookCleared(c = this.active()) { let n = 0; for (let i = 0; i < GAMES.skyhook.stages; i++) if (this.skyhookStage(i, c).cleared) n++; return n; },
+
+    // 징검다리(스테이지) 게임: 앞 스테이지를 깨야 다음이 열린다
+    stage(game, i, c = this.active()) { const r = this.rec(game, c); return (r && r.stages[i]) || { cleared: false, stars: 0, best: 0, plays: 0 }; },
+    stageUnlocked(game, i, c = this.active()) { return i === 0 || this.stage(game, i - 1, c).cleared; },
+    stageNext(game, c = this.active()) {
+      for (let i = 0; i < GAMES[game].stages; i++) if (!this.stage(game, i, c).cleared) return i;
+      return GAMES[game].stages - 1;
+    },
+    stageCleared(game, c = this.active()) { let n = 0; for (let i = 0; i < GAMES[game].stages; i++) if (this.stage(game, i, c).cleared) n++; return n; },
+    // 예전 이름 (스카이훅 코드에서 사용)
+    skyhookStage(i, c) { return this.stage('skyhook', i, c); },
+    skyhookUnlocked(i, c) { return this.stageUnlocked('skyhook', i, c); },
+    skyhookNext(c) { return this.stageNext('skyhook', c); },
+    skyhookCleared(c) { return this.stageCleared('skyhook', c); },
 
     // 게임 결과 저장 + 코인 지급. 반환: { earned, bonus, newBest, firstClear, coins }
     //   skyhook:    { stage, cleared, dist, coins, stars }
     //   helicopter: { dist, coins }
+    //   shisen:     { stage, cleared, dist: 0, coins, stars, time(클리어까지 걸린 초) }
     record(game, r) {
       reload(); // 다른 탭/게임에서 바뀌었을 수 있음
       const c = this.active();
@@ -203,13 +237,15 @@
       const g = gameRec(c, game);
       g.plays++; g.last = Date.now();
       let first = false, newBest = false;
-      if (game === 'skyhook') {
+      const staged = !!GAMES[game].stages;
+      if (staged) {
         const st = g.stages[r.stage] || (g.stages[r.stage] = { cleared: false, stars: 0, best: 0, plays: 0 });
         st.plays++;
         if (r.dist > st.best) { st.best = r.dist; newBest = true; }
         if (r.cleared) { first = !st.cleared; st.cleared = true; st.stars = Math.max(st.stars, r.stars || 0); }
+        if (r.cleared && r.time > 0 && (!st.bestTime || r.time < st.bestTime)) { st.bestTime = r.time; newBest = true; } // 빠를수록 좋은 기록
       }
-      if (r.dist > g.best) { g.best = r.dist; if (game !== 'skyhook') newBest = true; }
+      if (r.dist > g.best) { g.best = r.dist; if (!staged) newBest = true; }
       const bonus = COIN_RULES[game] ? COIN_RULES[game](r, first) : 0;
       const earned = (r.coins || 0) + bonus;
       g.coins += earned; c.coins += earned; c.earned += earned;

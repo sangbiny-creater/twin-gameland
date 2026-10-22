@@ -1,14 +1,17 @@
 'use strict';
 // 트윈 게임랜드 아이템 샵 — 게임별 배경 스킨(한 번 사면 계속) + 게임 부스트(1회용, 게임 시작 때 1개씩 사용)
 const $ = (id) => document.getElementById(id);
-const V = '?v=20261022h'; // bump when images change so phones don't show old cached ones
+const V = '?v=20261022j'; // bump when images change so phones don't show old cached ones
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 
 const GAMES = [
   { id: 'skyhook', name: '스카이훅', sub: '줄타기 게임', img: 'assets/card_skyhook.jpg' + V },
   { id: 'helicopter', name: '트윈 헬리콥터', sub: '비행 게임', img: 'assets/card_helicopter.jpg' + V },
   { id: 'stairs', name: '계단 오르기', sub: '점프 게임', img: 'assets/card_stairs.jpg' + V },
+  { id: 'shisen', name: '사천성', sub: '퍼즐 게임', img: 'assets/card_shisen.jpg' + V },
 ];
+// 부스트 아이콘 (계단 오르기 시간 부스트와 사천성 시간 부스트는 같은 그림)
+const boostIcon = (id) => `assets/icons/${id}.png${V}`;
 const TAB_TEXT = {
   skins: ['배경 스킨', '게임의 배경을 바꿔서 새로운 분위기에서 플레이해보세요!'],
   boosts: ['게임 부스트', "사 두면 게임을 시작할 때 '사용중'인 아이템이 1개씩 쓰여요."],
@@ -65,7 +68,7 @@ function renderGames() {
     b.onclick = () => { blip(); setGame(g.id, true); };
     box.appendChild(b);
   }
-  const soon = document.createElement('div'); soon.className = 'gcard coming';
+  const soon = document.createElement('div'); soon.className = 'gcard coming'; soon.style.display = 'none'; // 4개 게임이 꽉 차서 숨김
   soon.innerHTML = `<img src="assets/card_coming.jpg${V}" alt=""><div class="gtext"><div class="gn">추가 게임</div><div class="gs">COMING SOON</div></div><span class="gb">준비 중</span>`;
   box.appendChild(soon);
   const sel = $('gameSelect'); sel.innerHTML = GAMES.map((g) => `<option value="${g.id}">${g.name} (${g.sub})</option>`).join('');
@@ -97,7 +100,7 @@ function setTab(name) {
 }
 
 // ---------- items ----------
-const skinThumb = (id) => `assets/skins/${id}.jpg${V}`;
+const skinThumb = (id) => `assets/skins/${game === 'shisen' ? 'shisen_' : ''}${id}.jpg${V}`;
 const priceHTML = (p) => `<div class="price"><img src="${COIN}" alt="">${p}</div>`;
 function skinCard(s, ownedView) {
   const owned = Hub.ownsSkin(game, s.id), eq = Hub.equippedSkin(game) === s.id;
@@ -115,7 +118,7 @@ function boostCard(b, ownedView) {
   const n = Hub.boostCount(game, b.id), using = Hub.isUsing(game, b.id);
   const d = document.createElement('div'); d.className = 'item';
   const toggle = n > 0 ? `<button class="btn ${using ? 'teal' : 'line'}" data-act="use">${using ? '사용중' : '사용하기'}</button>` : '';
-  d.innerHTML = `<img class="icon" src="assets/icons/${b.id}.png" alt=""><div class="name">${b.name}</div><div class="desc">${b.desc}</div>`
+  d.innerHTML = `<img class="icon" src="${boostIcon(b.id)}" alt=""><div class="name">${b.name}</div><div class="desc">${b.desc}</div>`
     + (ownedView ? `<div class="count">x${n}</div>${toggle}`
       : `${priceHTML(b.price)}${n ? `<div class="count">보유 x${n}</div>` : ''}<div class="btn-row"><button class="btn pink${Hub.active().coins < b.price ? ' poor' : ''}" data-act="buy">구매</button>${toggle}</div>`);
   d.querySelectorAll('button[data-act]').forEach((btn) => {
@@ -142,7 +145,7 @@ function buySkin(s) {
 function equipSkin(s) { Hub.equipSkin(game, s.id); blip(900); toast(`${s.name} 적용!`); renderContent(); }
 function buyBoost(b) {
   if (lack(b.price)) return;
-  confirmBuy('부스트 구매', `<img class="mthumb" src="assets/icons/${b.id}.png" style="width:80px" alt=""><b>${b.name}</b> — ${b.desc}<br>1개를 살까요? <img src="${COIN}" style="width:20px;vertical-align:-4px"> ${b.price} 코인`, '구매', () => {
+  confirmBuy('부스트 구매', `<img class="mthumb" src="${boostIcon(b.id)}" style="width:80px" alt=""><b>${b.name}</b> — ${b.desc}<br>1개를 살까요? <img src="${COIN}" style="width:20px;vertical-align:-4px"> ${b.price} 코인`, '구매', () => {
     const r = Hub.buyBoost(game, b.id);
     if (r.ok) { ching(); toast(`${b.name} +1! 다음 게임 시작할 때 써요`); renderHeader(true); renderContent(); }
   });
@@ -154,11 +157,11 @@ function renderContent() {
   const box = $('content'); box.innerHTML = '';
   const grid = () => { const g = document.createElement('div'); g.className = 'grid'; box.appendChild(g); return g; };
   const head = (t) => { const h = document.createElement('div'); h.className = 'sub-h'; h.textContent = t; box.appendChild(h); };
-  if (tab === 'skins') { const g = grid(); for (const s of Hub.SKINS) g.appendChild(skinCard(s, false)); }
+  if (tab === 'skins') { const g = grid(); for (const s of Hub.skinsFor(game)) g.appendChild(skinCard(s, false)); }
   else if (tab === 'boosts') { const g = grid(); for (const b of Hub.BOOSTS[game]) g.appendChild(boostCard(b, false)); }
   else {
     head('★ 보유 배경 스킨'); const g1 = grid();
-    for (const s of Hub.SKINS) if (Hub.ownsSkin(game, s.id)) g1.appendChild(skinCard(s, true));
+    for (const s of Hub.skinsFor(game)) if (Hub.ownsSkin(game, s.id)) g1.appendChild(skinCard(s, true));
     head('★ 보유 부스트 아이템');
     const mine = Hub.BOOSTS[game].filter((b) => Hub.boostCount(game, b.id) > 0);
     if (!mine.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = "아직 부스트가 없어요. '게임 부스트'에서 살 수 있어요."; box.appendChild(e); }
