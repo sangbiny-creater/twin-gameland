@@ -2,7 +2,8 @@
 // 트윈 게임랜드 메인 화면: 캐릭터 만들기·선택 → 게임 고르기 → (스카이훅) 징검다리 지도 / 기록 / 아이템샵(shop/)
 const $ = (id) => document.getElementById(id);
 const root = $('root');
-const face = (c) => `skyhook/assets/${c.look}_base.jpg`;
+// 얼굴: 옷을 입었으면 옷 그림(윗부분을 동그랗게 보여 줌)
+const face = (c) => Hub.costumeImg(c) || `skyhook/assets/${c.look}_base.jpg`;
 
 // ---------- sound (tiny UI blips) ----------
 let actx = null;

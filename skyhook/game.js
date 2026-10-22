@@ -542,6 +542,8 @@ fetch('assets/kids.json').then((r) => r.json()).then((j) => {
 }).catch(() => { /* opened from file:// — keep vector fallback */ });
 const SPRITE_SIZE = 1.55; // sheet pixel -> game pixel
 function drawKidSprite(g, who, pose, t) {
+  // 캐릭터 꾸미기: 옷을 입었으면 옷 그림으로
+  if (window.Costume && Costume.ready()) return Costume.draw(g, pose, t, { h: 118, hangTop: -100 });
   if (!Sprites.ready) return false;
   const F = Sprites.frames;
   const pick = (act, fps) => {
@@ -600,7 +602,7 @@ function startStage(si) {
   if (!THEMES[skinTheme() || STAGES[si].theme].img) getBG(skinTheme() || STAGES[si].theme);
   setState('play');
   renderHearts();
-  $('hudProgFace').style.backgroundImage = `url(assets/${Save.data.char}_base.jpg)`;
+  $('hudProgFace').style.backgroundImage = `url(${(window.Costume && Costume.src) || `assets/${Save.data.char}_base.jpg`})`;
   Audio.startBgm();
 }
 
@@ -1265,7 +1267,8 @@ function showResult(clear) {
   $('resTitle').textContent = clear ? 'STAGE CLEAR!' : 'GAME OVER';
   $('resLabel').textContent = STAGES[G.si].label;
   document.querySelector('.panel.result').classList.toggle('over', !clear);
-  $('resFace').src = `assets/${Save.data.char}_${clear ? 'happy' : 'sad'}.jpg`;
+  $('resFace').src = (window.Costume && Costume.src) || `assets/${Save.data.char}_${clear ? 'happy' : 'sad'}.jpg`;
+  $('resFace').classList.toggle('cos', !!(window.Costume && Costume.src));
   $('btnRetry').className = 'rb ' + (clear ? 'white' : 'gold');
   $('resDist').textContent = r.dist; $('resCoin').textContent = G.coins;
   $('resBestVal').textContent = r.best;
@@ -1283,7 +1286,8 @@ function goHome() {
 function showReady(si) {
   G.si = si;
   $('readyTitle').textContent = `${STAGES[si].label} ${STAGES[si].name}`;
-  $('readyFace').src = `assets/${Save.data.char}_base.jpg`;
+  $('readyFace').src = (window.Costume && Costume.src) || `assets/${Save.data.char}_base.jpg`;
+  $('readyFace').classList.toggle('cos', !!(window.Costume && Costume.src));
   setState('ready');
 }
 

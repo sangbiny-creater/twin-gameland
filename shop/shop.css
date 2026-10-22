@@ -158,3 +158,79 @@ main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; 
   .mtab { font-size: 13px; gap: 2px; } .mtab i { display: none; }
   .bcard .bn { font-size: 12px; }
 }
+
+/* ---------- 캐릭터 꾸미기 입구 ---------- */
+.dress-entry { background: linear-gradient(#FFF0F6, #FDE4EF); border-radius: 20px; padding: 10px; border: 2px solid #fff; box-shadow: 0 6px 16px rgba(24,59,91,.1); }
+.dress-btn { width: 100%; height: 60px; border-radius: 18px; display: flex; align-items: center; gap: 10px; padding: 0 14px 0 8px; background: #fff; border: 3px solid #FFB93A; box-shadow: 0 4px 0 #F2C27A; }
+.dress-faces { display: flex; }
+.dress-faces img { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; object-position: top; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,.15); background: #FFE6EF; }
+.dress-faces img + img { margin-left: -10px; background: #E3F0FF; }
+.dress-btn b { font-size: 22px; font-weight: normal; color: #E05A8C; }
+.dress-btn .new { font-size: 12px; background: #FF5C7A; color: #fff; border-radius: 9px; padding: 1px 7px; }
+.dress-btn .arr { margin-left: auto; font-size: 30px; color: #E05A8C; }
+.dress-strip { display: flex; gap: 8px; overflow-x: auto; padding: 10px 2px 2px; scrollbar-width: none; }
+.dress-strip::-webkit-scrollbar { display: none; }
+.dchip { flex: 0 0 auto; width: 76px; background: #fff; border-radius: 14px; padding: 4px 4px 5px; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(24,59,91,.1); display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.dchip img { width: 64px; height: 74px; object-fit: contain; }
+.dchip .cn { font-size: 12px; white-space: nowrap; }
+.dchip .cp { font-size: 12px; display: flex; align-items: center; gap: 2px; color: #6A3A00; }
+.dchip .cp img { width: 14px; height: 14px; }
+.dchip .cp.own { color: #2FB86A; }
+.dchip.on { border-color: #2FB86A; }
+.stab.dress { color: #FFD86B; }
+
+/* ---------- 캐릭터 꾸미기 화면 ---------- */
+.dress { position: fixed; inset: 0; z-index: 30; background: linear-gradient(#BFE3FA, #E8F4FE); display: flex; flex-direction: column; }
+.dress-top { display: flex; align-items: center; gap: 10px; padding: calc(10px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) 10px calc(14px + env(safe-area-inset-left)); background: linear-gradient(#2C4F9A, #1E3A78); color: #fff; }
+.dress-top b { font-size: 22px; font-weight: normal; }
+.dclose { width: 40px; height: 40px; border-radius: 50%; color: #fff; font-size: 22px; background: rgba(255,255,255,.15); }
+.coin-pill.small { margin-left: auto; font-size: 18px; }
+.coin-pill.small img { width: 24px; height: 24px; }
+.dress-body { flex: 1; overflow-y: auto; padding: 12px calc(12px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left)); display: flex; flex-direction: column; gap: 12px; max-width: 900px; width: 100%; margin: 0 auto; }
+.dress-who { display: flex; gap: 8px; }
+.dwho { flex: 1; height: 54px; border-radius: 16px; background: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 17px; border: 3px solid #fff; box-shadow: 0 3px 0 #CFE0F2; min-width: 0; }
+.dwho img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; object-position: top; background: #F2F5F9; }
+.dwho span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dwho.on.eunyu { border-color: #FF8FB5; background: #FFF0F6; color: #E05A8C; }
+.dwho.on.eungyeol { border-color: #4FA3F0; background: #EEF6FF; color: #2265C9; }
+.dress-main { display: flex; flex-direction: column; gap: 10px; background: #fff; border-radius: 22px; padding: 10px; box-shadow: 0 6px 16px rgba(24,59,91,.12); }
+.dress-stage { position: relative; height: 300px; border-radius: 16px; background: url(../common/worlds/w1.jpg) center/cover; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.dress-stage img { height: 86%; max-width: 70%; object-fit: contain; filter: drop-shadow(0 8px 10px rgba(24,59,91,.3)); animation: dressIn .35s; }
+@keyframes dressIn { from { transform: scale(.85); opacity: .3; } }
+.dnav { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,.92); color: #2F7FE8; font-size: 30px; line-height: 40px; box-shadow: 0 3px 8px rgba(24,59,91,.25); }
+.dnav.prev { left: 10px; } .dnav.next { right: 10px; }
+.dress-info { display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; gap: 2px 12px; align-items: center; padding: 0 6px 4px; }
+.dname { font-size: 26px; }
+.ddesc { grid-column: 1; font-size: 14px; color: #6B7C8E; }
+.dprice { grid-column: 2; grid-row: 1; justify-self: end; display: flex; align-items: center; gap: 4px; font-size: 22px; color: #6A3A00; }
+.dprice img { width: 24px; height: 24px; }
+.dprice.own { color: #2FB86A; font-size: 17px; }
+.dact { grid-column: 2; grid-row: 2; min-width: 130px; height: 48px; border-radius: 16px; font-size: 20px; padding: 0 16px; background: linear-gradient(#FFD86B, #FFAE2E); color: #6A3A00; box-shadow: 0 4px 0 #D9881A; white-space: nowrap; }
+.dact.wear { background: linear-gradient(#6FB6FF, #3D8BFF); color: #fff; box-shadow: 0 4px 0 #2560B8; }
+.dact.worn { background: linear-gradient(#53D08B, #2FB86A); color: #fff; box-shadow: 0 4px 0 #1F8549; }
+.dact.poor { filter: saturate(.45); opacity: .85; }
+.dress-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px; }
+.ditem { position: relative; background: #fff; border-radius: 14px; padding: 4px 3px 5px; border: 3px solid #fff; box-shadow: 0 2px 6px rgba(24,59,91,.1); display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 0; }
+.ditem img { width: 100%; height: 76px; object-fit: contain; }
+.ditem .cn { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.ditem .lock { position: absolute; right: 4px; top: 4px; font-size: 12px; }
+.ditem.locked img { filter: saturate(.6) brightness(1.05); opacity: .8; }
+.ditem.sel { border-color: #FFB93A; box-shadow: 0 0 0 2px rgba(255,185,58,.35); }
+.ditem.worn::after { content: '입는 중'; position: absolute; left: 4px; top: 4px; font-size: 10px; background: #2FB86A; color: #fff; border-radius: 7px; padding: 0 5px; }
+.dress-tip { text-align: center; font-size: 14px; color: #6B7C8E; }
+@media (min-width: 760px) {
+  .dress-main { flex-direction: row; align-items: stretch; }
+  .dress-stage { flex: 1.3; height: 380px; }
+  .dress-info { flex: 1; grid-template-columns: 1fr; grid-template-rows: auto auto auto 1fr; align-content: center; gap: 10px; padding: 16px; }
+  .ddesc, .dprice, .dact { grid-column: 1; grid-row: auto; justify-self: start; }
+  .dname { font-size: 32px; }
+  .dress-list { grid-template-columns: repeat(7, 1fr); }
+}
+
+/* ---------- 쿠폰 ---------- */
+.coupon-wrap { display: flex; justify-content: center; padding: 6px 0 4px; }
+.coupon-btn { height: 52px; padding: 0 28px; border-radius: 26px; font-size: 19px; background: #fff; border: 2px dashed #9CC6F5; color: #2265C9; box-shadow: 0 3px 0 #CFE0F2; }
+.coupon-input { width: 100%; height: 52px; margin-top: 12px; border-radius: 14px; border: 3px solid #CDE6FA; padding: 0 14px; font-size: 22px; font-family: var(--font); color: var(--navy); text-align: center; outline: none; -webkit-user-select: text; user-select: text; }
+.coupon-input:focus { border-color: #3D8BFF; }
+.coupon-msg { min-height: 22px; margin-top: 8px; font-size: 16px; color: #E8456A; }
+.coupon-msg.ok { color: #2FB86A; }

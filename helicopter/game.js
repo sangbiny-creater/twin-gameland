@@ -67,6 +67,33 @@ function spr(g, name, x, y, w, rot = 0, alpha = 1) {
   g.restore();
 }
 
+// 캐릭터 꾸미기: 헬리콥터는 그대로, 창문 안 캐릭터만 입은 옷 그림으로 바꿔 그림
+function drawDressedHeli(name, x, y, w, rot) {
+  if (!SP.ready || !SP.f[name]) return;
+  const [sx, sy, sw, sh] = SP.f[name];
+  const h = w * sh / sw, L = -w / 2, T = -h / 2;
+  ctx.save(); ctx.translate(x, y); if (rot) ctx.rotate(rot);
+  ctx.drawImage(SP.img, sx, sy, sw, sh, L, T, w, h);
+  // 창문 (그림에서 잰 위치, 프레임 크기 비율)
+  const cx = L + w * 0.52, cy = T + h * 0.42, rx = w * 0.31, ry = h * 0.30;
+  ctx.save();
+  ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); ctx.clip();
+  const gl = ctx.createLinearGradient(0, cy - ry, 0, cy + ry);
+  gl.addColorStop(0, '#F4FAFF'); gl.addColorStop(1, Save.data.char === 'eunyu' ? '#FFE3EE' : '#DDEEFF');
+  ctx.fillStyle = gl; ctx.fillRect(cx - rx, cy - ry, rx * 2, ry * 2);
+  { // 옷 그림 윗부분(머리~배)을 창문 위쪽에 맞춰 넣음 — 아랫부분은 기체 앞쪽이 가려 줌
+    const im = Costume.img, frac = 0.78, bw = w * 0.46, bh = bw * (im.naturalHeight * frac) / im.naturalWidth;
+    ctx.drawImage(im, 0, 0, im.naturalWidth, im.naturalHeight * frac, cx + w * 0.03 - bw / 2, cy - ry * 0.92, bw, bh);
+  }
+  // 유리 반사
+  ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.beginPath(); ctx.ellipse(cx - rx * 0.45, cy - ry * 0.55, rx * 0.35, ry * 0.18, -0.5, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  // 기체 앞부분을 다시 그려 옷 아랫부분을 가림
+  const cut = 0.64;
+  ctx.drawImage(SP.img, sx, sy + sh * cut, sw, sh * (1 - cut), L, T + h * cut, w, h * (1 - cut));
+  ctx.restore();
+}
+
 // ---------- audio (WebAudio synth) ----------
 const Audio = {
   ctx: null, master: null, sfxGain: null, bgmGain: null, bgmOn: false, nextNote: 0, step: 0, timer: null,
@@ -187,7 +214,7 @@ function resetRun() {
   if (boosts.length) banner('부스트: ' + boosts.map((b) => HUB.boostName('helicopter', b)).join(' · '));
   renderHearts(); renderBuffs();
   $('hudBest').textContent = Save.data.best;
-  $('hudProgFace').style.backgroundImage = `url(assets/face_${Save.data.char}.png)`;
+  $('hudProgFace').style.backgroundImage = `url(${(window.Costume && Costume.src) || `assets/face_${Save.data.char}.png`})`;
 }
 
 function startRun() {
@@ -531,10 +558,12 @@ function render() {
   if (!blink) {
     const who = Save.data.char;
     let frame;
-    if (G.state === 'crash') frame = who === 'eunyu' ? 'eunyu_crash' : 'eungyeol_6';
-    else if (h.hurtT > 0) frame = `${who}_6`;
+    const dressed = window.Costume && Costume.ready();
+    if (G.state === 'crash' && !dressed) frame = who === 'eunyu' ? 'eunyu_crash' : 'eungyeol_6';
+    else if (h.hurtT > 0 && !dressed) frame = `${who}_6`;
     else frame = `${who}_${[0, 1, 2, 1][Math.floor(h.anim * 8) % 4]}`;
-    spr(ctx, frame, hx, h.y, 112, h.rot);
+    if (dressed) drawDressedHeli(frame, hx, h.y, 112, h.rot);
+    else spr(ctx, frame, hx, h.y, 112, h.rot);
     if (G.shield) spr(ctx, 'fx_ring', hx, h.y, 130, 0, 0.6 + Math.sin(G.t * 8) * 0.2);
   }
   // FX sprites
@@ -634,7 +663,7 @@ function showResult() {
     const h = HUB.record('helicopter', { dist: m, coins: G.coins });
     $('resEarn').innerHTML = `+${h.earned} 코인 획득!` + (h.bonus ? ` <small>(거리 보너스 +${h.bonus})</small>` : '') + `<small>내 코인 ${h.coins}</small>`;
   }
-  $('resFace').src = `assets/${Save.data.char === 'eunyu' ? 'eunyu_crash' : 'eungyeol_6'}.png`;
+  $('resFace').src = (window.Costume && Costume.src) || `assets/${Save.data.char === 'eunyu' ? 'eunyu_crash' : 'eungyeol_6'}.png`;
   $('resDist').textContent = m; $('resCoin').textContent = G.coins; $('resBestVal').textContent = Save.data.best;
   $('resTheme').textContent = THEMES[G.themeIdx].name;
   $('resBest').classList.toggle('hidden', !isBest);

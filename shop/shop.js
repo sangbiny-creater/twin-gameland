@@ -4,7 +4,7 @@
 //  · 배경 스킨: 한 번 사면 계속 내 것, '적용하기'로 그 게임 배경을 바꿈
 //  · 게임 부스트: 1개씩 사서 모음. 수량은 구매·게임 보상·게임에서 사용 모두 같은 숫자(common/profile.js)
 const $ = (id) => document.getElementById(id);
-const V = '?v=20261022y'; // bump when images change so phones don't show old cached ones
+const V = '?v=20261022z'; // bump when images change so phones don't show old cached ones
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 
 const GAMES = [
@@ -58,7 +58,7 @@ const coinImg = `<img src="${COIN}" alt="" style="width:20px;height:20px;display
 function renderHeader(bump) {
   const c = Hub.active();
   $('myCoins').textContent = c.coins;
-  $('myFace').src = `../skyhook/assets/${c.look}_base.jpg`;
+  $('myFace').src = faceOf(c);
   if (bump) { const p = document.querySelector('.coin-pill'); p.classList.remove('bump'); void p.offsetWidth; p.classList.add('bump'); }
 }
 
@@ -147,7 +147,95 @@ function renderOwned() {
     grid.appendChild(d);
   }
 }
-function renderAll() { renderGames(); renderSkins(); renderBoosts(); renderOwned(); }
+// ---------- 캐릭터 꾸미기 ----------
+const COS_IMG = (look, id) => (id ? `../common/costumes/${look}_${id}.png${V}` : `../skyhook/assets/${look === 'eungyeol' ? 'eungyeol' : 'eunyu'}_base.jpg`);
+const BASE_FULL = (look) => `../stairs/assets/${look}_idle.png${V}`; // 기본 옷 전신 그림
+const faceOf = (c) => Hub.costumeImg(c, '../') || `../skyhook/assets/${c.look}_base.jpg`;
+const fullOf = (look, id) => (id ? COS_IMG(look, id) : BASE_FULL(look));
+const DRESS_LIST = [{ id: null, name: '기본 옷', price: 0, desc: '처음 입고 있던 옷이에요' }, ...Hub.COSTUMES];
+let dressSel = 0;
+function renderDressEntry() {
+  const chars = Hub.chars();
+  const a = chars[0], b = chars.find((x) => x.look !== (a && a.look)) || chars[1];
+  $('dressFace1').src = a ? faceOf(a) : ''; $('dressFace2').src = b ? faceOf(b) : '';
+  $('dressFace2').style.display = b ? '' : 'none';
+  const c = Hub.active(), strip = $('dressStrip'); strip.innerHTML = '';
+  for (const [k, it] of Hub.COSTUMES.entries()) {
+    const own = Hub.ownsCostume(it.id), worn = Hub.costume() === it.id;
+    const d = document.createElement('button'); d.className = 'dchip' + (worn ? ' on' : '');
+    d.innerHTML = `<img src="${COS_IMG(c.look, it.id)}" alt=""><div class="cn">${it.name}</div>`
+      + (own ? `<div class="cp own">${worn ? '입는 중' : '보유'}</div>` : `<div class="cp"><img src="${COIN}" alt="">${it.price}</div>`);
+    d.onclick = () => openDress(k + 1);
+    strip.appendChild(d);
+  }
+}
+function openDress(sel) {
+  dressSel = sel != null ? sel : Math.max(0, DRESS_LIST.findIndex((x) => x.id === Hub.costume()));
+  $('dress').classList.remove('hidden'); document.body.style.overflow = 'hidden';
+  blip(); renderDress();
+}
+function closeDress() { $('dress').classList.add('hidden'); document.body.style.overflow = ''; renderHeader(); renderDressEntry(); }
+function renderDress() {
+  const c = Hub.active();
+  $('dressCoins').textContent = c.coins;
+  // 내 캐릭터들 (캐릭터마다 코인·옷이 따로)
+  const who = $('dressWho'); who.innerHTML = '';
+  for (const ch of Hub.chars()) {
+    const b = document.createElement('button'); b.className = `dwho ${ch.look}` + (ch.id === c.id ? ' on' : '');
+    b.innerHTML = `<img src="${faceOf(ch)}" alt=""><span></span>`;
+    b.querySelector('span').textContent = `${ch.name} (${ch.look === 'eunyu' ? '핑크' : '블루'})`;
+    b.onclick = () => { if (ch.id === c.id) return; blip(); Hub.setActive(ch.id); renderHeader(); renderAll(); openDress(); };
+    who.appendChild(b);
+  }
+  const it = DRESS_LIST[dressSel], own = it.id === null || Hub.ownsCostume(it.id), worn = (Hub.costume() || null) === it.id;
+  $('dressImg').src = fullOf(c.look, it.id); $('dressImg').style.animation = 'none'; void $('dressImg').offsetWidth; $('dressImg').style.animation = '';
+  $('dName').textContent = it.name;
+  $('dDesc').textContent = it.desc;
+  $('dPrice').className = 'dprice' + (own ? ' own' : '');
+  $('dPrice').innerHTML = own ? (worn ? '✓ 입는 중' : '✓ 가지고 있어요') : `<img src="${COIN}" alt="">${it.price}`;
+  const act = $('dAct');
+  act.className = 'dact' + (worn ? ' worn' : own ? ' wear' : (c.coins < it.price ? ' poor' : ''));
+  act.textContent = worn ? '입는 중' : own ? '입기' : '구매하기';
+  act.disabled = worn;
+  const list = $('dressList'); list.innerHTML = '';
+  DRESS_LIST.forEach((x, k) => {
+    const o = x.id === null || Hub.ownsCostume(x.id), w = (Hub.costume() || null) === x.id;
+    const d = document.createElement('button'); d.className = 'ditem' + (k === dressSel ? ' sel' : '') + (o ? '' : ' locked') + (w ? ' worn' : '');
+    d.innerHTML = `<img src="${fullOf(c.look, x.id)}" alt="">${o ? '' : '<span class="lock">🔒</span>'}<div class="cn">${x.name}</div>`;
+    d.onclick = () => { blip(); dressSel = k; renderDress(); };
+    list.appendChild(d);
+  });
+}
+$('dPrev').onclick = () => { blip(); dressSel = (dressSel + DRESS_LIST.length - 1) % DRESS_LIST.length; renderDress(); };
+$('dNext').onclick = () => { blip(); dressSel = (dressSel + 1) % DRESS_LIST.length; renderDress(); };
+$('dressClose').onclick = () => { blip(500); closeDress(); };
+$('dAct').onclick = () => {
+  const it = DRESS_LIST[dressSel], c = Hub.active();
+  if (it.id === null || Hub.ownsCostume(it.id)) { Hub.wearCostume(it.id); ching(); toast(`${it.name}을(를) 입었어요! 모든 게임에 적용돼요`); renderDress(); renderHeader(); return; }
+  if (lack(it.price)) return;
+  confirmBox('의상 구매', `<img class="mthumb" src="${fullOf(c.look, it.id)}" style="width:100px" alt=""><b>${c.name}</b>에게 <b>${it.name}</b>을(를) 사서 입힐까요?<br>${coinImg} ${it.price} 코인`, '구매', () => {
+    if (Hub.buyCostume(it.id).ok) { ching(); toast(`${it.name} 구매 완료! 바로 입었어요`); renderHeader(true); renderDress(); }
+  });
+};
+$('btnDress').onclick = () => openDress();
+document.querySelectorAll('[data-dress]').forEach((b) => { b.onclick = () => openDress(); });
+
+// ---------- 쿠폰 ----------
+$('btnCoupon').onclick = () => {
+  blip(); $('couponInput').value = ''; $('couponMsg').textContent = ''; $('couponMsg').className = 'coupon-msg';
+  $('coupon').classList.remove('hidden'); setTimeout(() => $('couponInput').focus(), 50);
+};
+$('couponCancel').onclick = () => $('coupon').classList.add('hidden');
+$('coupon').addEventListener('click', (e) => { if (e.target.id === 'coupon') $('coupon').classList.add('hidden'); });
+function useCoupon() {
+  const r = Hub.redeem($('couponInput').value);
+  $('couponMsg').textContent = r.msg; $('couponMsg').className = 'coupon-msg' + (r.ok ? ' ok' : '');
+  if (r.ok) { ching(); renderHeader(true); renderAll(); $('couponInput').value = ''; } else blip(300);
+}
+$('couponOk').onclick = useCoupon;
+$('couponInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') useCoupon(); });
+
+function renderAll() { renderGames(); renderSkins(); renderBoosts(); renderOwned(); renderDressEntry(); }
 
 // ---------- 탭 (해당 칸으로 이동) ----------
 document.querySelectorAll('[data-sec]').forEach((t) => {

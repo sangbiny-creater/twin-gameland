@@ -180,3 +180,7 @@ button:focus-visible { outline: 3px solid #fff; box-shadow: 0 0 0 6px rgba(92,16
 .rb.white { background: #fff; color: var(--navy); border: 2px solid #D5E6F6; box-shadow: 0 5px 0 #C9DDF0, 0 8px 14px rgba(24,59,91,.12); }
 .rb.gold { flex: 1.5; background: linear-gradient(#FFD86B, #FFAE2E); color: #6A3A00; border: 2px solid #FFE9A8; box-shadow: 0 5px 0 #D9881A, 0 8px 14px rgba(217,136,26,.3); }
 .rb:active { transform: translateY(3px); }
+
+/* 옷 입은 얼굴: 전신 그림의 윗부분만 동그랗게 */
+img.cos { object-fit: cover; object-position: 50% 0; background: #FFF6FA; }
+#hudProgFace { background-position: 50% 0 !important; background-size: cover !important; }

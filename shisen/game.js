@@ -61,6 +61,19 @@ function spr(name, x, y, w, h, alpha = 1) {
   ctx.globalAlpha = alpha; ctx.drawImage(SP.img, sx, sy, sw, sh, x - w / 2, y - h / 2, w, h); ctx.globalAlpha = 1;
 }
 
+// 내 캐릭터 얼굴 타일은 입은 옷 모습으로 (타일 판은 그대로, 안쪽 그림만 바꿈)
+const MY_TILE = HUB ? 't_' + HUB.active().look : null;
+function drawTile(name, x, y, w, h, alpha = 1) {
+  spr(name, x, y, w, h, alpha);
+  if (name !== MY_TILE || !window.Costume || !Costume.ready()) return;
+  ctx.save(); ctx.globalAlpha = alpha;
+  ctx.beginPath(); ctx.roundRect(x - w * 0.36, y - h * 0.38, w * 0.72, h * 0.72, w * 0.1); ctx.clip();
+  ctx.fillStyle = '#FFF6E8'; ctx.fillRect(x - w / 2, y - h / 2, w, h);
+  const im = Costume.img, frac = 0.6, bh = h * 0.70, bw = bh * im.naturalWidth / (im.naturalHeight * frac);
+  ctx.drawImage(im, 0, 0, im.naturalWidth, im.naturalHeight * frac, x - bw / 2, y - h / 2 + h * 0.13, bw, bh);
+  ctx.restore();
+}
+
 // ---------- audio ----------
 const Audio = {
   ctx: null, master: null, gain: null, bgm: null, bgmOn: false, timer: null, next: 0, step: 0,
@@ -429,12 +442,12 @@ function render() {
       ctx.fillStyle = sel ? 'rgba(255,211,77,.9)' : `rgba(111,211,255,${0.5 + pulse * 0.4})`;
       ctx.beginPath(); ctx.roundRect(c.x - BL.tw * 0.5, c.y - BL.th * 0.47 + lift, BL.tw, BL.th * 0.96, 10); ctx.fill(); ctx.restore();
     }
-    spr(G.pool[t], c.x, c.y + lift, BL.tw * 0.94, BL.th * 0.94);
+    drawTile(G.pool[t], c.x, c.y + lift, BL.tw * 0.94, BL.th * 0.94);
   }
   // tiles being removed: pop + fade
   for (const r of G.removing) {
     const c = cellCenter(r), k = r.t / 0.35;
-    spr(G.pool[r.type], c.x, c.y - k * 10, BL.tw * 0.94 * (1 + k * 0.25), BL.th * 0.94 * (1 + k * 0.25), 1 - k);
+    drawTile(G.pool[r.type], c.x, c.y - k * 10, BL.tw * 0.94 * (1 + k * 0.25), BL.th * 0.94 * (1 + k * 0.25), 1 - k);
   }
   // connect lines
   for (const l of G.lines) {

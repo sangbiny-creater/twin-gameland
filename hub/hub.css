@@ -259,3 +259,8 @@ i.star { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .map-track.vert .wpanel .map-me { width: 48px; height: 48px; margin: -96px 0 0 -24px; }
 .wpanel .goal-flag { position: absolute; right: 12px; top: 8px; z-index: 3; font-size: 34px; margin: 0; filter: drop-shadow(0 2px 3px rgba(0,0,0,.3)); }
 #root.portrait .map-scroll { margin: 10px calc(-22px - var(--safe-r, 0px)) 0 calc(-22px - var(--safe-l, 0px)); }
+
+/* 옷 입은 얼굴: 전신 그림의 윗부분 */
+img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #FFF6FA; }
+.map-me[style*="costumes/"] { background-position: 50% 0 !important; background-color: #FFF6FA; }
+.char-card .dressed { position: absolute; left: 10px; top: 10px; font-size: 18px; }

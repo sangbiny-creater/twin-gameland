@@ -14,13 +14,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shop.css?v=20261022y">
+<link rel="stylesheet" href="shop.css?v=20261022z">
 </head>
 <body>
 <header class="topbar">
   <a class="brand" href="../index.html#lobby"><span class="home">🏠</span><span>트윈 게임랜드</span></a>
   <div class="me">
-    <div class="coin-pill"><img src="assets/v2/coin.png?v=20261022y" alt=""><b id="myCoins">0</b></div>
+    <div class="coin-pill"><img src="assets/v2/coin.png?v=20261022z" alt=""><b id="myCoins">0</b></div>
     <img id="myFace" class="face" alt="">
   </div>
 </header>
@@ -31,18 +31,28 @@
     <button class="stab on" data-sec="skins"><i>🖼️</i>배경 스킨</button>
     <button class="stab" data-sec="boosts"><i>🚀</i>게임 부스트</button>
     <button class="stab" data-sec="owned"><i>🎒</i>보유 아이템</button>
+    <button class="stab dress" data-dress><i>👗</i>캐릭터 꾸미기</button>
     <div class="side-line"></div>
     <button class="help" data-help aria-label="아이템 샵 이용 안내">?</button>
   </aside>
 
   <main>
     <section class="banner">
-      <img src="assets/v2/banner.jpg?v=20261022y" alt="아이템 샵 — 게임을 더 재미있게! 나만의 스타일로 꾸며보세요!">
+      <img src="assets/v2/banner.jpg?v=20261022z" alt="아이템 샵 — 게임을 더 재미있게! 나만의 스타일로 꾸며보세요!">
     </section>
 
     <section class="games-wrap">
       <div id="games" class="games"></div>
       <button class="row-arrow" data-scroll="games" aria-label="더 보기">›</button>
+    </section>
+
+    <!-- 캐릭터 꾸미기 입구 -->
+    <section class="dress-entry">
+      <button id="btnDress" class="dress-btn">
+        <span class="dress-faces"><img id="dressFace1" alt=""><img id="dressFace2" alt=""></span>
+        <b>캐릭터 꾸미기</b><span class="new">NEW</span><span class="arr">›</span>
+      </button>
+      <div id="dressStrip" class="dress-strip"></div>
     </section>
 
     <!-- 폰: 가로 탭 -->
@@ -71,7 +81,54 @@
         <div id="ownedGrid" class="bgrid"></div>
       </section>
     </div>
+
+    <section class="coupon-wrap">
+      <button id="btnCoupon" class="coupon-btn">🎟️ 쿠폰 입력하기</button>
+    </section>
   </main>
+</div>
+
+<!-- 캐릭터 꾸미기 화면 -->
+<div id="dress" class="dress hidden">
+  <header class="dress-top">
+    <button id="dressClose" class="dclose" aria-label="닫기">✕</button>
+    <b>캐릭터 꾸미기</b>
+    <div class="coin-pill small"><img src="assets/v2/coin.png?v=20261022z" alt=""><b id="dressCoins">0</b></div>
+  </header>
+  <div class="dress-body">
+    <div id="dressWho" class="dress-who"></div>
+    <div class="dress-main">
+      <div class="dress-stage">
+        <button class="dnav prev" id="dPrev" aria-label="이전">‹</button>
+        <img id="dressImg" alt="">
+        <button class="dnav next" id="dNext" aria-label="다음">›</button>
+      </div>
+      <div class="dress-info">
+        <div id="dName" class="dname">기본 옷</div>
+        <div id="dDesc" class="ddesc"></div>
+        <div id="dPrice" class="dprice"></div>
+        <button id="dAct" class="dact">입기</button>
+      </div>
+    </div>
+    <div class="dress-list-wrap">
+      <div id="dressList" class="dress-list"></div>
+    </div>
+    <div class="dress-tip">입은 옷은 모든 게임과 메뉴 화면에 바로 적용돼요!</div>
+  </div>
+</div>
+
+<!-- 쿠폰 -->
+<div id="coupon" class="modal hidden">
+  <div class="mpanel">
+    <div class="m-title">🎟️ 쿠폰 입력하기</div>
+    <div class="m-body">받은 쿠폰 번호를 입력해 주세요.</div>
+    <input id="couponInput" class="coupon-input" maxlength="30" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="쿠폰 번호">
+    <div id="couponMsg" class="coupon-msg"></div>
+    <div class="m-row">
+      <button class="mbtn gray" id="couponCancel">닫기</button>
+      <button class="mbtn gold" id="couponOk">입력</button>
+    </div>
+  </div>
 </div>
 
 <div id="modal" class="modal hidden">
@@ -86,7 +143,7 @@
 </div>
 <div id="toast" class="toast hidden"></div>
 
-<script src="../common/profile.js?v=20261022y"></script>
-<script src="shop.js?v=20261022y"></script>
+<script src="../common/profile.js?v=20261022z"></script>
+<script src="shop.js?v=20261022z"></script>
 </body>
 </html>

@@ -520,7 +520,13 @@ function render() {
   const feetY = pp.y - 22; // top surface of the block
   if (G.shield && G.state === 'play') { ctx.save(); ctx.globalAlpha = 0.35 + Math.sin(G.t * 8) * 0.1; ctx.strokeStyle = '#6FC0FF'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(pp.x, feetY - 50, 62, 0, 7); ctx.stroke(); ctx.restore(); }
   if (G.wing > 0 && G.state === 'play') spr(ctx, 'wing', pp.x - (facingRight ? 26 : -26), feetY - 66, 56, { flip: !facingRight, alpha: 0.9 });
-  spr(ctx, `${who}_${frame}`, pp.x, feetY, 86, { flip, rot: G.state === 'fall' && G.fallReason !== 'time' ? G.rot : 0, anchor: 'b' });
+  if (window.Costume && Costume.ready()) { // 캐릭터 꾸미기: 입은 옷 그림
+    const pose = { idle: 'idle', ready: 'idle', side: 'idle', jump_l: 'jump', fall_l: 'fall', hurt: 'hurt', dizzy: 'dizzy', dead: 'dead', happy: 'happy' }[frame] || 'idle';
+    ctx.save(); ctx.translate(pp.x, feetY);
+    if (G.state === 'fall' && G.fallReason !== 'time') ctx.rotate(G.rot);
+    Costume.draw(ctx, pose, G.t, { h: 118, flip: !facingRight });
+    ctx.restore();
+  } else spr(ctx, `${who}_${frame}`, pp.x, feetY, 86, { flip, rot: G.state === 'fall' && G.fallReason !== 'time' ? G.rot : 0, anchor: 'b' });
   // fx
   for (const f of G.fx) {
     const k = f.t / f.life, p = toScreen(f.x, f.y);
@@ -624,7 +630,7 @@ function showResult() {
     const h = HUB.record('stairs', { dist: m, coins: G.coins });
     $('resEarn').innerHTML = `+${h.earned} 코인 획득!` + (h.bonus ? ` <small>(높이 보너스 +${h.bonus})</small>` : '') + `<small>내 코인 ${h.coins}</small>`;
   }
-  $('resFace').src = `assets/${Save.data.char}_${isBest && m > 0 ? 'happy' : 'dead'}.png`;
+  $('resFace').src = (window.Costume && Costume.src) || `assets/${Save.data.char}_${isBest && m > 0 ? 'happy' : 'dead'}.png`;
   $('resHeight').textContent = m; $('resCoin').textContent = G.coins; $('resBestVal').textContent = Save.data.best;
   $('resBest').classList.toggle('hidden', !isBest || m === 0);
   setState('result');

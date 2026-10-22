@@ -93,6 +93,30 @@
     ],
   };
 
+  // ---------- 캐릭터 꾸미기 (코스튬) ----------
+  // 캐릭터(프로필)마다 산 옷을 따로 저장. 입은 옷은 모든 게임 플레이·메뉴 화면에 보임
+  // 그림: common/costumes/<eunyu|eungyeol>_<id>.png
+  const COSTUMES = [
+    { id: 'hanbok', name: '한복', price: 300, desc: '고운 한복을 입었어요!' },
+    { id: 'raincoat', name: '우비', price: 300, desc: '비 오는 날에도 신나게!' },
+    { id: 'pajamas', name: '잠옷', price: 300, desc: '포근포근 곰돌이 잠옷이에요' },
+    { id: 'roman', name: '로마병사', price: 300, desc: '용감한 고대 로마 병사!' },
+    { id: 'tracksuit', name: '츄리닝', price: 300, desc: '편하게 달리기 좋은 츄리닝' },
+    { id: 'dino', name: '공룡 옷', price: 300, desc: '귀여운 공룡이 되었어요!' },
+    { id: 'school', name: '교복', price: 300, desc: '단정한 교복 차림!' },
+    { id: 'swimsuit', name: '수영복', price: 300, desc: '물놀이 준비 완료!' },
+    { id: 'wizard', name: '마법사 옷', price: 300, desc: '반짝반짝 마법 지팡이!' },
+    { id: 'santa', name: '산타클로스', price: 300, desc: '선물을 나눠 주는 산타!' },
+    { id: 'baseball', name: '야구복', price: 300, desc: '홈런을 노리는 야구 선수!' },
+    { id: 'suit', name: '정장', price: 300, desc: '멋쟁이 정장 차림!' },
+    { id: 'detective', name: '탐정 옷', price: 300, desc: '돋보기로 수수께끼 해결!' },
+  ];
+  // ---------- 쿠폰 ----------
+  // 띄어쓰기·대소문자 상관없이 입력. once: 캐릭터마다 한 번만
+  const COUPONS = {
+    showmethemoney: { coins: 5000, once: false, msg: '코인 5000개를 받았어요!' },
+  };
+
   // 캐릭터 추가 가격: 3번째 300, 4번째 600, 5번째 900 ...
   const slotPrice = (n) => 300 * (n - FREE_SLOTS);
 
@@ -120,7 +144,31 @@
   }
 
   const Hub = {
-    GAMES, WORLDS, FREE_SLOTS, MAX_CHARS, SKINS, BOOSTS, skinsFor,
+    GAMES, WORLDS, FREE_SLOTS, MAX_CHARS, SKINS, BOOSTS, skinsFor, COSTUMES,
+
+    // ----- 캐릭터 꾸미기 -----
+    ownsCostume(id, c = this.active()) { return !!(c && (c.costumes || []).includes(id)); },
+    costume(c = this.active()) { return (c && c.costume) || null; }, // 입은 옷 id (없으면 기본 옷)
+    // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
+    costumeImg(c = this.active(), base = '') { const id = this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.png?v=20261022z` : null; },
+    buyCostume(id, c = this.active()) {
+      const it = COSTUMES.find((x) => x.id === id);
+      if (!c || !it || this.ownsCostume(id, c)) return { ok: false };
+      if (c.coins < it.price) return { ok: false, why: 'coins' };
+      c.coins -= it.price; c.costumes = [...(c.costumes || []), id]; c.costume = id; // 사면 바로 입음
+      save(); return { ok: true };
+    },
+    wearCostume(id, c = this.active()) { if (!c) return; if (id && !this.ownsCostume(id, c)) return; c.costume = id || null; save(); },
+    // 쿠폰: { ok, msg }
+    redeem(code, c = this.active()) {
+      const key = String(code || '').toLowerCase().replace(/\s+/g, '');
+      const cp = COUPONS[key];
+      if (!c || !cp) return { ok: false, msg: '없는 쿠폰 번호예요' };
+      c.coupons = c.coupons || [];
+      if (cp.once && c.coupons.includes(key)) return { ok: false, msg: '이미 사용한 쿠폰이에요' };
+      c.coins += cp.coins || 0; c.earned += cp.coins || 0; c.coupons.push(key);
+      save(); return { ok: true, msg: cp.msg, coins: c.coins };
+    },
 
     // ----- 아이템샵 -----
     ownsSkin(game, id, c = this.active()) { return id === 'default' || !!(c && shopOf(c).skins[game] && shopOf(c).skins[game].includes(id)); },
