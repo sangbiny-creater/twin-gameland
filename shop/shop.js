@@ -12,6 +12,7 @@ const GAMES = [
   { id: 'helicopter', name: '트윈 헬리콥터', img: 'assets/v2/game_helicopter.jpg' },
   { id: 'stairs', name: '계단 오르기', img: 'assets/v2/game_stairs.jpg' },
   { id: 'shisen', name: '사천성', img: 'assets/v2/game_shisen.jpg' },
+  { id: 'downhill', name: '다운힐 러너', img: 'assets/v2/game_downhill.jpg' },
 ];
 // 부스트 그림: 새 아이콘이 있으면 그것, 없으면 예전 아이콘
 const NEW_ICON = { hint: 'boost_hint', shuffle: 'boost_shuffle', time: 'boost_time', bomb: 'boost_bomb', find: 'boost_find', combo: 'boost_combo' };

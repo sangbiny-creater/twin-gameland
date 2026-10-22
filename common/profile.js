@@ -23,6 +23,7 @@
     helicopter: { name: 'Twin Helicopter', path: 'helicopter/index.html' },
     stairs: { name: '계단 오르기', path: 'stairs/index.html' },
     shisen: { name: '사천성', path: 'shisen/index.html', stages: 50, worlds: WORLDS, perWorld: 5 },
+    downhill: { name: '다운힐 러너', path: 'downhill/index.html' },
   };
 
   const COIN_RULES = {
@@ -34,6 +35,8 @@
     stairs: (r) => Math.floor(r.dist / 50) * 5,
     // 스카이훅과 같은 징검다리 규칙
     shisen: (r, first) => (r.cleared ? 20 + r.stage * 3 + r.stars * 5 + (first ? 30 : 0) : 0),
+    // 100m 마다 +5 (헬리콥터와 같은 거리 규칙)
+    downhill: (r) => Math.floor(r.dist / 100) * 5,
   };
 
   // ---------- 아이템샵 카탈로그 ----------
@@ -82,6 +85,13 @@
       { id: 'bomb', name: '폭탄', desc: '짝 하나를 바로 없애요', price: 150, manual: true },
       { id: 'find', name: '자동 찾기', desc: '처음 20초 짝을 표시', price: 300 },
       { id: 'combo', name: '콤보 보너스', desc: '콤보 코인 2배', price: 300 },
+    ],
+    downhill: [
+      { id: 'life', name: '추가 하트', desc: '하트 4개로 시작', price: 300 },
+      { id: 'shield', name: '보호막', desc: '처음 한 번 안 다쳐요', price: 200 },
+      { id: 'dash', name: '스타트 부스터', desc: '출발 5초 슝~ 무적', price: 200 },
+      { id: 'magnet', name: '자석', desc: '처음 20초 코인 흡수', price: 300 },
+      { id: 'x2', name: '코인 2배', desc: '처음 30초 코인 2배', price: 300 },
     ],
   };
 
@@ -328,6 +338,7 @@
     //   skyhook:    { stage, cleared, dist, coins, stars }
     //   helicopter: { dist, coins }
     //   shisen:     { stage, cleared, dist: 0, coins, stars, time(클리어까지 걸린 초) }
+  //   downhill:   { dist, coins }
     record(game, r) {
       reload(); // 다른 탭/게임에서 바뀌었을 수 있음
       const c = this.active();

@@ -139,6 +139,9 @@ const GAME_CARDS = [
   { id: 'shisen', name: '사천성', thumb: 'hub/card_shisen.jpg', open: () => go('map-shisen'), portrait: true,
     sub: (c) => stageSub('shisen', c),
     rec: (c, r) => `징검다리 <b>${Hub.stageCleared('shisen', c)} / 12</b> · ${r.plays}번 도전<br>모은 코인 <b>${r.coins}</b>` },
+  { id: 'downhill', name: '다운힐 러너', thumb: 'hub/card_downhill.jpg', open: () => { location.href = Hub.GAMES.downhill.path; }, portrait: true,
+    sub: (c, r) => (r.plays ? `BEST ${r.best.toLocaleString()}m · ${r.plays}번 도전` : '장애물을 피해 끝없이 내려가요!'),
+    rec: (c, r) => `BEST <b>${r.best.toLocaleString()}m</b> · ${r.plays}번 도전<br>모은 코인 <b>${r.coins}</b>` },
 ];
 const mmss = (t) => `${Math.floor(t / 60)}분 ${String(t % 60).padStart(2, '0')}초`;
 function renderLobby() {
@@ -268,7 +271,7 @@ function renderRecords() {
     const li = document.createElement('li');
     const what = (h.game === 'skyhook' || h.game === 'shisen')
       ? `${h.game === 'shisen' ? '사천성' : '스카이훅'} ${Hub.stageLabel(h.stage, h.game)} <span class="${h.cleared ? 'ok' : 'no'}">${h.cleared ? '클리어 ' + '⭐'.repeat(h.stars) : '실패'}</span>`
-      : `${h.game === 'stairs' ? '계단 오르기' : '헬리콥터'} <span class="ok">${h.dist}m</span>`;
+      : `${{ stairs: '계단 오르기', downhill: '다운힐 러너' }[h.game] || '헬리콥터'} <span class="ok">${h.dist}m</span>`;
     li.innerHTML = `<span>${what}</span><span>+${h.earned} <i class="coin"></i><span class="when">${fmtDate(h.at)}</span></span>`;
     list.appendChild(li);
   }
