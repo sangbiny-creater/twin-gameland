@@ -81,3 +81,5 @@ button:active { transform: translateY(3px); }
 #root.wide .items { left: calc(24px); }
 #root.wide .hud-top, #root.wide .hud-sub { left: 30px; right: 30px; }
 #root.wide .hud-top .starbar { max-width: 420px; }
+
+.earn .reward { margin-top: 6px; font-size: 17px; color: #fff; background: rgba(255,255,255,.14); border-radius: 12px; padding: 4px 10px; }

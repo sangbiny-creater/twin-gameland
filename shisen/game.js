@@ -222,14 +222,13 @@ function startStage(si) {
   G.si = si; const st = STAGES[si];
   buildBoard(si);
   G.limit = st.s; G.time = st.s; G.elapsed = 0; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.lastMatchT = -99;
+  // 도움 아이템: 메인 화면에서 들어오면 캐릭터가 가진 수량을 그대로 씀(판이 바뀌어도 다시 채워지지 않음)
+  // 단독 실행일 때만 판마다 기본 수량을 줌
   G.items = { hint: 3, shuffle: 2, time: 1, bomb: 0 }; G.hint = null; G.hintT = 0; G.findT = 0; G.comboX2 = false;
+  if (HUB) HUB.starterKit('shisen');
   G.lines = []; G.fx = []; G.texts = []; G.removing = []; G.sel = null; G.t = 0;
   G.skin = HUB ? HUB.equippedSkin('shisen') : 'default';
   const boosts = HUB ? HUB.takeBoosts('shisen') : [];
-  if (boosts.includes('hint')) G.items.hint += 3;
-  if (boosts.includes('shuffle')) G.items.shuffle += 2;
-  if (boosts.includes('time')) { G.time += 30; G.limit += 30; }
-  if (boosts.includes('bomb')) G.items.bomb += 1;
   if (boosts.includes('find')) G.findT = 20;
   if (boosts.includes('combo')) G.comboX2 = true;
   if (boosts.length) toast('부스트: ' + boosts.map((b) => HUB.boostName('shisen', b)).join(' · '));
@@ -276,28 +275,34 @@ function removePair(a, b, path, byBomb = false) {
 }
 const same = (p, q) => p && q && p.x === q.x && p.y === q.y;
 
+const itemCount = (id) => (HUB ? HUB.boostCount('shisen', id) : G.items[id]);
+function spendItem(id) {
+  if (HUB) return HUB.useBoost('shisen', id);
+  if (G.items[id] <= 0) return false;
+  G.items[id]--; return true;
+}
 function useHint() {
   if (G.state !== 'play') return;
-  if (G.items.hint <= 0) { toast('힌트가 없어요'); Audio.sfx('bad'); return; }
+  if (itemCount('hint') <= 0) { toast('힌트가 없어요. 아이템샵에서 살 수 있어요'); Audio.sfx('bad'); return; }
   const p = anyPair(); if (!p) return;
-  G.items.hint--; G.hint = [p[0], p[1]]; G.hintT = 4; Audio.sfx('hint'); renderItems();
+  spendItem('hint'); G.hint = [p[0], p[1]]; G.hintT = 4; Audio.sfx('hint'); renderItems();
 }
 function useShuffle() {
   if (G.state !== 'play') return;
-  if (G.items.shuffle <= 0) { toast('섞기가 없어요'); Audio.sfx('bad'); return; }
-  G.items.shuffle--; reshuffle(); Audio.sfx('shuffle'); renderItems();
+  if (itemCount('shuffle') <= 0) { toast('섞기가 없어요. 아이템샵에서 살 수 있어요'); Audio.sfx('bad'); return; }
+  spendItem('shuffle'); reshuffle(); Audio.sfx('shuffle'); renderItems();
   G.fx.push({ name: 'fx_clear', x: W / 2, y: H / 2, w: 260, t: 0, life: 0.6 });
 }
 function useTime() {
   if (G.state !== 'play') return;
-  if (G.items.time <= 0) { toast('시간 추가가 없어요'); Audio.sfx('bad'); return; }
-  G.items.time--; G.time += 10; Audio.sfx('time'); renderItems();
+  if (itemCount('time') <= 0) { toast('시간 추가가 없어요. 아이템샵에서 살 수 있어요'); Audio.sfx('bad'); return; }
+  spendItem('time'); G.time += 10; Audio.sfx('time'); renderItems();
   G.fx.push({ name: 'fx_time', x: W / 2, y: H * 0.42, w: 150, t: 0, life: 0.9 });
 }
 function useBomb() {
-  if (G.state !== 'play' || G.items.bomb <= 0) return;
+  if (G.state !== 'play' || itemCount('bomb') <= 0) return;
   const p = anyPair(); if (!p) return;
-  G.items.bomb--; Audio.sfx('bomb'); G.shake = 0.25; renderItems();
+  spendItem('bomb'); Audio.sfx('bomb'); G.shake = 0.25; renderItems();
   removePair(p[0], p[1], p[2], true);
 }
 
@@ -308,9 +313,22 @@ function clearStage() {
   const st = stars();
   for (let i = 0; i < 40; i++) G.fx.push({ kind: 'confetti', x: Math.random() * W, y: -20 - Math.random() * 200, vx: (Math.random() - 0.5) * 80, vy: 120 + Math.random() * 160, r: Math.random() * 6, c: ['#FFB5C5', '#FFD34D', '#79C89C', '#5CA9E6', '#C9A8FF'][i % 5], t: 0, life: 3 });
   let earn = null;
-  if (HUB) earn = HUB.record('shisen', { stage: G.si, cleared: true, dist: 0, coins: G.coins, stars: st, time: Math.round(G.elapsed) });
-  else { Save.data.cleared[G.si] = true; Save.store(); }
-  setTimeout(() => showResult(true, st, earn), 900);
+  let reward = [];
+  if (HUB) {
+    earn = HUB.record('shisen', { stage: G.si, cleared: true, dist: 0, coins: G.coins, stars: st, time: Math.round(G.elapsed) });
+    reward = clearReward(st, earn.firstClear);
+  } else { Save.data.cleared[G.si] = true; Save.store(); }
+  setTimeout(() => showResult(true, st, earn, reward), 900);
+}
+// 클리어 보상 아이템 (캐릭터 보유 수량에 바로 더해짐)
+//  · 처음 깬 판: 힌트·섞기·시간 추가 중 1개  · 별 3개: 힌트 1개  · 월드 마지막 판(N-5) 처음 깨면: 폭탄 1개
+function clearReward(st, first) {
+  const got = [];
+  const give = (id) => { HUB.addBoost('shisen', id, 1); got.push(id); };
+  if (first) give(['hint', 'shuffle', 'time'][Math.floor(Math.random() * 3)]);
+  if (st >= 3) give('hint');
+  if (first && G.si % PER_WORLD === PER_WORLD - 1) give('bomb');
+  return got;
 }
 function failStage() {
   setState('done'); Audio.sfx('fail'); Audio.stopBgm();
@@ -318,7 +336,8 @@ function failStage() {
   if (HUB) earn = HUB.record('shisen', { stage: G.si, cleared: false, dist: 0, coins: G.coins, stars: 0 });
   setTimeout(() => showResult(false, 0, earn), 500);
 }
-function showResult(ok, st, earn) {
+const ITEM_NAME = { hint: '💡 힌트', shuffle: '🔀 섞기', time: '⏱ 시간 추가', bomb: '💣 폭탄' };
+function showResult(ok, st, earn, reward = []) {
   $('resTitle').textContent = ok ? '스테이지 클리어!' : '시간 초과!';
   document.querySelector('.panel.result').classList.toggle('fail', !ok);
   $('resStars').innerHTML = [0, 1, 2].map((k) => `<span class="${k < st ? '' : 'off'}">★</span>`).join('');
@@ -326,7 +345,12 @@ function showResult(ok, st, earn) {
   $('resCombo').textContent = G.maxCombo;
   $('resCoin').textContent = G.coins;
   $('resEarn').classList.toggle('hidden', !earn);
-  if (earn) $('resEarn').innerHTML = `+${earn.earned} 코인 획득!` + (earn.bonus ? ` <small>(클리어 보너스 +${earn.bonus}${earn.firstClear ? ', 첫 클리어!' : ''})</small>` : '') + `<small>내 코인 ${earn.coins}</small>`;
+  if (earn) {
+    const cnt = {}; reward.forEach((id) => { cnt[id] = (cnt[id] || 0) + 1; });
+    const items = Object.entries(cnt).map(([id, n]) => `${ITEM_NAME[id]} +${n}`).join(' · ');
+    $('resEarn').innerHTML = `+${earn.earned} 코인 획득!` + (earn.bonus ? ` <small>(클리어 보너스 +${earn.bonus}${earn.firstClear ? ', 첫 클리어!' : ''})</small>` : '') + `<small>내 코인 ${earn.coins}</small>`
+      + (items ? `<div class="reward">🎁 보상 아이템: ${items}</div>` : '');
+  }
   $('btnNext').classList.toggle('hidden', !(ok && G.si < STAGES.length - 1));
   setState('result');
 }
@@ -459,8 +483,8 @@ function updateHud() {
 }
 function renderItems() {
   const set = (id, cid, n) => { $(cid).textContent = n; $(id).classList.toggle('empty', n <= 0); };
-  set('btnHint', 'cHint', G.items.hint); set('btnShuffle', 'cShuffle', G.items.shuffle); set('btnTime', 'cTime', G.items.time);
-  $('btnBomb').classList.toggle('hidden', G.items.bomb <= 0); $('cBomb').textContent = G.items.bomb;
+  set('btnHint', 'cHint', itemCount('hint')); set('btnShuffle', 'cShuffle', itemCount('shuffle')); set('btnTime', 'cTime', itemCount('time'));
+  $('btnBomb').classList.toggle('hidden', itemCount('bomb') <= 0); $('cBomb').textContent = itemCount('bomb');
 }
 function renderBuffs() {
   const el = $('buffs'); el.innerHTML = '';

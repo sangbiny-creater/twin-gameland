@@ -1254,17 +1254,19 @@ function showResult(clear) {
   const r = finishRun(clear);
   const stars = clear ? clamp(G.hp, 1, 3) : 0; // 남은 하트 = 별
   Audio.stopBgm();
-  $('resStar').textContent = clear ? '⭐'.repeat(stars) + '☆'.repeat(3 - stars) : '-';
+  $('resStar').innerHTML = [0, 1, 2].map((k) => `<i class="${k < stars ? '' : 'off'}"></i>`).join('');
   $('resEarn').classList.toggle('hidden', !HUB);
   if (HUB) {
     const h = HUB.record('skyhook', { stage: G.si, cleared: clear, dist: r.dist, coins: G.coins, stars });
     const st = HUB.skyhookStage(G.si);
     r.isBest = h.newBest; r.best = st.best;
-    $('resEarn').innerHTML = `+${h.earned} 코인 획득!` + (h.bonus ? ` <small>(클리어 보너스 +${h.bonus}${h.firstClear ? ', 첫 클리어!' : ''})</small>` : '') + `<small>내 코인 ${h.coins}</small>`;
+    $('resEarn').innerHTML = `+${h.earned} 코인 획득!` + (h.bonus ? `<small>(클리어 보너스 +${h.bonus}${h.firstClear ? ', 첫 클리어!' : ''})</small>` : '') + `<small>내 코인 <b>${h.coins}</b></small>`;
   }
-  $('resTitle').textContent = (clear ? 'STAGE CLEAR!' : 'GAME OVER') + ` · ${STAGES[G.si].label}`;
+  $('resTitle').textContent = clear ? 'STAGE CLEAR!' : 'GAME OVER';
+  $('resLabel').textContent = STAGES[G.si].label;
   document.querySelector('.panel.result').classList.toggle('over', !clear);
   $('resFace').src = `assets/${Save.data.char}_${clear ? 'happy' : 'sad'}.jpg`;
+  $('btnRetry').className = 'rb ' + (clear ? 'white' : 'gold');
   $('resDist').textContent = r.dist; $('resCoin').textContent = G.coins;
   $('resBestVal').textContent = r.best;
   $('resBest').classList.toggle('hidden', !r.isBest);

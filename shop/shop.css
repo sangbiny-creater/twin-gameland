@@ -146,3 +146,8 @@ main { max-width: 1140px; margin: 0 auto; padding: 14px calc(16px + env(safe-are
   .banner img { max-height: 170px; object-fit: cover; }
   .gcard img { aspect-ratio: 1 / 0.6; }
 }
+
+.item .count { font-size: 14px; color: #2265C9; }
+.item .count b { font-weight: normal; font-size: 17px; }
+.item .count.zero { color: #9AA7B4; }
+.item .note { font-size: 12px; color: #6B7C8E; }

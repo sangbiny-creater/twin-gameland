@@ -1,7 +1,7 @@
 'use strict';
 // 트윈 게임랜드 아이템 샵 — 게임별 배경 스킨(한 번 사면 계속) + 게임 부스트(1회용, 게임 시작 때 1개씩 사용)
 const $ = (id) => document.getElementById(id);
-const V = '?v=20261022j'; // bump when images change so phones don't show old cached ones
+const V = '?v=20261022r'; // bump when images change so phones don't show old cached ones
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 
 const GAMES = [
@@ -117,10 +117,12 @@ function skinCard(s, ownedView) {
 function boostCard(b, ownedView) {
   const n = Hub.boostCount(game, b.id), using = Hub.isUsing(game, b.id);
   const d = document.createElement('div'); d.className = 'item';
-  const toggle = n > 0 ? `<button class="btn ${using ? 'teal' : 'line'}" data-act="use">${using ? '사용중' : '사용하기'}</button>` : '';
+  // manual 아이템(사천성 힌트·섞기 등)은 게임 화면 버튼으로 쓰므로 '사용중' 켜기/끄기가 없음
+  const toggle = n > 0 && !b.manual ? `<button class="btn ${using ? 'teal' : 'line'}" data-act="use">${using ? '사용중' : '사용하기'}</button>` : '';
+  const count = `<div class="count${n ? '' : ' zero'}">보유 <b>${n}</b>개</div>`;
   d.innerHTML = `<img class="icon" src="${boostIcon(b.id)}" alt=""><div class="name">${b.name}</div><div class="desc">${b.desc}</div>`
-    + (ownedView ? `<div class="count">x${n}</div>${toggle}`
-      : `${priceHTML(b.price)}${n ? `<div class="count">보유 x${n}</div>` : ''}<div class="btn-row"><button class="btn pink${Hub.active().coins < b.price ? ' poor' : ''}" data-act="buy">구매</button>${toggle}</div>`);
+    + (ownedView ? `${count}${toggle || (b.manual ? '<div class="note">게임 화면 버튼으로 사용</div>' : '')}`
+      : `${priceHTML(b.price)}${count}<div class="btn-row"><button class="btn pink${Hub.active().coins < b.price ? ' poor' : ''}" data-act="buy">구매</button>${toggle}</div>`);
   d.querySelectorAll('button[data-act]').forEach((btn) => {
     btn.onclick = () => {
       if (btn.dataset.act === 'buy') buyBoost(b);
@@ -147,7 +149,7 @@ function buyBoost(b) {
   if (lack(b.price)) return;
   confirmBuy('부스트 구매', `<img class="mthumb" src="${boostIcon(b.id)}" style="width:80px" alt=""><b>${b.name}</b> — ${b.desc}<br>1개를 살까요? <img src="${COIN}" style="width:20px;vertical-align:-4px"> ${b.price} 코인`, '구매', () => {
     const r = Hub.buyBoost(game, b.id);
-    if (r.ok) { ching(); toast(`${b.name} +1! 다음 게임 시작할 때 써요`); renderHeader(true); renderContent(); }
+    if (r.ok) { ching(); toast(b.manual ? `${b.name} +1! 지금 ${Hub.boostCount(game, b.id)}개 있어요` : `${b.name} +1! 다음 게임 시작할 때 써요`); renderHeader(true); renderContent(); }
   });
 }
 
@@ -169,5 +171,6 @@ function renderContent() {
   }
 }
 
-window.addEventListener('pageshow', () => { Hub.reload(); renderHeader(); renderGames(); setTab(tab); });
+Hub.starterKit('shisen'); // 사천성 기본 아이템을 아직 안 받았으면 지금 지급 (게임과 같은 수량을 보여 주려고)
+window.addEventListener('pageshow', () => { Hub.reload(); Hub.starterKit('shisen'); renderHeader(); renderGames(); setTab(tab); });
 renderHeader(); renderGames(); setTab(tab);

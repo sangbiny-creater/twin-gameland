@@ -82,11 +82,12 @@
       { id: 'magnet', name: '코인 흡수', desc: '처음 20초 자석', price: 300 },
       { id: 'x2', name: '코인 2배', desc: '처음 20초 코인 2배', price: 300 },
     ],
+    // manual: 게임 화면의 버튼으로 하나씩 꺼내 쓰는 아이템 (판이 바뀌어도 수량 그대로)
     shisen: [
-      { id: 'hint', name: '힌트 +3', desc: '짝 하나를 알려줘요', price: 200 },
-      { id: 'shuffle', name: '섞기 +2', desc: '타일 위치를 섞어요', price: 200 },
-      { id: 'time', name: '시작 시간 +30초', desc: '제한 시간이 늘어요', price: 200 },
-      { id: 'bomb', name: '폭탄 +1', desc: '짝 하나를 바로 없애요', price: 300 },
+      { id: 'hint', name: '힌트', desc: '짝 하나를 알려줘요', price: 60, manual: true },
+      { id: 'shuffle', name: '섞기', desc: '타일 위치를 섞어요', price: 80, manual: true },
+      { id: 'time', name: '시간 추가', desc: '제한 시간 +10초', price: 80, manual: true },
+      { id: 'bomb', name: '폭탄', desc: '짝 하나를 바로 없애요', price: 150, manual: true },
       { id: 'find', name: '자동 찾기', desc: '처음 20초 짝을 표시', price: 300 },
       { id: 'combo', name: '콤보 보너스', desc: '콤보 코인 2배', price: 300 },
     ],
@@ -155,10 +156,31 @@
       const sh = shopOf(c), have = sh.boosts[game] || {}, use = sh.using[game] || {};
       const used = [];
       for (const b of BOOSTS[game] || []) {
+        if (b.manual) continue; // 버튼으로 쓰는 아이템은 여기서 꺼내지 않음
         if (use[b.id] && have[b.id] > 0) { have[b.id]--; used.push(b.id); if (!have[b.id]) use[b.id] = false; }
       }
       if (used.length) save();
       return used;
+    },
+    // ----- 아이템 수량 (구매·게임 보상·게임에서 사용을 모두 이 숫자 하나로) -----
+    addBoost(game, id, n = 1, c = this.active()) {
+      if (!c) return 0;
+      const sh = shopOf(c); sh.boosts[game] = sh.boosts[game] || {}; sh.boosts[game][id] = Math.max(0, (sh.boosts[game][id] || 0) + n);
+      save(); return sh.boosts[game][id];
+    },
+    // 1개 쓰기: 있으면 줄이고 true
+    useBoost(game, id, c = this.active()) {
+      if (!c || this.boostCount(game, id, c) <= 0) return false;
+      shopOf(c).boosts[game][id]--; save(); return true;
+    },
+    // 캐릭터마다 한 번만 주는 기본 아이템
+    starterKit(game, c = this.active()) {
+      const KITS = { shisen: { hint: 3, shuffle: 2, time: 1 } };
+      if (!c || !KITS[game]) return false;
+      const sh = shopOf(c); sh.starter = sh.starter || {};
+      if (sh.starter[game]) return false;
+      for (const [id, n] of Object.entries(KITS[game])) { sh.boosts[game] = sh.boosts[game] || {}; sh.boosts[game][id] = (sh.boosts[game][id] || 0) + n; }
+      sh.starter[game] = true; save(); return true;
     },
     boostName(game, id) { const b = (BOOSTS[game] || []).find((x) => x.id === id); return b ? b.name : id; },
     get settings() { return data.settings; },
