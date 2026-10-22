@@ -133,7 +133,7 @@ const GAME_CARDS = [
     sub: (c, r) => (r.plays ? `BEST ${r.best}m · ${r.plays}번 비행` : '아직 안 해봤어요'),
     rec: (c, r) => `BEST <b>${r.best}m</b> · ${r.plays}번 비행<br>모은 코인 <b>${r.coins}</b>` },
   { id: 'stairs', name: '계단 오르기', thumb: 'hub/card_stairs.jpg', open: () => { location.href = Hub.GAMES.stairs.path; }, portrait: true,
-    sub: (c, r) => (r.plays ? `BEST ${r.best}m · ${r.plays}번 도전` : '폰은 세로로 해요'),
+    sub: (c, r) => (r.plays ? `BEST ${r.best}m · ${r.plays}번 도전` : '아직 안 해봤어요'),
     rec: (c, r) => `BEST <b>${r.best}m</b> · ${r.plays}번 도전<br>모은 코인 <b>${r.coins}</b>` },
   { id: 'shisen', name: '사천성', thumb: 'hub/card_shisen.jpg', open: () => go('map-shisen'), portrait: true,
     sub: (c) => stageSub('shisen', c),
@@ -153,7 +153,7 @@ function renderLobby() {
   for (const { g, fav } of list) {
     const card = document.createElement('div');
     card.className = 'game-card' + (fav ? ' fav' : ''); card.setAttribute('role', 'button'); card.tabIndex = 0;
-    card.innerHTML = `<div class="thumb" style="background-image:url(${g.thumb});${g.thumbPos ? `background-position:${g.thumbPos}` : ''}">${g.portrait ? '<span class="tag">📱 폰은 세로</span>' : ''}</div>
+    card.innerHTML = `<div class="thumb" style="background-image:url(${g.thumb}?v=20261022l)"></div>
       <button class="fav-btn" aria-label="즐겨찾기">${fav ? '★' : '☆'}</button>
       <div class="g-name"></div><div class="g-sub"></div>`;
     card.querySelector('.g-name').textContent = g.name;
@@ -264,7 +264,7 @@ function renderRecords() {
   const c = Hub.active();
   $('recTitle').textContent = `${c.name}의 기록`;
   $('recSummary').innerHTML = `<div class="rec-card total"><div class="v">지금 코인 <b>${c.coins}</b> · 지금까지 모은 코인 <b>${c.earned}</b> · 별 <b>${Hub.starsTotal(c)}</b></div></div>`
-    + GAME_CARDS.map((g) => `<div class="rec-card"><div class="thumb" style="background-image:url(${g.thumb});${g.thumbPos ? `background-position:${g.thumbPos}` : ''}"></div>
+    + GAME_CARDS.map((g) => `<div class="rec-card"><div class="thumb" style="background-image:url(${g.thumb}?v=20261022l)"></div>
       <div><div class="t">${g.name}${Hub.isFav(g.id, c) ? ' <span class="star-on">★</span>' : ''}</div><div class="v">${g.rec(c, Hub.rec(g.id, c))}</div></div></div>`).join('');
   const list = $('recList'); list.innerHTML = '';
   if (!c.history.length) list.innerHTML = '<li><span>아직 기록이 없어요. 게임을 해봐요!</span></li>';
