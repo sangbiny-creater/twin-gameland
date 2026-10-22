@@ -231,7 +231,8 @@ function renderMap() {
   });
   requestAnimationFrame(() => {
     if (!currentPanel) return;
-    if (portraitNow) scroller.scrollTop = Math.max(0, currentPanel.offsetTop - 8);
+    // 세로: 지금 월드 카드가 화면 가운데쯤 오게 (처음엔 맨 아래 1번 월드)
+    if (portraitNow) scroller.scrollTop = Math.max(0, currentPanel.offsetTop - (scroller.clientHeight - currentPanel.offsetHeight) / 2);
     else scroller.scrollLeft = Math.max(0, currentPanel.offsetLeft - (scroller.clientWidth - currentPanel.offsetWidth) / 2);
   });
 }
