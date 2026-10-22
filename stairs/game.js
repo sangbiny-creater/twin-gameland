@@ -286,7 +286,9 @@ function arrive(s) {
   if (G.magnetT > 0) for (let k = 1; k <= 4; k++) { const n = G.steps[G.idx + k]; if (n && n.item && n.item.startsWith('coin')) { collect(n.item, n); n.item = null; } }
 }
 function startBoost(n) { G.boost = n; G.boostT = 0; Audio.sfx('boost'); popText('슝~!', G.pos.x, G.pos.y - 120, '#FF9F2E'); renderBuffs(); }
+const GOD = () => !!(window.Hub && window.Hub.god); // 무적 쿠폰 (테스트용)
 function misstep() {
+  if (GOD()) { G.anim = null; G.queue = []; G.shake = 0.1; Audio.sfx('hit'); popText('무적!', G.pos.x, G.pos.y - 120, '#D6344C'); return; } // 무적: 틀려도 제자리
   const cur = G.steps[G.idx];
   const wrongCol = cur.col + G.dir;
   const to = worldOf(G.idx + 1, wrongCol);
@@ -305,6 +307,7 @@ function dropFromCurrent(reason) { // e.g. crumbling stair
   G.fallReason = reason; G.state = 'fall'; Audio.sfx('fall'); haptic(40);
 }
 function afterFall() {
+  if (GOD()) { respawn(); return; }
   if (G.shield) {
     G.shield = false; renderBuffs();
     popText('보호막!', G.pos.x, G.pos.y - 120, '#3D8BFF');
@@ -369,6 +372,7 @@ function step(dt) {
   const drain = 1 + Math.min(2, G.idx / 200); // 높이 올라갈수록 시간이 빨리 줄어듦
   if (G.idx > 0 || G.t > 0) G.time -= dt * drain;
   if (G.time < 5) { G.tickT -= dt; if (G.tickT <= 0) { G.tickT = 0.5; Audio.sfx('tick'); } }
+  if (G.time <= 0 && GOD()) G.time = 10; // 무적: 시간이 다 되면 다시 채움
   if (G.time <= 0) { G.time = 0; G.fallReason = 'time'; G.pose = 'dizzy'; G.state = 'fall'; G.fallFrom = { ...G.pos }; G.fallTo = { ...G.pos }; G.fallT = 0.5; G.vy = -200; Audio.sfx('hit'); fxAt('fx_dizzy', G.pos.x, G.pos.y - 120, 70, 0.8); return; }
   if (G.magnetT > 0) { G.magnetT -= dt; if (G.magnetT <= 0) renderBuffs(); }
   if (G.x2T > 0) { G.x2T -= dt; if (G.x2T <= 0) renderBuffs(); }

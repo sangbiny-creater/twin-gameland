@@ -343,6 +343,7 @@ function clearReward(st, first) {
   if (first && G.si % PER_WORLD === PER_WORLD - 1) give('bomb');
   return got;
 }
+const GOD = () => !!(window.Hub && window.Hub.god); // 무적 쿠폰 (테스트용)
 function failStage() {
   setState('done'); Audio.sfx('fail'); Audio.stopBgm();
   let earn = null;
@@ -381,6 +382,7 @@ function step(dt) {
   if (G.hintT > 0) { G.hintT -= dt; if (G.hintT <= 0) G.hint = null; }
   if (G.findT > 0) { G.findT -= dt; if (!G.hint) { const p = anyPair(); if (p) { G.hint = [p[0], p[1]]; G.hintT = 0.4; } } if (G.findT <= 0) renderBuffs(); }
   if (G.time < 10) { G.tickT -= dt; if (G.tickT <= 0) { G.tickT = 1; Audio.sfx('tick'); } }
+  if (G.time <= 0 && GOD()) G.time = G.limit; // 무적: 시간이 다 되면 다시 채움
   if (G.time <= 0) { G.time = 0; failStage(); }
 }
 

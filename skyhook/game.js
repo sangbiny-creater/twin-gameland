@@ -671,8 +671,10 @@ function releaseHook(boost = true) {
   p.hook = null; p.airT = 0.2;
 }
 
+const GOD = () => !!(window.Hub && window.Hub.god); // 무적 쿠폰 (테스트용)
 function hurt(kind) {
   const p = G.p;
+  if (GOD()) { if (kind === 'fall') respawn(); return; } // 무적: 안 다치고, 떨어지면 다음 발판으로
   if (kind === 'hit' && p.inv > 0) return;
   if (G.shield) { // 1회 보호 부스트
     G.shield = false; popText('보호막!', p.x, p.y - 80, '#3D8BFF', 28); Audio.sfx('item');

@@ -107,6 +107,9 @@
   // 띄어쓰기·대소문자 상관없이 입력. once: 캐릭터마다 한 번만
   const COUPONS = {
     showmethemoney: { coins: 5000, once: false, msg: '코인 5000개를 받았어요!' },
+    // 게임 테스트용 무적 (모든 캐릭터·모든 게임에 적용, 끌 때까지 유지)
+    supermanon: { god: true, once: false, msg: '무적 모드 ON! 이제 안 죽어요' },
+    supermanoff: { god: false, once: false, msg: '무적 모드 OFF' },
   };
 
   // 캐릭터 추가 가격: 3번째 300, 4번째 600, 5번째 900 ...
@@ -144,6 +147,21 @@
     return sh;
   }
 
+  // 무적 모드일 때 화면 위에 작은 표시
+  function godBadge() {
+    if (typeof document === 'undefined') return;
+    const put = () => {
+      let el = document.getElementById('godBadge');
+      if (!data.settings.god) { if (el) el.remove(); return; }
+      if (!el) {
+        el = document.createElement('div'); el.id = 'godBadge'; el.textContent = '🦸 무적';
+        el.style.cssText = 'position:fixed;left:50%;top:calc(4px + env(safe-area-inset-top));transform:translateX(-50%);z-index:99999;pointer-events:none;background:rgba(214,52,76,.88);color:#fff;font:15px Jua,system-ui,sans-serif;padding:2px 10px;border-radius:10px;';
+        document.body.appendChild(el);
+      }
+    };
+    if (document.body) put(); else document.addEventListener('DOMContentLoaded', put);
+  }
+
   const Hub = {
     GAMES, WORLDS, FREE_SLOTS, MAX_CHARS, SKINS, BOOSTS, skinsFor, COSTUMES,
 
@@ -151,7 +169,7 @@
     ownsCostume(id, c = this.active()) { return !!(c && (c.costumes || []).includes(id)); },
     costume(c = this.active()) { return (c && c.costume) || null; }, // 입은 옷 id (없으면 기본 옷)
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
-    costumeImg(c = this.active(), base = '') { const id = this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.png?v=20261023c` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.png?v=20261023d` : null; },
     buyCostume(id, c = this.active()) {
       const it = COSTUMES.find((x) => x.id === id);
       if (!c || !it || this.ownsCostume(id, c)) return { ok: false };
@@ -168,6 +186,7 @@
       c.coupons = c.coupons || [];
       if (cp.once && c.coupons.includes(key)) return { ok: false, msg: '이미 사용한 쿠폰이에요' };
       c.coins += cp.coins || 0; c.earned += cp.coins || 0; c.coupons.push(key);
+      if (cp.god != null) { data.settings.god = cp.god; godBadge(); }
       save(); return { ok: true, msg: cp.msg, coins: c.coins };
     },
 
@@ -234,6 +253,8 @@
     },
     boostName(game, id) { const b = (BOOSTS[game] || []).find((x) => x.id === id); return b ? b.name : id; },
     get settings() { return data.settings; },
+    // 무적 모드 (쿠폰 supermanon / supermanoff)
+    get god() { return !!data.settings.god; },
     setSound(on) { data.settings.sound = !!on; save(); },
     reload,
 
@@ -329,4 +350,5 @@
     },
   };
   window.Hub = Hub;
+  godBadge();
 })();

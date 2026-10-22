@@ -385,8 +385,10 @@ function step(dt) {
 }
 
 // returns false if the run ended
+const GOD = () => !!(window.Hub && window.Hub.god); // 무적 쿠폰 (테스트용)
 function damage(kind) {
   const h = G.heli;
+  if (GOD()) return true; // 무적: 부딪혀도 그대로 (바닥은 튕겨 오름)
   if (G.boostT > 0 && kind !== 'ground') return true;
   if (h.inv > 0) return true;
   if (G.shield) {
