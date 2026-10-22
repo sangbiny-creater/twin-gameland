@@ -7,7 +7,7 @@ const U = 60;
 const H = 540;
 const CFG = {
   runSpeed: 6.0 * U,
-  runSpeedMax: 9.0 * U,
+  runSpeedMax: 10.0 * U,
   jumpVel: 8.2 * U,
   gravity: 22 * U,
   hookRange: 5.5 * U,
@@ -23,7 +23,6 @@ const CFG = {
   bodyOff: 40, // feet -> body center
 };
 
-// 4개 월드 × 3스테이지 = 12스테이지 (1-1 ~ 4-3). 뒤로 갈수록 길고, 빠르고, 어려워진다.
 const STAGES = [];
 // 10개 월드 × 5판 = 50판 (1-1 ~ 10-5). 뒤로 갈수록 길고, 빠르고, 어려워진다.
 const PER_WORLD = 5;
@@ -31,7 +30,9 @@ const PER_WORLD = 5;
   ['구름왕국', 'cloud'], ['바닷속도시', 'ocean'], ['마법숲', 'magic'], ['별빛우주', 'space'], ['황금성', 'golden']].forEach(([name, theme], w) => {
   for (let k = 0; k < PER_WORLD; k++) {
     const i = w * PER_WORLD + k;
-    STAGES.push({ name: `${name} ${k + 1}`, label: `${w + 1}-${k + 1}`, world: w, seed: 11 + i * 13, len: 18000 + i * 400, speed: i * 0.03, diff: i * 0.07, theme });
+    // d: 0(1-1) → 1(10-5). 월드가 바뀔 때 한 번 더 확 올라가도록 월드 단계 + 판 단계를 섞는다
+    const d = Math.min(1, (w + k / PER_WORLD * 0.8) / 9.8);
+    STAGES.push({ name: `${name} ${k + 1}`, label: `${w + 1}-${k + 1}`, world: w, seed: 11 + i * 13, len: 18000 + i * 400, speed: d * 2.0, d, theme });
   }
 });
 
@@ -204,11 +205,24 @@ function buildLevel(si) {
   const R = rng(st.seed * 7919);
   const rand = (a, b) => a + (b - a) * R();
   const L = { plats: [], anchors: [], items: [], obs: [], hints: [], goal: null, len: st.len };
-  const diff = st.diff;
+  // ----- 난이도 손잡이 (d: 0 → 1) -----
+  const d = st.d;
+  const D = {
+    jumpMin: lerp(110, 175, d), jumpMax: lerp(160, 250, d),       // 점프 간격
+    platMin: lerp(420, 230, d), platMax: lerp(760, 430, d),       // 발판 길이 (점점 짧게)
+    dy: lerp(42, 85, d),                                          // 발판 높낮이 차
+    hookMin: lerp(380, 440, d), hookMax: lerp(470, 560, d),       // 훅 간격
+    hookMove: d < 0.2 ? 0 : lerp(25, 70, d),                      // 훅 흔들림 (2월드부터)
+    cloud: lerp(0.15, 0.75, d),                                   // 먹구름 나올 확률
+    cloudMove: d < 0.3 ? 0 : lerp(20, 60, d),                     // 위아래로 움직이는 먹구름 (3~4월드부터)
+    chainMax: d < 0.35 ? 2 : d < 0.7 ? 3 : 4,                     // 연속 훅 개수
+    learn: si === 0 ? 0.18 : lerp(0.12, 0.04, d),                 // 쉬운 앞부분 길이
+    heart: d < 0.75,                                              // 마지막 두 월드는 하트 아이템 없음
+  };
   const plat = (x, y, w, upper = false) => { const p = { x, y, w, upper, deco: Math.floor(R() * 1e6) }; L.plats.push(p); return p; };
   const anchor = (x, y, move = 0) => { const a = { x, y, bx: x, by: y, move, ph: R() * 6.28, used: false }; L.anchors.push(a); return a; };
   const item = (type, x, y) => L.items.push({ type, x, y, got: false, t: R() * 6 });
-  const cloud = (x, y, move = 0) => L.obs.push({ x, y, by: y, move, ph: R() * 6.28, hit: false });
+  const cloud = (x, y, move = D.cloudMove * (R() < 0.6 ? 1 : 0)) => L.obs.push({ x, y, by: y, move, ph: R() * 6.28, hit: false });
   const coinArc = (x0, y0, x1, y1, h, n) => {
     for (let i = 0; i < n; i++) {
       const t = (i + 0.5) / n;
@@ -222,34 +236,42 @@ function buildLevel(si) {
   coinLine(500, y - 60, 6);
   let x = 1000; // cursor: end of last platform
 
-  const nextY = (dy0, dy1) => clamp(y + rand(dy0, dy1), 330, 470);
+  const nextY = (dy0, dy1) => clamp(y + rand(dy0, dy1) * D.dy / 42, 320, 475);
+  // 점프로 닿을 수 있는 최대 거리 (판 시작 속도 기준, 높은 발판일수록 짧아짐) → 못 깨는 간격은 안 만든다
+  const v0 = CFG.runSpeed + st.speed * U;
+  const reach = (up) => {
+    const disc = CFG.jumpVel * CFG.jumpVel - 2 * CFG.gravity * Math.max(0, up);
+    if (disc <= 0) return 0;
+    return v0 * (CFG.jumpVel + Math.sqrt(disc)) / CFG.gravity * 0.78;
+  };
 
   const jumpGap = (opt = {}) => {
-    const gap = rand(110, 160 + diff * 12);
-    const ny = nextY(-40, 45);
+    let ny = nextY(-40, 45);
+    if (y - ny > 70) ny = y - 70; // 너무 높은 계단은 점프로 힘듦
+    const gap = Math.min(rand(D.jumpMin, D.jumpMax), reach(y - ny));
     coinArc(x - 30, y - 50, x + gap + 30, ny - 50, 90, 5);
-    const w = rand(420, 760);
+    const w = rand(D.platMin, D.platMax);
     plat(x + gap, ny, w);
-    if (opt.cloud && w > 480) cloud(x + gap + w * 0.55, ny - 34);
+    if (opt.cloud && w > 300) cloud(x + gap + w * 0.55, ny - 34);
     else coinLine(x + gap + 120, ny - 60, Math.floor(w / 140));
     if (opt.hint) L.hints.push({ x: x - 170, y: y - 150, text: '탭 / 스페이스 = 점프!' });
     x += gap + w; y = ny;
   };
 
   const hookGap = (opt = {}) => {
-    const gap = rand(380, 470 + diff * 25);
+    const gap = rand(D.hookMin, D.hookMax);
     const ny = nextY(-50, 40);
     const ax = x + gap * 0.42, ay = Math.min(y, ny) - rand(195, 225);
-    anchor(ax, ay, opt.move ? 30 + diff * 6 : 0);
+    anchor(ax, ay, opt.move ? D.hookMove : 0);
     // coins trace the swing arc under the anchor
     for (let i = 0; i < 7; i++) {
       const a = lerp(-0.9, 1.1, i / 6), r = 175;
       item(i === 3 && opt.star ? 'star' : 'coin', ax + Math.sin(a) * r, ay + Math.cos(a) * r);
     }
     if (opt.hint) L.hints.push({ x: x - 120, y: ay + 20, text: '공중에서 꾹! = 훅 걸기' });
-    const w = rand(460, 780);
+    const w = rand(D.platMin + 40, D.platMax + 20);
     plat(x + gap, ny, w);
-    if (opt.cloud && w > 520) cloud(x + gap + w * 0.6, ny - 34);
+    if (opt.cloud && w > 320) cloud(x + gap + w * 0.6, ny - 34);
     x += gap + w; y = ny;
   };
 
@@ -260,11 +282,11 @@ function buildLevel(si) {
     const base = Math.min(y, ny) - 215;
     for (let i = 0; i < n; i++) {
       const ax = x + 180 + i * sp, ay = base + (i % 2 ? -18 : 12);
-      anchor(ax, ay, move ? 28 + diff * 6 : 0);
+      anchor(ax, ay, move ? D.hookMove : 0);
       for (let k = 0; k < 3; k++) item('coin', ax - 50 + k * 50, ay + 170 + (k === 1 ? 12 : 0));
     }
     if (R() < 0.5) item('star', x + 180 + sp * (n - 1) + 170, base + 40);
-    const w = rand(500, 800);
+    const w = rand(D.platMin + 80, D.platMax + 40);
     plat(x + gap, ny, w);
     x += gap + w; y = ny;
   };
@@ -281,7 +303,7 @@ function buildLevel(si) {
     anchor(X0 + 230, ny - 245);
     const up = plat(X0 + 470, ny - 190, 560, true);
     coinLine(up.x + 60, up.y - 55, 9, 50);
-    item(R() < 0.35 ? 'heart' : 'star', up.x + up.w - 70, up.y - 95);
+    item(D.heart && R() < 0.35 ? 'heart' : 'star', up.x + up.w - 70, up.y - 95);
     x += gap + w; y = ny;
   };
 
@@ -289,7 +311,7 @@ function buildLevel(si) {
   let magnetPlaced = false, heartsPlaced = 0;
   while (x < st.len) {
     const prog = x / st.len;
-    if (prog < 0.18) {
+    if (prog < D.learn) {
       // A. 학습: 넓은 플랫폼 + 고정 훅
       if (first) { jumpGap({ hint: introJump }); introJump = false; first = false; continue; }
       if (introHook) { hookGap({ hint: true }); introHook = false; continue; }
@@ -298,24 +320,24 @@ function buildLevel(si) {
       // B. 리듬: 짧은 발판, 코인 아치, 장애물 소개
       const r = R();
       if (!magnetPlaced) { item('magnet', x - 200, y - 110); magnetPlaced = true; }
-      if (r < 0.45) jumpGap({ cloud: R() < 0.4 + diff * 0.1 });
-      else hookGap({ cloud: R() < 0.3, star: R() < 0.3 });
+      if (r < 0.45) jumpGap({ cloud: R() < D.cloud });
+      else hookGap({ cloud: R() < D.cloud * 0.7, star: R() < 0.3, move: d >= 0.5 && R() < 0.5 });
     } else if (prog < 0.68) {
       // C. 선택: 상/하 경로
       const r = R();
       if (r < 0.4) upperPath();
-      else if (r < 0.7) hookGap({ star: true, move: diff >= 2 });
+      else if (r < 0.7) hookGap({ star: true, move: d >= 0.2, cloud: R() < D.cloud * 0.5 });
       else jumpGap({ cloud: true });
     } else if (prog < 0.9) {
       // D. 압박: 이동 훅, 먹구름, 연속 훅
       const r = R();
-      if (heartsPlaced < 1) { item('heart', x - 160, y - 120); heartsPlaced++; }
-      if (r < 0.45) chainGap(2 + (R() < 0.3 + diff * 0.15 ? 1 : 0), true);
+      if (D.heart && heartsPlaced < 1) { item('heart', x - 160, y - 120); heartsPlaced++; }
+      if (r < 0.45) chainGap(2 + Math.floor(R() * (D.chainMax - 1)), d >= 0.2);
       else if (r < 0.7) hookGap({ move: true, cloud: true });
       else jumpGap({ cloud: true });
     } else {
       // E. 피날레: 긴 연속 스윙
-      chainGap(3, false);
+      chainGap(Math.min(D.chainMax + 1, 4), d >= 0.6);
       break;
     }
   }
@@ -615,7 +637,7 @@ function skinDrawn() { return G.skin && G.skin !== 'default' && !skinTheme() && 
 function runSpeedNow() {
   const prog = clamp(G.p.x / G.level.len, 0, 1);
   const base = CFG.runSpeed + STAGES[G.si].speed * U;
-  return Math.min(CFG.runSpeedMax, lerp(base, base + 2.2 * U, prog)) * G.speedMul;
+  return Math.min(CFG.runSpeedMax, lerp(base, base + 1.6 * U, prog)) * G.speedMul;
 }
 
 function findHookTarget(p) {
