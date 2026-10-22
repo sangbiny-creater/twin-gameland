@@ -151,3 +151,55 @@ main { max-width: 1140px; margin: 0 auto; padding: 14px calc(16px + env(safe-are
 .item .count b { font-weight: normal; font-size: 17px; }
 .item .count.zero { color: #9AA7B4; }
 .item .note { font-size: 12px; color: #6B7C8E; }
+
+/* ---------- 아이템 카드: 모두 같은 틀로 가지런히 ---------- */
+.grid { align-items: stretch; }
+.item { display: flex; flex-direction: column; align-items: stretch; gap: 0; padding: 8px 8px 10px; text-align: center; min-width: 0; }
+.item .pic { position: relative; display: flex; justify-content: center; align-items: center; }
+.item.boost .pic { height: 72px; }
+.item .icon { width: 62px; height: 62px; margin: 0; }
+.item .thumb { display: block; }
+.item .check { right: 4px; top: 4px; }
+.item .name { margin-top: 6px; font-size: 16px; line-height: 20px; height: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.3px; }
+.item .desc { margin-top: 2px; font-size: 12px; line-height: 15px; height: 30px; min-height: 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; opacity: .65; word-break: keep-all; }
+.item .meta { margin-top: auto; padding-top: 6px; min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 1px; }
+.item.skin .meta { min-height: 32px; }
+.item .price { font-size: 18px; line-height: 22px; }
+.item .count { font-size: 13px; line-height: 18px; color: #2265C9; white-space: nowrap; }
+.item .count b { font-size: 16px; }
+.item .owned-tag { font-size: 14px; color: #2FB86A; line-height: 22px; }
+.item .actions { margin-top: 6px; height: 36px; display: flex; }
+.item .actions .btn { width: 100%; height: 36px; font-size: 16px; white-space: nowrap; padding: 0 4px; }
+.item .note { width: 100%; font-size: 12px; line-height: 15px; color: #6B7C8E; display: flex; align-items: center; justify-content: center; word-break: keep-all; }
+.item.using { border-color: #20AFA1; box-shadow: 0 0 0 3px rgba(32,175,161,.18); }
+.use-chip { position: absolute; right: 6px; top: 6px; z-index: 2; font-size: 11px; line-height: 18px; padding: 0 7px; border-radius: 9px; background: #EEF2F6; color: #7A8796; border: 1px solid #D7DEE6; white-space: nowrap; }
+.use-chip.on { background: #20AFA1; color: #fff; border-color: #20AFA1; }
+.item.boost { position: relative; }
+.btn-row { display: none; }
+@media (max-width: 700px) {
+  .item { padding: 6px 6px 8px; }
+  .item .name { font-size: 14px; }
+  .item .actions .btn { font-size: 15px; height: 34px; }
+  .item .actions { height: 34px; }
+  .item .icon { width: 54px; height: 54px; }
+  .item.boost .pic { height: 62px; }
+}
+.item .meta.small { min-height: 24px; }
+
+.tab i { font-style: normal; }
+.gcard .gn { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gcard .gtext { min-width: 0; }
+@media (max-width: 420px) {
+  .tab i { display: none; }
+  .tab { font-size: 14px; }
+  .gcard .gn { font-size: 18px; }
+  .gcard img { width: 84px; flex-basis: 84px; }
+  .brand span:last-child { font-size: 17px; }
+}
+@media (max-width: 360px) {
+  .grid { gap: 6px; }
+  .item { padding: 6px 4px 8px; }
+  .item .name { font-size: 12.5px; letter-spacing: -0.6px; }
+  .item .desc { font-size: 11px; }
+  .item .actions .btn { font-size: 14px; }
+}

@@ -102,30 +102,36 @@ function setTab(name) {
 // ---------- items ----------
 const skinThumb = (id) => `assets/skins/${game === 'shisen' ? 'shisen_' : ''}${id}.jpg${V}`;
 const priceHTML = (p) => `<div class="price"><img src="${COIN}" alt="">${p}</div>`;
+// 카드 모양은 모두 같음: 그림 → 이름(1줄) → 설명(2줄 자리) → [가격/보유 줄] → [버튼 1개]  (아래 두 줄은 카드 맨 아래에 맞춤)
 function skinCard(s, ownedView) {
   const owned = Hub.ownsSkin(game, s.id), eq = Hub.equippedSkin(game) === s.id;
-  const d = document.createElement('div'); d.className = 'item' + (eq ? ' equipped' : '');
-  let bottom;
-  if (eq) bottom = '<button class="btn green" disabled>적용중</button>';
-  else if (owned) bottom = '<button class="btn blue" data-act="equip">적용하기</button>';
-  else bottom = priceHTML(s.price) + `<button class="btn pink${Hub.active().coins < s.price ? ' poor' : ''}" data-act="buy">구매</button>`;
-  d.innerHTML = `<img class="thumb" src="${skinThumb(s.id)}" alt="">${eq ? '<span class="check">✓</span>' : ''}<div class="name">${s.name}</div>${owned && !eq && !ownedView ? '<div class="count">보유</div>' : ''}${bottom}`;
-  const btn = d.querySelector('button[data-act]');
-  if (btn) btn.onclick = () => (btn.dataset.act === 'equip' ? equipSkin(s) : buySkin(s));
+  const d = document.createElement('div'); d.className = 'item skin' + (eq ? ' equipped' : '');
+  const meta = owned ? `<div class="meta"><span class="owned-tag">${eq ? '✓ 적용 중' : '보유 중'}</span></div>` : `<div class="meta">${priceHTML(s.price)}</div>`;
+  const btn = eq ? '<button class="btn green" disabled>적용중</button>'
+    : owned ? '<button class="btn blue" data-act="equip">적용하기</button>'
+      : `<button class="btn pink${Hub.active().coins < s.price ? ' poor' : ''}" data-act="buy">구매</button>`;
+  d.innerHTML = `<div class="pic"><img class="thumb" src="${skinThumb(s.id)}" alt="">${eq ? '<span class="check">✓</span>' : ''}</div>`
+    + `<div class="name">${s.name}</div>${meta}<div class="actions">${btn}</div>`;
+  const el = d.querySelector('button[data-act]');
+  if (el) el.onclick = () => (el.dataset.act === 'equip' ? equipSkin(s) : buySkin(s));
   return d;
 }
 function boostCard(b, ownedView) {
   const n = Hub.boostCount(game, b.id), using = Hub.isUsing(game, b.id);
-  const d = document.createElement('div'); d.className = 'item';
-  // manual 아이템(사천성 힌트·섞기 등)은 게임 화면 버튼으로 쓰므로 '사용중' 켜기/끄기가 없음
-  const toggle = n > 0 && !b.manual ? `<button class="btn ${using ? 'teal' : 'line'}" data-act="use">${using ? '사용중' : '사용하기'}</button>` : '';
-  const count = `<div class="count${n ? '' : ' zero'}">보유 <b>${n}</b>개</div>`;
-  d.innerHTML = `<img class="icon" src="${boostIcon(b.id)}" alt=""><div class="name">${b.name}</div><div class="desc">${b.desc}</div>`
-    + (ownedView ? `${count}${toggle || (b.manual ? '<div class="note">게임 화면 버튼으로 사용</div>' : '')}`
-      : `${priceHTML(b.price)}${count}<div class="btn-row"><button class="btn pink${Hub.active().coins < b.price ? ' poor' : ''}" data-act="buy">구매</button>${toggle}</div>`);
-  d.querySelectorAll('button[data-act]').forEach((btn) => {
-    btn.onclick = () => {
-      if (btn.dataset.act === 'buy') buyBoost(b);
+  const d = document.createElement('div'); d.className = 'item boost' + (using && n > 0 && !b.manual ? ' using' : '');
+  // 게임 시작 때 쓰는 부스트: 오른쪽 위 작은 배지로 '사용중' 켜기/끄기 (manual = 게임 화면 버튼으로 쓰는 아이템이라 배지 없음)
+  const chip = n > 0 && !b.manual ? `<button class="use-chip ${using ? 'on' : ''}" data-act="use" aria-label="사용 켜기/끄기">${using ? '사용중' : '안 씀'}</button>` : '';
+  const count = `<span class="count${n ? '' : ' zero'}">보유 <b>${n}</b>개</span>`;
+  const meta = ownedView ? `<div class="meta small">${count}</div>` : `<div class="meta">${priceHTML(b.price)}${count}</div>`;
+  const btn = ownedView
+    ? (b.manual ? '<div class="note">게임 화면 버튼으로 써요</div>'
+      : `<button class="btn ${using ? 'teal' : 'line'}" data-act="use">${using ? '사용중' : '사용하기'}</button>`)
+    : `<button class="btn pink${Hub.active().coins < b.price ? ' poor' : ''}" data-act="buy">구매</button>`;
+  d.innerHTML = `${ownedView ? '' : chip}<div class="pic"><img class="icon" src="${boostIcon(b.id)}" alt=""></div>`
+    + `<div class="name">${b.name}</div><div class="desc">${b.desc}</div>${meta}<div class="actions">${btn}</div>`;
+  d.querySelectorAll('[data-act]').forEach((el) => {
+    el.onclick = () => {
+      if (el.dataset.act === 'buy') buyBoost(b);
       else { Hub.setUsing(game, b.id, !using); blip(using ? 500 : 900); toast(!using ? `${b.name}: 다음 게임부터 사용해요` : `${b.name}: 안 쓰고 아껴 둘게요`); renderContent(); }
     };
   });
