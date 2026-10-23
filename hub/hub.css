@@ -264,3 +264,84 @@ i.star { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #FFF6FA; }
 .map-me[style*="costumes/"] { background-position: 50% 0 !important; background-color: #FFF6FA; }
 .char-card .dressed { position: absolute; left: 10px; top: 10px; font-size: 18px; }
+
+/* ---------- 로비 v2 (시안: 은유와 은결의 미니게임랜드) ---------- */
+#scrLobby { padding: 0; }
+.lb-scroll {
+  position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; touch-action: pan-y; scrollbar-width: none;
+  display: flex; flex-direction: column;
+  padding: var(--safe-t, 0px) var(--safe-r, 0px) var(--safe-b, 0px) var(--safe-l, 0px);
+  background: linear-gradient(#86C6F1 0%, #B9E0FA 40%, #D9EFFF 75%, #CFE9D6 100%);
+}
+.lb-scroll::-webkit-scrollbar { display: none; }
+.lb-top { display: flex; align-items: center; gap: 8px; padding: 10px 12px 4px; position: relative; z-index: 2; }
+.lb-me { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,.95); border-radius: 22px; padding: 4px 12px 4px 4px; box-shadow: 0 4px 10px rgba(24,59,91,.16); min-width: 0; }
+.lb-face { width: 62px; height: 62px; border-radius: 50%; object-fit: cover; object-position: top; border: 3px solid #FFD2E2; background: #FFF3F7; flex: 0 0 62px; }
+.lb-meinfo { min-width: 0; }
+.lb-namerow { display: flex; align-items: center; gap: 4px; }
+.lb-namerow b { font-weight: normal; font-size: 21px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 84px; }
+.lb-pen { width: 26px; height: 26px; border-radius: 50%; background: #EAF3FC; font-size: 13px; }
+.lb-lv { display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+.lb-lvtag { background: linear-gradient(#6FB6FF, #3D8BFF); color: #fff; border-radius: 10px; padding: 0 7px; font-size: 13px; line-height: 20px; }
+.lb-bar { width: 66px; height: 10px; border-radius: 6px; background: #DDE6F1; overflow: hidden; }
+.lb-bar i { display: block; height: 100%; background: linear-gradient(90deg, #FFD54A, #FFB52E); border-radius: 6px; }
+.lb-lvtxt { font-size: 11px; color: #5B6B80; text-align: right; }
+.lb-pills { display: flex; gap: 6px; flex: 1; justify-content: center; min-width: 0; }
+.lb-pill { display: inline-flex; align-items: center; gap: 2px; height: 34px; border-radius: 18px; padding: 0 6px 0 6px; background: rgba(28,44,78,.82); color: #fff; font-size: 17px; box-shadow: inset 0 0 0 2px rgba(255,255,255,.18); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lb-pill b { font-weight: normal; padding: 0 4px 0 2px; }
+.lb-pill i.coin, .lb-pill i.star { width: 22px; height: 22px; margin: 0; vertical-align: 0; }
+.lb-plus { width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(#FF7BA0, #F0466F); color: #fff; font-size: 18px; line-height: 22px; text-align: center; }
+.lb-btns { display: flex; gap: 5px; }
+.lb-btn { width: 44px; height: 52px; border-radius: 14px; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; box-shadow: 0 3px 0 #C8DCF0, 0 4px 10px rgba(24,59,91,.12); font-size: 11px; }
+.lb-btn img { width: 28px; height: 26px; object-fit: contain; mix-blend-mode: multiply; }
+.lb-body { flex: 1 0 auto; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+.lb-hero { position: relative; margin-top: -10px; }
+.lb-hero img { display: block; width: 100%; -webkit-mask-image: linear-gradient(transparent 0, #000 16%); mask-image: linear-gradient(transparent 0, #000 16%); }
+.lb-shoprow { display: flex; gap: 8px; align-items: stretch; margin: -10px 10px 0; padding: 6px; border-radius: 22px; background: rgba(255,255,255,.92); box-shadow: 0 6px 16px rgba(24,59,91,.15); position: relative; }
+.lb-shop { flex: 0 0 auto; border-radius: 16px; overflow: hidden; }
+.lb-shop img { display: block; height: 76px; width: auto; }
+.lb-items { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.lb-items-h { align-self: flex-start; font-size: 13px; background: #EAF3FC; color: #2F5A8A; border-radius: 10px; padding: 1px 10px; }
+.lb-itemlist { flex: 1; display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.lb-item { background: linear-gradient(#fff, #F1F6FC); border: 2px solid #E1EBF6; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2px 0; min-width: 0; }
+.lb-item img { width: 26px; height: 26px; object-fit: contain; }
+.lb-item b { font-weight: normal; font-size: 13px; color: #2A3A55; }
+.lb-noitem { grid-column: 1 / -1; align-self: center; text-align: center; font-size: 14px; color: #5B6B80; line-height: 1.3; }
+.lb-noitem small { font-size: 12px; color: #8A9AAE; }
+.lb-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 4px 10px 6px; }
+.lb-card { position: relative; background: linear-gradient(#fff, #F6FAFF); border-radius: 20px; padding: 6px 6px 8px; border: 3px solid #fff; box-shadow: 0 4px 0 #C8DCF0, 0 8px 16px rgba(24,59,91,.14); cursor: pointer; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.lb-card.fav { border-color: #FFD34D; }
+.lb-art { border-radius: 15px; overflow: hidden; background: #DCEBFA; }
+.lb-art img { display: block; width: 100%; height: auto; }
+.lb-fav { position: absolute; top: 11px; right: 11px; width: 15%; aspect-ratio: 1; border-radius: 50%; background: rgba(40,58,96,.78); color: #AFC2DB; font-size: 17px; display: grid; place-items: center; box-shadow: 0 0 0 2px rgba(255,255,255,.7); }
+.lb-card.fav .lb-fav { background: #fff; color: #FFB800; }
+.lb-best { display: flex; align-items: center; justify-content: center; gap: 3px; font-size: 15px; color: #26365A; white-space: nowrap; overflow: hidden; }
+.lb-crown { font-size: 14px; }
+.lb-play { height: 34px; border-radius: 18px; background: linear-gradient(#FFE27A, #FFC21E); box-shadow: 0 3px 0 #E09A12, inset 0 2px 0 rgba(255,255,255,.6); color: #D8341C; font-size: 17px; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
+.lb-tri { width: 0; height: 0; border-left: 12px solid #E8361E; border-top: 7px solid transparent; border-bottom: 7px solid transparent; }
+.lb-card.soon { cursor: default; background: linear-gradient(#F4F8FD, #E9F1FA); }
+.lb-soon-t { text-align: center; font-size: 18px; color: #26365A; margin-top: 2px; }
+.lb-soon-s { text-align: center; font-size: 12px; color: #5B6B80; }
+.lb-play.off { background: linear-gradient(#8FA6C8, #6D86AD); box-shadow: 0 3px 0 #50688F; color: #fff; font-size: 14px; letter-spacing: 1px; }
+.lb-wall { flex: 0 0 64px; margin-top: 6px; background: url(v2/wall.jpg) center bottom / auto 64px repeat-x; }
+
+/* PC·가로: 왼쪽 배너·아이템샵, 오른쪽 게임 카드 */
+#root:not(.portrait) .lb-body { flex-direction: row; align-items: flex-start; padding: 2px 14px 0; gap: 14px; }
+#root:not(.portrait) .lb-side { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+#root:not(.portrait) .lb-hero { margin-top: 0; border-radius: 20px; overflow: hidden; box-shadow: 0 6px 16px rgba(24,59,91,.18); border: 3px solid #fff; }
+#root:not(.portrait) .lb-hero img { -webkit-mask-image: none; mask-image: none; }
+#root:not(.portrait) .lb-shoprow { margin: 0; }
+#root:not(.portrait) .lb-shop img { height: 92px; width: auto; }
+#root:not(.portrait) .lb-itemlist { grid-template-columns: repeat(3, 1fr); }
+#root:not(.portrait) .lb-grid { flex: 0 0 auto; padding: 0; gap: 10px; grid-template-columns: repeat(3, 160px); align-content: start; }
+#root:not(.portrait) .lb-best { font-size: 13px; }
+#root:not(.portrait) .lb-play { height: 28px; font-size: 14px; }
+#root:not(.portrait) .lb-soon-t { font-size: 15px; } #root:not(.portrait) .lb-soon-s { font-size: 11px; }
+#root:not(.portrait) .lb-body { flex: 1 0 auto; justify-content: flex-start; }
+#root:not(.portrait) .lb-wall { flex-basis: 30px; background-size: auto 36px; }
+#root:not(.portrait) .lb-fav { font-size: 14px; top: 9px; right: 9px; }
+
+/* 설정 팝업 */
+.set-list { display: flex; flex-direction: column; gap: 8px; width: 100%; margin: 6px 0 12px; }
+.set-row { display: flex; justify-content: space-between; align-items: center; height: 52px; padding: 0 18px; border-radius: 16px; background: #F1F7FD; border: 2px solid #DCEAF8; font-size: 19px; }
+.set-row b { font-weight: normal; color: #3D8BFF; }

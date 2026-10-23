@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="hub/hub.css?v=20261023k">
+<link rel="stylesheet" href="hub/hub.css?v=20261023n">
 </head>
 <body>
 <div id="safe"></div>
@@ -33,19 +33,43 @@
     </footer>
   </section>
 
-  <!-- 2. 로비 (게임 고르기) -->
+  <!-- 2. 로비 (게임 고르기) — 처음 들어오면 보이는 화면 -->
   <section id="scrLobby" class="screen hidden">
-    <header class="top-bar">
-      <div class="me"><img id="meFace" alt=""><div><b id="meName"></b><span class="pill"><i class="coin"></i><b id="meCoins">0</b></span><span class="pill"><i class="star"></i><b id="meStars">0</b></span></div></div>
-      <div class="top-actions">
-        <button class="btn-sub small" data-go="records">📒 기록</button>
-        <button class="btn-sub small" data-go="select">캐릭터 바꾸기</button>
+    <div class="lb-scroll">
+      <header class="lb-top">
+        <div class="lb-me">
+          <img id="meFace" class="lb-face" alt="">
+          <div class="lb-meinfo">
+            <div class="lb-namerow"><b id="meName"></b><button id="btnMeRename" class="lb-pen" aria-label="이름 바꾸기">✏️</button></div>
+            <div class="lb-lv"><span id="meLv" class="lb-lvtag">Lv.1</span><span class="lb-bar"><i id="meLvBar"></i></span></div>
+            <div id="meLvTxt" class="lb-lvtxt">0 / 500</div>
+          </div>
+        </div>
+        <div class="lb-pills">
+          <button class="lb-pill" data-open="shop" aria-label="코인 · 아이템샵"><i class="coin"></i><b id="meCoins">0</b><span class="lb-plus">+</span></button>
+          <div class="lb-pill"><i class="star"></i><b id="meStars">0</b></div>
+        </div>
+        <nav class="lb-btns">
+          <button class="lb-btn" data-go="select"><img src="hub/v2/ic_char.jpg?v=20261023n" alt=""><span>캐릭터</span></button>
+          <button class="lb-btn" data-go="records"><img src="hub/v2/ic_book.jpg?v=20261023n" alt=""><span>기록</span></button>
+          <button class="lb-btn" id="btnSettings"><img src="hub/v2/ic_set.jpg?v=20261023n" alt=""><span>설정</span></button>
+        </nav>
+      </header>
+      <div class="lb-body">
+        <div class="lb-side">
+          <div class="lb-hero"><img src="hub/v2/hero.jpg?v=20261023n" alt="은유와 은결의 미니게임랜드"></div>
+          <div class="lb-shoprow">
+            <button class="lb-shop" data-open="shop"><img src="hub/v2/shop.png?v=20261023n" alt="아이템샵 — 게임을 더 재미있게!"></button>
+            <div class="lb-items">
+              <div class="lb-items-h">보유 아이템</div>
+              <div id="meItems" class="lb-itemlist"></div>
+            </div>
+          </div>
+        </div>
+        <div id="gameGrid" class="lb-grid"></div>
       </div>
-    </header>
-    <div id="gameGrid" class="game-grid"></div>
-    <footer class="hub-foot">
-      <button class="btn-sub shop-btn" data-open="shop">🛒 아이템샵</button>
-    </footer>
+      <div class="lb-wall"></div>
+    </div>
   </section>
 
   <!-- 3. 스카이훅 징검다리 -->
@@ -113,6 +137,18 @@
     </div>
   </div>
 
+  <div id="popSettings" class="modal hidden">
+    <div class="panel">
+      <div class="p-title">설정</div>
+      <div class="set-list">
+        <button id="setSound" class="set-row"><span>🔊 소리</span><b id="setSoundVal">켜짐</b></button>
+        <button id="setRename" class="set-row"><span>✏️ 이름 바꾸기</span><b>›</b></button>
+        <button class="set-row" data-go="select"><span>👦 캐릭터 바꾸기</span><b>›</b></button>
+      </div>
+      <div class="row"><button class="btn-main" data-close>닫기</button></div>
+    </div>
+  </div>
+
   <div id="popConfirm" class="modal hidden">
     <div class="panel">
       <div class="p-title" id="cfTitle">정말요?</div>
@@ -131,7 +167,7 @@
 
   <div id="toast" class="toast hidden"></div>
 </div>
-<script src="common/profile.js?v=20261023k"></script>
-<script src="hub/hub.js?v=20261023k"></script>
+<script src="common/profile.js?v=20261023n"></script>
+<script src="hub/hub.js?v=20261023n"></script>
 </body>
 </html>

@@ -38,7 +38,7 @@ function go(name) {
   ({ select: renderSelect, lobby: renderLobby, map: renderMap, records: renderRecords })[name]();
 }
 const routeOk = (n) => n in SCREENS || (n.startsWith('map-') && Hub.GAMES[n.slice(4)] && Hub.GAMES[n.slice(4)].stages);
-window.addEventListener('pageshow', () => { Hub.reload(); const n = (location.hash || '#select').slice(1); go(routeOk(n) ? n : 'select'); });
+window.addEventListener('pageshow', () => { Hub.reload(); const n = (location.hash || (Hub.active() ? '#lobby' : '#select')).slice(1); go(routeOk(n) ? n : 'select'); });
 window.addEventListener('hashchange', () => { const n = location.hash.slice(1); if (routeOk(n)) go(n); });
 
 function openModal(id) { closeModals(); $(id).classList.remove('hidden'); }
@@ -127,27 +127,39 @@ function openBuy() {
 // 게임 목록: 새 게임은 여기에 한 줄 추가 (썸네일, 열기, 로비/기록에 보일 문구)
 const stageSub = (g, c) => `징검다리 ${Hub.stageCleared(g, c)} / ${Hub.GAMES[g].stages} · 다음 ${Hub.stageLabel(Hub.stageNext(g, c), g)}`;
 const GAME_CARDS = [
-  { id: 'skyhook', name: 'Sky Hook Runner', thumb: 'hub/card_skyhook.jpg', open: () => go('map-skyhook'),
+  { id: 'skyhook', name: 'Sky Hook Runner', thumb: 'hub/v2/g_skyhook.jpg', open: () => go('map-skyhook'),
     sub: (c) => stageSub('skyhook', c),
     rec: (c, r) => `징검다리 <b>${Hub.stageCleared('skyhook', c)} / 12</b> · ${r.plays}번 도전<br>최고 거리 <b>${r.best}m</b> · 모은 코인 <b>${r.coins}</b>` },
-  { id: 'helicopter', name: 'Twin Helicopter', thumb: 'hub/card_helicopter.jpg', open: () => { location.href = Hub.GAMES.helicopter.path; },
+  { id: 'helicopter', name: 'Twin Helicopter', thumb: 'hub/v2/g_helicopter.jpg', open: () => { location.href = Hub.GAMES.helicopter.path; },
     sub: (c, r) => (r.plays ? `BEST ${r.best}m · ${r.plays}번 비행` : '아직 안 해봤어요'),
     rec: (c, r) => `BEST <b>${r.best}m</b> · ${r.plays}번 비행<br>모은 코인 <b>${r.coins}</b>` },
-  { id: 'stairs', name: '계단 오르기', thumb: 'hub/card_stairs.jpg', open: () => { location.href = Hub.GAMES.stairs.path; }, portrait: true,
+  { id: 'stairs', name: '계단 오르기', thumb: 'hub/v2/g_stairs.jpg', open: () => { location.href = Hub.GAMES.stairs.path; }, portrait: true,
     sub: (c, r) => (r.plays ? `BEST ${r.best}m · ${r.plays}번 도전` : '아직 안 해봤어요'),
     rec: (c, r) => `BEST <b>${r.best}m</b> · ${r.plays}번 도전<br>모은 코인 <b>${r.coins}</b>` },
-  { id: 'shisen', name: '사천성', thumb: 'hub/card_shisen.jpg', open: () => go('map-shisen'), portrait: true,
+  { id: 'shisen', name: '사천성', thumb: 'hub/v2/g_shisen.jpg', open: () => go('map-shisen'), portrait: true,
     sub: (c) => stageSub('shisen', c),
     rec: (c, r) => `징검다리 <b>${Hub.stageCleared('shisen', c)} / 12</b> · ${r.plays}번 도전<br>모은 코인 <b>${r.coins}</b>` },
-  { id: 'downhill', name: '다운힐 러너', thumb: 'hub/card_downhill.jpg', open: () => { location.href = Hub.GAMES.downhill.path; }, portrait: true,
+  { id: 'downhill', name: '다운힐 러너', thumb: 'hub/v2/g_downhill.jpg', open: () => { location.href = Hub.GAMES.downhill.path; }, portrait: true,
     sub: (c, r) => (r.plays ? `BEST ${r.best.toLocaleString()}m · ${r.plays}번 도전` : '장애물을 피해 끝없이 내려가요!'),
     rec: (c, r) => `BEST <b>${r.best.toLocaleString()}m</b> · ${r.plays}번 도전<br>모은 코인 <b>${r.coins}</b>` },
 ];
 const mmss = (t) => `${Math.floor(t / 60)}분 ${String(t % 60).padStart(2, '0')}초`;
+// 레벨: 지금까지 모은 코인 500개마다 1레벨
+const LV_STEP = 500;
+// 보유 아이템 그림 (아이템샵과 같은 그림)
+const ITEM_ICON = { hint: 'v2/boost_hint', shuffle: 'v2/boost_shuffle', time: 'v2/boost_time', bomb: 'v2/boost_bomb', find: 'v2/boost_find', combo: 'v2/boost_combo' };
+const itemIcon = (id) => `shop/assets/${ITEM_ICON[id] || 'icons/' + id}.png?v=20261023n`;
+// 게임 카드 아래 한 줄: 징검다리 게임은 깬 판 수, 나머지는 최고 기록
+const cardLine = (g, c, r) => (Hub.GAMES[g.id].stages
+  ? `징검다리 ${Hub.stageCleared(g.id, c)} / ${Hub.GAMES[g.id].stages}`
+  : (r.plays ? `BEST ${r.best.toLocaleString()}m` : '첫 도전을 기다려요!'));
 function renderLobby() {
   const c = Hub.active();
   $('meFace').src = face(c); $('meName').textContent = c.name;
-  $('meCoins').textContent = c.coins; $('meStars').textContent = Hub.starsTotal(c);
+  $('meCoins').textContent = c.coins.toLocaleString(); $('meStars').textContent = Hub.starsTotal(c);
+  const earned = c.earned || 0, lv = Math.floor(earned / LV_STEP) + 1, cur = earned % LV_STEP;
+  $('meLv').textContent = `Lv.${lv}`; $('meLvBar').style.width = `${(cur / LV_STEP) * 100}%`; $('meLvTxt').textContent = `${cur} / ${LV_STEP}`;
+  renderItems(c);
   // 즐겨찾기한 게임이 앞으로 — 별을 가장 최근에 누른 게임이 맨 앞
   const favs = c.favs || [];
   const list = GAME_CARDS.map((g, i) => ({ g, i, fav: favs.indexOf(g.id) }))
@@ -156,15 +168,16 @@ function renderLobby() {
   const grid = $('gameGrid'); grid.innerHTML = '';
   for (const { g, fav } of list) {
     const card = document.createElement('div');
-    card.className = 'game-card' + (fav ? ' fav' : ''); card.setAttribute('role', 'button'); card.tabIndex = 0;
-    card.innerHTML = `<div class="thumb" style="background-image:url(${g.thumb}?v=20261022l)"></div>
-      <button class="fav-btn" aria-label="즐겨찾기">${fav ? '★' : '☆'}</button>
-      <div class="g-name"></div><div class="g-sub"></div>`;
-    card.querySelector('.g-name').textContent = g.name;
-    card.querySelector('.g-sub').textContent = g.sub(c, Hub.rec(g.id, c));
+    card.className = 'lb-card' + (fav ? ' fav' : ''); card.setAttribute('role', 'button'); card.tabIndex = 0;
+    card.innerHTML = `<div class="lb-art"><img src="${g.thumb}?v=20261023n" alt=""></div>
+      <button class="lb-fav" aria-label="즐겨찾기">★</button>
+      <div class="lb-best"><span class="lb-crown">👑</span><span class="lb-bt"></span></div>
+      <div class="lb-play"><span class="lb-tri"></span>게임 시작</div>`;
+    card.querySelector('.lb-art img').alt = g.name;
+    card.querySelector('.lb-bt').textContent = cardLine(g, c, Hub.rec(g.id, c));
     card.addEventListener('click', () => { blip(880); g.open(); });
     card.addEventListener('keydown', (e) => { if (e.key === 'Enter') g.open(); });
-    card.querySelector('.fav-btn').addEventListener('click', (e) => {
+    card.querySelector('.lb-fav').addEventListener('click', (e) => {
       e.stopPropagation();
       const on = Hub.toggleFav(g.id, c); blip(on ? 1046 : 500);
       toast(on ? `${g.name} 즐겨찾기! 맨 앞으로 옮겼어요 ★` : '즐겨찾기에서 뺐어요');
@@ -172,10 +185,38 @@ function renderLobby() {
     });
     grid.appendChild(card);
   }
-  const soon = document.createElement('div'); soon.className = 'game-card soon-card';
-  soon.innerHTML = '<div class="thumb soon-thumb">?</div><div class="g-name">다음 게임</div><div class="g-sub">곧 나와요!</div>';
+  const soon = document.createElement('div'); soon.className = 'lb-card soon';
+  soon.innerHTML = '<div class="lb-art"><img src="hub/v2/g_soon.jpg?v=20261023n" alt=""></div><div class="lb-soon-t">다음 게임</div><div class="lb-soon-s">곧 새로운 모험이 찾아와요!</div><div class="lb-play off">COMING SOON</div>';
   grid.appendChild(soon);
 }
+// 보유 아이템: 모든 게임의 부스트를 종류별로 합쳐서 많은 순서로 6개
+function renderItems(c) {
+  const sum = {};
+  for (const [game, list] of Object.entries(Hub.BOOSTS)) for (const b of list) {
+    const n = Hub.boostCount(game, b.id, c);
+    if (n > 0) sum[b.id] = (sum[b.id] || 0) + n;
+  }
+  const top = Object.entries(sum).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  const box = $('meItems'); box.innerHTML = '';
+  if (!top.length) { box.innerHTML = '<div class="lb-noitem">아직 아이템이 없어요<br><small>아이템샵에서 부스트를 사 보세요!</small></div>'; return; }
+  for (const [id, n] of top) {
+    const d = document.createElement('button'); d.className = 'lb-item';
+    d.innerHTML = `<img src="${itemIcon(id)}" alt=""><b>x${n}</b>`;
+    d.addEventListener('click', () => { blip(); location.href = 'shop/index.html'; });
+    box.appendChild(d);
+  }
+}
+function renameMe() {
+  const c = Hub.active();
+  const n = prompt('새 이름 (8글자까지)', c.name);
+  if (n && n.trim()) { Hub.rename(c.id, n); toast('이름을 바꿨어요!'); renderLobby(); }
+}
+$('btnMeRename').addEventListener('click', () => { blip(); renameMe(); });
+// 설정
+function renderSettings() { $('setSoundVal').textContent = Hub.settings.sound ? '켜짐' : '꺼짐'; }
+$('btnSettings').addEventListener('click', () => { blip(); renderSettings(); openModal('popSettings'); });
+$('setSound').addEventListener('click', () => { Hub.setSound(!Hub.settings.sound); document.body.classList.toggle('muted', !Hub.settings.sound); renderSettings(); blip(); });
+$('setRename').addEventListener('click', () => { closeModals(); renameMe(); });
 // ---------- 3. 스카이훅 징검다리 ----------
 // 월드마다 배경 그림 카드 1장, 그 안에서 5개 돌다리가 아래 → 위로 올라감
 // 가로 화면: 카드가 옆으로 나란히 (좌우로 밀기) / 폰 세로 화면: 카드가 위아래로 (위아래로 밀기)
