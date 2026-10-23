@@ -1,6 +1,7 @@
 """캐릭터 v2 팩(character/<캐릭터>_character_v2_png_assets)을 게임용 파일로 만든다.
 
-사용: python3 tools/build_char_v2.py eungyeol eungyeol2
+사용: python3 tools/build_char_v2.py eungyeol eungyeol2 [그림 폴더]
+  그림 폴더를 안 주면 character/<캐릭터>_character_v2_png_assets/character_v2/<캐릭터>/base
   - common/chars/<look>.webp + .json : 모든 게임이 쓰는 포즈 아틀라스 (common/charv2.js가 읽음)
   - 메뉴·결과 화면용 얼굴/전신 그림 (기존 파일 이름 규칙 그대로)
 """
@@ -11,7 +12,8 @@ from scipy import ndimage as nd
 
 src_name, look = sys.argv[1], sys.argv[2]
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = f'{ROOT}/character/{src_name}_character_v2_png_assets/character_v2/{src_name}/base/{src_name}_base_'
+SRC_DIR = sys.argv[3] if len(sys.argv) > 3 else f'{ROOT}/character/{src_name}_character_v2_png_assets/character_v2/{src_name}/base'
+SRC = f'{SRC_DIR}/{src_name}_base_'
 BG = {'eunyu': (255, 228, 238), 'eungyeol': (221, 238, 255)}[src_name]
 
 def load(p):
@@ -37,16 +39,40 @@ BODY = ['idle', 'ready', 'run_0', 'run_1', 'run_2', 'run_3', 'run_4', 'run_5', '
         'swing_0', 'swing_1', 'hit', 'dizzy', 'happy', 'cheer', 'dead',
         'back_run_0', 'back_run_1', 'back_left', 'back_right', 'back_hit', 'back_happy', 'back_dead', 'back_boost']
 frames = {}  # name -> (image, scale)
-for p in BODY: frames[p] = (clean(load(p), p in STRAYS), 0.6)
-frames['tile_face'] = (load('tile_face'), 0.75)
-for p in ['face_base', 'face_happy', 'face_sad', 'face_hurt']: frames[p] = (load(p), 0.5)
+def body(p):
+    im = clean(load(p), p in STRAYS)
+    if im.width != 512: im = im.resize((512, 512), Image.LANCZOS)
+    bb = im.getchannel('A').point(lambda v: 255 if v > 20 else 0).getbbox()
+    if bb and bb[3] < 470 and not p.startswith('swing'):  # 발이 떠 있음 → 키를 맞추고 발을 488에
+        part = im.crop(bb); k = REF_H / part.height
+        part = part.resize((round(part.width * k), round(part.height * k)), Image.LANCZOS)
+        im = Image.new('RGBA', (512, 512)); cx = (bb[0] + bb[2]) // 2
+        im.alpha_composite(part, (cx - part.width // 2, 488 - part.height))
+    return im
+hs = []
+for p in BODY:
+    bb = load(p).getchannel('A').point(lambda v: 255 if v > 20 else 0).getbbox()
+    if bb and bb[3] >= 470: hs.append(bb[3] - bb[1])
+REF_H = sorted(hs)[len(hs) // 2]
+for p in BODY: frames[p] = (body(p), 0.6)
+frames['tile_face'] = (load('tile_face'), 192 / load('tile_face').width)
+for p in ['face_base', 'face_happy', 'face_sad', 'face_hurt']: frames[p] = (load(p), 256 / load(p).width)
 # 헬리콥터: 몸체 + 조종사 + 유리를 미리 합쳐 둠 (조종사는 창문 가운데)
 glass = load('heli_glass')
 def heli(body, pilot):
-    c = load(body).copy(); s = 0.85
-    pi = load(pilot).resize((int(512 * s), int(512 * s)), Image.LANCZOS)
-    c.alpha_composite(pi, (int(575 - 256 * s), int(335 - 256 * s)))
-    c.alpha_composite(glass); return c
+    b = load(body)
+    if b.width == 1024:  # 1024×640 팩: 몸체 → 조종사(창문 가운데에 맞춰 줄임) → 유리
+        c = b.copy(); s = 0.85
+        pi = load(pilot).resize((int(512 * s), int(512 * s)), Image.LANCZOS)
+        c.alpha_composite(pi, (int(575 - 256 * s), int(335 - 256 * s)))
+        c.alpha_composite(glass)
+    else:  # 512 팩: 같은 좌표에 조종사 → 몸체 → 유리 (조종사 아래쪽이 몸체에 가려짐)
+        c = Image.new('RGBA', b.size); c.alpha_composite(load(pilot)); c.alpha_composite(b); c.alpha_composite(glass)
+    # 팩마다 여백이 달라서, 헬기가 캔버스 폭의 55%가 되게 다시 맞춤 (게임에서 같은 크기로 보이게)
+    bb = c.getchannel('A').point(lambda v: 255 if v > 8 else 0).getbbox(); part = c.crop(bb)
+    cw = round(part.width / 0.55); ch = round(cw * 640 / 1024)
+    out = Image.new('RGBA', (cw, ch)); out.alpha_composite(part, ((cw - part.width) // 2, (ch - part.height) // 2))
+    return out.resize((1024, 640), Image.LANCZOS)
 for i in range(3): frames[f'heli_{i}'] = (heli(f'heli_body_{i}', 'pilot_fly'), 0.4)
 frames['heli_happy'] = (heli('heli_body_1', 'pilot_happy'), 0.4)
 frames['heli_hurt'] = (heli('heli_body_1', 'pilot_hurt'), 0.4)
@@ -88,5 +114,5 @@ trim(load('face_base'), 138).save(f'{ROOT}/helicopter/assets/face_{look}.png', o
 trim(heli('heli_body_crash', 'pilot_dizzy'), 200).save(f'{ROOT}/helicopter/assets/{look}_crash.png', optimize=True)
 for k, p in [('idle', 'idle'), ('happy', 'happy'), ('dead', 'dead')]:
     trim(clean(load(p), p in STRAYS), 240).save(f'{ROOT}/stairs/assets/{look}_{k}.png', optimize=True)
-trim(load('front_stand'), 600).save(f'{ROOT}/common/costumes/{look}_base.png', optimize=True)
+trim(load('front_stand'), 600 if load('front_stand').width >= 1024 else 460).save(f'{ROOT}/common/costumes/{look}_base.png', optimize=True)
 print(look, 'frames', len(meta), 'atlas', atlas.size, os.path.getsize(f'{ROOT}/common/chars/{look}.webp') // 1024, 'KB')

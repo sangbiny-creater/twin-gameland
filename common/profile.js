@@ -126,7 +126,7 @@
   };
 
   // 캐릭터 모양: 기본 은유·은결 + 새 캐릭터 v2 (그림은 common/chars, common/charv2.js)
-  const LOOKS = ['eunyu', 'eungyeol', 'eungyeol2'];
+  const LOOKS = ['eunyu', 'eungyeol', 'eunyu2', 'eungyeol2'];
   // 옷(코스튬) 그림이 있는 캐릭터
   const DRESSABLE = ['eunyu', 'eungyeol'];
 
