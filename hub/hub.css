@@ -413,3 +413,13 @@ img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #
 .look.on.base-eungyeol { border-color: #4FA3F0; background: #EEF6FF; }
 .char-card.base-eunyu { border-color: #FFC2D6; }
 .char-card.base-eungyeol { border-color: #BFDDFB; }
+
+/* 이름 입력 중(키보드 올라옴): 배치는 그대로, 팝업만 화면 위쪽으로 */
+#root.typing .modal { align-items: flex-start; padding-top: calc(var(--safe-t, 0px) + 14px); }
+/* 캐릭터가 많아져도 팝업 안에 들어가게 */
+.looks { flex-wrap: wrap; }
+#popCreate .panel { max-width: 930px; }
+#root:not(.portrait) #popCreate .looks { gap: 12px; }
+#root:not(.portrait) #popCreate .look { width: 120px; font-size: 17px; }
+#root:not(.portrait) #popCreate .look img { width: 88px; height: 88px; }
+.modal { z-index: 20; } /* 홈 화면 추가 안내보다 팝업이 위에 */

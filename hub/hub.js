@@ -3,7 +3,7 @@
 const $ = (id) => document.getElementById(id);
 const root = $('root');
 // 얼굴: 옷을 입었으면 옷 그림(윗부분을 동그랗게 보여 줌)
-const face = (c) => Hub.costumeImg(c) || `skyhook/assets/${c.look}_base.jpg?v=20261023x`;
+const face = (c) => Hub.costumeImg(c) || `skyhook/assets/${c.look}_base.jpg?v=20261024c`;
 
 // ---------- sound (tiny UI blips) ----------
 let actx = null;
@@ -61,7 +61,7 @@ function renderSelect() {
     b.className = 'char-card ' + c.look + (lk ? ' base-' + lk.base : '');
     b.innerHTML = `<img src="${face(c)}" alt=""><div class="nm"></div><div class="st"><i class="coin"></i>${c.coins} · <i class="star"></i>${Hub.starsTotal(c)}</div>`;
     b.querySelector('.nm').textContent = c.name;
-    b.addEventListener('click', () => { blip(880); Hub.setActive(c.id); go('lobby'); });
+    b.addEventListener('click', () => { blip(880); Hub.setActive(c.id); preload(c.look); go('lobby'); });
     grid.appendChild(b);
   }
   if (Hub.chars().length < Hub.MAX_CHARS) {
@@ -90,6 +90,7 @@ function openCreate() {
   setLook(createLook);
   openModal('popCreate');
 }
+const preload = (look) => { try { if (window.CharV2) CharV2.load(look); } catch (e) { /* ignore */ } }; // 새 캐릭터 그림을 미리 받아 둠 (게임 첫 판부터 보이게)
 function setLook(l) { createLook = l; document.querySelectorAll('.look').forEach((b) => b.classList.toggle('on', b.dataset.look === l)); }
 // 캐릭터 만들기 버튼: common/chars/looks.js 목록대로 (새 캐릭터는 목록에 추가만 하면 나옴)
 (function buildLooks() {
@@ -97,7 +98,7 @@ function setLook(l) { createLook = l; document.querySelectorAll('.look').forEach
   for (const l of window.CHAR_LOOKS || [{ look: 'eunyu', name: '은유 스타일', base: 'eunyu' }, { look: 'eungyeol', name: '은결 스타일', base: 'eungyeol' }]) {
     const b = document.createElement('button');
     b.className = `look base-${l.base}` + (l.atlas ? ' v2' : ''); b.dataset.look = l.look;
-    b.innerHTML = `<img src="skyhook/assets/${l.look}_base.jpg?v=20261024a" alt=""><span></span>`;
+    b.innerHTML = `<img src="skyhook/assets/${l.look}_base.jpg?v=20261024c" alt=""><span></span>`;
     b.querySelector('span').textContent = l.name;
     if (l.isNew) b.querySelector('span').insertAdjacentHTML('beforeend', ' <i class="new">NEW</i>');
     b.addEventListener('click', () => { blip(); setLook(l.look); });
@@ -109,7 +110,7 @@ $('btnCreate').addEventListener('click', () => {
   if (!name) { toast('이름을 적어 주세요!'); $('inName').focus(); return; }
   const c = Hub.create(name, createLook);
   if (!c) { toast('자리가 없어요. 코인으로 자리를 늘려요!'); return; }
-  blip(1046); $('inName').blur();
+  blip(1046); $('inName').blur(); preload(c.look);
   toast(`${c.name} 캐릭터가 생겼어요!`);
   renderSelect(); closeModals();
 });
@@ -414,6 +415,10 @@ const isStandalone = navigator.standalone === true || window.matchMedia('(displa
 // 폰 세로: 세로 전용 배치 (논리 폭 540) / 폰 가로·PC: 가로 배치 (논리 높이 540)
 const isTouch = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
 function resize() {
+  // 이름 입력 중(폰 키보드가 올라옴)에는 화면 배치를 바꾸지 않고 팝업만 위로 올림
+  const typing = isTouch && document.activeElement && document.activeElement.tagName === 'INPUT';
+  root.classList.toggle('typing', typing);
+  if (typing && scaleNow) return;
   const vv = window.visualViewport;
   const vw = Math.round(vv ? vv.width : window.innerWidth), vh = Math.round(vv ? vv.height : window.innerHeight);
   const s = $('safe').getBoundingClientRect();
@@ -432,6 +437,8 @@ function resize() {
   if (!$('scrMap').classList.contains('hidden')) renderMap();
 }
 window.addEventListener('resize', resize);
+document.addEventListener('focusin', resize);
+document.addEventListener('focusout', () => setTimeout(resize, 50));
 window.addEventListener('orientationchange', () => setTimeout(resize, 200));
 if (window.visualViewport) window.visualViewport.addEventListener('resize', resize);
 resize();

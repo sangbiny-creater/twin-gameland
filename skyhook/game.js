@@ -520,7 +520,8 @@ function limb(g, x1, y1, x2, y2, w, col) {
 function blob(g, fill, lw = 2.5) { g.fillStyle = fill; g.fill(); g.strokeStyle = OUT; g.lineWidth = lw; g.stroke(); }
 
 function drawKid(g, who, pose, t, opt = {}) {
-  const k = KIDS[who];
+  // 새 캐릭터 그림을 아직 불러오는 중이면 같은 계열 기본 캐릭터로
+  const k = KIDS[who] || KIDS[window.CharV2 ? CharV2.base(who) : who] || KIDS.eunyu;
   g.lineCap = 'round'; g.lineJoin = 'round';
   const run = Math.sin(t * 16);
   let legA = 0, legB = 0, armA = 0, armB = 0, legLen = 18, armsUp = false;
@@ -659,6 +660,7 @@ function drawKidSprite(g, who, pose, t) {
   if (window.Costume && Costume.ready()) return Costume.draw(g, pose, t, { h: 118, hangTop: -100 });
   if (!Sprites.ready) return false;
   const F = Sprites.frames;
+  if (window.CharV2 && CharV2.is(who)) who = CharV2.base(who); // 새 캐릭터 그림을 불러오는 중: 기본 캐릭터 그림으로
   const pick = (act, fps) => {
     let n = 0; while (F[`${who}_${act}_${n}`]) n++;
     return n ? F[`${who}_${act}_${Math.floor(t * fps) % n}`] : null;

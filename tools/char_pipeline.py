@@ -93,23 +93,28 @@ def place(im, s, src, dst, size):
     out = Image.new('RGBA', size); out.alpha_composite(big, (round(dst[0] - src[0] * s), round(dst[1] - src[1] * s)))
     return out
 
-def normalize(im, pose, size, scale_hint=None):
-    """규격 캔버스에 맞추기 (기준 v4 7쪽): 머리 폭·발 위치·가운데"""
+STAND_H = 393   # 서 있는 키 (512 캔버스) — 쌍둥이 키를 똑같이 맞춤
+FACE_REF = 190  # 얼굴·타일·탈것 크기 기준: 은결 v3 의 머리 폭(서 있는 키 393일 때). 머리카락이 넓은 캐릭터는 그만큼 크게
+
+def normalize(im, pose, size, scale_hint=None, std=210):
+    """규격 캔버스에 맞추기: std = 이 캐릭터가 서 있는 키 393일 때의 머리 폭 (머리 폭 대신 키로 쌍둥이 크기를 맞춤)"""
     k = kind(pose); b = bbox(im); cx = (b[0] + b[2]) / 2
-    hw = head_width(im)
+    hw = head_width(im); f = std / FACE_REF
     if k == 'front':
-        s = 420 / hw; return place(im, s, (cx, b[3]), (512, 976), size), s
+        s = 2 * std / hw; return place(im, s, (cx, b[3]), (512, 976), size), s
     if k == 'face':
-        s = 360 / max(hw, b[2] - b[0]) ; return place(im, s, (cx, b[1]), (256, 40), size), s
+        s = 360 * f / max(hw, b[2] - b[0]) ; return place(im, s, (cx, b[1]), (256, 40), size), s
     if k == 'tile':
-        s = 205 / (b[2] - b[0]); return place(im, s, (cx, (b[1] + b[3]) / 2), (128, 128), size), s
+        s = min(205 * f, 240) / (b[2] - b[0]); return place(im, s, (cx, (b[1] + b[3]) / 2), (128, 128), size), s
     if k == 'cloud':
         s = 600 / (b[2] - b[0]); return place(im, s, (cx, (b[1] + b[3]) / 2), (512, 380), size), s
     if k == 'ride':
-        s = 250 / hw; return place(im, s, (cx, b[3]), (512, 370), size), s
-    s = 210 / hw
+        s = 250 * f / hw; return place(im, s, (cx, b[3]), (512, 370), size), s
+    s = std / hw
     if scale_hint and (k == 'lying' or abs(s / scale_hint - 1) > 0.35): s = scale_hint  # 누운 자세 등은 다른 포즈 크기로
     if k == 'hang':
+        # 팔 든 매달리기: 손끝~발 길이가 서 있는 키의 1.05배를 넘지 않게 (넘으면 줄 잡을 때 키가 커 보임)
+        s = min(s, STAND_H * 1.05 / (b[3] - b[1]))
         top = np.array(im)[b[1]:b[1] + 12, :, 3] > 60; xs = np.where(top.any(0))[0]
         hx = xs.mean() if len(xs) else cx
         return place(im, s, (hx, b[1]), (256, 40), size), s
@@ -210,6 +215,10 @@ def cmd_import(eid, cname, src, refdir=None):
     report, redo, done = [], [], {}
     # 몸 그림 크기를 맞추려고 서 있는 포즈의 배율을 먼저 구함
     scales = []
+    std = 210
+    if files.get('idle_0'):  # 서 있는 그림의 키가 STAND_H 가 되는 머리 폭 = 이 캐릭터의 기준 머리 폭
+        i0, _ = main_part(remove_bg(Image.open(files['idle_0']))); b0 = bbox(i0)
+        std = head_width(i0) * STAND_H / (b0[3] - b0[1]); print(f"  기준 머리 폭 {std:.0f} (얼굴 배율 {std / FACE_REF:.2f})")
     order = sorted(M, key=lambda m: kind(m['pose']) == 'lying')
     for m in order:
         p = m['pose']; f = files.get(p)
@@ -224,7 +233,7 @@ def cmd_import(eid, cname, src, refdir=None):
         if bad:
             report.append(f'{m["no"]:>2}. {p}: ✕ ' + ' / '.join(bad + warn)); redo.append((m, bad + warn)); continue
         hint = float(np.median(scales)) if scales else None
-        fixed, s = normalize(im, p, (m['w'], m['h']), hint)
+        fixed, s = normalize(im, p, (m['w'], m['h']), hint, std)
         if kind(p) == 'ground': scales.append(s)
         fixed.save(f'{base}/{eid}_base_{p}.png', optimize=True); done[p] = True
         report.append(f'{m["no"]:>2}. {p}: ○' + (' (확인 필요: ' + ' / '.join(warn) + ')' if warn else ''))
@@ -543,7 +552,8 @@ def cmd_build(eid, cname, base_look):
     # 메뉴·결과 화면 그림
     BG = {'eunyu': (255, 228, 238), 'eungyeol': (221, 238, 255)}.get(base_look, (236, 244, 252))
     def face_jpg(p, out):
-        im = L(p); bb = bbox(im); side = int((bb[2] - bb[0]) * 1.06); cx = (bb[0] + bb[2]) // 2; top = bb[1] - int(side * 0.02)
+        # 머리카락 폭이 아니라 같은 크기(얼굴 360 기준)로 잘라서 쌍둥이 얼굴 크기가 같게 (머리카락이 넓으면 옆이 조금 잘림)
+        im = L(p); bb = bbox(im); side = 382; cx = (bb[0] + bb[2]) // 2; top = max(0, bb[1] - 8)
         c = im.crop((cx - side // 2, top, cx + side // 2, top + side)); bg = Image.new('RGBA', c.size, BG + (255,)); bg.alpha_composite(c)
         bg.convert('RGB').resize((240, 240), Image.LANCZOS).save(out, quality=90)
     for k, p in [('base', 'face_base'), ('happy', 'face_happy'), ('sad', 'face_sad')]:

@@ -69,9 +69,10 @@ function drawTile(name, x, y, w, h, alpha = 1) {
   spr(name, x, y, w, h, alpha);
   if (name === MY_TILE && window.CharV2 && CharV2.is(MY_LOOK) && CharV2.ready(MY_LOOK)) {
     ctx.save(); ctx.globalAlpha = alpha;
-    ctx.beginPath(); ctx.roundRect(x - w * 0.36, y - h * 0.38, w * 0.72, h * 0.72, w * 0.1); ctx.clip();
+    // 기본 타일 얼굴과 같은 크기로 (타일 안쪽 판을 거의 다 채움)
+    ctx.beginPath(); ctx.roundRect(x - w * 0.42, y - h * 0.41, w * 0.84, h * 0.8, w * 0.12); ctx.clip();
     ctx.fillStyle = '#FFF6E8'; ctx.fillRect(x - w / 2, y - h / 2, w, h);
-    CharV2.drawCenter(ctx, MY_LOOK, 'tile_face', x, y - h * 0.02, w * 0.78);
+    CharV2.drawCenter(ctx, MY_LOOK, 'tile_face', x, y - h * 0.02, w * 1.02);
     ctx.restore(); return;
   }
   if (name !== MY_TILE || !window.Costume || !Costume.ready()) return;
