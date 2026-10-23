@@ -388,3 +388,9 @@ img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #
 #root:not(.portrait) .lb-card .lb-fav::after { font-size: 13px; }
 #root.portrait .lb-body { flex: 0 0 auto; justify-content: flex-start; }
 #root.portrait .lb-wall { flex: 1 0 70px; background-position: center bottom; }
+
+/* 인트로: 세로 화면(폰)은 그림으로 화면을 꽉 채움 (가로·PC는 그림 전체가 보이게) */
+@media (orientation: portrait) {
+  .title-scr .ts-art { object-fit: cover; filter: none; }
+  .title-scr .ts-bg { display: none; }
+}
