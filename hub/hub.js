@@ -3,7 +3,7 @@
 const $ = (id) => document.getElementById(id);
 const root = $('root');
 // 얼굴: 옷을 입었으면 옷 그림(윗부분을 동그랗게 보여 줌)
-const face = (c) => Hub.costumeImg(c) || `skyhook/assets/${c.look}_base.jpg`;
+const face = (c) => Hub.costumeImg(c) || `skyhook/assets/${c.look}_base.jpg?v=20261023v`;
 
 // ---------- sound (tiny UI blips) ----------
 let actx = null;

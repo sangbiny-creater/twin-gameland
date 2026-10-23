@@ -15,6 +15,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC_DIR = sys.argv[3] if len(sys.argv) > 3 else f'{ROOT}/character/{src_name}_character_v2_png_assets/character_v2/{src_name}/base'
 SRC = f'{SRC_DIR}/{src_name}_base_'
 BG = {'eunyu': (255, 228, 238), 'eungyeol': (221, 238, 255)}[src_name]
+FACE_PAD = {'eunyu': 1.12, 'eungyeol': 1.04}[src_name]  # 프로필 얼굴 자르기 여백 (그림 폭 대비)
 
 def load(p):
     return Image.open(SRC + p + '.png').convert('RGBA')
@@ -128,9 +129,10 @@ atlas.save(f'{ROOT}/common/chars/{look}.webp', quality=90, method=6)
 json.dump({'look': look, 'frames': meta}, open(f'{ROOT}/common/chars/{look}.json', 'w'), separators=(',', ':'))
 
 # ----- 메뉴·결과 화면용 그림 (기존 이름 규칙) -----
-def face_jpg(p, out):  # 240×240 동그라미 얼굴 (배경색 있음)
-    im = load(p); bb = im.getchannel('A').getbbox()
-    cx = (bb[0] + bb[2]) // 2; side = int((bb[3] - bb[1]) * 1.02); top = bb[1] - 6
+def face_jpg(p, out):  # 240×240 동그라미 얼굴 (배경색 있음) — 그림 폭 기준으로 잘라서 캐릭터마다 얼굴 크기가 같게
+    im = load(p); bb = im.getchannel('A').point(lambda v: 255 if v > 40 else 0).getbbox()
+    # 은유 얼굴 그림은 머리가 좁게 그려져 있어서 조금 더 넓게 잘라야 은결과 얼굴 크기가 같아 보임
+    side = int((bb[2] - bb[0]) * FACE_PAD); cx = (bb[0] + bb[2]) // 2; top = bb[1] - int(side * 0.02)
     c = im.crop((cx - side // 2, top, cx + side // 2, top + side))
     bg = Image.new('RGBA', c.size, BG + (255,)); bg.alpha_composite(c)
     bg.convert('RGB').resize((240, 240), Image.LANCZOS).save(out, quality=90)

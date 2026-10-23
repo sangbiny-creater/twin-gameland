@@ -148,7 +148,7 @@ function renderOwned() {
 // ---------- 캐릭터 꾸미기 ----------
 const COS_IMG = (look, id) => (id ? `../common/costumes/${look}_${id}.png${V}` : `../skyhook/assets/${look}_base.jpg${V}`);
 const BASE_FULL = (look) => `../common/costumes/${look}_base.png${V}`; // 기본 옷 전신 그림
-const faceOf = (c) => Hub.costumeImg(c, '../') || `../skyhook/assets/${c.look}_base.jpg`;
+const faceOf = (c) => Hub.costumeImg(c, '../') || `../skyhook/assets/${c.look}_base.jpg${V}`;
 const fullOf = (look, id) => (id ? COS_IMG(look, id) : BASE_FULL(look));
 const DRESS_ALL = [{ id: null, name: '기본 옷', price: 0, desc: '처음 입고 있던 옷이에요' }, ...Hub.COSTUMES];
 // 새 캐릭터(v2)는 아직 옷 그림이 없어서 기본 옷만

@@ -714,7 +714,7 @@ function startStage(si) {
   if (!THEMES[skinTheme() || STAGES[si].theme].img) getBG(skinTheme() || STAGES[si].theme);
   setState('play');
   renderHearts();
-  $('hudProgFace').style.backgroundImage = `url(${(window.Costume && Costume.src) || `assets/${Save.data.char}_base.jpg`})`;
+  $('hudProgFace').style.backgroundImage = `url(${(window.Costume && Costume.src) || `assets/${Save.data.char}_base.jpg?v=20261023v`})`;
   Audio.startBgm();
 }
 
@@ -1444,7 +1444,7 @@ function goHome() {
 function showReady(si) {
   G.si = si;
   $('readyTitle').textContent = `${STAGES[si].label} ${STAGES[si].name}`;
-  $('readyFace').src = (window.Costume && Costume.src) || `assets/${Save.data.char}_base.jpg`;
+  $('readyFace').src = (window.Costume && Costume.src) || `assets/${Save.data.char}_base.jpg?v=20261023v`;
   $('readyFace').classList.toggle('cos', !!(window.Costume && Costume.src));
   setState('ready');
 }
