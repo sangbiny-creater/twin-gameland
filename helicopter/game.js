@@ -564,10 +564,11 @@ function render() {
     const who = Save.data.char;
     let frame;
     const dressed = window.Costume && Costume.ready();
-    if (G.state === 'crash' && !dressed) frame = who === 'eunyu' ? 'eunyu_crash' : 'eungyeol_6';
-    else if (h.hurtT > 0 && !dressed) frame = `${who}_6`;
-    else frame = `${who}_${[0, 1, 2, 1][Math.floor(h.anim * 8) % 4]}`;
-    if (window.CharV2 && CharV2.is(who) && CharV2.ready(who)) { // 새 캐릭터(v2): 헬기 몸체+조종사 그림
+    const bw = window.CharV2 ? CharV2.base(who) : who; // 그림이 없는 새 캐릭터는 같은 계열 기본 캐릭터 헬기로
+    if (G.state === 'crash' && !dressed) frame = bw === 'eunyu' ? 'eunyu_crash' : 'eungyeol_6';
+    else if (h.hurtT > 0 && !dressed) frame = `${bw}_6`;
+    else frame = `${bw}_${[0, 1, 2, 1][Math.floor(h.anim * 8) % 4]}`;
+    if (window.CharV2 && CharV2.is(who) && CharV2.ready(who) && CharV2.has(who, 'heli_1')) { // 새 캐릭터(v2): 헬기 몸체+조종사 그림
       // v2 헬기는 프레임마다 몸체 모양이 조금씩 달라서 번갈아 쓰면 덜덜 떨려 보임 → 한 장 + 살짝 둥실
       const n = G.state === 'crash' ? 'heli_crash' : h.hurtT > 0 ? 'heli_hurt' : 'heli_1';
       const bob = G.state === 'play' && h.hurtT <= 0 ? Math.sin(h.anim * 5) * 1.5 : 0;

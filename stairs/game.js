@@ -537,7 +537,10 @@ function render() {
     Costume.draw(ctx, pose, G.t, { h: 118, flip: !facingRight });
     ctx.restore();
   } else if (window.CharV2 && CharV2.is(who) && CharV2.ready(who)) { // 새 캐릭터(v2)
-    const name = { idle: 'idle', ready: 'ready', side: 'idle', jump_l: 'jump_up', fall_l: 'jump_down', hurt: 'hit', dizzy: 'dizzy', dead: 'dead', happy: 'happy' }[frame] || 'idle';
+    let name = { idle: 'idle', ready: 'ready', side: 'idle', jump_l: 'jump_up', fall_l: 'jump_down', hurt: 'hit', dizzy: 'dizzy', dead: 'dead', happy: 'happy' }[frame] || 'idle';
+    // v4 캐릭터는 계단 전용 3/4 시점 그림이 있으면 그걸 씀
+    const st = { idle: 'stairs_idle', ready: 'stairs_ready', side: 'stairs_idle', jump_l: 'stairs_jump', fall_l: 'stairs_fall', hurt: 'stairs_hurt', dizzy: 'stairs_dizzy', dead: 'stairs_dead', happy: 'stairs_happy' }[frame];
+    if (st && CharV2.has(who, st)) name = st;
     ctx.save(); ctx.translate(pp.x, feetY);
     CharV2.draw(ctx, who, name, { h: 118, flip, rot: G.state === 'fall' && G.fallReason !== 'time' ? G.rot : 0 });
     ctx.restore();

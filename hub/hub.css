@@ -407,3 +407,9 @@ img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #
 .title-scr .ts-back img { display: block; width: 100%; height: 100%; }
 .look.on[data-look="eunyu2"] { border-color: #FF8FB5; background: #FFF0F6; }
 .look.on[data-look="eungyeol2"] { border-color: #4FA3F0; background: #EEF6FF; }
+
+/* 캐릭터 만들기 버튼 색은 기본 캐릭터 계열을 따름 (새 캐릭터도 자동) */
+.look.on.base-eunyu { border-color: #FF8FB5; background: #FFF0F6; }
+.look.on.base-eungyeol { border-color: #4FA3F0; background: #EEF6FF; }
+.char-card.base-eunyu { border-color: #FFC2D6; }
+.char-card.base-eungyeol { border-color: #BFDDFB; }

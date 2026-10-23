@@ -126,9 +126,9 @@
   };
 
   // 캐릭터 모양: 기본 은유·은결 + 새 캐릭터 v2 (그림은 common/chars, common/charv2.js)
-  const LOOKS = ['eunyu', 'eungyeol', 'eunyu2', 'eungyeol2'];
+  const LOOKS = (window.CHAR_LOOKS || [{ look: 'eunyu' }, { look: 'eungyeol' }]).map((l) => l.look);
   // 옷(코스튬) 그림이 있는 캐릭터
-  const DRESSABLE = ['eunyu', 'eungyeol'];
+  const DRESSABLE = (window.CHAR_LOOKS || [{ look: 'eunyu', dress: true }, { look: 'eungyeol', dress: true }]).filter((l) => l.dress).map((l) => l.look);
 
   // 캐릭터 추가 가격: 3번째 300, 4번째 600, 5번째 900 ...
   const slotPrice = (n) => 300 * (n - FREE_SLOTS);

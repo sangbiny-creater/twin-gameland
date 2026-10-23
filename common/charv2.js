@@ -6,18 +6,16 @@
 // 몸 그림은 512 캔버스 기준 발이 아래 488px, 몸 높이 393px로 맞춰져 있어서 같은 비율로 그리면 발이 땅에 붙음
 (function () {
   // 게임에 쓸 수 있는 v2 캐릭터 (base: 같은 계열 기본 캐릭터 — 색·예비 그림에 씀)
-  const LOOKS = {
-    eungyeol2: { base: 'eungyeol', name: '은결 v2' },
-    eunyu2: { base: 'eunyu', name: '은유 v2' },
-  };
+  const LOOKS = {};
+  for (const l of window.CHAR_LOOKS || []) if (l.atlas) LOOKS[l.look] = { base: l.base, name: l.name };
   const BODY_H = 393 / 512, FOOT = 488 / 512;
   const base = (document.currentScript && document.currentScript.src.replace(/common\/charv2\.js.*$/, '')) || '../';
   const atlas = {};
   function load(look) {
     if (!LOOKS[look] || atlas[look]) return;
     const a = atlas[look] = { img: new Image(), f: null, ok: false };
-    fetch(`${base}common/chars/${look}.json?v=20261023x`).then((r) => r.json()).then((j) => {
-      a.f = j.frames; a.img.onload = () => { a.ok = true; }; a.img.src = `${base}common/chars/${look}.webp?v=20261023x`;
+    fetch(`${base}common/chars/${look}.json?v=202610240218`).then((r) => r.json()).then((j) => {
+      a.f = j.frames; a.img.onload = () => { a.ok = true; }; a.img.src = `${base}common/chars/${look}.webp?v=202610240218`;
     }).catch(() => { /* 그림이 없으면 기본 그림으로 */ });
   }
   const get = (look, name) => { const a = atlas[look]; return a && a.ok && a.f[name] ? [a, a.f[name]] : null; };
@@ -28,6 +26,8 @@
     load,
     ready: (look) => !!(atlas[look] && atlas[look].ok),
     has: (look, name) => !!get(look, name),
+    // run_0, run_1 … 처럼 번호 붙은 그림이 몇 장 있는지 (v2는 달리기 6장, v4는 8장)
+    count(look, prefix) { let n = 0; while (get(look, prefix + n)) n++; return n; },
     // 발이 (0,0)에 오게 그림. h: 몸 높이(px). anchor 'hang'이면 손(줄 잡는 곳)이 hangTop에 옴
     draw(g, look, name, o = {}) {
       const hit = get(look, name); if (!hit) return false;

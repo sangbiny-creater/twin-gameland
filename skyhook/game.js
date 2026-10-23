@@ -650,7 +650,8 @@ const SPRITE_SIZE = 1.55; // sheet pixel -> game pixel
 function drawKidSprite(g, who, pose, t) {
   // 새 캐릭터(v2): 포즈별 그림
   if (window.CharV2 && CharV2.is(who)) {
-    const name = pose === 'run' ? `run_${Math.floor(t * 13) % 6}` : pose === 'swing' ? `swing_${Math.floor(t * 4) % 2}`
+    const nr = CharV2.count(who, 'run_') || 6, ns = CharV2.count(who, 'swing_') || 2;
+    const name = pose === 'run' ? `run_${Math.floor(t * 13 * nr / 6) % nr}` : pose === 'swing' ? `swing_${Math.floor(t * 4) % ns}`
       : ({ jump: 'jump_up', fall: 'jump_down' })[pose] || pose;
     if (CharV2.draw(g, who, CharV2.has(who, name) ? name : 'idle', { h: 118, anchor: pose === 'swing' ? 'hang' : 'feet', hangTop: -100, handX: 3 })) return true;
   }
@@ -1295,7 +1296,7 @@ function render() {
     if (G.endT > 0 && p.vx < 30) pose = 'idle';
     if (v2Hand && pose === 'swing') {
       ctx.save(); ctx.translate(v2Hand.x, v2Hand.y);
-      CharV2.draw(ctx, Save.data.char, `swing_${Math.floor(p.anim * 4) % 2}`, { h: 118, anchor: 'hand', rot: v2Hand.rot });
+      CharV2.draw(ctx, Save.data.char, `swing_${Math.floor(p.anim * 4) % (CharV2.count(Save.data.char, 'swing_') || 2)}`, { h: 118, anchor: 'hand', rot: v2Hand.rot });
       ctx.restore();
     } else {
     ctx.save();

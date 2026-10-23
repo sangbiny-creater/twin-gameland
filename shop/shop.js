@@ -187,7 +187,7 @@ function renderDress() {
   for (const ch of Hub.chars()) {
     const b = document.createElement('button'); b.className = `dwho ${ch.look}` + (ch.id === c.id ? ' on' : '');
     b.innerHTML = `<img src="${faceOf(ch)}" alt=""><span></span>`;
-    b.querySelector('span').textContent = `${ch.name} (${ch.look.startsWith('eunyu') ? '핑크' : '블루'})`;
+    b.querySelector('span').textContent = `${ch.name} (${((window.CHAR_LOOKS || []).find((l) => l.look === ch.look) || { base: ch.look }).base === 'eunyu' ? '핑크' : '블루'})`;
     b.onclick = () => { if (ch.id === c.id) return; blip(); Hub.setActive(ch.id); renderHeader(); renderAll(); openDress(); };
     who.appendChild(b);
   }

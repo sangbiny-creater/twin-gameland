@@ -57,7 +57,8 @@ function renderSelect() {
   const grid = $('charGrid'); grid.innerHTML = '';
   for (const c of Hub.chars()) {
     const b = document.createElement('button');
-    b.className = 'char-card ' + c.look;
+    const lk = (window.CHAR_LOOKS || []).find((l) => l.look === c.look);
+    b.className = 'char-card ' + c.look + (lk ? ' base-' + lk.base : '');
     b.innerHTML = `<img src="${face(c)}" alt=""><div class="nm"></div><div class="st"><i class="coin"></i>${c.coins} · <i class="star"></i>${Hub.starsTotal(c)}</div>`;
     b.querySelector('.nm').textContent = c.name;
     b.addEventListener('click', () => { blip(880); Hub.setActive(c.id); go('lobby'); });
@@ -90,7 +91,19 @@ function openCreate() {
   openModal('popCreate');
 }
 function setLook(l) { createLook = l; document.querySelectorAll('.look').forEach((b) => b.classList.toggle('on', b.dataset.look === l)); }
-document.querySelectorAll('.look').forEach((b) => b.addEventListener('click', () => { blip(); setLook(b.dataset.look); }));
+// 캐릭터 만들기 버튼: common/chars/looks.js 목록대로 (새 캐릭터는 목록에 추가만 하면 나옴)
+(function buildLooks() {
+  const box = $('lookList'); if (!box) return;
+  for (const l of window.CHAR_LOOKS || [{ look: 'eunyu', name: '은유 스타일', base: 'eunyu' }, { look: 'eungyeol', name: '은결 스타일', base: 'eungyeol' }]) {
+    const b = document.createElement('button');
+    b.className = `look base-${l.base}` + (l.atlas ? ' v2' : ''); b.dataset.look = l.look;
+    b.innerHTML = `<img src="skyhook/assets/${l.look}_base.jpg?v=20261024a" alt=""><span></span>`;
+    b.querySelector('span').textContent = l.name;
+    if (l.isNew) b.querySelector('span').insertAdjacentHTML('beforeend', ' <i class="new">NEW</i>');
+    b.addEventListener('click', () => { blip(); setLook(l.look); });
+    box.appendChild(b);
+  }
+})();
 $('btnCreate').addEventListener('click', () => {
   const name = $('inName').value.trim();
   if (!name) { toast('이름을 적어 주세요!'); $('inName').focus(); return; }
