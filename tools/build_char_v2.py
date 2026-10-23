@@ -39,22 +39,43 @@ BODY = ['idle', 'ready', 'run_0', 'run_1', 'run_2', 'run_3', 'run_4', 'run_5', '
         'swing_0', 'swing_1', 'hit', 'dizzy', 'happy', 'cheer', 'dead',
         'back_run_0', 'back_run_1', 'back_left', 'back_right', 'back_hit', 'back_happy', 'back_dead', 'back_boost']
 frames = {}  # name -> (image, scale)
-def body(p):
-    im = clean(load(p), p in STRAYS)
-    if im.width != 512: im = im.resize((512, 512), Image.LANCZOS)
-    bb = im.getchannel('A').point(lambda v: 255 if v > 20 else 0).getbbox()
-    if bb and bb[3] < 470 and not p.startswith('swing'):  # 발이 떠 있음 → 키를 맞추고 발을 488에
-        part = im.crop(bb); k = REF_H / part.height
-        part = part.resize((round(part.width * k), round(part.height * k)), Image.LANCZOS)
-        im = Image.new('RGBA', (512, 512)); cx = (bb[0] + bb[2]) // 2
-        im.alpha_composite(part, (cx - part.width // 2, 488 - part.height))
-    return im
-hs = []
+def hair_box(im):
+    """머리카락(갈색) 덩어리: 가운데 x, 맨 위 y, 높이 → 포즈마다 머리 크기를 맞추는 기준"""
+    a = np.array(im).astype(int); r, g, b_, al = a[..., 0], a[..., 1], a[..., 2], a[..., 3]
+    m = (al > 128) & (r > 70) & (r < 190) & (g > 35) & (g < 130) & (b_ < 95) & (r > g + 15) & (g > b_)
+    m = nd.binary_opening(m, iterations=2); lab, n = nd.label(m)
+    if n == 0: return None
+    sz = nd.sum(m, lab, range(1, n + 1)); ys, xs = np.where(lab == (np.argmax(sz) + 1))
+    return xs.mean(), ys.min(), ys.max() - ys.min()
+def bbox(im):
+    return im.getchannel('A').point(lambda v: 255 if v > 20 else 0).getbbox()
+def place(im, s, src, dst):
+    """src 점을 기준으로 s배 하고 그 점을 dst에 둠 (512 캔버스)"""
+    big = im.resize((round(im.width * s), round(im.height * s)), Image.LANCZOS)
+    out = Image.new('RGBA', (512, 512)); out.alpha_composite(big, (round(dst[0] - src[0] * s), round(dst[1] - src[1] * s)))
+    return out
+med = lambda v: sorted(v)[len(v) // 2]
+raw = {}
 for p in BODY:
-    bb = load(p).getchannel('A').point(lambda v: 255 if v > 20 else 0).getbbox()
-    if bb and bb[3] >= 470: hs.append(bb[3] - bb[1])
-REF_H = sorted(hs)[len(hs) // 2]
-for p in BODY: frames[p] = (body(p), 0.6)
+    im = clean(load(p), p in STRAYS)
+    raw[p] = im.resize((512, 512), Image.LANCZOS) if im.width != 512 else im
+hb = {p: hair_box(raw[p]) for p in BODY}
+RUNS = [f'run_{i}' for i in range(6)]
+ref_h = med([hb[r][2] for r in RUNS]); ref_cx = med([hb[r][0] for r in RUNS]); ref_top = med([hb[r][1] for r in RUNS])
+norm = {}
+# 1) 달리기: 프레임마다 머리 크기·좌우 위치를 같게 (크기가 들쭉날쭉하면 걸음이 어색해 보임)
+for r in RUNS:
+    im, (cx, top, h) = raw[r], hb[r]; k = ref_h / h; bb = bbox(im)
+    if bb[3] >= 470:  # 땅에 닿은 프레임: 발 위치는 그대로, 머리 가운데만 맞춤
+        norm[r] = place(im, k, (cx, bb[3]), (ref_cx, 488))
+    else:             # 떠 있는 프레임: 머리 위치를 다른 프레임에 맞춤 (발은 공중)
+        norm[r] = place(im, k, (cx, top), (ref_cx, ref_top))
+# 2) 서 있는 포즈·점프: 머리 크기를 달리기와 같게 (서 있는 포즈는 발을 488에)
+for p in ['idle', 'ready', 'happy', 'cheer', 'jump_up', 'jump_down']:
+    im, (cx, top, h) = raw[p], hb[p]; k = max(0.8, min(1.25, ref_h / h)); bb = bbox(im)
+    foot = (bb[0] + bb[2]) / 2
+    norm[p] = place(im, k, (foot, bb[3]), (256, 488 if p not in ('jump_up', 'jump_down') else bb[3]))
+for p in BODY: frames[p] = (norm.get(p, raw[p]), 0.6)
 frames['tile_face'] = (load('tile_face'), 192 / load('tile_face').width)
 for p in ['face_base', 'face_happy', 'face_sad', 'face_hurt']: frames[p] = (load(p), 256 / load(p).width)
 # 헬리콥터: 몸체 + 조종사 + 유리를 미리 합쳐 둠 (조종사는 창문 가운데)
@@ -68,15 +89,19 @@ def heli(body, pilot):
         c.alpha_composite(glass)
     else:  # 512 팩: 같은 좌표에 조종사 → 몸체 → 유리 (조종사 아래쪽이 몸체에 가려짐)
         c = Image.new('RGBA', b.size); c.alpha_composite(load(pilot)); c.alpha_composite(b); c.alpha_composite(glass)
-    # 팩마다 여백이 달라서, 헬기가 캔버스 폭의 55%가 되게 다시 맞춤 (게임에서 같은 크기로 보이게)
-    bb = c.getchannel('A').point(lambda v: 255 if v > 8 else 0).getbbox(); part = c.crop(bb)
-    cw = round(part.width / 0.55); ch = round(cw * 640 / 1024)
-    out = Image.new('RGBA', (cw, ch)); out.alpha_composite(part, ((cw - part.width) // 2, (ch - part.height) // 2))
-    return out.resize((1024, 640), Image.LANCZOS)
-for i in range(3): frames[f'heli_{i}'] = (heli(f'heli_body_{i}', 'pilot_fly'), 0.4)
-frames['heli_happy'] = (heli('heli_body_1', 'pilot_happy'), 0.4)
-frames['heli_hurt'] = (heli('heli_body_1', 'pilot_hurt'), 0.4)
-frames['heli_crash'] = (heli('heli_body_crash', 'pilot_dizzy'), 0.4)
+    return c
+HELI = {f'heli_{i}': (f'heli_body_{i}', 'pilot_fly') for i in range(3)}
+HELI.update(heli_happy=('heli_body_1', 'pilot_happy'), heli_hurt=('heli_body_1', 'pilot_hurt'), heli_crash=('heli_body_crash', 'pilot_dizzy'))
+hc = {k: heli(*v) for k, v in HELI.items()}
+# 비행 프레임(0~2)을 합친 범위로 한 번만 자리 잡기 → 모든 헬기 프레임에 똑같이 적용
+ub = None
+for k in ('heli_0', 'heli_1', 'heli_2'):
+    bb = hc[k].getchannel('A').point(lambda v: 255 if v > 8 else 0).getbbox()
+    ub = bb if ub is None else (min(ub[0], bb[0]), min(ub[1], bb[1]), max(ub[2], bb[2]), max(ub[3], bb[3]))
+bw = ub[2] - ub[0]; cw = round(bw / 0.55); ch = round(cw * 640 / 1024); cx0 = (ub[0] + ub[2]) / 2; cy0 = (ub[1] + ub[3]) / 2
+for k, c in hc.items():
+    out = Image.new('RGBA', (cw, ch)); out.alpha_composite(c, (round(cw / 2 - cx0), round(ch / 2 - cy0)))
+    frames[k] = (out.resize((1024, 640), Image.LANCZOS), 0.4)
 
 # 아틀라스로 묶기: [x, y, w, h, 잘라낸 위치 ox, oy, 원래 캔버스 cw, ch] (모두 줄인 크기 기준)
 items = []
@@ -95,6 +120,9 @@ meta = {}
 for name, im, ox, oy, cw, ch in items:
     px, py = pos[name]; atlas.alpha_composite(im, (px, py))
     meta[name] = [px, py, im.width, im.height, ox, oy, cw, ch]
+    if name.startswith('swing'):  # 맨 위 12px(손·줄)의 가운데 x (캔버스 기준)
+        al = np.array(im.getchannel('A')) > 60; ys, xs = np.where(al[:12])
+        meta[name].append(round(ox + xs.mean(), 1))
 os.makedirs(f'{ROOT}/common/chars', exist_ok=True)
 atlas.save(f'{ROOT}/common/chars/{look}.webp', quality=90, method=6)
 json.dump({'look': look, 'frames': meta}, open(f'{ROOT}/common/chars/{look}.json', 'w'), separators=(',', ':'))
@@ -111,8 +139,8 @@ for k, p in [('base', 'face_base'), ('happy', 'face_happy'), ('sad', 'face_sad')
 def trim(im, h):
     im = im.crop(im.getchannel('A').getbbox()); return im.resize((round(im.width * h / im.height), h), Image.LANCZOS)
 trim(load('face_base'), 138).save(f'{ROOT}/helicopter/assets/face_{look}.png', optimize=True)
-trim(heli('heli_body_crash', 'pilot_dizzy'), 200).save(f'{ROOT}/helicopter/assets/{look}_crash.png', optimize=True)
+trim(hc['heli_crash'], 200).save(f'{ROOT}/helicopter/assets/{look}_crash.png', optimize=True)
 for k, p in [('idle', 'idle'), ('happy', 'happy'), ('dead', 'dead')]:
-    trim(clean(load(p), p in STRAYS), 240).save(f'{ROOT}/stairs/assets/{look}_{k}.png', optimize=True)
+    trim(norm.get(p, raw[p]), 240).save(f'{ROOT}/stairs/assets/{look}_{k}.png', optimize=True)
 trim(load('front_stand'), 600 if load('front_stand').width >= 1024 else 460).save(f'{ROOT}/common/costumes/{look}_base.png', optimize=True)
 print(look, 'frames', len(meta), 'atlas', atlas.size, os.path.getsize(f'{ROOT}/common/chars/{look}.webp') // 1024, 'KB')

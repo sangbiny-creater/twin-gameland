@@ -568,8 +568,10 @@ function render() {
     else if (h.hurtT > 0 && !dressed) frame = `${who}_6`;
     else frame = `${who}_${[0, 1, 2, 1][Math.floor(h.anim * 8) % 4]}`;
     if (window.CharV2 && CharV2.is(who) && CharV2.ready(who)) { // 새 캐릭터(v2): 헬기 몸체+조종사 그림
-      const n = G.state === 'crash' ? 'heli_crash' : h.hurtT > 0 ? 'heli_hurt' : `heli_${[0, 1, 2, 1][Math.floor(h.anim * 8) % 4]}`;
-      CharV2.drawCenter(ctx, who, n, hx, h.y, 205, { rot: h.rot });
+      // v2 헬기는 프레임마다 몸체 모양이 조금씩 달라서 번갈아 쓰면 덜덜 떨려 보임 → 한 장 + 살짝 둥실
+      const n = G.state === 'crash' ? 'heli_crash' : h.hurtT > 0 ? 'heli_hurt' : 'heli_1';
+      const bob = G.state === 'play' && h.hurtT <= 0 ? Math.sin(h.anim * 5) * 1.5 : 0;
+      CharV2.drawCenter(ctx, who, n, hx, h.y + bob, 205, { rot: h.rot });
     } else if (dressed) drawDressedHeli(frame, hx, h.y, 112, h.rot);
     else spr(ctx, frame, hx, h.y, 112, h.rot);
     if (G.shield) spr(ctx, 'fx_ring', hx, h.y, 130, 0, 0.6 + Math.sin(G.t * 8) * 0.2);

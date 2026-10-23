@@ -652,7 +652,7 @@ function drawKidSprite(g, who, pose, t) {
   if (window.CharV2 && CharV2.is(who)) {
     const name = pose === 'run' ? `run_${Math.floor(t * 13) % 6}` : pose === 'swing' ? `swing_${Math.floor(t * 4) % 2}`
       : ({ jump: 'jump_up', fall: 'jump_down' })[pose] || pose;
-    if (CharV2.draw(g, who, CharV2.has(who, name) ? name : 'idle', { h: 118, anchor: pose === 'swing' ? 'hang' : 'feet', hangTop: -100 })) return true;
+    if (CharV2.draw(g, who, CharV2.has(who, name) ? name : 'idle', { h: 118, anchor: pose === 'swing' ? 'hang' : 'feet', hangTop: -100, handX: 3 })) return true;
   }
   // 캐릭터 꾸미기: 옷을 입었으면 옷 그림으로
   if (window.Costume && Costume.ready()) return Costume.draw(g, pose, t, { h: 118, hangTop: -100 });

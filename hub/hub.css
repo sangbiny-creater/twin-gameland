@@ -405,3 +405,5 @@ img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #
 /* 인트로 화면 뒤로 버튼: 디자이너 버튼 그림 */
 .title-scr .ts-back { width: clamp(56px, 8vh, 76px); height: auto; aspect-ratio: 192 / 188; background: none; box-shadow: none; border-radius: 50%; padding: 0; filter: drop-shadow(0 4px 8px rgba(0,0,0,.25)); }
 .title-scr .ts-back img { display: block; width: 100%; height: 100%; }
+.look.on[data-look="eunyu2"] { border-color: #FF8FB5; background: #FFF0F6; }
+.look.on[data-look="eungyeol2"] { border-color: #4FA3F0; background: #EEF6FF; }
