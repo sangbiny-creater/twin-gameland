@@ -7,5 +7,7 @@ window.CHAR_LOOKS = [
   { look: 'eungyeol', name: '은결 스타일', base: 'eungyeol', atlas: false, dress: true },
   { look: 'eunyu2', name: '은유 v2', base: 'eunyu', atlas: true, dress: false, isNew: true },
   { look: 'eungyeol2', name: '은결 v2', base: 'eungyeol', atlas: true, dress: false, isNew: true },
+  { look: 'eungyeol3', name: '은결 v3', base: 'eungyeol', atlas: true, dress: false, isNew: true },
+  { look: 'eunyu3', name: '은유 v3', base: 'eunyu', atlas: true, dress: false, isNew: true },
   // @@NEW_LOOKS@@ (이 줄 위에 새 캐릭터가 추가돼요)
 ];

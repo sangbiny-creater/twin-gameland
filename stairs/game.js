@@ -541,6 +541,11 @@ function render() {
     // v4 캐릭터는 계단 전용 3/4 시점 그림이 있으면 그걸 씀
     const st = { idle: 'stairs_idle', ready: 'stairs_ready', side: 'stairs_idle', jump_l: 'stairs_jump', fall_l: 'stairs_fall', hurt: 'stairs_hurt', dizzy: 'stairs_dizzy', dead: 'stairs_dead', happy: 'stairs_happy' }[frame];
     if (st && CharV2.has(who, st)) name = st;
+    // 그림이 빠져 있으면 비슷한 포즈로 대신 그림 (v4는 idle 대신 idle_0, ready·dizzy 없음)
+    for (const alt of [{ idle: 'idle_0', ready: 'idle_0', dizzy: 'hit', jump_up: 'stairs_jump', jump_down: 'stairs_fall' }[name], 'stairs_idle', 'idle_0', 'idle', 'front_stand']) {
+      if (CharV2.has(who, name)) break;
+      if (alt) name = alt;
+    }
     ctx.save(); ctx.translate(pp.x, feetY);
     CharV2.draw(ctx, who, name, { h: 118, flip, rot: G.state === 'fall' && G.fallReason !== 'time' ? G.rot : 0 });
     ctx.restore();

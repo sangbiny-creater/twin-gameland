@@ -162,11 +162,11 @@ def qa(src_im, im_nobg, pose, ref_hist, full=None):
         for row in zone:
             d = np.diff(np.concatenate([[0], row.astype(int), [0]])); st = np.where(d == 1)[0]; en = np.where(d == -1)[0]
             if len(st) and (en - st).max() >= ww * 0.3: hits += 1
-        if hits >= 8 and kind(pose) not in ('face', 'tile', 'cloud'): bad.append('라벨 글자 칸이 그려져 있음')
+        pass  # (흰 양말·소매를 라벨로 잘못 보는 경우가 많아 덩어리 기준 검사만 씀)
         k = kind(pose); bh = (b[3] - b[1]) / H
         if k in ('ground', 'hang', 'front') and bh < 0.4: bad.append('캐릭터가 너무 작음 (조각 같음)')
         if k == 'ride' and bh < 0.25: bad.append('캐릭터가 너무 작음 (조각 같음)')
-        if k in ('ground', 'hang') and not pose.startswith('back_') and head_width(im_nobg) > W * 0.75: bad.append('얼굴 일부만 크게 확대한 그림 같음')
+        if k in ('ground', 'hang') and not pose.startswith('back_') and head_width(im_nobg) > W * 0.75 and (b[3] - b[1]) < H * 0.6: bad.append('얼굴 일부만 크게 확대한 그림 같음')
     if ref_hist is not None and len(opaque) and not pose.startswith('ride_cloud'):
         h = hue_hist(opaque); c = float(np.minimum(h, ref_hist).sum())
         if c < 0.45: warn.append(f'기준 그림과 색이 많이 다름 (닮음 {c:.2f})')
@@ -192,7 +192,10 @@ def find_files(src, tmp):
 def cmd_import(eid, cname, src, refdir=None):
     out = f'{ROOT}/character/{eid}_v4'; base = f'{out}/base'; raw = f'{out}/raw'
     os.makedirs(base, exist_ok=True); os.makedirs(raw, exist_ok=True)
-    files = {}
+    files = {}; touch = {}
+    for one in src.split(','):
+        tp = os.path.join(one, 'touch.json')
+        if os.path.isdir(one) and os.path.exists(tp): touch.update(json.load(open(tp)))
     for i, one in enumerate(src.split(',')):  # zip 여러 개(part1,part2)는 쉼표로
         files.update(find_files(one, f'{out}/_unzip{i}'))
     if refdir:  # 기준 그림 2장은 GPT zip에 없으니 기준 그림 폴더에서
@@ -214,6 +217,10 @@ def cmd_import(eid, cname, src, refdir=None):
         src_im = Image.open(f); src_im.save(f'{raw}/{eid}_base_{p}.png')
         full = remove_bg(src_im); im, _ = main_part(full)
         bad, warn = qa(src_im, im, p, ref_hist, full)
+        if p in touch:  # 시트 그림: 잘라 쓴 흔적 검사는 빼고, 시트 가장자리에서 잘렸는지만 봄
+            bad = [x for x in bad if '곧게 잘린' not in x and '조각이 있음' not in x]
+            t = touch[p]; allow_bottom = kind(p) in ('face', 'tile', 'ride')
+            if t[0] or t[1] or t[2] or (t[3] and not allow_bottom): bad.append('그림 가장자리에서 몸이 잘림')
         if bad:
             report.append(f'{m["no"]:>2}. {p}: ✕ ' + ' / '.join(bad + warn)); redo.append((m, bad + warn)); continue
         hint = float(np.median(scales)) if scales else None
@@ -275,26 +282,68 @@ SHEETS = [
 def split_sheet(path, names, rows):
     """초록 배경 시트에서 캐릭터 덩어리를 찾아 순서대로 잘라 돌려줌. 개수가 안 맞으면 None"""
     im = remove_bg(Image.open(path)); a = np.array(im); m = a[..., 3] > 40
-    m2 = nd.binary_closing(m, structure=np.ones((9, 9)))  # 머리카락·손가락 사이 틈 메우기
+    N = len(names); H0, W0 = m.shape
+    if names[0].startswith('stairs_'):  # 계단 블록(회색, 채도 낮음) 먼저 지움
+        rgb = a[..., :3].astype(int); sat = rgb.max(2) - rgb.min(2); v = rgb.max(2)
+        gray = m & (sat < 24) & (v > 100) & (v < 240)
+        gl, gn = nd.label(nd.binary_opening(gray, iterations=2))
+        if gn:
+            gsz = nd.sum(gray, gl, range(1, gn + 1))
+            kill = nd.binary_dilation(np.isin(gl, [i + 1 for i, v2 in enumerate(gsz) if v2 > 2500]), iterations=2)
+            a[..., 3] = np.where(kill, 0, a[..., 3]); m = a[..., 3] > 40
+    m2 = nd.binary_closing(m, structure=np.ones((5, 5)))  # 머리카락·손가락 사이 작은 틈 메우기
     lab, n = nd.label(m2)
     if n == 0: return None, '그림에서 캐릭터를 못 찾음'
     sz = nd.sum(m2, lab, range(1, n + 1)); order = np.argsort(sz)[::-1]
-    N = len(names); keep = [i for i in order[:N] if sz[i] > sz[order[0]] * 0.15]
-    if len(keep) < N: return None, f'캐릭터가 {N}명이어야 하는데 {len(keep)}명만 보임 (붙어 있거나 빠짐)'
+    big = [i for i in order if sz[i] > sz[order[0]] * 0.15]
+    if len(big) < N and rows == 1:
+        # 캐릭터끼리 살짝 붙은 경우: 세로로 가장 비어 있는 곳에서 나눔
+        col = m.sum(0).astype(float); xs = np.where(col > 0)[0]; L, R = xs.min(), xs.max()
+        cuts = []
+        for k in range(1, N):
+            c0 = L + (R - L) * k / N; lo, hi = int(c0 - (R - L) / N * 0.35), int(c0 + (R - L) / N * 0.35)
+            cuts.append(lo + int(np.argmin(col[lo:hi])))
+        lab = np.zeros_like(lab); edges = [0] + cuts + [W0]
+        for k in range(N):
+            part = m2.copy(); part[:, :edges[k]] = False; part[:, edges[k + 1]:] = False
+            pl, pn = nd.label(part)
+            if pn: psz = nd.sum(part, pl, range(1, pn + 1)); lab[pl == (np.argmax(psz) + 1)] = k + 1
+        n = N; sz = nd.sum(lab > 0, lab, range(1, N + 1)); order = np.argsort(sz)[::-1]
+        big = list(range(N))
+    if len(big) < N: return None, f'캐릭터가 {N}명이어야 하는데 {len(big)}명만 보임 (붙어 있거나 빠짐)'
+    if len(big) > N: return None, f'캐릭터가 {N}명이어야 하는데 {len(big)}명이 그려짐 (다른 묶음 그림 같음)'
+    keep = big
     objs = nd.find_objects(lab)
     boxes = [(objs[i], i + 1) for i in keep]
     cy = lambda b: (b[0][0].start + b[0][0].stop) / 2; cx = lambda b: (b[0][1].start + b[0][1].stop) / 2
     boxes.sort(key=cy)
     per = (N + rows - 1) // rows; ordered = []
     for r in range(rows): ordered += sorted(boxes[r * per:(r + 1) * per], key=cx)
-    out = {}
+    out = {}; touch = {}
     for name, (sl, li) in zip(names, ordered):
+        touch[name] = [sl[1].start <= 2, sl[0].start <= 2, sl[1].stop >= W0 - 2, sl[0].stop >= H0 - 2]  # 왼·위·오른·아래
         pad = 6; y0, y1 = max(0, sl[0].start - pad), min(a.shape[0], sl[0].stop + pad); x0, x1 = max(0, sl[1].start - pad), min(a.shape[1], sl[1].stop + pad)
         piece = a[y0:y1, x0:x1].copy(); mask = nd.binary_dilation(lab[y0:y1, x0:x1] == li, iterations=3)
         piece[..., 3] = np.where(mask, piece[..., 3], 0)
+        if name.startswith('stairs_'):  # GPT가 계단 블록을 같이 그린 경우 지움
+            rgb = piece[..., :3].astype(int); sat = rgb.max(2) - rgb.min(2); v = rgb.max(2)
+            gray = (sat < 22) & (v > 110) & (v < 238) & (piece[..., 3] > 40)
+            gray[:int(piece.shape[0] * 0.55)] = False
+            gl, gn = nd.label(nd.binary_opening(gray, iterations=2))
+            if gn:
+                gsz = nd.sum(gray, gl, range(1, gn + 1))
+                kill = np.isin(gl, [i + 1 for i, v2 in enumerate(gsz) if v2 > 1500])
+                kill = nd.binary_dilation(kill, iterations=2)
+                piece[..., 3] = np.where(kill, 0, piece[..., 3])
+                kp, kn = nd.label(piece[..., 3] > 40)
+                if kn > 1:
+                    ksz = nd.sum(piece[..., 3] > 40, kp, range(1, kn + 1)); keepm = kp == (np.argmax(ksz) + 1)
+                    keepm = nd.binary_dilation(keepm, iterations=2); piece[..., 3] = np.where(keepm, piece[..., 3], 0)
         c = Image.fromarray(piece); big = Image.new('RGBA', (c.width + 80, c.height + 80)); big.alpha_composite(c, (40, 40))
         out[name] = big
+    split_sheet.touch.update(touch)
     return out, None
+split_sheet.touch = {}
 
 def sheet_shape(parts):
     """잘라낸 캐릭터들의 모양 특징: 매달림(손이 맨 위 가운데에 좁게) · 뒷모습(얼굴 살색 적음) · 상반신(키가 낮음)"""
@@ -306,7 +355,7 @@ def sheet_shape(parts):
         up = a[b[1]:b[1] + int(h * 0.45), b[0]:b[2]]; r, g, bb, aa = [up[..., i].astype(int) for i in range(4)]
         skin = ((aa > 128) & (r > 200) & (g > 150) & (bb > 120) & (r > bb + 25)).sum() / max(1, (aa > 128).sum())
         if skin < 0.06: back += 1
-        if h < w * 1.05: ride += 1
+        if h < w * 1.35: ride += 1
     n = max(1, len(parts)); return hang / n, back / n, ride / n
 
 EXPECT = {'S06': 'hang', 'S12': 'ride'}
@@ -332,12 +381,7 @@ def cmd_sheets(eid, cname, folder, refdir=None):
     for sid, title, names, rows in SHEETS:
         f = named.get(sid) or (rest.pop(0) if rest else None)
         if not f: log.append(f'{sid} {title}: ✕ 시트 그림 없음'); continue
-        parts, err = split_sheet(f, names, rows)
-        if not err and not shape_ok(sid, parts): err = '이 묶음 포즈가 아닌 것 같음 (저장 순서가 바뀌었을 수 있음)'
-        if err:  # 순서가 바뀐 경우: 남은 그림 중에 개수·모양이 맞는 것 찾기
-            for g in list(rest):
-                p2, e2 = split_sheet(g, names, rows)
-                if not e2 and shape_ok(sid, p2): rest.remove(g); rest.insert(0, f); parts, err, f = p2, None, g; break
+        parts, err = split_sheet(f, names, rows)  # 저장한 순서를 그대로 믿음 (다른 시트를 끌어오지 않음)
         if err: log.append(f'{sid} {title}: ✕ {err} ({os.path.basename(f)})'); continue
         for nm, im in parts.items(): im.save(f'{out}/{eid}_base_{nm}.png')
         check.append((sid, title, f))
@@ -347,6 +391,7 @@ def cmd_sheets(eid, cname, folder, refdir=None):
     if os.path.exists(cb):
         c = Image.open(cb).convert('RGBA'); a = np.array(c); b = bbox(c)
         a[:b[1] + int((b[3] - b[1]) * 0.55), :, 3] = 0; Image.fromarray(a).save(f'{out}/{eid}_base_ride_cloud_front.png')
+    json.dump(split_sheet.touch, open(f'{out}/touch.json', 'w'))
     open(f'{ROOT}/character/{eid}_v4/시트자르기.txt', 'w', encoding='utf-8').write('\n'.join(log))
     # 시트 확인 그림: 묶음 이름 옆에 그 묶음으로 쓰인 그림 (순서가 맞는지 눈으로 확인)
     F = ImageFont.truetype('/System/Library/Fonts/AppleSDGothicNeo.ttc', 22)
