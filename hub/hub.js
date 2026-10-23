@@ -127,19 +127,19 @@ function openBuy() {
 // 게임 목록: 새 게임은 여기에 한 줄 추가 (썸네일, 열기, 로비/기록에 보일 문구)
 const stageSub = (g, c) => `징검다리 ${Hub.stageCleared(g, c)} / ${Hub.GAMES[g].stages} · 다음 ${Hub.stageLabel(Hub.stageNext(g, c), g)}`;
 const GAME_CARDS = [
-  { id: 'skyhook', key: 'skyhook/assets/keyart.jpg', name: 'Sky Hook Runner', thumb: 'hub/v2/g_skyhook.jpg', open: () => go('map-skyhook'),
+  { id: 'skyhook', key: 'skyhook/assets/keyart.jpg', name: 'Sky Hook Runner', thumb: 'hub/v3/card_skyhook.webp', open: () => go('map-skyhook'),
     sub: (c) => stageSub('skyhook', c),
     rec: (c, r) => `징검다리 <b>${Hub.stageCleared('skyhook', c)} / 12</b> · ${r.plays}번 도전<br>최고 거리 <b>${r.best}m</b> · 모은 코인 <b>${r.coins}</b>` },
-  { id: 'helicopter', key: 'helicopter/assets/keyart.jpg', name: 'Twin Helicopter', thumb: 'hub/v2/g_helicopter.jpg', open: () => { location.href = Hub.GAMES.helicopter.path; },
+  { id: 'helicopter', key: 'helicopter/assets/keyart.jpg', name: 'Twin Helicopter', thumb: 'hub/v3/card_helicopter.webp', open: () => { location.href = Hub.GAMES.helicopter.path; },
     sub: (c, r) => (r.plays ? `BEST ${r.best}m · ${r.plays}번 비행` : '아직 안 해봤어요'),
     rec: (c, r) => `BEST <b>${r.best}m</b> · ${r.plays}번 비행<br>모은 코인 <b>${r.coins}</b>` },
-  { id: 'stairs', key: 'stairs/assets/keyart.jpg', name: '계단 오르기', thumb: 'hub/v2/g_stairs.jpg', open: () => { location.href = Hub.GAMES.stairs.path; }, portrait: true,
+  { id: 'stairs', key: 'stairs/assets/keyart.jpg', name: '계단 오르기', thumb: 'hub/v3/card_stairs.webp', open: () => { location.href = Hub.GAMES.stairs.path; }, portrait: true,
     sub: (c, r) => (r.plays ? `BEST ${r.best}m · ${r.plays}번 도전` : '아직 안 해봤어요'),
     rec: (c, r) => `BEST <b>${r.best}m</b> · ${r.plays}번 도전<br>모은 코인 <b>${r.coins}</b>` },
-  { id: 'shisen', key: 'shisen/assets/keyart.jpg', name: '사천성', thumb: 'hub/v2/g_shisen.jpg', open: () => go('map-shisen'), portrait: true,
+  { id: 'shisen', key: 'shisen/assets/keyart.jpg', name: '사천성', thumb: 'hub/v3/card_shisen.webp', open: () => go('map-shisen'), portrait: true,
     sub: (c) => stageSub('shisen', c),
     rec: (c, r) => `징검다리 <b>${Hub.stageCleared('shisen', c)} / 12</b> · ${r.plays}번 도전<br>모은 코인 <b>${r.coins}</b>` },
-  { id: 'downhill', key: 'downhill/assets/keyart.jpg', name: '다운힐 러너', thumb: 'hub/v2/g_downhill.jpg', open: () => { location.href = Hub.GAMES.downhill.path; }, portrait: true,
+  { id: 'downhill', key: 'downhill/assets/keyart.jpg', name: '다운힐 러너', thumb: 'hub/v3/card_downhill.webp', open: () => { location.href = Hub.GAMES.downhill.path; }, portrait: true,
     sub: (c, r) => (r.plays ? `BEST ${r.best.toLocaleString()}m · ${r.plays}번 도전` : '장애물을 피해 끝없이 내려가요!'),
     rec: (c, r) => `BEST <b>${r.best.toLocaleString()}m</b> · ${r.plays}번 도전<br>모은 코인 <b>${r.coins}</b>` },
 ];
@@ -148,7 +148,9 @@ const mmss = (t) => `${Math.floor(t / 60)}분 ${String(t % 60).padStart(2, '0')}
 const LV_STEP = 500;
 // 보유 아이템 그림 (아이템샵과 같은 그림)
 const ITEM_ICON = { hint: 'v2/boost_hint', shuffle: 'v2/boost_shuffle', time: 'v2/boost_time', bomb: 'v2/boost_bomb', find: 'v2/boost_find', combo: 'v2/boost_combo' };
-const itemIcon = (id) => `shop/assets/${ITEM_ICON[id] || 'icons/' + id}.png?v=20261023o`;
+const itemIcon = (id) => `shop/assets/${ITEM_ICON[id] || 'icons/' + id}.png?v=20261023q`;
+// 카드 그림에서 BEST 줄이 있는 위치 (카드 높이 %: 위, 아래)
+const BEST_POS = { skyhook: [73.23, 81.36], helicopter: [74.02, 82.15], stairs: [73.23, 81.36], shisen: [74.07, 81.73], downhill: [74.07, 81.73] };
 // 게임 카드 아래 한 줄: 징검다리 게임은 깬 판 수, 나머지는 최고 기록
 const cardLine = (g, c, r) => (Hub.GAMES[g.id].stages
   ? `징검다리 ${Hub.stageCleared(g.id, c)} / ${Hub.GAMES[g.id].stages}`
@@ -169,11 +171,12 @@ function renderLobby() {
   for (const { g, fav } of list) {
     const card = document.createElement('div');
     card.className = 'lb-card' + (fav ? ' fav' : ''); card.setAttribute('role', 'button'); card.tabIndex = 0;
-    card.innerHTML = `<div class="lb-art"><img src="${g.thumb}?v=20261023o" alt=""></div>
+    // 카드 그림 한 장(제목·게임 시작 버튼 포함) 위에 최고 기록만 실제 값으로 덮어 씀
+    const bp = BEST_POS[g.id] || [73.5, 81.5];
+    card.innerHTML = `<img class="lb-cardimg" src="${g.thumb}?v=20261023q" alt="">
       <button class="lb-fav" aria-label="즐겨찾기">★</button>
-      <div class="lb-best"><span class="lb-crown">👑</span><span class="lb-bt"></span></div>
-      <div class="lb-play"><span class="lb-tri"></span>게임 시작</div>`;
-    card.querySelector('.lb-art img').alt = g.name;
+      <div class="lb-best" style="top:${bp[0]}%;height:${bp[1] - bp[0]}%"><img src="hub/v3/crown.png?v=20261023q" alt=""><span class="lb-bt"></span></div>`;
+    card.querySelector('.lb-cardimg').alt = g.name;
     card.querySelector('.lb-bt').textContent = cardLine(g, c, Hub.rec(g.id, c));
     card.addEventListener('click', () => { blip(880); showTitle(g); });
     card.addEventListener('keydown', (e) => { if (e.key === 'Enter') showTitle(g); });
@@ -186,14 +189,14 @@ function renderLobby() {
     grid.appendChild(card);
   }
   const soon = document.createElement('div'); soon.className = 'lb-card soon';
-  soon.innerHTML = '<div class="lb-art"><img src="hub/v2/g_soon.jpg?v=20261023o" alt=""></div><div class="lb-soon-t">다음 게임</div><div class="lb-soon-s">곧 새로운 모험이 찾아와요!</div><div class="lb-play off">COMING SOON</div>';
+  soon.innerHTML = '<img class="lb-cardimg" src="hub/v3/card_soon.webp?v=20261023q" alt="다음 게임 — 곧 새로운 모험이 찾아와요! COMING SOON">';
   grid.appendChild(soon);
 }
 // 게임 타이틀 화면: 메인 그림을 화면 가득 → START를 누르면 게임(또는 징검다리 지도)으로
 let titleGame = null;
 function showTitle(g) {
   titleGame = g;
-  const src = `${g.key}?v=20261023o`;
+  const src = `${g.key}?v=20261023q`;
   $('tsArt').src = src; $('tsArt').alt = g.name;
   $('tsBg').style.backgroundImage = `url(${src})`;
   const el = $('scrTitle'); el.classList.remove('hidden', 'go'); void el.offsetWidth; el.classList.add('show');

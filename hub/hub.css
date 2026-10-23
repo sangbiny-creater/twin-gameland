@@ -366,3 +366,25 @@ img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #
 .ts-start:active { box-shadow: 0 2px 0 #D9761A; }
 .ts-tri { width: 0; height: 0; border-left: 22px solid #fff; border-top: 14px solid transparent; border-bottom: 14px solid transparent; filter: drop-shadow(0 2px 0 #C9700E); }
 .ts-back { position: absolute; left: calc(16px + env(safe-area-inset-left)); top: calc(14px + env(safe-area-inset-top)); width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,.92); font-size: 28px; color: #2F5A8A; box-shadow: 0 4px 12px rgba(0,0,0,.25); }
+
+/* ---------- 로비 v3: 게임 카드는 디자이너 카드 그림 한 장 (비율 그대로) ---------- */
+.lb-scroll { background: linear-gradient(#52B2FD 0%, #63BBFD 22%, #78C8FD 45%, #92D6FE 70%, #B4E4FD 88%, #CBEAD9 100%); }
+.lb-hero { margin-top: -6px; }
+.lb-hero img { -webkit-mask-image: linear-gradient(transparent 0, #000 7%); mask-image: linear-gradient(transparent 0, #000 7%); }
+.lb-shoprow { margin: 2px 10px 0; }
+.lb-shop { border-radius: 18px; box-shadow: 0 3px 8px rgba(214,60,110,.25); }
+.lb-grid { gap: 10px; align-items: start; }
+.lb-card { padding: 0; border: 0; background: none; box-shadow: 0 8px 16px rgba(24,59,91,.18); border-radius: 7.5% / 6.1%; gap: 0; }
+.lb-card.fav { box-shadow: 0 0 0 3px #FFD34D, 0 8px 16px rgba(24,59,91,.18); }
+.lb-cardimg { display: block; width: 100%; height: auto; aspect-ratio: 320 / 395; }
+.lb-card .lb-fav { top: 4.2%; right: 4%; width: 13.7%; font-size: 0; background: rgba(38,62,110,.92); box-shadow: none; }
+.lb-card .lb-fav::after { content: '★'; font-size: 17px; color: #C2CEE0; line-height: 1; }
+.lb-card.fav .lb-fav { background: #fff; box-shadow: 0 0 0 2px #FFD34D; }
+.lb-card.fav .lb-fav::after { color: #FFB800; }
+.lb-card .lb-best { position: absolute; left: 12%; right: 12%; display: flex; align-items: center; justify-content: center; gap: 4px; background: #F9FCFE; border-radius: 10px; font-size: 15px; color: #233257; white-space: nowrap; overflow: hidden; }
+.lb-card .lb-best img { height: 72%; width: auto; }
+.lb-card.soon { cursor: default; }
+#root:not(.portrait) .lb-card .lb-best { font-size: 12px; }
+#root:not(.portrait) .lb-card .lb-fav::after { font-size: 13px; }
+#root.portrait .lb-body { flex: 0 0 auto; justify-content: flex-start; }
+#root.portrait .lb-wall { flex: 1 0 70px; background-position: center bottom; }
