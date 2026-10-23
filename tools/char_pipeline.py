@@ -296,6 +296,9 @@ def split_sheet(path, names, rows):
     if n == 0: return None, '그림에서 캐릭터를 못 찾음'
     sz = nd.sum(m2, lab, range(1, n + 1)); order = np.argsort(sz)[::-1]
     big = [i for i in order if sz[i] > sz[order[0]] * 0.15]
+    if names[0].startswith('stairs_'):  # 사람과 떨어진 계단 블록 덩어리(거의 다 흐린 회색)는 사람으로 안 셈
+        rgb = a[..., :3].astype(int); dull = (rgb.max(2) - rgb.min(2)) < 45
+        big = [i for i in big if dull[lab == i + 1].mean() < 0.6]
     if len(big) < N and rows == 1:
         # 캐릭터끼리 살짝 붙은 경우: 세로로 가장 비어 있는 곳에서 나눔
         col = m.sum(0).astype(float); xs = np.where(col > 0)[0]; L, R = xs.min(), xs.max()
@@ -327,14 +330,24 @@ def split_sheet(path, names, rows):
         piece[..., 3] = np.where(mask, piece[..., 3], 0)
         if name.startswith('stairs_'):  # GPT가 계단 블록을 같이 그린 경우 지움
             rgb = piece[..., :3].astype(int); sat = rgb.max(2) - rgb.min(2); v = rgb.max(2)
-            gray = (sat < 22) & (v > 110) & (v < 238) & (piece[..., 3] > 40)
+            gray = (sat < 40) & (v > 110) & (v < 238) & (piece[..., 3] > 40)
             gray[:int(piece.shape[0] * 0.55)] = False
+            # 베이지 블록은 피부색과 비슷해서 크기로 가름: 넓고 매끈한 덩어리(몸의 8% 넘게)면 블록 (다리·얼굴은 훨씬 작음)
+            beige = (sat < 62) & (v > 150) & (v < 253) & (piece[..., 3] > 40); beige[:int(piece.shape[0] * 0.5)] = False
+            bl, bn = nd.label(nd.binary_opening(beige, iterations=4))
+            if bn:
+                bsz = nd.sum(bl > 0, bl, range(1, bn + 1)); body = (piece[..., 3] > 40).sum()
+                gray = gray | nd.binary_dilation(np.isin(bl, [i + 1 for i, v2 in enumerate(bsz) if v2 > body * 0.08]), iterations=4)
             gl, gn = nd.label(nd.binary_opening(gray, iterations=2))
             if gn:
                 gsz = nd.sum(gray, gl, range(1, gn + 1))
                 kill = np.isin(gl, [i + 1 for i, v2 in enumerate(gsz) if v2 > 1500])
                 kill = nd.binary_dilation(kill, iterations=2)
                 piece[..., 3] = np.where(kill, 0, piece[..., 3])
+                # 발밑에 남은 블록 윗면(흐린 색, 테두리 선만 진함): 신발 색(진한 색) 맨 아래보다 밑은 지움
+                strong = (piece[..., 3] > 40) & (sat > 60)
+                rows_s = np.where(strong.sum(1) >= 3)[0]
+                if len(rows_s): piece[rows_s.max() + 10:, :, 3] = 0
                 kp, kn = nd.label(piece[..., 3] > 40)
                 if kn > 1:
                     ksz = nd.sum(piece[..., 3] > 40, kp, range(1, kn + 1)); keepm = kp == (np.argmax(ksz) + 1)
@@ -376,10 +389,22 @@ def cmd_sheets(eid, cname, folder, refdir=None):
         mm = re.search(r'S(\d{2})', os.path.basename(f), re.I)
         if mm: named[f'S{mm.group(1)}'] = f
     rest = [f for f in imgs if f not in named.values()]
+    # 14장 뒤에 더 넣은 그림 = 다시요청.txt 로 다시 받은 시트 (요청한 순서대로 그 시트를 바꿈)
+    vd = f'{ROOT}/character/{eid}_v4'; os.makedirs(vd, exist_ok=True)
+    try: redo_map = json.load(open(f'{vd}/다시배정.json'))
+    except Exception: redo_map = {}
+    extra = [f for f in rest[len(SHEETS) - len(named):] if os.path.basename(f) not in redo_map.values()]
+    if extra and os.path.exists(f'{vd}/다시요청.txt'):
+        asked = re.findall(r'^(S\d{2}) ', open(f'{vd}/다시요청.txt', encoding='utf-8').read(), re.M)
+        for sid, f in zip(asked, extra): redo_map[sid] = os.path.basename(f)
+        json.dump(redo_map, open(f'{vd}/다시배정.json', 'w'), ensure_ascii=False)
+    rest = rest[:len(SHEETS) - len(named)]
+    redo_f = {sid: f'{folder}/{b}' for sid, b in redo_map.items() if os.path.exists(f'{folder}/{b}')}
     out = f'{ROOT}/character/{eid}_v4/cut'; os.makedirs(out, exist_ok=True)
     log = []; check = []
     for sid, title, names, rows in SHEETS:
         f = named.get(sid) or (rest.pop(0) if rest else None)
+        f = redo_f.get(sid, f)  # 다시 받은 그림이 있으면 그걸 씀 (원래 순서 자리는 그대로 넘김)
         if not f: log.append(f'{sid} {title}: ✕ 시트 그림 없음'); continue
         parts, err = split_sheet(f, names, rows)  # 저장한 순서를 그대로 믿음 (다른 시트를 끌어오지 않음)
         if err: log.append(f'{sid} {title}: ✕ {err} ({os.path.basename(f)})'); continue
