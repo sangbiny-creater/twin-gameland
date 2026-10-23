@@ -345,3 +345,24 @@ img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #
 .set-list { display: flex; flex-direction: column; gap: 8px; width: 100%; margin: 6px 0 12px; }
 .set-row { display: flex; justify-content: space-between; align-items: center; height: 52px; padding: 0 18px; border-radius: 16px; background: #F1F7FD; border: 2px solid #DCEAF8; font-size: 19px; }
 .set-row b { font-weight: normal; color: #3D8BFF; }
+
+/* ---------- 게임 타이틀 화면 (메인 그림 + START) ---------- */
+.title-scr { position: fixed; inset: 0; z-index: 1000; background: #1C2A48; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.ts-bg { position: absolute; inset: -40px; background: center / cover no-repeat; filter: blur(22px) brightness(.85) saturate(1.2); transform: scale(1.1); }
+.ts-art { position: relative; max-width: 100%; max-height: 100%; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 10px 30px rgba(0,0,0,.35)); }
+.title-scr.show .ts-art { animation: tsIn .45s cubic-bezier(.2,.9,.3,1.2) both; }
+.title-scr.show .ts-start { animation: tsBtn .5s .25s both, tsPulse 1.4s .8s ease-in-out infinite; }
+.title-scr.go { animation: tsOut .26s ease-in forwards; }
+@keyframes tsIn { from { transform: scale(.85); opacity: 0; } }
+@keyframes tsBtn { from { transform: translate(-50%, 40px); opacity: 0; } }
+@keyframes tsPulse { 50% { transform: translate(-50%, 0) scale(1.06); } }
+@keyframes tsOut { to { opacity: 0; transform: scale(1.04); } }
+.ts-start {
+  position: absolute; left: 50%; bottom: calc(clamp(24px, 6vh, 64px) + env(safe-area-inset-bottom)); transform: translate(-50%, 0);
+  height: clamp(58px, 9vh, 96px); padding: 0 clamp(36px, 6vw, 72px); border-radius: 60px; font-size: clamp(28px, 4.6vh, 48px); letter-spacing: 4px; color: #fff;
+  background: linear-gradient(#FFE27A, #FFB21E); border: 4px solid #FFF6D6; text-shadow: 0 3px 0 #C9700E;
+  box-shadow: 0 7px 0 #D9761A, 0 14px 28px rgba(0,0,0,.35); display: flex; align-items: center; gap: 14px;
+}
+.ts-start:active { box-shadow: 0 2px 0 #D9761A; }
+.ts-tri { width: 0; height: 0; border-left: 22px solid #fff; border-top: 14px solid transparent; border-bottom: 14px solid transparent; filter: drop-shadow(0 2px 0 #C9700E); }
+.ts-back { position: absolute; left: calc(16px + env(safe-area-inset-left)); top: calc(14px + env(safe-area-inset-top)); width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,.92); font-size: 28px; color: #2F5A8A; box-shadow: 0 4px 12px rgba(0,0,0,.25); }
