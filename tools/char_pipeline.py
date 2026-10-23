@@ -96,7 +96,7 @@ def place(im, s, src, dst, size):
 STAND_H = 393   # 서 있는 키 (512 캔버스) — 쌍둥이 키를 똑같이 맞춤
 FACE_REF = 190  # 얼굴·타일·탈것 크기 기준: 은결 v3 의 머리 폭(서 있는 키 393일 때). 머리카락이 넓은 캐릭터는 그만큼 크게
 
-def normalize(im, pose, size, scale_hint=None, std=210):
+def normalize(im, pose, size, scale_hint=None, std=210, sheet_s=None):
     """규격 캔버스에 맞추기: std = 이 캐릭터가 서 있는 키 393일 때의 머리 폭 (머리 폭 대신 키로 쌍둥이 크기를 맞춤)"""
     k = kind(pose); b = bbox(im); cx = (b[0] + b[2]) / 2
     hw = head_width(im); f = std / FACE_REF
@@ -112,9 +112,10 @@ def normalize(im, pose, size, scale_hint=None, std=210):
         s = 250 * f / hw; return place(im, s, (cx, b[3]), (512, 370), size), s
     s = std / hw
     if scale_hint and (k == 'lying' or abs(s / scale_hint - 1) > 0.35): s = scale_hint  # 누운 자세 등은 다른 포즈 크기로
+    if sheet_s: s = sheet_s  # 시트 그림: 같은 시트 컷은 모두 같은 배율
     if k == 'hang':
         # 팔 든 매달리기: 손끝~발 길이가 서 있는 키의 1.05배를 넘지 않게 (넘으면 줄 잡을 때 키가 커 보임)
-        s = min(s, STAND_H * 1.05 / (b[3] - b[1]))
+        s = min(s, STAND_H * 1.12 / (b[3] - b[1]))
         top = np.array(im)[b[1]:b[1] + 12, :, 3] > 60; xs = np.where(top.any(0))[0]
         hx = xs.mean() if len(xs) else cx
         return place(im, s, (hx, b[1]), (256, 40), size), s
@@ -216,9 +217,20 @@ def cmd_import(eid, cname, src, refdir=None):
     # 몸 그림 크기를 맞추려고 서 있는 포즈의 배율을 먼저 구함
     scales = []
     std = 210
+    # GPT는 한 시트 안의 컷을 같은 크기로 그림 → 시트마다 배율 하나 (머리 폭은 팔이 섞이면 커지니 시트에서 가장 작은 값)
+    sheet_of = {}
+    for one in src.split(','):
+        sp = os.path.join(one, 'sheet.json')
+        if os.path.isdir(one) and os.path.exists(sp): sheet_of.update(json.load(open(sp)))
+    sheet_hw = {}
+    for p, sid in sheet_of.items():
+        if p in files and kind(p) in ('ground', 'hang', 'lying'):
+            im_, _ = main_part(remove_bg(Image.open(files[p]))); sheet_hw.setdefault(sid, []).append(head_width(im_))
+    sheet_hw = {k: min(v) for k, v in sheet_hw.items()}
     if files.get('idle_0'):  # 서 있는 그림의 키가 STAND_H 가 되는 머리 폭 = 이 캐릭터의 기준 머리 폭
         i0, _ = main_part(remove_bg(Image.open(files['idle_0']))); b0 = bbox(i0)
-        std = head_width(i0) * STAND_H / (b0[3] - b0[1]); print(f"  기준 머리 폭 {std:.0f} (얼굴 배율 {std / FACE_REF:.2f})")
+        hw0 = sheet_hw.get(sheet_of.get('idle_0'), head_width(i0))
+        std = hw0 * STAND_H / (b0[3] - b0[1]); print(f"  기준 머리 폭 {std:.0f} (얼굴 배율 {std / FACE_REF:.2f})")
     order = sorted(M, key=lambda m: kind(m['pose']) == 'lying')
     for m in order:
         p = m['pose']; f = files.get(p)
@@ -233,7 +245,7 @@ def cmd_import(eid, cname, src, refdir=None):
         if bad:
             report.append(f'{m["no"]:>2}. {p}: ✕ ' + ' / '.join(bad + warn)); redo.append((m, bad + warn)); continue
         hint = float(np.median(scales)) if scales else None
-        fixed, s = normalize(im, p, (m['w'], m['h']), hint, std)
+        fixed, s = normalize(im, p, (m['w'], m['h']), hint, std, std / sheet_hw[sheet_of[p]] if sheet_of.get(p) in sheet_hw and kind(p) in ('ground', 'hang', 'lying') else None)
         if kind(p) == 'ground': scales.append(s)
         fixed.save(f'{base}/{eid}_base_{p}.png', optimize=True); done[p] = True
         report.append(f'{m["no"]:>2}. {p}: ○' + (' (확인 필요: ' + ' / '.join(warn) + ')' if warn else ''))
@@ -392,7 +404,8 @@ def shape_ok(sid, parts):
 
 def cmd_sheets(eid, cname, folder, refdir=None):
     """folder 안의 시트 그림(저장한 순서 = S01~S14)을 잘라 import 까지"""
-    imgs = sorted([f for f in glob.glob(f'{folder}/*') if re.search(r'\.(png|jpe?g|webp)$', f, re.I)], key=lambda f: (os.path.getmtime(f), f))
+    imgs = sorted([f for f in glob.glob(f'{folder}/*') if re.search(r'\.(png|jpe?g|webp)$', f, re.I)
+                   and not re.search(r'비율|기준|레퍼런스', os.path.basename(f))], key=lambda f: (os.path.getmtime(f), f))  # 기준 그림은 시트가 아님
     named = {}
     for f in imgs:  # 파일 이름에 S01 같은 번호가 있으면 그걸 씀
         mm = re.search(r'S(\d{2})', os.path.basename(f), re.I)
@@ -410,7 +423,7 @@ def cmd_sheets(eid, cname, folder, refdir=None):
     rest = rest[:len(SHEETS) - len(named)]
     redo_f = {sid: f'{folder}/{b}' for sid, b in redo_map.items() if os.path.exists(f'{folder}/{b}')}
     out = f'{ROOT}/character/{eid}_v4/cut'; os.makedirs(out, exist_ok=True)
-    log = []; check = []
+    log = []; check = []; sheet_of = {}
     for sid, title, names, rows in SHEETS:
         f = named.get(sid) or (rest.pop(0) if rest else None)
         f = redo_f.get(sid, f)  # 다시 받은 그림이 있으면 그걸 씀 (원래 순서 자리는 그대로 넘김)
@@ -418,6 +431,7 @@ def cmd_sheets(eid, cname, folder, refdir=None):
         parts, err = split_sheet(f, names, rows)  # 저장한 순서를 그대로 믿음 (다른 시트를 끌어오지 않음)
         if err: log.append(f'{sid} {title}: ✕ {err} ({os.path.basename(f)})'); continue
         for nm, im in parts.items(): im.save(f'{out}/{eid}_base_{nm}.png')
+        sheet_of.update({nm: sid for nm in parts})
         check.append((sid, title, f))
         log.append(f'{sid} {title}: ○ {len(parts)}장 잘라냄 ({os.path.basename(f)})')
     # 구름 앞부분: 구름 몸체 아래쪽 45%를 잘라 캐릭터 앞에 겹침
@@ -426,6 +440,7 @@ def cmd_sheets(eid, cname, folder, refdir=None):
         c = Image.open(cb).convert('RGBA'); a = np.array(c); b = bbox(c)
         a[:b[1] + int((b[3] - b[1]) * 0.55), :, 3] = 0; Image.fromarray(a).save(f'{out}/{eid}_base_ride_cloud_front.png')
     json.dump(split_sheet.touch, open(f'{out}/touch.json', 'w'))
+    json.dump(sheet_of, open(f'{out}/sheet.json', 'w'))  # 같은 시트 컷은 같은 배율로 맞추려고
     open(f'{ROOT}/character/{eid}_v4/시트자르기.txt', 'w', encoding='utf-8').write('\n'.join(log))
     # 시트 확인 그림: 묶음 이름 옆에 그 묶음으로 쓰인 그림 (순서가 맞는지 눈으로 확인)
     F = ImageFont.truetype('/System/Library/Fonts/AppleSDGothicNeo.ttc', 22)
