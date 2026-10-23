@@ -62,9 +62,18 @@ function spr(name, x, y, w, h, alpha = 1) {
 }
 
 // 내 캐릭터 얼굴 타일은 입은 옷 모습으로 (타일 판은 그대로, 안쪽 그림만 바꿈)
-const MY_TILE = HUB ? 't_' + HUB.active().look : null;
+const MY_LOOK = HUB ? HUB.active().look : null;
+// 새 캐릭터(v2)는 같은 계열 기본 캐릭터 타일 자리에 v2 얼굴을 넣음
+const MY_TILE = MY_LOOK ? 't_' + (window.CharV2 ? CharV2.base(MY_LOOK) : MY_LOOK) : null;
 function drawTile(name, x, y, w, h, alpha = 1) {
   spr(name, x, y, w, h, alpha);
+  if (name === MY_TILE && window.CharV2 && CharV2.is(MY_LOOK) && CharV2.ready(MY_LOOK)) {
+    ctx.save(); ctx.globalAlpha = alpha;
+    ctx.beginPath(); ctx.roundRect(x - w * 0.36, y - h * 0.38, w * 0.72, h * 0.72, w * 0.1); ctx.clip();
+    ctx.fillStyle = '#FFF6E8'; ctx.fillRect(x - w / 2, y - h / 2, w, h);
+    CharV2.drawCenter(ctx, MY_LOOK, 'tile_face', x, y - h * 0.02, w * 0.78);
+    ctx.restore(); return;
+  }
   if (name !== MY_TILE || !window.Costume || !Costume.ready()) return;
   ctx.save(); ctx.globalAlpha = alpha;
   ctx.beginPath(); ctx.roundRect(x - w * 0.36, y - h * 0.38, w * 0.72, h * 0.72, w * 0.1); ctx.clip();

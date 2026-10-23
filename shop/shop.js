@@ -146,11 +146,14 @@ function renderOwned() {
   }
 }
 // ---------- 캐릭터 꾸미기 ----------
-const COS_IMG = (look, id) => (id ? `../common/costumes/${look}_${id}.png${V}` : `../skyhook/assets/${look === 'eungyeol' ? 'eungyeol' : 'eunyu'}_base.jpg`);
+const COS_IMG = (look, id) => (id ? `../common/costumes/${look}_${id}.png${V}` : `../skyhook/assets/${look}_base.jpg${V}`);
 const BASE_FULL = (look) => `../common/costumes/${look}_base.png${V}`; // 기본 옷 전신 그림
 const faceOf = (c) => Hub.costumeImg(c, '../') || `../skyhook/assets/${c.look}_base.jpg`;
 const fullOf = (look, id) => (id ? COS_IMG(look, id) : BASE_FULL(look));
-const DRESS_LIST = [{ id: null, name: '기본 옷', price: 0, desc: '처음 입고 있던 옷이에요' }, ...Hub.COSTUMES];
+const DRESS_ALL = [{ id: null, name: '기본 옷', price: 0, desc: '처음 입고 있던 옷이에요' }, ...Hub.COSTUMES];
+// 새 캐릭터(v2)는 아직 옷 그림이 없어서 기본 옷만
+let DRESS_LIST = DRESS_ALL;
+const dressFor = (c) => (DRESS_LIST = Hub.canDress(c) ? DRESS_ALL : [{ ...DRESS_ALL[0], desc: '새 캐릭터 옷은 준비 중이에요. 곧 입을 수 있어요!' }]);
 let dressSel = 0;
 function renderDressEntry() {
   const chars = Hub.chars();
@@ -158,6 +161,7 @@ function renderDressEntry() {
   $('dressFace1').src = a ? faceOf(a) : ''; $('dressFace2').src = b ? faceOf(b) : '';
   $('dressFace2').style.display = b ? '' : 'none';
   const c = Hub.active(), strip = $('dressStrip'); strip.innerHTML = '';
+  if (!Hub.canDress(c)) { strip.innerHTML = '<div class="dress-soon">새 캐릭터 옷은 준비 중이에요 👗</div>'; return; }
   for (const [k, it] of Hub.COSTUMES.entries()) {
     const own = Hub.ownsCostume(it.id), worn = Hub.costume() === it.id;
     const d = document.createElement('button'); d.className = 'dchip' + (worn ? ' on' : '');
@@ -168,6 +172,7 @@ function renderDressEntry() {
   }
 }
 function openDress(sel) {
+  dressFor(Hub.active());
   dressSel = sel != null ? sel : Math.max(0, DRESS_LIST.findIndex((x) => x.id === Hub.costume()));
   $('dress').classList.remove('hidden'); document.body.style.overflow = 'hidden';
   blip(); renderDress();
@@ -175,6 +180,7 @@ function openDress(sel) {
 function closeDress() { $('dress').classList.add('hidden'); document.body.style.overflow = ''; renderHeader(); renderDressEntry(); }
 function renderDress() {
   const c = Hub.active();
+  dressFor(c); if (dressSel >= DRESS_LIST.length) dressSel = 0;
   $('dressCoins').textContent = c.coins;
   // 내 캐릭터들 (캐릭터마다 코인·옷이 따로)
   const who = $('dressWho'); who.innerHTML = '';

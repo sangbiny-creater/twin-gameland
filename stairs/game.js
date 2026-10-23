@@ -536,6 +536,11 @@ function render() {
     if (G.state === 'fall' && G.fallReason !== 'time') ctx.rotate(G.rot);
     Costume.draw(ctx, pose, G.t, { h: 118, flip: !facingRight });
     ctx.restore();
+  } else if (window.CharV2 && CharV2.is(who) && CharV2.ready(who)) { // 새 캐릭터(v2)
+    const name = { idle: 'idle', ready: 'ready', side: 'idle', jump_l: 'jump_up', fall_l: 'jump_down', hurt: 'hit', dizzy: 'dizzy', dead: 'dead', happy: 'happy' }[frame] || 'idle';
+    ctx.save(); ctx.translate(pp.x, feetY);
+    CharV2.draw(ctx, who, name, { h: 118, flip, rot: G.state === 'fall' && G.fallReason !== 'time' ? G.rot : 0 });
+    ctx.restore();
   } else spr(ctx, `${who}_${frame}`, pp.x, feetY, 86, { flip, rot: G.state === 'fall' && G.fallReason !== 'time' ? G.rot : 0, anchor: 'b' });
   // fx
   for (const f of G.fx) {

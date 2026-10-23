@@ -648,6 +648,12 @@ fetch('assets/kids.json').then((r) => r.json()).then((j) => {
 }).catch(() => { /* opened from file:// — keep vector fallback */ });
 const SPRITE_SIZE = 1.55; // sheet pixel -> game pixel
 function drawKidSprite(g, who, pose, t) {
+  // 새 캐릭터(v2): 포즈별 그림
+  if (window.CharV2 && CharV2.is(who)) {
+    const name = pose === 'run' ? `run_${Math.floor(t * 13) % 6}` : pose === 'swing' ? `swing_${Math.floor(t * 4) % 2}`
+      : ({ jump: 'jump_up', fall: 'jump_down' })[pose] || pose;
+    if (CharV2.draw(g, who, CharV2.has(who, name) ? name : 'idle', { h: 118, anchor: pose === 'swing' ? 'hang' : 'feet', hangTop: -100 })) return true;
+  }
   // 캐릭터 꾸미기: 옷을 입었으면 옷 그림으로
   if (window.Costume && Costume.ready()) return Costume.draw(g, pose, t, { h: 118, hangTop: -100 });
   if (!Sprites.ready) return false;

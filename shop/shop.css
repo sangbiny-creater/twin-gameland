@@ -229,3 +229,5 @@ main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; 
 .coupon-input:focus { border-color: #3D8BFF; }
 .coupon-msg { min-height: 22px; margin-top: 8px; font-size: 16px; color: #E8456A; }
 .coupon-msg.ok { color: #2FB86A; }
+
+.dress-soon { padding: 14px; text-align: center; color: #7A8CA3; font-size: 15px; }

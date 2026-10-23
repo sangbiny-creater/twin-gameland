@@ -79,7 +79,7 @@ function drawDressedHeli(name, x, y, w, rot) {
   ctx.save();
   ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); ctx.clip();
   const gl = ctx.createLinearGradient(0, cy - ry, 0, cy + ry);
-  gl.addColorStop(0, '#F4FAFF'); gl.addColorStop(1, Save.data.char === 'eunyu' ? '#FFE3EE' : '#DDEEFF');
+  gl.addColorStop(0, '#F4FAFF'); gl.addColorStop(1, baseChar() === 'eunyu' ? '#FFE3EE' : '#DDEEFF');
   ctx.fillStyle = gl; ctx.fillRect(cx - rx, cy - ry, rx * 2, ry * 2);
   { // 옷 그림 윗부분(머리~배)을 창문 위쪽에 맞춰 넣음 — 아랫부분은 기체 앞쪽이 가려 줌
     const im = Costume.img, frac = 0.78, bw = w * 0.46, bh = bw * (im.naturalHeight * frac) / im.naturalWidth;
@@ -190,6 +190,8 @@ const input = { down: false, pressed: false }; // pressed: a tap shorter than on
 const SKIN_THEME = { forest: 1, park: 2, winter: 3, sunset: 4 };
 function themeAt(m) { return Math.floor(m / CFG.themeEvery) % THEMES.length; }
 
+// 새 캐릭터(v2)도 색은 같은 계열 기본 캐릭터를 따름
+const baseChar = () => (window.CharV2 ? CharV2.base(Save.data.char) : Save.data.char);
 function newHeli() {
   return { x: 0, y: H * 0.45, vy: 0, inv: 0, anim: 0, rot: 0, smokeT: 0, hurtT: 0 };
 }
@@ -555,7 +557,7 @@ function render() {
   }
   // boost trail
   const h = G.heli, hx = HELI_SX();
-  if (G.boostT > 0 && G.state === 'play') spr(ctx, Save.data.char === 'eunyu' ? 'fx_boost_pink' : 'fx_boost_blue', hx - 85, h.y + 4, 120, 0, 0.9);
+  if (G.boostT > 0 && G.state === 'play') spr(ctx, baseChar() === 'eunyu' ? 'fx_boost_pink' : 'fx_boost_blue', hx - 85, h.y + 4, 120, 0, 0.9);
   // helicopter
   const blink = h.inv > 0 && G.state === 'play' && Math.floor(h.inv * 12) % 2 === 0;
   if (!blink) {
@@ -565,7 +567,10 @@ function render() {
     if (G.state === 'crash' && !dressed) frame = who === 'eunyu' ? 'eunyu_crash' : 'eungyeol_6';
     else if (h.hurtT > 0 && !dressed) frame = `${who}_6`;
     else frame = `${who}_${[0, 1, 2, 1][Math.floor(h.anim * 8) % 4]}`;
-    if (dressed) drawDressedHeli(frame, hx, h.y, 112, h.rot);
+    if (window.CharV2 && CharV2.is(who) && CharV2.ready(who)) { // 새 캐릭터(v2): 헬기 몸체+조종사 그림
+      const n = G.state === 'crash' ? 'heli_crash' : h.hurtT > 0 ? 'heli_hurt' : `heli_${[0, 1, 2, 1][Math.floor(h.anim * 8) % 4]}`;
+      CharV2.drawCenter(ctx, who, n, hx, h.y, 205, { rot: h.rot });
+    } else if (dressed) drawDressedHeli(frame, hx, h.y, 112, h.rot);
     else spr(ctx, frame, hx, h.y, 112, h.rot);
     if (G.shield) spr(ctx, 'fx_ring', hx, h.y, 130, 0, 0.6 + Math.sin(G.t * 8) * 0.2);
   }
@@ -666,7 +671,7 @@ function showResult() {
     const h = HUB.record('helicopter', { dist: m, coins: G.coins });
     $('resEarn').innerHTML = `+${h.earned} 코인 획득!` + (h.bonus ? ` <small>(거리 보너스 +${h.bonus})</small>` : '') + `<small>내 코인 ${h.coins}</small>`;
   }
-  $('resFace').src = (window.Costume && Costume.src) || `assets/${Save.data.char === 'eunyu' ? 'eunyu_crash' : 'eungyeol_6'}.png`;
+  $('resFace').src = (window.Costume && Costume.src) || (window.CharV2 && CharV2.is(Save.data.char) ? `assets/${Save.data.char}_crash.png` : `assets/${Save.data.char === 'eunyu' ? 'eunyu_crash' : 'eungyeol_6'}.png`);
   $('resDist').textContent = m; $('resCoin').textContent = G.coins; $('resBestVal').textContent = Save.data.best;
   $('resTheme').textContent = THEMES[G.themeIdx].name;
   $('resBest').classList.toggle('hidden', !isBest);

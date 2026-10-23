@@ -394,3 +394,9 @@ img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #
   .title-scr .ts-art { object-fit: cover; filter: none; }
   .title-scr .ts-bg { display: none; }
 }
+
+/* 새 캐릭터 v2 */
+.char-card.eungyeol2 { border-color: #9FD0FF; background: linear-gradient(#EAF5FF, #fff); }
+.look .new { font-style: normal; font-size: 11px; background: #FF5C7A; color: #fff; border-radius: 8px; padding: 0 5px; vertical-align: 2px; }
+#root.portrait .looks { flex-wrap: wrap; justify-content: center; }
+#root.portrait .look { width: 128px; }

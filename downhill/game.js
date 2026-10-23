@@ -733,7 +733,10 @@ function drawPlayer() {
   const back = cos && BACK_COSTUME[who] && BACK_COSTUME[who].includes(cos) ? `${who}_c_${cos}` : null;
   ctx.save(); ctx.translate(p.x, p.y + 4 + bob);
   if (G.wingT > 0) { spr(ctx, 'wing', -38, -h * 0.7, 56, { flip: true, alpha: 0.9, rot: Math.sin(G.t * 10) * 0.2 }); spr(ctx, 'wing', 38, -h * 0.7, 56, { alpha: 0.9, rot: -Math.sin(G.t * 10) * 0.2 }); }
-  if (back) { // 코스튬 뒷모습: 기울여서 좌우 이동 표현
+  if (window.CharV2 && CharV2.is(who) && CharV2.ready(who)) { // 새 캐릭터(v2) 뒷모습
+    const name = { idle: running ? `back_run_${Math.floor(G.t * 8) % 2}` : 'back_run_0', left: 'back_left', right: 'back_right', hit: 'back_hit', dead: 'back_dead', boost: 'back_boost', happy: 'back_happy' }[pose] || 'back_run_0';
+    CharV2.draw(ctx, who, name, { h: h * 0.96, rot: pose === 'idle' ? sway : 0 });
+  } else if (back) { // 코스튬 뒷모습: 기울여서 좌우 이동 표현
     const rot = pose === 'dead' ? 0.5 : pose === 'hit' ? Math.sin(G.t * 40) * 0.15 : G.lean * 0.16 + sway;
     drawFit(back, h * 0.92, rot);
   } else if (cos && window.Costume && Costume.ready()) { // 뒷모습 그림이 없는 옷은 앞모습 그림으로
@@ -819,7 +822,7 @@ function showResult() {
     const h = HUB.record('downhill', { dist: m, coins: G.coins });
     $('resEarn').innerHTML = h.god ? '무적 모드라서 기록·코인이 없어요' : `+${h.earned} 코인 획득!` + (h.bonus ? ` <small>(거리 보너스 +${h.bonus})</small>` : '') + `<small>내 코인 ${h.coins}</small>`;
   }
-  $('resFace').src = iconURL(`${Save.data.char}_${isBest ? 'happy' : 'dead'}`);
+  $('resFace').src = window.CharV2 && CharV2.is(Save.data.char) ? CharV2.url(Save.data.char, isBest ? 'back_happy' : 'back_dead') : iconURL(`${Save.data.char}_${isBest ? 'happy' : 'dead'}`);
   $('resDist').textContent = m.toLocaleString(); $('resCoin').textContent = G.coins; $('resCombo').textContent = G.maxCombo;
   $('resBestVal').textContent = (Save.data.best || 0).toLocaleString();
   $('resBest').classList.toggle('hidden', !isBest);

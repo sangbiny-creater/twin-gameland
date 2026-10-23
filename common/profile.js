@@ -125,6 +125,11 @@
     closeeverything: { openAll: false, once: false, msg: '자물쇠가 다시 잠겼어요 (깬 스테이지까지만 열려요)' },
   };
 
+  // 캐릭터 모양: 기본 은유·은결 + 새 캐릭터 v2 (그림은 common/chars, common/charv2.js)
+  const LOOKS = ['eunyu', 'eungyeol', 'eungyeol2'];
+  // 옷(코스튬) 그림이 있는 캐릭터
+  const DRESSABLE = ['eunyu', 'eungyeol'];
+
   // 캐릭터 추가 가격: 3번째 300, 4번째 600, 5번째 900 ...
   const slotPrice = (n) => 300 * (n - FREE_SLOTS);
 
@@ -182,7 +187,8 @@
     ownsCostume(id, c = this.active()) { return !!(c && (c.costumes || []).includes(id)); },
     costume(c = this.active()) { return (c && c.costume) || null; }, // 입은 옷 id (없으면 기본 옷)
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
-    costumeImg(c = this.active(), base = '') { const id = this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.png?v=20261023j` : null; },
+    canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.png?v=20261023j` : null; },
     buyCostume(id, c = this.active()) {
       const it = COSTUMES.find((x) => x.id === id);
       if (!c || !it || this.ownsCostume(id, c)) return { ok: false };
@@ -288,7 +294,7 @@
     },
     create(name, look) {
       if (!this.canCreate()) return null;
-      const c = { id: 'c' + data.nextId++, name: String(name).trim().slice(0, 8) || '친구', look: look === 'eungyeol' ? 'eungyeol' : 'eunyu', coins: 0, earned: 0, created: Date.now(), games: {}, history: [] };
+      const c = { id: 'c' + data.nextId++, name: String(name).trim().slice(0, 8) || '친구', look: LOOKS.includes(look) ? look : 'eunyu', coins: 0, earned: 0, created: Date.now(), games: {}, history: [] };
       data.chars.push(c);
       if (!data.activeId) data.activeId = c.id;
       save(); return c;
