@@ -714,7 +714,7 @@ function startStage(si) {
   if (!THEMES[skinTheme() || STAGES[si].theme].img) getBG(skinTheme() || STAGES[si].theme);
   setState('play');
   renderHearts();
-  $('hudProgFace').style.backgroundImage = `url(${(window.Costume && Costume.src) || `assets/${Save.data.char}_base.jpg?v=20261023v`})`;
+  $('hudProgFace').style.backgroundImage = `url(${(window.Costume && Costume.src) || `assets/${Save.data.char}_base.jpg?v=20261023x`})`;
   Audio.startBgm();
 }
 
@@ -1260,8 +1260,17 @@ function render() {
     ctx.strokeStyle = 'rgba(61,139,255,.55)'; ctx.lineWidth = 3; ctx.setLineDash([8, 8]);
     ctx.beginPath(); ctx.moveTo(p.x, p.y - 25); ctx.lineTo(target.x, target.y); ctx.stroke(); ctx.setLineDash([]);
   }
-  // rope
-  if (p.hook) {
+  // rope — 새 캐릭터(v2): 줄 끝 = 손, 몸은 줄과 한 직선으로 (줄이 절대 꺾이지 않게)
+  const v2Hang = p.hook && window.CharV2 && CharV2.is(Save.data.char) && CharV2.ready(Save.data.char) && !(p.inv > 0 && Math.floor(p.inv * 12) % 2 === 0) && p.hurtT <= 0;
+  let v2Hand = null;
+  if (v2Hang) {
+    const dx = p.x - p.hook.x, dy = p.y - p.hook.y, d = Math.hypot(dx, dy) || 1;
+    const L = Math.max(30, d - 46); v2Hand = { x: p.hook.x + dx / d * L, y: p.hook.y + dy / d * L, rot: -Math.atan2(dx, dy) };
+    ctx.strokeStyle = '#5A3B22'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(p.hook.x, p.hook.y); ctx.lineTo(v2Hand.x, v2Hand.y); ctx.stroke();
+    ctx.strokeStyle = '#C9945A'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(p.hook.x, p.hook.y); ctx.lineTo(v2Hand.x, v2Hand.y); ctx.stroke();
+  } else if (p.hook) {
     // hands: local (3,-96) around the body pivot (feet-50), rotated like the sprite
     const r = -Math.atan2(p.x - p.hook.x, p.y - p.hook.y) * 0.8;
     const hx = p.x + 3 * Math.cos(r) + 46 * Math.sin(r), hy = p.y + CFG.bodyOff - 50 + 3 * Math.sin(r) - 46 * Math.cos(r);
@@ -1284,6 +1293,11 @@ function render() {
     else if (p.hook) pose = 'swing';
     else if (!p.onGround) pose = p.vy < 0 ? 'jump' : 'fall';
     if (G.endT > 0 && p.vx < 30) pose = 'idle';
+    if (v2Hand && pose === 'swing') {
+      ctx.save(); ctx.translate(v2Hand.x, v2Hand.y);
+      CharV2.draw(ctx, Save.data.char, `swing_${Math.floor(p.anim * 4) % 2}`, { h: 118, anchor: 'hand', rot: v2Hand.rot });
+      ctx.restore();
+    } else {
     ctx.save();
     ctx.translate(p.x, p.y + CFG.bodyOff);
     if (p.hook) {
@@ -1294,6 +1308,7 @@ function render() {
     if (G.endT > 0 && p.vx < 30) pose = 'cheer';
     if (!drawKidSprite(ctx, Save.data.char, pose, p.anim)) drawKid(ctx, Save.data.char, pose === 'cheer' ? 'idle' : pose, p.anim, { blink: p.blinkT < 0, happy: p.happyT > 0 });
     ctx.restore();
+    }
   }
   // FX
   for (const f of G.fx) {
@@ -1444,7 +1459,7 @@ function goHome() {
 function showReady(si) {
   G.si = si;
   $('readyTitle').textContent = `${STAGES[si].label} ${STAGES[si].name}`;
-  $('readyFace').src = (window.Costume && Costume.src) || `assets/${Save.data.char}_base.jpg?v=20261023v`;
+  $('readyFace').src = (window.Costume && Costume.src) || `assets/${Save.data.char}_base.jpg?v=20261023x`;
   $('readyFace').classList.toggle('cos', !!(window.Costume && Costume.src));
   setState('ready');
 }
@@ -1552,6 +1567,7 @@ if (HUB) {
   let si = parseInt(new URLSearchParams(location.search).get('stage'), 10);
   if (!(si >= 0 && si < STAGES.length) || !HUB.skyhookUnlocked(si)) si = HUB.skyhookNext();
   showReady(si);
+  if (new URLSearchParams(location.search).get('go') === '1') startStage(si); // 인트로 START: 준비 창 없이 바로
   $('btnHomeR').textContent = '지도로'; $('btnHomeP').textContent = '지도로';
 } else setState('home');
 requestAnimationFrame(frame);

@@ -925,7 +925,7 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 resize();
-if (HUB) { startRun(); } else setState('home');
+if (HUB) { startRun(); if (new URLSearchParams(location.search).get('go') === '1') go(); } else setState('home'); // 인트로 START: 바로 출발
 requestAnimationFrame(frame);
 
 // debug/test hook

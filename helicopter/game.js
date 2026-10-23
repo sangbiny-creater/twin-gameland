@@ -776,6 +776,7 @@ if (HUB) {
   // 메인 화면에서 바로 들어오면 홈 없이 '꾹 누르면 출발' 대기 상태로
   $('btnHomeR').textContent = '메인으로'; $('btnHomeP').textContent = '메인으로';
   startRun();
+  if (new URLSearchParams(location.search).get('go') === '1') G.state = 'play'; // 인트로 START로 들어오면 대기 화면 없이 바로 출발
 } else setState('home');
 requestAnimationFrame(frame);
 

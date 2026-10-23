@@ -756,6 +756,7 @@ resize();
 if (HUB) {
   $('btnHomeR').textContent = '메인으로'; $('btnHomeP').textContent = '메인으로';
   startRun();
+  if (new URLSearchParams(location.search).get('go') === '1') setState('play'); // 인트로 START로 들어오면 대기 화면 없이 바로 시작
 } else setState('home');
 requestAnimationFrame(frame);
 

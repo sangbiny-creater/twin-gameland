@@ -16,8 +16,8 @@
   function load(look) {
     if (!LOOKS[look] || atlas[look]) return;
     const a = atlas[look] = { img: new Image(), f: null, ok: false };
-    fetch(`${base}common/chars/${look}.json?v=20261023v`).then((r) => r.json()).then((j) => {
-      a.f = j.frames; a.img.onload = () => { a.ok = true; }; a.img.src = `${base}common/chars/${look}.webp?v=20261023v`;
+    fetch(`${base}common/chars/${look}.json?v=20261023x`).then((r) => r.json()).then((j) => {
+      a.f = j.frames; a.img.onload = () => { a.ok = true; }; a.img.src = `${base}common/chars/${look}.webp?v=20261023x`;
     }).catch(() => { /* 그림이 없으면 기본 그림으로 */ });
   }
   const get = (look, name) => { const a = atlas[look]; return a && a.ok && a.f[name] ? [a, a.f[name]] : null; };
@@ -31,8 +31,13 @@
     // 발이 (0,0)에 오게 그림. h: 몸 높이(px). anchor 'hang'이면 손(줄 잡는 곳)이 hangTop에 옴
     draw(g, look, name, o = {}) {
       const hit = get(look, name); if (!hit) return false;
-      const [a, [x, y, w, h, ox, oy, cw, ch, hand]] = hit;
+      const [a, [x, y, w, h, ox, oy, cw, ch, hand, handY, ropeAng]] = hit;
       const s = (o.h || 118) / (BODY_H * ch);
+      if (o.anchor === 'hand') { // 줄 잡는 점이 (0,0), 그림 속 줄이 위쪽(-y)을 향하게 돌려서 그림
+        g.save(); if (o.rot) g.rotate(o.rot); g.rotate(-(ropeAng || 0));
+        g.drawImage(a.img, x, y, w, h, (ox - hand) * s, (oy - handY) * s, w * s, h * s);
+        g.restore(); return true;
+      }
       // 매달리기: 손 x를 handX(기본 0)에 맞춰서 줄 끝과 손이 붙어 보이게
       const dx = o.anchor === 'hang' && hand != null ? (o.handX || 0) - (hand - cw / 2) * s : 0;
       // 매달리기: 그림 맨 위(줄 잡은 손)가 hangTop에 오게

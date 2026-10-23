@@ -3,7 +3,7 @@
 const $ = (id) => document.getElementById(id);
 const root = $('root');
 // 얼굴: 옷을 입었으면 옷 그림(윗부분을 동그랗게 보여 줌)
-const face = (c) => Hub.costumeImg(c) || `skyhook/assets/${c.look}_base.jpg?v=20261023v`;
+const face = (c) => Hub.costumeImg(c) || `skyhook/assets/${c.look}_base.jpg?v=20261023x`;
 
 // ---------- sound (tiny UI blips) ----------
 let actx = null;
@@ -213,8 +213,10 @@ $('tsBack').addEventListener('click', (e) => { e.stopPropagation(); blip(500); h
 $('tsStart').addEventListener('click', (e) => {
   e.stopPropagation();
   const g = titleGame; if (!g) return;
-  blip(1046); $('scrTitle').classList.add('go');
-  setTimeout(() => { hideTitle(); g.open(); }, 260);
+  blip(1046);
+  // 지도·준비 창을 거치지 않고 바로 게임으로 (징검다리 게임은 다음에 할 판). 인트로 그림은 넘어갈 때까지 그대로 둠
+  const GM = Hub.GAMES[g.id];
+  location.href = GM.stages ? `${GM.path}?stage=${Hub.stageNext(g.id)}&go=1` : `${GM.path}?go=1`;
 });
 window.addEventListener('keydown', (e) => {
   if (!titleGame) return;
@@ -222,7 +224,7 @@ window.addEventListener('keydown', (e) => {
   else if (e.key === 'Escape') hideTitle();
 });
 // 다른 화면으로 가면 타이틀은 닫기 (게임에서 뒤로 돌아왔을 때 남아 있지 않게)
-window.addEventListener('pageshow', () => hideTitle());
+window.addEventListener('pageshow', (e) => { if (e.persisted) hideTitle(); });
 
 // 보유 아이템: 모든 게임의 부스트를 종류별로 합쳐서 많은 순서로 6개
 function renderItems(c) {

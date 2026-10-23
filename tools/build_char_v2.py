@@ -35,6 +35,24 @@ def clean(im, strays=False):
     a[..., 3] = np.where(keep[lab], a[..., 3], 0)
     return Image.fromarray(a)
 
+def tidy(im):
+    """삐죽 나온 가는 머리카락 가닥(폭 5px 이하)을 자르고, 테두리의 흰 테두리(흰 배경 잔상)를 없앰"""
+    a = np.array(im).astype(np.float32); al = a[..., 3]
+    solid = al > 100
+    keep = nd.binary_opening(solid, structure=np.ones((5, 5)))          # 가는 가닥은 사라짐
+    keep = nd.binary_dilation(keep, iterations=1) & (al > 10)             # 원래 테두리 살짝 남김
+    lab, n = nd.label(keep)
+    if n > 1:  # 잘리고 남은 작은 조각 지우기
+        sz = nd.sum(keep, lab, range(1, n + 1)); keep = np.isin(lab, [i + 1 for i, v in enumerate(sz) if v > 400])
+    al = np.where(keep, al, 0)
+    # 흰 테두리: 반투명이면서 아주 밝은 픽셀은 투명하게, 테두리 픽셀은 안쪽 색으로
+    edge = keep & ~nd.binary_erosion(keep, iterations=2)
+    light = a[..., :3].min(2) > 215
+    al = np.where(edge & light, al * 0.25, al)
+    a[..., 3] = al
+    return Image.fromarray(a.clip(0, 255).astype(np.uint8))
+
+TIDY = src_name == 'eunyu'  # 은유 v2 그림에 가는 머리카락·흰 테두리가 많음
 STRAYS = {'ready', 'run_0', 'run_1', 'run_2', 'run_3', 'run_4', 'run_5'}
 BODY = ['idle', 'ready', 'run_0', 'run_1', 'run_2', 'run_3', 'run_4', 'run_5', 'jump_up', 'jump_down', 'land',
         'swing_0', 'swing_1', 'hit', 'dizzy', 'happy', 'cheer', 'dead',
@@ -59,6 +77,7 @@ med = lambda v: sorted(v)[len(v) // 2]
 raw = {}
 for p in BODY:
     im = clean(load(p), p in STRAYS)
+    if TIDY: im = tidy(im)
     raw[p] = im.resize((512, 512), Image.LANCZOS) if im.width != 512 else im
 hb = {p: hair_box(raw[p]) for p in BODY}
 RUNS = [f'run_{i}' for i in range(6)]
@@ -121,9 +140,25 @@ meta = {}
 for name, im, ox, oy, cw, ch in items:
     px, py = pos[name]; atlas.alpha_composite(im, (px, py))
     meta[name] = [px, py, im.width, im.height, ox, oy, cw, ch]
-    if name.startswith('swing'):  # 맨 위 12px(손·줄)의 가운데 x (캔버스 기준)
-        al = np.array(im.getchannel('A')) > 60; ys, xs = np.where(al[:12])
-        meta[name].append(round(ox + xs.mean(), 1))
+    if name.startswith('swing'):
+        # 줄 잡는 점(맨 위) x·y와, 그림에 그려진 줄(또는 팔)의 기울기(세로 기준, 라디안)
+        # → 게임 줄과 그림 속 줄이 한 직선이 되게 돌려서 그림 (줄이 꺾여 보이지 않게)
+        al = np.array(im.getchannel('A')) > 60
+        rows = [r for r in range(min(60, im.height)) if al[r].any()]
+        top_x = np.where(al[rows[0]])[0].mean()
+        # 그림 속 줄: 맨 위부터 이어지는 얇은 줄 부분만 (폭 14px 이하) — 손·팔이 나오면 멈춤
+        thin = []
+        for r in rows:
+            xs = np.where(al[r])[0]
+            if xs.max() - xs.min() > 14: break
+            thin.append(r)
+        rows = thin; cx = [np.where(al[r])[0].mean() for r in rows]
+        if len(rows) > 6:
+            k = np.polyfit(rows, cx, 1)[0]  # 아래로 갈수록 x가 늘면 + (그림 속 줄이 오른쪽 위로 기운 것)
+            ang = float(np.arctan(-k))
+        else: ang = 0.0
+        if abs(ang) < 0.06: ang = 0.0
+        meta[name] += [round(ox + top_x, 1), oy, round(ang, 3)]
 os.makedirs(f'{ROOT}/common/chars', exist_ok=True)
 atlas.save(f'{ROOT}/common/chars/{look}.webp', quality=90, method=6)
 json.dump({'look': look, 'frames': meta}, open(f'{ROOT}/common/chars/{look}.json', 'w'), separators=(',', ':'))

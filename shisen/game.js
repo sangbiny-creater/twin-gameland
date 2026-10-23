@@ -617,6 +617,7 @@ resize();
   let si = parseInt(new URLSearchParams(location.search).get('stage'), 10);
   if (!(si >= 0 && si < STAGES.length) || !unlocked(si)) si = nextStage();
   showReady(si);
+  if (new URLSearchParams(location.search).get('go') === '1') startStage(si); // 인트로 START: 준비 창 없이 바로
 }
 requestAnimationFrame(frame);
 
