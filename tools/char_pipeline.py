@@ -410,6 +410,10 @@ def cmd_sheets(eid, cname, folder, refdir=None):
     for f in imgs:  # 파일 이름에 S01 같은 번호가 있으면 그걸 씀
         mm = re.search(r'S(\d{2})', os.path.basename(f), re.I)
         if mm: named[f'S{mm.group(1)}'] = f
+    sids = {x[0] for x in SHEETS}
+    rest = [f for f in imgs if f not in named.values()]
+    named = {k: v for k, v in named.items() if k in sids}  # S00(새 캐릭터 기준 정면) 같은 번호는 시트가 아님
+    imgs = [f for f in imgs if f in named.values() or f in rest]
     rest = [f for f in imgs if f not in named.values()]
     # 14장 뒤에 더 넣은 그림 = 다시요청.txt 로 다시 받은 시트 (요청한 순서대로 그 시트를 바꿈)
     vd = f'{ROOT}/character/{eid}_v4'; os.makedirs(vd, exist_ok=True)
