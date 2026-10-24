@@ -25,6 +25,9 @@ const CFG = {
 
 const STAGES = [];
 // 10개 월드 × 5판 = 50판 (1-1 ~ 10-5). 뒤로 갈수록 길고, 빠르고, 어려워진다.
+//  · 달리는 거리: 1-1 300m → 10-5 1000m, 판마다 늘어나고 뒤로 갈수록 더 많이 늘어남
+//  · 판 모양: 판마다 "구간 구성표"(점프·훅·징검다리… 각각 코스의 몇 %)를 따로 정해, 바로 앞판과는 30% 넘게,
+//    앞앞판과는 20% 넘게 다르게 만든다 (stageMix 참고. 실제 만들어진 판의 구성으로 다시 재서 확인함)
 const PER_WORLD = 5;
 [['하늘도시', 'city'], ['숲속 나무마을', 'forest'], ['겨울왕국', 'winter'], ['석양의 항구', 'sunset'], ['벚꽃마을', 'cherry'],
   ['구름왕국', 'cloud'], ['바닷속도시', 'ocean'], ['마법숲', 'magic'], ['별빛우주', 'space'], ['황금성', 'golden']].forEach(([name, theme], w) => {
@@ -33,9 +36,45 @@ const PER_WORLD = 5;
     // d: 0(1-1) → 1(10-5). 월드가 바뀔 때 한 번 더 확 올라가도록 월드 단계 + 판 단계를 섞는다
     const d = Math.min(1, (w + k / PER_WORLD * 0.8) / 9.8);
     // 속도는 조금만 올리고(예전과 같음), 난이도는 지형으로 올린다 (buildLevel 참고)
-    STAGES.push({ name: `${name} ${k + 1}`, label: `${w + 1}-${k + 1}`, world: w, k, seed: 11 + i * 13, len: 18000 + i * 400, speed: i * 0.03, d, theme });
+    const lenM = 300 + 700 * Math.pow(i / 49, 1.2); // 달리는 거리(m)
+    STAGES.push({ name: `${name} ${k + 1}`, label: `${w + 1}-${k + 1}`, world: w, k, seed: 11 + i * 13, len: Math.round(lenM * U), speed: i * 0.03, d, theme });
   }
 });
+
+// ---------- 판마다 구간 구성표 ----------
+// 구간 종류와 어려움 정도. 월드가 올라갈 때마다 새 종류가 하나씩 열린다 (buildLevel 의 F 와 같음)
+const PIECES = [
+  ['jump', 0, 0], ['hook', 0.1, 0], ['cloud', 0.3, 0], ['chain', 0.4, 0], ['stones', 0.4, 1], ['stairs', 0.5, 2],
+  ['vstones', 0.6, 3], ['crumble', 0.7, 4], ['hstones', 0.8, 5], ['mixed', 1, 8],
+]; // [이름, 어려움, 열리는 월드(0부터)]
+// 구성표 차이 = 두 판에서 구간 종류별 비율 차이를 모두 더해 반으로 나눈 값 (0 = 똑같음, 1 = 완전히 다름)
+const mixDiff = (a, b) => { let s = 0; for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) s += Math.abs((a[k] || 0) - (b[k] || 0)); return s / 2; };
+// 판마다 "주인공 구간" 58% + "조연 구간" 24% + 나머지 18%. 앞판·앞앞판과 넉넉히 다른 조합 중에서
+// 이 판 난이도에 맞는(월드 안에서 판이 오를수록 어려운 구간이 주인공) 조합을 고름
+(function stageMix() {
+  STAGES.forEach((st, i) => {
+    const avail = PIECES.filter((p) => p[2] <= st.world);
+    const hardMax = Math.max(...avail.map((p) => p[1]));
+    const target = hardMax * (0.25 + 0.75 * st.k / (PER_WORLD - 1));
+    const NEWP = avail.find((p) => p[2] === st.world && st.world > 0);
+    let best = null, bestScore = -1e9, far = null, farM = -1e9;
+    for (const f of avail) for (const s2 of avail) {
+      if (f === s2) continue;
+      const mix = {}; const rest = avail.filter((p) => p !== f && p !== s2);
+      mix[f[0]] = 0.58; mix[s2[0]] = 0.24; rest.forEach((p) => { mix[p[0]] = 0.18 / rest.length; });
+      const d1 = i > 0 ? mixDiff(mix, STAGES[i - 1].mix) : 1, d2 = i > 1 ? mixDiff(mix, STAGES[i - 2].mix) : 1;
+      const m = Math.min(d1 - 0.5, d2 - 0.36);
+      if (m > farM) { farM = m; far = mix; } // 넉넉한 조합이 없으면 가장 많이 다른 조합
+      if (m < 0) continue; // 실제 판은 조금씩 어긋나므로 목표(30%·20%)보다 넉넉하게
+      let score = -Math.abs(f[1] - target) - Math.abs(s2[1] - target) * 0.4;
+      if (NEWP && f === NEWP && st.k === 1) score += 1; // 새 구간은 월드 2번째 판에서 주인공으로 소개
+      if (NEWP && s2 === NEWP && st.k !== 1) score += 0.2;
+      score += Math.sin(i * 12.9898 + f[1] * 78.233) * 0.05; // 같은 점수일 때 판마다 다르게
+      if (score > bestScore) { bestScore = score; best = mix; }
+    }
+    st.mix = best || far;
+  });
+})();
 
 // 트윈 게임랜드(메인 화면)에서 들어왔으면 그 캐릭터로 플레이하고 기록·코인을 공통 저장소에 남긴다
 const HUB = window.Hub && window.Hub.active() ? window.Hub : null;
@@ -205,7 +244,7 @@ function buildLevel(si) {
   const st = STAGES[si];
   const R = rng(st.seed * 7919);
   const rand = (a, b) => a + (b - a) * R();
-  const L = { plats: [], anchors: [], items: [], obs: [], hints: [], goal: null, len: st.len };
+  const L = { plats: [], anchors: [], items: [], obs: [], hints: [], goal: null, len: st.len, pieces: [] };
   const d = st.d, wd = st.world, k = st.k;
 
   // ----- 월드마다 새 지형이 하나씩 늘어난다 (속도는 거의 그대로, 지형으로 어려워짐) -----
@@ -258,14 +297,14 @@ function buildLevel(si) {
   const nextY = (dy0, dy1) => clamp(y + rand(dy0, dy1) * D.dy / 40, 320, 475);
   const jumpTo = (ny, slack = 0) => Math.max(90, Math.min(rand(D.jumpMin, D.jumpMax), reach(y - ny) - slack));
   const intro = {}; // 처음 나오는 지형엔 안내 글
-  const introHint = (key, hx, hy, text) => { if (k === 0 && NEW === key && !intro[key]) { intro[key] = true; hint(hx, hy, text); } };
+  const introHint = (key, hx, hy, text) => { if (k <= 1 && NEW === key && !intro[key]) { intro[key] = true; hint(hx, hy, text); } };
 
   const jumpGap = (opt = {}) => {
     let ny = nextY(-40, 45);
     if (y - ny > 70) ny = y - 70;
     const gap = jumpTo(ny);
     coinArc(x - 30, y - 50, x + gap + 30, ny - 50, 90, 5);
-    const w = rand(D.platMin, D.platMax);
+    const w = opt.wide ? rand(Math.max(D.platMin, 420), D.platMax + 80) : rand(D.platMin, D.platMax);
     plat(x + gap, ny, w);
     if (opt.cloud && w > 320) cloud(x + gap + w * 0.55, ny - 34);
     else coinLine(x + gap + 120, ny - 60, Math.floor(w / 140));
@@ -378,24 +417,18 @@ function buildLevel(si) {
     x += gap + w; y = ny;
   };
 
-  // 지형 고르기: 이 월드에서 새로 나온 지형이 판이 올라갈수록 더 자주 나옴
-  const boost = (key) => (NEW === key ? 1.4 + k * 0.45 : 1);
-  const pickPiece = (prog) => {
-    const late = wd >= 8; // 9~10월드: 섞어서 더 어렵게
-    const P = [
-      ['jump', 1.0 - d * 0.5], ['hook', 1.0 - d * 0.4],
-      ['stones', F.stones ? 0.8 * boost('stones') : 0],
-      ['stairs', F.stairs ? 0.55 * boost('stairs') : 0],
-      ['vstones', F.vmove ? 0.6 * boost('vmove') : 0],
-      ['crumble', F.crumble ? 0.6 * boost('crumble') : 0],
-      ['hstones', F.hmove ? 0.6 * boost('hmove') : 0],
-      ['chain', prog > 0.4 ? (F.longChain ? 0.5 * boost('longChain') : 0.3) : 0],
-      ['mixed', late ? 0.9 : 0],
-    ];
-    let sum = 0; for (const [, w] of P) sum += w;
-    let r = R() * sum;
-    for (const [id, w] of P) { r -= w; if (r <= 0) return id; }
-    return 'jump';
+  // 구간 고르기: 이 판의 구성표(st.mix)에서 지금까지 모자란 구간을 고름 → 판마다 구성이 확실히 다름
+  const X0 = x, used = {};
+  const track = (type, fn) => { const x0 = x; fn(); used[type] = (used[type] || 0) + (x - x0); L.pieces.push({ type, x0, x1: x }); };
+  const pickPiece = (only) => {
+    const done = x - X0 + 900; // 다음 구간까지 포함해서 비교
+    let bestId = 'jump', bestDef = -1e9;
+    for (const [id, share] of Object.entries(st.mix)) {
+      if (only && !only.includes(id)) continue;
+      const def = share * done - (used[id] || 0) + R() * 250;
+      if (def > bestDef) { bestDef = def; bestId = id; }
+    }
+    return bestId;
   };
   const nStones = () => 3 + Math.floor(R() * (2 + d * 3));
 
@@ -404,27 +437,43 @@ function buildLevel(si) {
   while (x < st.len) {
     const prog = x / st.len;
     if (prog < D.learn) {
-      if (first) { jumpGap({ hint: introJump && si === 0 }); introJump = false; first = false; continue; }
-      if (introHook && si === 0) { hookGap({ hint: true }); introHook = false; continue; }
-      R() < 0.5 ? jumpGap() : hookGap();
+      if (first) { track('jump', () => jumpGap({ hint: introJump && si === 0 })); introJump = false; first = false; continue; }
+      if (introHook && si === 0) { track('hook', () => hookGap({ hint: true })); introHook = false; continue; }
+      if (R() < 0.5) track('jump', () => jumpGap()); else track('hook', () => hookGap());
       continue;
     }
-    if (prog > 0.9) { chainGap(F.longChain ? 3 + (R() < d ? 1 : 0) : 3, F.vmove && d > 0.5); break; }
+    if (x > st.len - 4600) { // 마지막: 연속 훅 (남은 거리에 들어갈 때만)
+      const n = F.longChain ? 3 + (R() < d ? 1 : 0) : 3;
+      if (x + 200 + 340 * (n - 1) + 260 + D.platMax + 40 < st.len - 160) track('chain', () => chainGap(n, F.vmove && d > 0.5));
+      break;
+    }
     if (!magnetPlaced && prog > 0.2) { item('magnet', x - 200, y - 110); magnetPlaced = true; }
     if (D.heart && heartsPlaced < 1 && prog > 0.7) { item('heart', x - 160, y - 120); heartsPlaced++; }
-    if (!upperDone && prog > 0.45 && prog < 0.7 && R() < 0.5) { upperPath(); upperDone = true; continue; }
-    switch (pickPiece(prog)) {
-      case 'jump': jumpGap({ cloud: R() < D.cloud }); break;
-      case 'hook': hookGap({ cloud: R() < D.cloud * 0.6, star: R() < 0.3, move: F.vmove && R() < 0.3 + d * 0.4 }); break;
-      case 'stones': stones(nStones()); break;
-      case 'stairs': stairs(2 + Math.floor(R() * (1 + d * 2))); break;
-      case 'vstones': stones(nStones() - 1, { vmove: true }); break;
-      case 'crumble': stones(nStones(), { crumble: true }); break;
-      case 'hstones': stones(nStones() - 1, { hmove: true }); break;
-      case 'chain': chainGap(F.longChain ? 3 + (R() < 0.5 ? 1 : 0) : 2, F.vmove); break;
-      case 'mixed': stones(nStones(), { crumble: R() < 0.5, vmove: R() < 0.4, hmove: R() < 0.3 }); break;
-    }
+    if (!upperDone && prog > 0.45 && prog < 0.7 && R() < 0.5) { track('upper', upperPath); upperDone = true; continue; }
+    const id = pickPiece();
+    track(id, () => {
+      switch (id) {
+        case 'jump': jumpGap({ cloud: R() < D.cloud * 0.5 }); break;
+        case 'cloud': jumpGap({ cloud: true, wide: true }); break;
+        case 'hook': hookGap({ cloud: R() < D.cloud * 0.6, star: R() < 0.3, move: F.vmove && R() < 0.3 + d * 0.4 }); break;
+        case 'stones': stones(nStones()); break;
+        case 'stairs': stairs(2 + Math.floor(R() * (1 + d * 2))); break;
+        case 'vstones': stones(nStones() - 1, { vmove: true }); break;
+        case 'crumble': stones(nStones(), { crumble: true }); break;
+        case 'hstones': stones(nStones() - 1, { hmove: true }); break;
+        case 'chain': chainGap(F.longChain ? 3 + (R() < 0.5 ? 1 : 0) : 2, F.vmove); break;
+        case 'mixed': stones(nStones(), { crumble: R() < 0.5, vmove: R() < 0.4, hmove: R() < 0.3 }); break;
+      }
+    });
   }
+  // 결승선은 언제나 이 판의 거리(st.len)에 맞춤: 짧은 구간(점프·구름·훅 중 구성표에서 모자란 것)으로 채우고
+  // 마지막 발판을 늘려서 딱 맞춤 → 판마다 거리가 꼭 늘어남
+  while (x < st.len - 1550) {
+    const id = pickPiece(['jump', 'cloud', 'hook']);
+    track(id, () => (id === 'hook' ? hookGap() : jumpGap(id === 'cloud' ? { cloud: true, wide: true } : {})));
+  }
+  const lastP = L.plats[L.plats.length - 1];
+  if (x < st.len - 160) { const ext = st.len - 160 - x; lastP.w += ext; x += ext; }
   // goal
   const gp = plat(x + 160, y, 1400);
   L.goal = { x: gp.x + 420, y: gp.y - 90 };
