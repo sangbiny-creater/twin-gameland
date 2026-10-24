@@ -1,6 +1,6 @@
 {
-  "name": "트윈 게임랜드",
-  "short_name": "게임랜드",
+  "name": "은유와 은결",
+  "short_name": "은유와 은결",
   "start_url": "../index.html",
   "display": "fullscreen",
   "orientation": "any",
@@ -8,12 +8,12 @@
   "theme_color": "#5CA9E6",
   "icons": [
     {
-      "src": "icon-180.png?v=20261024",
+      "src": "icon-180.png?v=20261024c",
       "sizes": "180x180",
       "type": "image/png"
     },
     {
-      "src": "icon-512.png?v=20261024",
+      "src": "icon-512.png?v=20261024c",
       "sizes": "512x512",
       "type": "image/png"
     }
