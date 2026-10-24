@@ -323,7 +323,7 @@ function renderMap() {
     for (let k = 0; k < K; k++) {
       const i = w * K + k, p = stoneSpot(w, k, K), st = Hub.stage(mapGame, i, c), open = Hub.stageUnlocked(mapGame, i, c);
       const b = document.createElement('button');
-      b.className = 'stone ' + (st.cleared ? 'cleared' : open ? 'current' : 'locked');
+      b.className = 'stone ' + (st.cleared ? 'cleared' : open ? 'current' : 'locked') + (i === next && !allClear ? ' next' : ''); // next: 지금 해야 할 판
       b.style.left = p.x + '%'; b.style.top = p.y + '%';
       const stars = st.cleared ? '⭐'.repeat(st.stars) + '☆'.repeat(3 - st.stars) : '';
       b.innerHTML = open ? `<span class="sl">${Hub.stageLabel(i, mapGame)}</span><span class="ss">${stars}</span>` : `<span class="lock">🔒</span><span class="ss">${Hub.stageLabel(i, mapGame)}</span>`;

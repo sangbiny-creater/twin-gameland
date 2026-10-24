@@ -431,3 +431,13 @@ img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #
 #root:not(.portrait) #popCreate .look { width: 120px; font-size: 17px; }
 #root:not(.portrait) #popCreate .look img { width: 88px; height: 88px; }
 .modal { z-index: 20; } /* 홈 화면 추가 안내보다 팝업이 위에 */
+
+/* 징검다리 지도: 지금 해야 할 판 — 깬 판(노랑)·안 깬 판(파랑)과 확 다르게, 분홍으로 빛나며 커졌다 작아짐 */
+.stone.next { background: radial-gradient(ellipse at 50% 30%, #FF9CC2 0 25%, #FF5C98 75%, #F0407F 100%); color: #fff; text-shadow: 0 2px 0 #A8205A, 0 0 6px #A8205A;
+  box-shadow: 0 8px 0 #C23069, 0 0 0 5px #fff, 0 0 0 10px rgba(255,111,150,.55), 0 12px 22px rgba(194,48,105,.45);
+  animation: stoneNext 1.1s ease-in-out infinite; z-index: 3; }
+.stone.next .sl { color: #fff; font-weight: 900; }
+.stone.next .ss { color: #FFF3B0; }
+.stone.next::after { content: ''; position: absolute; inset: -14px; border-radius: 50%; border: 4px solid #FFD34D; opacity: 0; animation: stoneRing 1.1s ease-out infinite; pointer-events: none; }
+@keyframes stoneNext { 0%, 100% { transform: translateY(0) scale(1.08); } 50% { transform: translateY(-6px) scale(1.18); } }
+@keyframes stoneRing { 0% { transform: scale(.7); opacity: .95; } 100% { transform: scale(1.35); opacity: 0; } }
