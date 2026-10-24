@@ -209,18 +209,26 @@ function renderLobby() {
 }
 // 게임 타이틀 화면: 메인 그림을 화면 가득 → START를 누르면 게임(또는 징검다리 지도)으로
 let titleGame = null;
-function showTitle(g) {
-  titleGame = g;
-  const src = `${g.key}?v=20261023r`;
+// 인트로 그림: 화면이 가로면 가로 그림(<id>_land.webp), 세로면 세로 그림 — 폰·태블릿을 돌리면 바로 바뀜
+const landMQ = window.matchMedia('(orientation: landscape)');
+const introSrc = (g) => `${landMQ.matches ? g.key.replace('.webp', '_land.webp') : g.key}?v=20261024i`;
+function setTitleArt(g) {
+  const src = introSrc(g);
   $('tsArt').src = src; $('tsArt').alt = g.name;
   $('tsBg').style.backgroundImage = `url(${src})`;
+  $('scrTitle').classList.toggle('land', landMQ.matches);
+}
+landMQ.addEventListener('change', () => { if (titleGame) setTitleArt(titleGame); });
+function showTitle(g) {
+  titleGame = g;
+  setTitleArt(g);
   const el = $('scrTitle'); el.classList.remove('hidden', 'go'); void el.offsetWidth; el.classList.add('show');
 }
 // 인트로 그림 미리 받아 두기 (로비가 뜨고 조금 뒤에)
 let introPreloaded = false;
 function preloadIntros() {
   if (introPreloaded) return; introPreloaded = true;
-  setTimeout(() => { for (const g of GAME_CARDS) { const im = new Image(); im.src = `${g.key}?v=20261023r`; } }, 1500);
+  setTimeout(() => { for (const g of GAME_CARDS) { const im = new Image(); im.src = introSrc(g); } }, 1500);
 }
 function hideTitle() { $('scrTitle').classList.add('hidden'); $('scrTitle').classList.remove('show'); titleGame = null; }
 $('tsBack').addEventListener('click', (e) => { e.stopPropagation(); blip(500); hideTitle(); });

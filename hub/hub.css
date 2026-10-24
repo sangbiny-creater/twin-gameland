@@ -389,10 +389,19 @@ img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #
 #root.portrait .lb-body { flex: 0 0 auto; justify-content: flex-start; }
 #root.portrait .lb-wall { flex: 1 0 70px; background-position: center bottom; }
 
-/* 인트로: 세로 화면(폰)은 그림으로 화면을 꽉 채움 (가로·PC는 그림 전체가 보이게) */
+/* 인트로: 세로 화면은 세로 그림(941x1672), 가로 화면은 가로 그림(1536x1024).
+   화면을 꽉 채우되, 로고가 있는 위아래는 조금만(6~8%), 양옆은 조금 더(15~22%)까지만 잘림. 남는 곳은 흐린 그림으로 채움
+   너비 = min(꽉 채우는 너비, 양옆 허용 × 화면 너비, 위아래 허용 × 화면 높이 × 그림 비율) */
+.title-scr .ts-art { flex: none; max-width: none; max-height: none; height: auto; object-fit: cover; filter: none; }
 @media (orientation: portrait) {
-  .title-scr .ts-art { object-fit: cover; filter: none; }
-  .title-scr .ts-bg { display: none; }
+  .title-scr .ts-art { aspect-ratio: 941 / 1672;
+    width: min(max(100vw, 100vh * 0.5628), 122vw, 106vh * 0.5628);
+    width: min(max(100vw, 100dvh * 0.5628), 122vw, 106dvh * 0.5628); }
+}
+@media (orientation: landscape) {
+  .title-scr .ts-art { aspect-ratio: 3 / 2;
+    width: min(max(100vw, 100vh * 1.5), 115vw, 108vh * 1.5);
+    width: min(max(100vw, 100dvh * 1.5), 115vw, 108dvh * 1.5); }
 }
 
 /* 새 캐릭터 v2 */
