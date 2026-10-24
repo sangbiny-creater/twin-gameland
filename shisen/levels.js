@@ -1,7 +1,9 @@
 'use strict';
-// 사천성 스테이지 표 + 층 쌓기 + "끝까지 풀 수 있는" 타일 배치 (게임과 Node 시험 스크립트가 같이 씀)
+// 사천성 스테이지 표 + 2층 타일 + "끝까지 풀 수 있는" 타일 배치 (게임과 Node 시험 스크립트가 같이 씀)
 //  · 10개 월드 × 10판 = 100판 (1-1 ~ 10-10). 판 크기는 가로 8 × 세로 12 를 넘지 않음
-//  · 1~2월드는 한 층, 3월드부터 가운데 등에 2층을 조금씩 늘려 쌓고, 10-6 ~ 10-10 에만 3층을 아주 조금
+//  · 1~2월드는 한 층. 3월드부터 1층 판 위에 2층 타일이 "드문드문" 올라감 (3-1 은 2개 → 10-10 은 20개)
+//    - 2층 타일끼리는 서로 붙지 않음(대각선도 떨어짐). 1층을 덮는 판이 아니라 1층 위에 얹힌 몇 개의 타일
+//    - 2층 타일의 짝은 1층에 있음 → 2층 타일과 1층 타일을 선으로 이어서 없앰. 2층 타일을 치우면 밑의 1층 타일을 고를 수 있음
 //  · 제한 시간: 7-10 까지는 타일 수 × 타일당 시간(조금씩 줄어듦), 8-1 부터는 판마다 조금씩 짧아짐
 (function (root) {
   const WORLDS = 10, PER_WORLD = 10;
@@ -12,26 +14,22 @@
     mid: [[6, 8], [6, 8], [8, 8], [8, 8], [8, 10], [8, 10], [8, 10], [8, 12], [8, 12], [8, 12]],
     late: [[8, 8], [8, 8], [8, 10], [8, 10], [8, 10], [8, 12], [8, 12], [8, 12], [8, 12], [8, 12]],
   };
-  const SHAPES = ['center', 'cross', 'corners', 'stripes', 'frame'];
-  const L3 = { 95: 4, 96: 4, 97: 4, 98: 8, 99: 8 }; // 3층 타일 수 (10-6 ~ 10-10 만)
 
   const STAGES = [];
   for (let i = 0; i < WORLDS * PER_WORLD; i++) {
     const w = Math.floor(i / PER_WORLD), k = i % PER_WORLD;
     const [c, r] = (w === 0 ? BASE[0] : w === 1 ? BASE[1] : w <= 4 ? BASE.mid : w <= 6 ? BASE.late : [[8, 12]])[w <= 6 ? k : 0];
-    // 2층 비율: 3-1 에서 10% → 10-10 에서 66%  (4칸씩 대칭으로 쌓으므로 4의 배수)
-    const f = i < 20 ? 0 : 0.10 + 0.56 * (i - 20) / 79;
-    const n2 = Math.round((c * r * f) / 4) * 4;
-    const n3 = L3[i] || 0;
-    const tiles = c * r + n2 + n3;
+    // 2층 타일 수: 3-1 에서 2개 → 10-10 에서 20개 (판이 작으면 그만큼 줄임: 칸 수의 1/5 까지)
+    const n2 = i < 20 ? 0 : Math.min(2 + 2 * Math.floor(((i - 20) * 10) / 80), Math.floor((c * r) / 10) * 2);
+    const tiles = c * r + n2;
     const t = Math.min(24, 6 + Math.floor(i * 0.19)); // 그림 종류
-    STAGES.push({ c, r, n2, n3, tiles, t, shape: SHAPES[k % SHAPES.length], layers: n3 ? 3 : n2 ? 2 : 1 });
+    STAGES.push({ c, r, n2, tiles, t, layers: n2 ? 2 : 1 });
   }
   // 제한 시간
   let t70 = 0;
   STAGES.forEach((st, i) => {
     if (i < 70) {
-      const per = 6.3 - 2.3 * (i / 69) + (st.layers > 1 ? 0.25 : 0); // 타일당 초: 6.3 → 4.0 (층이 있으면 살짝 더)
+      const per = 6.3 - 2.3 * (i / 69); // 타일당 초: 6.3 → 4.0
       st.s = Math.round((st.tiles * per) / 5) * 5;
       if (i === 69) t70 = st.s;
     } else {
@@ -39,30 +37,25 @@
     }
   });
 
-  // 층 높이 지도 h[y][x] (1~3). 같은 판이면 언제나 같은 모양 (위아래·좌우 대칭)
+  // 판마다 늘 같은 무작위 (같은 판이면 2층 자리가 언제나 같음)
+  function seeded(n) {
+    let a = (n * 2654435761) >>> 0;
+    return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  }
+  // 층 높이 지도 h[y][x] (1 또는 2). 2층 칸은 서로 8방향 모두 떨어지게 흩어 놓음
   function heights(i) {
-    const st = STAGES[i], { c, r } = st;
-    const cx = (c - 1) / 2, cy = (r - 1) / 2;
-    const score = (x, y) => {
-      const dx = Math.abs(x - cx) / c, dy = Math.abs(y - cy) / r;
-      switch (st.shape) {
-        case 'cross': return Math.min(dx, dy) * 3 + (dx + dy) * 0.5;
-        case 'corners': return Math.hypot(0.32 - dx, 0.3 - dy);
-        case 'stripes': return (Math.floor(Math.abs(x - cx)) % 2) * 2 + dy + dx * 0.1;
-        case 'frame': return Math.abs(Math.max(dx * 1.1, dy) - 0.25) + dx * 0.05;
-        default: return dx * dx + dy * dy;
-      }
-    };
-    // 대칭 묶음(4칸) 단위로 점수가 낮은 곳부터 쌓음
-    const orbits = [];
-    for (let y = 0; y < r / 2; y++) for (let x = 0; x < c / 2; x++) {
-      orbits.push({ s: score(x, y), d: Math.hypot(x - cx, y - cy), cells: [[x, y], [c - 1 - x, y], [x, r - 1 - y], [c - 1 - x, r - 1 - y]] });
-    }
+    const st = STAGES[i], { c, r } = st, rand = seeded(i + 1);
     const h = Array.from({ length: r }, () => new Array(c).fill(1));
-    const byScore = orbits.slice().sort((a, b) => a.s - b.s || a.d - b.d);
-    const top2 = byScore.slice(0, st.n2 / 4);
-    top2.forEach((o) => o.cells.forEach(([x, y]) => { h[y][x] = 2; }));
-    top2.slice().sort((a, b) => a.d - b.d).slice(0, st.n3 / 4).forEach((o) => o.cells.forEach(([x, y]) => { h[y][x] = 3; }));
+    const cells = [];
+    for (let y = 0; y < r; y++) for (let x = 0; x < c; x++) cells.push([x, y]);
+    for (let a = cells.length - 1; a > 0; a--) { const b = Math.floor(rand() * (a + 1)); [cells[a], cells[b]] = [cells[b], cells[a]]; }
+    let n = 0;
+    for (const [x, y] of cells) {
+      if (n >= st.n2) break;
+      let near = false;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (h[y + dy] && h[y + dy][x + dx] === 2) near = true;
+      if (!near) { h[y][x] = 2; n++; }
+    }
     return h;
   }
 
@@ -83,13 +76,15 @@
       while (left > 0) {
         const tops = [];
         for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) if (cur[y][x] > 0) tops.push({ x, y, k: rand() + cur[y][x] * 0.7 });
-        tops.sort((a, b) => b.k - a.k); // 높이 쌓인 칸을 먼저 치우면 마지막에 한 칸에 둘이 겹쳐 남는 일이 없음
+        tops.sort((a, b) => b.k - a.k); // 2층 타일을 먼저 치우는 순서로 만들어야 2층 타일 짝이 언제나 1층에 있음
         let done = false;
         for (const p of tops) {
-          const qs = reach(p.x, p.y, cur, C, R);
+          // 2층 타일의 짝은 언제나 1층 타일 (2층끼리는 짝을 만들지 않음)
+          const qs = reach(p.x, p.y, cur, C, R).filter((c) => cur[p.y][p.x] < 2 || cur[c[1]][c[0]] < 2);
           if (!qs.length) continue;
+          // 바로 옆 칸보다 멀리 떨어진 짝을 더 자주 고름 (붙어 있는 같은 그림이 많으면 너무 쉬움)
           let q = qs[0], qk = -1;
-          for (const c of qs) { const k = rand() + cur[c[1]][c[0]] * 0.7; if (k > qk) { qk = k; q = c; } }
+          for (const c of qs) { const d = Math.abs(c[0] - p.x) + Math.abs(c[1] - p.y); const k = rand() + (d > 1 ? 0.9 : 0) + cur[c[1]][c[0]] * 0.7; if (k > qk) { qk = k; q = c; } }
           cur[p.y][p.x]--; cur[q[1]][q[0]]--; left -= 2;
           order.push([[p.x, p.y], q]); done = true; break;
         }

@@ -3,7 +3,7 @@
 //  · 선은 최대 2번까지 꺾을 수 있고, 다른 타일을 지나갈 수 없다 (보드 바깥 테두리는 지나갈 수 있음)
 //  · 제한 시간 안에 모든 타일을 없애면 클리어 → 남은 시간으로 별 1~3개
 //  · 징검다리: 10개 월드 × 10판 = 100판 (1-1 ~ 10-10). 판 크기·층·시간 표는 levels.js
-//  · 3월드부터 타일이 2층(마지막 몇 판만 3층)으로 쌓임: 맨 위 타일만 고를 수 있고, 치우면 아래 타일이 드러남
+//  · 3월드부터 1층 판 위에 2층 타일이 드문드문 얹힘: 2층 타일은 1층 타일과 짝, 밑의 1층 타일은 2층 타일을 치워야 고를 수 있음
 // 폰: 세로 화면 (가로로 들면 화면을 돌려서 세로 유지) / PC: 창 전체를 쓰는 가로 화면 (보드도 가로로 눕힘)
 
 let W = 540, H = 960;
@@ -11,7 +11,7 @@ const BASE_TILES = ['strawberry', 'banana', 'grape', 'cherry', 'orange', 'peach'
   'clover', 'flower', 'star', 'heart', 'leaf', 'snowflake', 'sun', 'cloud', 'moon', 'cat', 'dog', 'paw'].map((n) => 't_' + n);
 // 10개 월드 × 10판 = 100판. 월드 5~10은 그 월드 전용 그림 타일(14종)을 먼저 쓰고, 은유·은결 얼굴 타일은 항상 들어감
 const WORLDS = ['하늘도시', '숲속 나무마을', '겨울왕국', '석양의 항구', '벚꽃마을', '구름왕국', '바닷속도시', '마법숲', '별빛우주', '황금성'];
-const { PER_WORLD, STAGES } = window.ShisenLevels; // 스테이지 i: { c, r(판 크기), n2·n3(2·3층 타일 수), tiles, t(그림 종류), s(제한 초) }
+const { PER_WORLD, STAGES } = window.ShisenLevels; // 스테이지 i: { c, r(판 크기), n2(2층 타일 수), tiles, t(그림 종류), s(제한 초) }
 function tilePool(si) {
   const w = Math.floor(si / PER_WORLD);
   const themed = w >= 4 ? Array.from({ length: 14 }, (_, k) => `w${w + 1}_${k}`).filter((n) => !(w === 4 && (n === 'w5_2' || n === 'w5_3'))) : [];
@@ -256,7 +256,7 @@ function showReady(si) {
   G.si = si;
   $('readyTitle').textContent = `${label(si)} ${stageName(si)}`;
   const st = STAGES[si];
-  const layer = st.n3 ? ` · ${st.n2}칸 2층, ${st.n3}칸 3층` : st.n2 ? ` · ${st.n2}칸 2층으로 쌓임` : '';
+  const layer = st.n2 ? ` · 2층 타일 ${st.n2}개` : '';
   $('readyInfo').textContent = `${st.c}×${st.r} 판 · 타일 ${st.tiles}개${layer} · 제한 시간 ${mmss(st.s)}`;
   G.cols = 0; setState('ready');
 }
@@ -428,15 +428,17 @@ function drawBg() {
   g.addColorStop(0, 'rgba(20,14,40,.35)'); g.addColorStop(0.5, 'rgba(20,14,40,.15)'); g.addColorStop(1, 'rgba(20,14,40,.5)');
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
 }
-const layerLift = () => BL.th * 0.13; // 한 층 쌓일 때마다 위로 올라가는 만큼
-function topCenter(p) { const c = cellCenter(p), n = Math.max(1, stackH(p.x, p.y)); return { x: c.x, y: c.y - (n - 1) * layerLift() }; }
-// 아래층 타일 옆면 (그림 없이 두께만 보임)
-function drawSlab(x, y, z) {
-  const w = BL.tw * 0.92, h = BL.th * 0.9;
-  ctx.fillStyle = z ? '#D9B98A' : '#C9A574'; ctx.strokeStyle = 'rgba(90,55,20,.55)'; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.roundRect(x - w / 2, y - h / 2 + 2, w, h, 9); ctx.fill(); ctx.stroke();
+// 2층 타일은 조금 작게, 밑의 1층 타일보다 왼쪽 위로 비켜 얹혀 있어서 1층 타일의 오른쪽·아래쪽 그림이 보임
+const upOff = () => ({ x: -BL.tw * 0.24, y: -BL.th * 0.3 });
+const UP_S = 0.88; // 2층 타일 크기 (1층의 88%)
+function topCenter(p) { const c = cellCenter(p); if (stackH(p.x, p.y) < 2) return c; const o = upOff(); return { x: c.x + o.x, y: c.y + o.y }; }
+// 2층 타일 밑에 깔린 1층 타일: 그림은 보이지만 아직 못 고르므로 어둡게
+function drawUnder(t, x, y) {
+  drawTile(G.pool[t], x, y, BL.tw * 0.94, BL.th * 0.94);
+  ctx.fillStyle = 'rgba(20,10,40,.22)';
+  ctx.beginPath(); ctx.roundRect(x - BL.tw * 0.45, y - BL.th * 0.44, BL.tw * 0.9, BL.th * 0.88, 9); ctx.fill();
 }
-// 쌓인 층 수 배지 (2: 파랑, 3: 보라)
+// 2층 배지
 function drawLayerBadge(x, y, n) {
   const r = Math.max(8, BL.tw * 0.17);
   ctx.save();
@@ -489,31 +491,37 @@ function render() {
   ctx.fillStyle = 'rgba(255,248,238,.18)'; ctx.strokeStyle = 'rgba(255,255,255,.45)'; ctx.lineWidth = 3;
   ctx.beginPath(); ctx.roundRect(BL.ox - pad, BL.oy - pad, BL.tw * G.cols + pad * 2, BL.th * G.rows + pad * 2, 18); ctx.fill(); ctx.stroke();
   // tiles (bottom rows drawn last so their shadow overlaps the row above)
-  // 쌓인 칸: 아래층 타일은 옆면(두께)으로 보이고, 맨 위 타일만 그림이 보이며 위로 조금 올라가 있음 + 층 수 배지
+  // 2층 칸: 1층 타일(어둡게)을 먼저 그리고, 그 위에 2층 타일을 왼쪽 위로 비켜 그림자와 함께 얹음 + "2" 배지
   const pulse = 0.5 + 0.5 * Math.sin(G.t * 8);
-  const LZ = layerLift();
+  const UO = upOff();
   for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
     const n = stackH(x, y); if (!n) continue;
     const t = cellAt(x, y);
     const c = cellCenter({ x, y });
     const sel = G.sel && G.sel.x === x && G.sel.y === y;
     const hint = G.hint && !G.hintBig && (same(G.hint[0], { x, y }) || same(G.hint[1], { x, y }));
-    const lift = (sel ? -5 : 0) - (n - 1) * LZ;
     ctx.fillStyle = 'rgba(40,20,10,.25)';
     ctx.beginPath(); ctx.roundRect(c.x - BL.tw * 0.46, c.y - BL.th * 0.42 + 4, BL.tw * 0.92, BL.th * 0.9, 8); ctx.fill();
-    for (let z = 0; z < n - 1; z++) drawSlab(c.x, c.y - z * LZ, z);
+    let tx = c.x, ty = c.y + (sel ? -5 : 0);
+    if (n > 1) {
+      drawUnder(G.stk[y][x][0], c.x, c.y);
+      tx += UO.x; ty += UO.y;
+      ctx.fillStyle = 'rgba(20,10,30,.5)'; // 2층 타일 그림자
+      ctx.beginPath(); ctx.roundRect(tx - BL.tw * 0.4 + 5, ty - BL.th * 0.38 + 7, BL.tw * 0.8, BL.th * 0.8, 8); ctx.fill();
+    }
+    const ts = n > 1 ? UP_S : 1;
     if (sel || hint) {
       ctx.save(); ctx.shadowColor = sel ? '#FFD34D' : '#6FD3FF'; ctx.shadowBlur = 16 + pulse * 10;
       ctx.fillStyle = sel ? 'rgba(255,211,77,.9)' : `rgba(111,211,255,${0.5 + pulse * 0.4})`;
-      ctx.beginPath(); ctx.roundRect(c.x - BL.tw * 0.5, c.y - BL.th * 0.47 + lift, BL.tw, BL.th * 0.96, 10); ctx.fill(); ctx.restore();
+      ctx.beginPath(); ctx.roundRect(tx - BL.tw * 0.5 * ts, ty - BL.th * 0.47 * ts, BL.tw * ts, BL.th * 0.96 * ts, 10); ctx.fill(); ctx.restore();
     }
-    drawTile(G.pool[t], c.x, c.y + lift, BL.tw * 0.94, BL.th * 0.94);
-    if (n > 1) drawLayerBadge(c.x + BL.tw * 0.36, c.y + lift - BL.th * 0.36, n);
+    drawTile(G.pool[t], tx, ty, BL.tw * 0.94 * ts, BL.th * 0.94 * ts);
+    if (n > 1) drawLayerBadge(tx - BL.tw * 0.3, ty - BL.th * 0.3, n);
   }
   // tiles being removed: pop + fade
   for (const r of G.removing) {
-    const c = cellCenter(r), k = r.t / 0.35, z = (r.z || 0) * LZ;
-    drawTile(G.pool[r.type], c.x, c.y - z - k * 10, BL.tw * 0.94 * (1 + k * 0.25), BL.th * 0.94 * (1 + k * 0.25), 1 - k);
+    const c = cellCenter(r), k = r.t / 0.35, ox = r.z ? UO.x : 0, oy = r.z ? UO.y : 0, ts = r.z ? UP_S : 1;
+    drawTile(G.pool[r.type], c.x + ox, c.y + oy - k * 10, BL.tw * 0.94 * ts * (1 + k * 0.25), BL.th * 0.94 * ts * (1 + k * 0.25), 1 - k);
   }
   // connect lines
   for (const l of G.lines) {
