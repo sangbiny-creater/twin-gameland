@@ -2,7 +2,8 @@
 // 은유와 은결의 사천성 — 같은 그림 타일 2개를 선으로 이어 없애는 퍼즐 (HTML5 Canvas)
 //  · 선은 최대 2번까지 꺾을 수 있고, 다른 타일을 지나갈 수 없다 (보드 바깥 테두리는 지나갈 수 있음)
 //  · 제한 시간 안에 모든 타일을 없애면 클리어 → 남은 시간으로 별 1~3개
-//  · 징검다리: 10개 월드 × 10판 = 100판 (1-1 ~ 10-10). 판 크기·시간 표는 levels.js
+//  · 징검다리: 10개 월드 × 10판 = 100판 (1-1 ~ 10-10). 판 크기·2층·시간 표와 잇기 규칙은 levels.js
+//  · 3월드부터 1층 판 가운데에 작은 2층 판이 얹힘: 2층끼리는 2층에서, 1층끼리는 1층에서 잇고, 2층↔1층은 바로 옆이거나 둘 다 판 밖으로 곧장 나갈 수 있으면 이음
 // 폰: 세로 화면 (가로로 들면 화면을 돌려서 세로 유지) / PC: 창 전체를 쓰는 가로 화면 (보드도 가로로 눕힘)
 
 let W = 540, H = 960;
@@ -138,64 +139,18 @@ const Audio = {
 const canvas = $('game'), ctx = canvas.getContext('2d'), root = $('root');
 let scale = 1, dpr = 1;
 const G = {
-  state: 'ready', si: 0, cols: 4, rows: 6, grid: [], sel: null, time: 0, limit: 0, elapsed: 0,
+  state: 'ready', si: 0, cols: 4, rows: 6, b: null, sel: null, time: 0, limit: 0, elapsed: 0,
   coins: 0, combo: 0, maxCombo: 0, lastMatchT: -99, left: 0,
   items: { hint: 3, shuffle: 2, time: 1, bomb: 0 }, hint: null, hintT: 0, hintBig: false, findT: 0, comboX2: false,
   lines: [], fx: [], texts: [], removing: [], t: 0, skin: 'default', shake: 0, tickT: 0,
 };
 
-// grid[y][x] = tile type index or -1. Coordinates are in the board's own orientation.
-function cellAt(x, y) { return (x < 0 || y < 0 || x >= G.cols || y >= G.rows) ? -1 : G.grid[y][x]; }
-
-// 0-1 BFS: path from a to b with at most 2 turns, walking only over empty cells (and the ring outside the board)
-function findPath(a, b) {
-  const C = G.cols + 2, R = G.rows + 2;
-  const free = (x, y) => (x === b.x && y === b.y) || cellAt(x, y) === -1;
-  const DX = [1, -1, 0, 0], DY = [0, 0, 1, -1];
-  const key = (x, y, d) => ((y + 1) * C + (x + 1)) * 4 + d;
-  const cost = new Map(), prev = new Map();
-  const dq = [];
-  for (let d = 0; d < 4; d++) { const k = key(a.x, a.y, d); cost.set(k, 0); dq.push([a.x, a.y, d, 0]); }
-  while (dq.length) {
-    const [x, y, d, c] = dq.shift();
-    if (c > (cost.get(key(x, y, d)) ?? 99)) continue;
-    // keep going straight (no extra turn)
-    const nx = x + DX[d], ny = y + DY[d];
-    if (nx >= -1 && ny >= -1 && nx <= G.cols && ny <= G.rows && free(nx, ny)) {
-      const k = key(nx, ny, d);
-      if (c < (cost.get(k) ?? 99)) {
-        cost.set(k, c); prev.set(k, key(x, y, d)); dq.unshift([nx, ny, d, c]);
-        if (nx === b.x && ny === b.y) return buildPath(k, prev, C);
-      }
-    }
-    // turn (costs one)
-    if (c < 2) for (let d2 = 0; d2 < 4; d2++) {
-      if (d2 === d) continue;
-      const k = key(x, y, d2);
-      if (c + 1 < (cost.get(k) ?? 99)) { cost.set(k, c + 1); prev.set(k, key(x, y, d)); dq.push([x, y, d2, c + 1]); }
-    }
-  }
-  return null;
-}
-function buildPath(k, prev, C) {
-  const pts = [];
-  let cur = k;
-  while (cur != null) {
-    const cell = Math.floor(cur / 4), x = (cell % C) - 1, y = Math.floor(cell / C) - 1;
-    const last = pts[pts.length - 1];
-    if (!last || last.x !== x || last.y !== y) pts.push({ x, y });
-    cur = prev.get(cur);
-  }
-  pts.reverse();
-  // keep only the corners
-  const out = [pts[0]];
-  for (let i = 1; i < pts.length - 1; i++) {
-    const a = out[out.length - 1], b = pts[i], c = pts[i + 1];
-    if ((b.x - a.x) * (c.y - b.y) !== (b.y - a.y) * (c.x - b.x)) out.push(b);
-  }
-  out.push(pts[pts.length - 1]);
-  return out;
-}
+// 판 G.b = { C, R, f1, f2 }: f1[y][x] 1층 그림, f2[y][x] 2층 그림 (없으면 -1). Coordinates are in the board's own orientation.
+// cellAt = 그 칸 맨 위 타일 그림 (빈 칸이면 -1), topZ = 맨 위 타일 층 (0: 빈 칸)
+function cellAt(x, y) { return ShisenLevels.topType(G.b, x, y); }
+const topZ = (x, y) => ShisenLevels.topZ(G.b, x, y);
+// 두 맨 위 타일을 잇는 선 (꺾이는 점들) 또는 null — 규칙은 levels.js link
+function findPath(a, b) { return ShisenLevels.link(G.b, a, b); }
 function anyPair() {
   const byType = {};
   for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) { const t = cellAt(x, y); if (t >= 0) (byType[t] = byType[t] || []).push({ x, y }); }
@@ -207,25 +162,34 @@ function anyPair() {
 
 // ---------- board ----------
 // 끝까지 풀리는 순서가 있게 그림을 놓음 (levels.js deal)
+const transpose = (g) => g[0].map((_, x) => g.map((row) => row[x]));
 function buildBoard(si) {
   const st = STAGES[si];
-  const portrait = !wideLayout(); // PC 가로 화면: 판을 눕힘
-  G.cols = portrait ? st.c : st.r; G.rows = portrait ? st.r : st.c;
+  let { occ1, occ2 } = ShisenLevels.occupancy(si); // 폰 세로 기준 [r][c]
+  if (wideLayout()) { occ1 = transpose(occ1); occ2 = transpose(occ2); } // PC 가로 화면: 판을 눕힘
+  G.rows = occ1.length; G.cols = occ1[0].length;
   G.pool = tilePool(si).slice(0, st.t);
   const pairs = st.tiles / 2, pairTypes = [];
   for (let p = 0; p < pairs; p++) pairTypes.push(p % G.pool.length);
-  const full = Array.from({ length: G.rows }, () => new Array(G.cols).fill(true));
-  G.grid = ShisenLevels.deal(full, pairTypes);
+  G.b = { C: G.cols, R: G.rows, ...ShisenLevels.deal(occ1, occ2, pairTypes) };
   G.left = pairs;
 }
-// 섞기: 남은 타일 자리는 그대로 두고 그림만 다시 놓음 — 이번에도 끝까지 풀리는 순서가 있게
+// 섞기: 남은 타일 자리(층까지)는 그대로 두고 그림만 다시 놓음 — 이번에도 끝까지 풀리는 순서가 있게
 function reshuffle() {
-  const filled = G.grid.map((row) => row.map((t) => t >= 0)), cnt = {};
-  G.grid.forEach((row) => row.forEach((t) => { if (t >= 0) cnt[t] = (cnt[t] || 0) + 1; }));
+  const occ1 = G.b.f1.map((row) => row.map((t) => t >= 0)), occ2 = G.b.f2.map((row) => row.map((t) => t >= 0)), cnt = {};
+  [G.b.f1, G.b.f2].forEach((g) => g.forEach((row) => row.forEach((t) => { if (t >= 0) cnt[t] = (cnt[t] || 0) + 1; })));
   const pairTypes = [];
   for (const [t, n] of Object.entries(cnt)) for (let k = 0; k < n / 2; k++) pairTypes.push(+t);
-  const grid = ShisenLevels.deal(filled, pairTypes);
-  if (grid) G.grid = grid;
+  let d = ShisenLevels.deal(occ1, occ2, pairTypes);
+  if (!d) {
+    // 지금 자리로는 풀 수 없음 (예: 마지막 두 타일이 한 칸에 위아래로 겹침) → 2층 타일을 빈 1층 칸으로 내려서 다시 놓음
+    const empty = [];
+    occ1.forEach((row, y) => row.forEach((o, x) => { if (!o) empty.push([x, y]); }));
+    shuffleArr(empty);
+    occ2.forEach((row, y) => row.forEach((o, x) => { if (o) { const [ex, ey] = empty.pop(); occ1[ey][ex] = true; row[x] = false; } }));
+    d = ShisenLevels.deal(occ1, occ2, pairTypes);
+  }
+  if (d) { G.b.f1 = d.f1; G.b.f2 = d.f2; }
   G.sel = null; G.hint = null;
 }
 
@@ -253,7 +217,8 @@ function showReady(si) {
   G.si = si;
   $('readyTitle').textContent = `${label(si)} ${stageName(si)}`;
   const st = STAGES[si];
-  $('readyInfo').textContent = `${st.c}×${st.r} 판 · 타일 ${st.tiles}개 · 그림 ${st.t}종 · 제한 시간 ${mmss(st.s)}`;
+  const up = st.n2 ? ` (2층 ${st.w2}×${st.h2})` : '';
+  $('readyInfo').textContent = `${st.c}×${st.r} 판${up} · 타일 ${st.tiles}개 · 그림 ${st.t}종 · 제한 시간 ${mmss(st.s)}`;
   G.cols = 0; setState('ready');
 }
 
@@ -268,18 +233,18 @@ function select(x, y) {
   removePair(s, { x, y }, path);
 }
 function removePair(a, b, path, byBomb = false) {
-  const t = cellAt(a.x, a.y);
-  G.grid[a.y][a.x] = -1; G.grid[b.y][b.x] = -1; G.left--; G.sel = null;
+  const t = cellAt(a.x, a.y), za = topZ(a.x, a.y), zb = topZ(b.x, b.y);
+  (za === 2 ? G.b.f2 : G.b.f1)[a.y][a.x] = -1; (zb === 2 ? G.b.f2 : G.b.f1)[b.y][b.x] = -1; G.left--; G.sel = null;
   if (G.hint && (same(G.hint[0], a) || same(G.hint[0], b) || same(G.hint[1], a) || same(G.hint[1], b))) G.hint = null;
   else if (G.hint) { G.hint[2] = findPath(G.hint[0], G.hint[1]); if (!G.hint[2]) G.hint = null; } // 다른 짝을 없애면 힌트 선을 다시 그림
-  G.lines.push({ path, t: 0, life: 0.38 });
-  G.removing.push({ x: a.x, y: a.y, type: t, t: 0 }, { x: b.x, y: b.y, type: t, t: 0 });
+  G.lines.push({ pts: pathPts(path, za, zb), t: 0, life: 0.38 });
+  G.removing.push({ x: a.x, y: a.y, z: za, type: t, t: 0 }, { x: b.x, y: b.y, z: zb, type: t, t: 0 });
   // combo & coins (짝 1개 = 2코인, 콤보면 +1, 콤보 보너스 부스트면 콤보 코인 2배)
   if (!byBomb && G.elapsed - G.lastMatchT <= COMBO_WINDOW) G.combo++; else G.combo = 1;
   G.lastMatchT = G.elapsed; G.maxCombo = Math.max(G.maxCombo, G.combo);
   const bonus = G.combo >= 2 ? (G.comboX2 ? 2 : 1) : 0;
   if (!GOD()) G.coins += 2 + bonus; // 무적: 코인 0
-  const pa = cellCenter(a), pb = cellCenter(b);
+  const pa = zCenter(a, za), pb = zCenter(b, zb);
   G.fx.push({ name: 'fx_remove', x: pa.x, y: pa.y, w: tileW() * 1.4, t: 0, life: 0.5 }, { name: 'fx_remove', x: pb.x, y: pb.y, w: tileW() * 1.4, t: 0, life: 0.5 });
   if (G.combo >= 2) G.texts.push({ combo: G.combo, x: (pa.x + pb.x) / 2, y: Math.min(pa.y, pb.y) - 30, t: 0, life: 0.9 });
   Audio.sfx('match', G.combo);
@@ -406,7 +371,22 @@ const tileW = () => BL.tw;
 function cellCenter(p) { return { x: BL.ox + (p.x + 0.5) * BL.tw, y: BL.oy + (p.y + 0.5) * BL.th }; }
 function cellFromPoint(px, py) {
   const x = Math.floor((px - BL.ox) / BL.tw), y = Math.floor((py - BL.oy) / BL.th);
+  // 2층 타일은 위로 조금 떠 있어서, 그 그림을 누르면 그 2층 타일로
+  const y2 = Math.floor((py - BL.oy + upLift()) / BL.th);
+  if (x >= 0 && y2 >= 0 && x < G.cols && y2 < G.rows && G.b.f2[y2][x] >= 0) return { x, y: y2 };
   return (x >= 0 && y >= 0 && x < G.cols && y < G.rows) ? { x, y } : null;
+}
+// 2층은 위로 떠 보이게 (그만큼 밑의 1층 타일 옆면이 보임)
+const upLift = () => BL.th * 0.17;
+function zCenter(p, z) { const c = cellCenter(p); return z === 2 ? { x: c.x, y: c.y - upLift() } : c; }
+const topCenter = (p) => zCenter(p, topZ(p.x, p.y));
+// 선의 점들을 화면 좌표로: 2층 타일 쪽 끝과, 2층에서 나가는 첫 구간은 2층 높이로
+function pathPts(path, za, zb) {
+  const n = path.length;
+  return path.map((p, i) => {
+    const z = (za === 2 && zb === 2) ? 2 : (i === 0 || (i === 1 && n > 2)) ? za : (i === n - 1 || (i === n - 2 && n > 2)) ? zb : 1;
+    return zCenter(p, z);
+  });
 }
 
 // ---------- render ----------
@@ -430,7 +410,7 @@ function drawBigHint(pulse) {
   ctx.save(); ctx.globalAlpha = fade;
   ctx.fillStyle = 'rgba(10,6,24,.62)'; ctx.fillRect(-20, -20, W + 40, H + 40);
   if (path) {
-    const pts = path.map(cellCenter);
+    const pts = pathPts(path, topZ(a.x, a.y), topZ(b.x, b.y));
     ctx.lineJoin = 'round'; ctx.lineCap = 'round';
     ctx.beginPath(); pts.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
     ctx.shadowColor = '#7FF0FF'; ctx.shadowBlur = 16; ctx.strokeStyle = 'rgba(127,240,255,.55)'; ctx.lineWidth = 12; ctx.stroke();
@@ -438,7 +418,7 @@ function drawBigHint(pulse) {
     ctx.setLineDash([]);
   }
   const hop = Math.abs(Math.sin(G.t * 7)) * BL.th * 0.16, w = BL.tw * 1.06, h = BL.th * 1.06;
-  const spots = [a, b].map((p) => { const c = cellCenter(p); return { p, x: c.x, y: c.y - hop }; });
+  const spots = [a, b].map((p) => { const c = topCenter(p); return { p, x: c.x, y: c.y - hop }; });
   // 위에서 가리키는 화살표 (타일보다 먼저 그려서, 두 타일이 붙어 있으면 아래 화살표는 위 타일 뒤로 숨음)
   for (const s of spots) {
     const ay = s.y - h / 2 - 14 - Math.abs(Math.sin(G.t * 7 + 1)) * 10, aw = Math.max(12, BL.tw * 0.26);
@@ -466,31 +446,50 @@ function render() {
   ctx.fillStyle = 'rgba(255,248,238,.18)'; ctx.strokeStyle = 'rgba(255,255,255,.45)'; ctx.lineWidth = 3;
   ctx.beginPath(); ctx.roundRect(BL.ox - pad, BL.oy - pad, BL.tw * G.cols + pad * 2, BL.th * G.rows + pad * 2, 18); ctx.fill(); ctx.stroke();
   // tiles (bottom rows drawn last so their shadow overlaps the row above)
-  const pulse = 0.5 + 0.5 * Math.sin(G.t * 8);
-  for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
-    const t = G.grid[y][x]; if (t < 0) continue;
-    const c = cellCenter({ x, y });
+  // 1층을 먼저 다 그리고(2층 밑에 가려진 1층 타일은 그림 없이 옆면만), 그 위에 2층 판과 2층 타일을 떠 있게 그림
+  const pulse = 0.5 + 0.5 * Math.sin(G.t * 8), UL = upLift();
+  const drawOne = (t, x, y, cx, cy) => {
     const sel = G.sel && G.sel.x === x && G.sel.y === y;
     const hint = G.hint && !G.hintBig && (same(G.hint[0], { x, y }) || same(G.hint[1], { x, y }));
     const lift = sel ? -5 : 0;
-    ctx.fillStyle = 'rgba(40,20,10,.25)';
-    ctx.beginPath(); ctx.roundRect(c.x - BL.tw * 0.46, c.y - BL.th * 0.42 + 4, BL.tw * 0.92, BL.th * 0.9, 8); ctx.fill();
     if (sel || hint) {
       ctx.save(); ctx.shadowColor = sel ? '#FFD34D' : '#6FD3FF'; ctx.shadowBlur = 16 + pulse * 10;
       ctx.fillStyle = sel ? 'rgba(255,211,77,.9)' : `rgba(111,211,255,${0.5 + pulse * 0.4})`;
-      ctx.beginPath(); ctx.roundRect(c.x - BL.tw * 0.5, c.y - BL.th * 0.47 + lift, BL.tw, BL.th * 0.96, 10); ctx.fill(); ctx.restore();
+      ctx.beginPath(); ctx.roundRect(cx - BL.tw * 0.5, cy - BL.th * 0.47 + lift, BL.tw, BL.th * 0.96, 10); ctx.fill(); ctx.restore();
     }
-    drawTile(G.pool[t], c.x, c.y + lift, BL.tw * 0.94, BL.th * 0.94);
+    drawTile(G.pool[t], cx, cy + lift, BL.tw * 0.94, BL.th * 0.94);
+  };
+  for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
+    const t = G.b.f1[y][x]; if (t < 0) continue;
+    const c = cellCenter({ x, y });
+    ctx.fillStyle = 'rgba(40,20,10,.25)';
+    ctx.beginPath(); ctx.roundRect(c.x - BL.tw * 0.46, c.y - BL.th * 0.42 + 4, BL.tw * 0.92, BL.th * 0.9, 8); ctx.fill();
+    if (G.b.f2[y][x] >= 0) { // 2층 밑에 가려진 1층 타일: 옆면만
+      ctx.fillStyle = '#C9A574'; ctx.strokeStyle = 'rgba(90,55,20,.55)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.roundRect(c.x - BL.tw * 0.46, c.y - BL.th * 0.44, BL.tw * 0.92, BL.th * 0.9, 9); ctx.fill(); ctx.stroke();
+      continue;
+    }
+    drawOne(t, x, y, c.x, c.y);
+  }
+  // 2층 타일: 짙은 그림자 + 위로 떠 있음 + 파란 테두리
+  for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
+    const t = G.b.f2[y][x]; if (t < 0) continue;
+    const c = cellCenter({ x, y }), cy = c.y - UL;
+    ctx.fillStyle = 'rgba(20,10,40,.45)';
+    ctx.beginPath(); ctx.roundRect(c.x - BL.tw * 0.46 + 3, cy - BL.th * 0.42 + 8, BL.tw * 0.92, BL.th * 0.9, 9); ctx.fill();
+    drawOne(t, x, y, c.x, cy);
+    ctx.strokeStyle = 'rgba(70,150,255,.85)'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.roundRect(c.x - BL.tw * 0.45, cy - BL.th * 0.43, BL.tw * 0.9, BL.th * 0.88, 9); ctx.stroke();
   }
   // tiles being removed: pop + fade
   for (const r of G.removing) {
-    const c = cellCenter(r), k = r.t / 0.35;
+    const c = zCenter(r, r.z), k = r.t / 0.35;
     drawTile(G.pool[r.type], c.x, c.y - k * 10, BL.tw * 0.94 * (1 + k * 0.25), BL.th * 0.94 * (1 + k * 0.25), 1 - k);
   }
   // connect lines
   for (const l of G.lines) {
     const k = l.t / l.life;
-    const pts = l.path.map(cellCenter);
+    const pts = l.pts;
     ctx.save(); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
     ctx.globalAlpha = 1 - k * 0.6;
     ctx.shadowColor = '#FFD34D'; ctx.shadowBlur = 18;
@@ -622,8 +621,8 @@ function resize() {
   if (G.cols && wasWide !== wideLayout() && (G.state === 'play' || G.state === 'pause')) transposeBoard();
 }
 function transposeBoard() {
-  const g = []; for (let x = 0; x < G.cols; x++) { const row = []; for (let y = 0; y < G.rows; y++) row.push(G.grid[y][x]); g.push(row); }
-  G.grid = g; [G.cols, G.rows] = [G.rows, G.cols]; G.sel = null; G.hint = null;
+  G.b.f1 = transpose(G.b.f1); G.b.f2 = transpose(G.b.f2);
+  [G.cols, G.rows] = [G.rows, G.cols]; G.b.C = G.cols; G.b.R = G.rows; G.sel = null; G.hint = null;
 }
 window.addEventListener('resize', resize);
 window.addEventListener('orientationchange', () => setTimeout(resize, 200));
@@ -648,4 +647,4 @@ resize();
 requestAnimationFrame(frame);
 
 // debug/test hook
-window.__shisen = { G, findPath, anyPair, select, startStage, STAGES, useHint, useShuffle, useTime, useBomb, cellAt };
+window.__shisen = { G, findPath, anyPair, select, startStage, STAGES, useHint, useShuffle, useTime, useBomb, cellAt, topZ };
