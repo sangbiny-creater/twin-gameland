@@ -399,9 +399,8 @@ img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #
     width: min(max(100vw, 100dvh * 0.5628), 122vw, 106dvh * 0.5628); }
 }
 @media (orientation: landscape) {
-  .title-scr .ts-art { aspect-ratio: 3 / 2;
-    width: min(max(100vw, 100vh * 1.5), 115vw, 108vh * 1.5);
-    width: min(max(100vw, 100dvh * 1.5), 115vw, 108dvh * 1.5); }
+  /* 가로: 세로처럼 화면을 꽉 채움. 폰(가로로 긴 화면)은 위아래가 잘리는데, 로고가 있는 위는 조금만 자르고 아래(START 자리)를 더 자름 */
+  .title-scr .ts-art { width: 100%; height: 100%; aspect-ratio: auto; object-position: 50% 8%; }
 }
 
 /* 새 캐릭터 v2 */
