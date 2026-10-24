@@ -1,7 +1,7 @@
 'use strict';
 // 은유와 은결의 메모리 게임 — 카드 짝 맞추기
 //  · 처음에 모든 카드를 잠깐 보여 주고(미리 보기) 뒤집어 놓음 → 2장을 골라 뒤집어 같은 그림이면 획득, 다르면 다시 뒤집힘
-//  · 틀리면 제한 시간이 2초 줄어듦 (아무거나 마구 누르지 않게)
+//  · 틀리면 제한 시간이 0.2초 줄어듦 (아무거나 마구 누르지 않게)
 //  · 제한 시간 안에 모든 짝을 찾으면 클리어 → 남은 시간으로 별 1~3개 (사천성과 같은 규칙)
 //  · 징검다리: 10개 월드 × 10판 = 100판 (1-1 ~ 10-10). 짝 수·추억 카드·미리 보기·시간 표는 levels.js
 //  · 카드는 DOM(3D 뒤집기), 배경과 꽃가루 효과는 canvas
@@ -14,7 +14,7 @@ const FRONTS = Array.from({ length: 18 }, (_, k) => `f${String(k).padStart(2, '0
 const SCENES = Array.from({ length: 36 }, (_, k) => `s${String(k).padStart(2, '0')}`); // 은유·은결 일상 그림 (추억 카드)
 const SKIN_BG = { forest: 1, sunset: 1, winter: 2, night: 3, space: 4 }; // 공통 배경 스킨 → 사천성 배경 그림 (나머지는 skins.js로 그림)
 const MISS_SHOW = 0.75;  // 틀린 두 장을 보여 주는 시간 (초)
-const MISS_TIME = 2;     // 틀리면 줄어드는 시간 (초)
+const MISS_TIME = 0.2;   // 틀리면 줄어드는 시간 (초)
 const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
 const ASSET_V = '20261024a';
