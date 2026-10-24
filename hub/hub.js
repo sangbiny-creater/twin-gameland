@@ -206,7 +206,7 @@ function renderLobby() {
     });
     grid.appendChild(card);
   }
-  const soon = document.createElement('div'); soon.className = 'lb-card soon';
+  const soon = document.createElement('div'); soon.className = 'lb-card lb-soon'; // .soon 은 작은 딱지 스타일이라 다른 이름
   soon.innerHTML = '<img class="lb-cardimg" src="hub/v3/card_soon.webp?v=20261023r" alt="다음 게임 — 곧 새로운 모험이 찾아와요! COMING SOON">';
   grid.appendChild(soon);
 }

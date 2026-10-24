@@ -319,7 +319,7 @@ img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #
 .lb-crown { font-size: 14px; }
 .lb-play { height: 34px; border-radius: 18px; background: linear-gradient(#FFE27A, #FFC21E); box-shadow: 0 3px 0 #E09A12, inset 0 2px 0 rgba(255,255,255,.6); color: #D8341C; font-size: 17px; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
 .lb-tri { width: 0; height: 0; border-left: 12px solid #E8361E; border-top: 7px solid transparent; border-bottom: 7px solid transparent; }
-.lb-card.soon { cursor: default; background: linear-gradient(#F4F8FD, #E9F1FA); }
+.lb-card.lb-soon { cursor: default; background: linear-gradient(#F4F8FD, #E9F1FA); }
 .lb-soon-t { text-align: center; font-size: 18px; color: #26365A; margin-top: 2px; }
 .lb-soon-s { text-align: center; font-size: 12px; color: #5B6B80; }
 .lb-play.off { background: linear-gradient(#8FA6C8, #6D86AD); box-shadow: 0 3px 0 #50688F; color: #fff; font-size: 14px; letter-spacing: 1px; }
@@ -383,7 +383,7 @@ img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #
 .lb-card.fav .lb-fav::after { color: #FFB800; }
 .lb-card .lb-best { position: absolute; left: 12%; right: 12%; display: flex; align-items: center; justify-content: center; gap: 4px; background: #F9FCFE; border-radius: 10px; font-size: 15px; color: #233257; white-space: nowrap; overflow: hidden; }
 .lb-card .lb-best img { height: 72%; width: auto; }
-.lb-card.soon { cursor: default; }
+.lb-card.lb-soon { cursor: default; }
 #root:not(.portrait) .lb-card .lb-best { font-size: 12px; }
 #root:not(.portrait) .lb-card .lb-fav::after { font-size: 13px; }
 #root.portrait .lb-body { flex: 0 0 auto; justify-content: flex-start; }
