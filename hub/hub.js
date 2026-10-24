@@ -239,11 +239,11 @@ $('tsStart').addEventListener('click', (e) => {
   e.stopPropagation();
   const g = titleGame; if (!g) return;
   blip(1046);
-  // 지도·준비 창을 거치지 않고 바로 게임으로 (징검다리 게임은 다음에 할 판). 인트로 그림은 넘어갈 때까지 그대로 둠
+  // 징검다리가 없는 게임은 바로 게임으로. 인트로 그림은 넘어갈 때까지 그대로 둠
   const GM = Hub.GAMES[g.id];
-  // 사천성·스카이훅은 START를 누르면 징검다리 지도로
-  if (g.id === 'shisen' || g.id === 'skyhook') { hideTitle(); g.open(); return; }
-  location.href = GM.stages ? `${GM.path}?stage=${Hub.stageNext(g.id)}&go=1` : `${GM.path}?go=1`;
+  // 징검다리 게임(스카이훅·사천성·메모리)은 START를 누르면 징검다리 지도로
+  if (GM.stages) { hideTitle(); g.open(); return; }
+  location.href = `${GM.path}?go=1`;
 });
 window.addEventListener('keydown', (e) => {
   if (!titleGame) return;
