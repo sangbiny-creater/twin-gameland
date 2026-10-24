@@ -58,20 +58,48 @@ function spr(name, x, y, w, h, alpha = 1) {
 const MY_LOOK = HUB ? HUB.active().look : null;
 // 새 캐릭터(v2)는 같은 계열 기본 캐릭터 타일 자리에 v2 얼굴을 넣음
 const MY_TILE = MY_LOOK ? 't_' + (window.CharV2 ? CharV2.base(MY_LOOK) : MY_LOOK) : null;
-function drawTile(name, x, y, w, h, alpha = 1) {
-  spr(name, x, y, w, h, alpha);
+// 2층 타일: 그림은 그대로 두고 타일 바탕(크림색)만 하늘색으로 바꾼 그림을 한 번 만들어 둠
+//  · 타일 가장자리 안쪽의 크림색 점에서 시작해 이어진 크림색 부분만 칠함 (그림 안의 크림색은 테두리 선에 막혀 그대로)
+const UPPER_BG = '#D6E9FF', UP_SPR = {};
+const isCream = (d, i) => d[i + 3] > 200 && d[i] > 196 && d[i + 1] > 172 && d[i + 2] > 140 && d[i] >= d[i + 2] && d[i] - d[i + 2] < 80;
+function upperSprite(name) {
+  if (name in UP_SPR) return UP_SPR[name];
+  if (!SP.ready || !SP.f[name]) return null;
+  const [sx, sy, sw, sh] = SP.f[name];
+  const cv = document.createElement('canvas'); cv.width = sw; cv.height = sh;
+  const c = cv.getContext('2d'); c.drawImage(SP.img, sx, sy, sw, sh, 0, 0, sw, sh);
+  try {
+    const im = c.getImageData(0, 0, sw, sh), d = im.data, seen = new Uint8Array(sw * sh), st = [];
+    const ix = Math.round(sw * 0.14), iy = Math.round(sh * 0.14);
+    for (let x = ix; x < sw - ix; x += 2) st.push(iy * sw + x, (sh - 1 - iy) * sw + x);
+    for (let y = iy; y < sh - iy; y += 2) st.push(y * sw + ix, y * sw + sw - 1 - ix);
+    while (st.length) {
+      const p = st.pop(); if (seen[p]) continue; seen[p] = 1;
+      const i = p * 4; if (!isCream(d, i)) continue;
+      const l = (d[i] + d[i + 1] + d[i + 2]) / 3 / 245; // 밝기는 살리고 색만 하늘색으로
+      d[i] = Math.min(255, 214 * l); d[i + 1] = Math.min(255, 233 * l); d[i + 2] = Math.min(255, 255 * l);
+      const x = p % sw, y = (p - x) / sw;
+      if (x > 0) st.push(p - 1); if (x < sw - 1) st.push(p + 1); if (y > 0) st.push(p - sw); if (y < sh - 1) st.push(p + sw);
+    }
+    c.putImageData(im, 0, 0);
+  } catch (e) { /* 그림을 읽을 수 없으면 그대로 */ }
+  return (UP_SPR[name] = cv);
+}
+function drawTile(name, x, y, w, h, alpha = 1, upper = false) {
+  const up = upper && upperSprite(name);
+  if (up) { ctx.globalAlpha = alpha; ctx.drawImage(up, x - w / 2, y - h / 2, w, h); ctx.globalAlpha = 1; } else spr(name, x, y, w, h, alpha);
   if (name === MY_TILE && window.CharV2 && CharV2.is(MY_LOOK) && CharV2.ready(MY_LOOK)) {
     ctx.save(); ctx.globalAlpha = alpha;
     // 기본 타일 얼굴과 같은 크기로 (타일 안쪽 판을 거의 다 채움)
     ctx.beginPath(); ctx.roundRect(x - w * 0.42, y - h * 0.41, w * 0.84, h * 0.8, w * 0.12); ctx.clip();
-    ctx.fillStyle = '#FFF6E8'; ctx.fillRect(x - w / 2, y - h / 2, w, h);
+    ctx.fillStyle = upper ? UPPER_BG : '#FFF6E8'; ctx.fillRect(x - w / 2, y - h / 2, w, h);
     CharV2.drawCenter(ctx, MY_LOOK, 'tile_face', x, y - h * 0.02, w * 1.02);
     ctx.restore(); return;
   }
   if (name !== MY_TILE || !window.Costume || !Costume.ready()) return;
   ctx.save(); ctx.globalAlpha = alpha;
   ctx.beginPath(); ctx.roundRect(x - w * 0.36, y - h * 0.38, w * 0.72, h * 0.72, w * 0.1); ctx.clip();
-  ctx.fillStyle = '#FFF6E8'; ctx.fillRect(x - w / 2, y - h / 2, w, h);
+  ctx.fillStyle = upper ? UPPER_BG : '#FFF6E8'; ctx.fillRect(x - w / 2, y - h / 2, w, h);
   const im = Costume.img, frac = 0.6, bh = h * 0.70, bw = bh * im.naturalWidth / (im.naturalHeight * frac);
   ctx.drawImage(im, 0, 0, im.naturalWidth, im.naturalHeight * frac, x - bw / 2, y - h / 2 + h * 0.13, bw, bh);
   ctx.restore();
@@ -428,7 +456,7 @@ function drawBigHint(pulse) {
   for (const s of spots) {
     ctx.save(); ctx.shadowColor = '#FFE45C'; ctx.shadowBlur = 22 + pulse * 18;
     ctx.fillStyle = '#FFF3A8'; ctx.beginPath(); ctx.roundRect(s.x - w / 2 - 5, s.y - h / 2 - 5, w + 10, h + 10, 14); ctx.fill(); ctx.restore();
-    drawTile(G.pool[cellAt(s.p.x, s.p.y)], s.x, s.y, w * 0.96, h * 0.96);
+    drawTile(G.pool[cellAt(s.p.x, s.p.y)], s.x, s.y, w * 0.96, h * 0.96, 1, topZ(s.p.x, s.p.y) === 2);
     ctx.strokeStyle = pulse > 0.5 ? '#FFFFFF' : '#FFC21A'; ctx.lineWidth = 6;
     ctx.beginPath(); ctx.roundRect(s.x - w / 2 - 4, s.y - h / 2 - 4, w + 8, h + 8, 13); ctx.stroke();
   }
@@ -448,7 +476,7 @@ function render() {
   // tiles (bottom rows drawn last so their shadow overlaps the row above)
   // 1층을 먼저 다 그리고(2층 밑에 가려진 1층 타일은 그림 없이 옆면만), 그 위에 2층 판과 2층 타일을 떠 있게 그림
   const pulse = 0.5 + 0.5 * Math.sin(G.t * 8), UL = upLift();
-  const drawOne = (t, x, y, cx, cy) => {
+  const drawOne = (t, x, y, cx, cy, z) => {
     const sel = G.sel && G.sel.x === x && G.sel.y === y;
     const hint = G.hint && !G.hintBig && (same(G.hint[0], { x, y }) || same(G.hint[1], { x, y }));
     const lift = sel ? -5 : 0;
@@ -457,7 +485,7 @@ function render() {
       ctx.fillStyle = sel ? 'rgba(255,211,77,.9)' : `rgba(111,211,255,${0.5 + pulse * 0.4})`;
       ctx.beginPath(); ctx.roundRect(cx - BL.tw * 0.5, cy - BL.th * 0.47 + lift, BL.tw, BL.th * 0.96, 10); ctx.fill(); ctx.restore();
     }
-    drawTile(G.pool[t], cx, cy + lift, BL.tw * 0.94, BL.th * 0.94);
+    drawTile(G.pool[t], cx, cy + lift, BL.tw * 0.94, BL.th * 0.94, 1, z === 2);
   };
   for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
     const t = G.b.f1[y][x]; if (t < 0) continue;
@@ -469,22 +497,23 @@ function render() {
       ctx.beginPath(); ctx.roundRect(c.x - BL.tw * 0.46, c.y - BL.th * 0.44, BL.tw * 0.92, BL.th * 0.9, 9); ctx.fill(); ctx.stroke();
       continue;
     }
-    drawOne(t, x, y, c.x, c.y);
+    drawOne(t, x, y, c.x, c.y, 1);
   }
-  // 2층 타일: 짙은 그림자 + 위로 떠 있음 + 파란 테두리
+  // 2층 타일: 짙은 그림자 + 위로 떠 있음 + 하늘색 바탕 + 파란 테두리
   for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
     const t = G.b.f2[y][x]; if (t < 0) continue;
     const c = cellCenter({ x, y }), cy = c.y - UL;
     ctx.fillStyle = 'rgba(20,10,40,.45)';
     ctx.beginPath(); ctx.roundRect(c.x - BL.tw * 0.46 + 3, cy - BL.th * 0.42 + 8, BL.tw * 0.92, BL.th * 0.9, 9); ctx.fill();
-    drawOne(t, x, y, c.x, cy);
-    ctx.strokeStyle = 'rgba(70,150,255,.85)'; ctx.lineWidth = 2.5;
+    drawOne(t, x, y, c.x, cy, 2);
+    ctx.strokeStyle = 'rgba(40,120,240,.95)'; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.roundRect(c.x - BL.tw * 0.45, cy - BL.th * 0.43, BL.tw * 0.9, BL.th * 0.88, 9); ctx.stroke();
   }
   // tiles being removed: pop + fade
   for (const r of G.removing) {
     const c = zCenter(r, r.z), k = r.t / 0.35;
-    drawTile(G.pool[r.type], c.x, c.y - k * 10, BL.tw * 0.94 * (1 + k * 0.25), BL.th * 0.94 * (1 + k * 0.25), 1 - k);
+    const w = BL.tw * 0.94 * (1 + k * 0.25), h = BL.th * 0.94 * (1 + k * 0.25);
+    drawTile(G.pool[r.type], c.x, c.y - k * 10, w, h, 1 - k, r.z === 2);
   }
   // connect lines
   for (const l of G.lines) {
