@@ -27,7 +27,7 @@ function toast(text) {
 
 // ---------- routing ----------
 const SCREENS = { select: 'scrSelect', lobby: 'scrLobby', map: 'scrMap', records: 'scrRecords' };
-let mapGame = 'skyhook'; // 징검다리 지도에 보여 줄 게임 (스카이훅 / 사천성)
+let mapGame = 'skyhook'; // 징검다리 지도에 보여 줄 게임 (스카이훅 / 사천성 / 메모리 게임)
 function go(name) {
   if (name.startsWith('map-')) { mapGame = name.slice(4); name = 'map'; }
   if (name !== 'select' && !Hub.active()) name = 'select';
@@ -156,6 +156,9 @@ const GAME_CARDS = [
   { id: 'downhill', key: 'hub/intro/downhill.webp', name: '다운힐 러너', thumb: 'hub/v3/card_downhill.webp', open: () => { location.href = Hub.GAMES.downhill.path; }, portrait: true,
     sub: (c, r) => (r.plays ? `BEST ${r.best.toLocaleString()}m · ${r.plays}번 도전` : '장애물을 피해 끝없이 내려가요!'),
     rec: (c, r) => `BEST <b>${r.best.toLocaleString()}m</b> · ${r.plays}번 도전<br>모은 코인 <b>${r.coins}</b>` },
+  { id: 'memory', key: 'hub/intro/memory.webp', name: '메모리 게임', thumb: 'hub/v3/card_memory.webp', open: () => go('map-memory'), portrait: true,
+    sub: (c) => stageSub('memory', c),
+    rec: (c, r) => `징검다리 <b>${Hub.stageCleared('memory', c)} / ${Hub.GAMES.memory.stages}</b> · ${r.plays}번 도전<br>모은 코인 <b>${r.coins}</b>` },
 ];
 const mmss = (t) => `${Math.floor(t / 60)}분 ${String(t % 60).padStart(2, '0')}초`;
 // 레벨: 지금까지 모은 코인 500개마다 1레벨
@@ -164,7 +167,7 @@ const LV_STEP = 500;
 const ITEM_ICON = { hint: 'v2/boost_hint', shuffle: 'v2/boost_shuffle', time: 'v2/boost_time', bomb: 'v2/boost_bomb', find: 'v2/boost_find', combo: 'v2/boost_combo' };
 const itemIcon = (id) => `shop/assets/${ITEM_ICON[id] || 'icons/' + id}.png?v=20261023r`;
 // 카드 그림에서 BEST 줄이 있는 위치 (카드 높이 %: 위, 아래)
-const BEST_POS = { skyhook: [73.23, 81.36], helicopter: [74.02, 82.15], stairs: [73.23, 81.36], shisen: [74.07, 81.73], downhill: [74.07, 81.73] };
+const BEST_POS = { skyhook: [73.23, 81.36], helicopter: [74.02, 82.15], stairs: [73.23, 81.36], shisen: [74.07, 81.73], downhill: [74.07, 81.73], memory: [74.07, 81.73] };
 // 게임 카드 아래 한 줄: 징검다리 게임은 깬 판 수, 나머지는 최고 기록
 const cardLine = (g, c, r) => (Hub.GAMES[g.id].stages
   ? `징검다리 ${Hub.stageCleared(g.id, c)} / ${Hub.GAMES[g.id].stages}`
@@ -188,7 +191,7 @@ function renderLobby() {
     card.className = 'lb-card' + (fav ? ' fav' : ''); card.setAttribute('role', 'button'); card.tabIndex = 0;
     // 카드 그림 한 장(제목·게임 시작 버튼 포함) 위에 최고 기록만 실제 값으로 덮어 씀
     const bp = BEST_POS[g.id] || [73.5, 81.5];
-    card.innerHTML = `<img class="lb-cardimg" src="${g.thumb}?v=20261023r" alt="">
+    card.innerHTML = `<img class="lb-cardimg" src="${g.thumb}?v=20261024m" alt="">
       <button class="lb-fav" aria-label="즐겨찾기">★</button>
       <div class="lb-best" style="top:${bp[0]}%;height:${bp[1] - bp[0]}%"><img src="hub/v3/crown.png?v=20261023r" alt=""><span class="lb-bt"></span></div>`;
     card.querySelector('.lb-cardimg').alt = g.name;
@@ -211,7 +214,7 @@ function renderLobby() {
 let titleGame = null;
 // 인트로 그림: 화면이 가로면 가로 그림(<id>_land.webp), 세로면 세로 그림 — 폰·태블릿을 돌리면 바로 바뀜
 const landMQ = window.matchMedia('(orientation: landscape)');
-const introSrc = (g) => `${landMQ.matches ? g.key.replace('.webp', '_land.webp') : g.key}?v=20261024i`;
+const introSrc = (g) => `${landMQ.matches ? g.key.replace('.webp', '_land.webp') : g.key}?v=20261024m`;
 function setTitleArt(g) {
   const src = introSrc(g);
   $('tsArt').src = src; $('tsArt').alt = g.name;
@@ -349,7 +352,7 @@ function openStage(i) {
   const st = Hub.stage(mapGame, i);
   $('stTitle').textContent = `${Hub.stageLabel(i, mapGame)} ${Hub.stageName(i, mapGame)}`;
   $('stStars').innerHTML = [0, 1, 2].map((k) => `<span class="${k < st.stars ? '' : 'off'}">⭐</span>`).join('');
-  const shisen = mapGame === 'shisen';
+  const shisen = mapGame === 'shisen' || mapGame === 'memory'; // 시간 안에 깨는 게임: 빨리 깬 기록·남은 시간으로 별
   const bestTxt = shisen ? (st.bestTime ? `가장 빨리 깬 기록 <b>${mmss(st.bestTime)}</b>` : '') : `최고 기록 <b>${st.best}m</b>`;
   const starTip = shisen ? '시간이 많이 남을수록 별이 늘어요.' : '남은 하트가 많을수록 별이 늘어요.';
   $('stInfo').innerHTML = st.cleared
@@ -366,14 +369,14 @@ function renderRecords() {
   const c = Hub.active();
   $('recTitle').textContent = `${c.name}의 기록`;
   $('recSummary').innerHTML = `<div class="rec-card total"><div class="v">지금 코인 <b>${c.coins}</b> · 지금까지 모은 코인 <b>${c.earned}</b> · 별 <b>${Hub.starsTotal(c)}</b></div></div>`
-    + GAME_CARDS.map((g) => `<div class="rec-card"><div class="thumb" style="background-image:url(${g.thumb}?v=20261022l)"></div>
+    + GAME_CARDS.map((g) => `<div class="rec-card"><div class="thumb" style="background-image:url(${g.thumb}?v=20261024m)"></div>
       <div><div class="t">${g.name}${Hub.isFav(g.id, c) ? ' <span class="star-on">★</span>' : ''}</div><div class="v">${g.rec(c, Hub.rec(g.id, c))}</div></div></div>`).join('');
   const list = $('recList'); list.innerHTML = '';
   if (!c.history.length) list.innerHTML = '<li><span>아직 기록이 없어요. 게임을 해봐요!</span></li>';
   for (const h of c.history) {
     const li = document.createElement('li');
-    const what = (h.game === 'skyhook' || h.game === 'shisen')
-      ? `${h.game === 'shisen' ? '사천성' : '스카이훅'} ${Hub.stageLabel(h.stage, h.game)} <span class="${h.cleared ? 'ok' : 'no'}">${h.cleared ? '클리어 ' + '⭐'.repeat(h.stars) : '실패'}</span>`
+    const what = (Hub.GAMES[h.game] && Hub.GAMES[h.game].stages)
+      ? `${{ shisen: '사천성', memory: '메모리 게임' }[h.game] || '스카이훅'} ${Hub.stageLabel(h.stage, h.game)} <span class="${h.cleared ? 'ok' : 'no'}">${h.cleared ? '클리어 ' + '⭐'.repeat(h.stars) : '실패'}</span>`
       : `${{ stairs: '계단 오르기', downhill: '다운힐 러너' }[h.game] || '헬리콥터'} <span class="ok">${h.dist}m</span>`;
     li.innerHTML = `<span>${what}</span><span>+${h.earned} <i class="coin"></i><span class="when">${fmtDate(h.at)}</span></span>`;
     list.appendChild(li);

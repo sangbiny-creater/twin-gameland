@@ -13,6 +13,7 @@ const GAMES = [
   { id: 'stairs', name: '계단 오르기', img: 'assets/v2/game_stairs.jpg' },
   { id: 'shisen', name: '사천성', img: 'assets/v2/game_shisen.jpg' },
   { id: 'downhill', name: '다운힐 러너', img: 'assets/v2/game_downhill.jpg' },
+  { id: 'memory', name: '메모리 게임', img: 'assets/v2/game_memory.jpg' },
 ];
 // 부스트 그림: 새 아이콘이 있으면 그것, 없으면 예전 아이콘
 const NEW_ICON = { hint: 'boost_hint', shuffle: 'boost_shuffle', time: 'boost_time', bomb: 'boost_bomb', find: 'boost_find', combo: 'boost_combo' };
@@ -255,8 +256,8 @@ document.querySelectorAll('[data-scroll]').forEach((b) => {
 })();
 
 // ---------- start ----------
-Hub.starterKit('shisen'); // 사천성 기본 아이템을 아직 안 받았으면 지금 지급 (게임과 같은 수량을 보여 주려고)
-window.addEventListener('pageshow', () => { Hub.reload(); Hub.starterKit('shisen'); renderHeader(); renderAll(); });
+Hub.starterKit('shisen'); Hub.starterKit('memory'); // 사천성·메모리 게임 기본 아이템을 아직 안 받았으면 지금 지급 (게임과 같은 수량을 보여 주려고)
+window.addEventListener('pageshow', () => { Hub.reload(); Hub.starterKit('shisen'); Hub.starterKit('memory'); renderHeader(); renderAll(); });
 renderHeader(); renderAll();
 // 고른 게임 카드가 보이게
 requestAnimationFrame(() => { const on = document.querySelector('.game.on'); if (on) on.scrollIntoView({ inline: 'center', block: 'nearest' }); window.scrollTo(0, 0); });

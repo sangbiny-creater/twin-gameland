@@ -15,7 +15,7 @@
   const FREE_SLOTS = 2;  // 처음엔 2명(은유, 은결)까지 무료
   const MAX_CHARS = 8;
 
-  // 징검다리 게임(스카이훅·사천성)이 같이 쓰는 10개 월드 (스카이훅 5판씩 50판 1-1 ~ 10-5, 사천성 10판씩 100판 1-1 ~ 10-10)
+  // 징검다리 게임(스카이훅·사천성·메모리 게임)이 같이 쓰는 10개 월드 (스카이훅 5판씩 50판 1-1 ~ 10-5, 사천성·메모리 게임 10판씩 100판 1-1 ~ 10-10)
   // 배경 그림은 common/worlds/w1.jpg ~ w10.jpg
   const WORLDS = ['하늘도시', '숲속 나무마을', '겨울왕국', '석양의 항구', '벚꽃마을', '구름왕국', '바닷속도시', '마법숲', '별빛우주', '황금성'];
   const GAMES = {
@@ -24,6 +24,7 @@
     stairs: { name: '계단 오르기', path: 'stairs/index.html' },
     shisen: { name: '사천성', path: 'shisen/index.html', stages: 100, worlds: WORLDS, perWorld: 10 }, // 10개 월드 × 10판 (1-1 ~ 10-10)
     downhill: { name: '다운힐 러너', path: 'downhill/index.html' },
+    memory: { name: '메모리 게임', path: 'memory/index.html', stages: 100, worlds: WORLDS, perWorld: 10 }, // 사천성처럼 10개 월드 × 10판
   };
 
   const COIN_RULES = {
@@ -37,6 +38,8 @@
     shisen: (r, first) => (r.cleared ? 20 + Math.round(r.stage * 1.5) + r.stars * 5 + (first ? 30 : 0) : 0),
     // 100m 마다 +5 (헬리콥터와 같은 거리 규칙)
     downhill: (r) => Math.floor(r.dist / 100) * 5,
+    // 사천성과 같은 징검다리 규칙 (100판: 1-1 +20 … 10-10 +169)
+    memory: (r, first) => (r.cleared ? 20 + Math.round(r.stage * 1.5) + r.stars * 5 + (first ? 30 : 0) : 0),
   };
 
   // ---------- 아이템샵 카탈로그 ----------
@@ -92,6 +95,13 @@
       { id: 'dash', name: '스타트 부스터', desc: '출발 5초 슝~ 무적', price: 200 },
       { id: 'magnet', name: '자석', desc: '처음 20초 코인 흡수', price: 300 },
       { id: 'x2', name: '코인 2배', desc: '처음 30초 코인 2배', price: 300 },
+    ],
+    memory: [
+      { id: 'hint', name: '힌트', desc: '짝 하나를 잠깐 보여줘요', price: 60, manual: true },
+      { id: 'find', name: '모두 보기', desc: '모든 카드를 2초 보여줘요', price: 120, manual: true },
+      { id: 'time', name: '시간 추가', desc: '제한 시간 +10초', price: 80, manual: true },
+      { id: 'bomb', name: '짝 맞추기', desc: '짝 하나를 바로 찾아요', price: 150, manual: true },
+      { id: 'combo', name: '콤보 보너스', desc: '콤보 코인 2배', price: 300 },
     ],
   };
 
@@ -264,7 +274,7 @@
     },
     // 캐릭터마다 한 번만 주는 기본 아이템
     starterKit(game, c = this.active()) {
-      const KITS = { shisen: { hint: 3, shuffle: 2, time: 1 } };
+      const KITS = { shisen: { hint: 3, shuffle: 2, time: 1 }, memory: { hint: 3, find: 1, time: 1 } };
       if (!c || !KITS[game]) return false;
       const sh = shopOf(c); sh.starter = sh.starter || {};
       if (sh.starter[game]) return false;
@@ -344,6 +354,7 @@
     //   skyhook:    { stage, cleared, dist, coins, stars }
     //   helicopter: { dist, coins }
     //   shisen:     { stage, cleared, dist: 0, coins, stars, time(클리어까지 걸린 초) }
+    //   memory:     shisen 과 같음
   //   downhill:   { dist, coins }
     record(game, r) {
       reload(); // 다른 탭/게임에서 바뀌었을 수 있음
