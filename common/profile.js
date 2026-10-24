@@ -15,14 +15,14 @@
   const FREE_SLOTS = 2;  // 처음엔 2명(은유, 은결)까지 무료
   const MAX_CHARS = 8;
 
-  // 징검다리 게임(스카이훅·사천성)이 같이 쓰는 10개 월드 × 5판 = 50판 (1-1 ~ 10-5)
+  // 징검다리 게임(스카이훅·사천성)이 같이 쓰는 10개 월드 (스카이훅 5판씩 50판 1-1 ~ 10-5, 사천성 10판씩 100판 1-1 ~ 10-10)
   // 배경 그림은 common/worlds/w1.jpg ~ w10.jpg
   const WORLDS = ['하늘도시', '숲속 나무마을', '겨울왕국', '석양의 항구', '벚꽃마을', '구름왕국', '바닷속도시', '마법숲', '별빛우주', '황금성'];
   const GAMES = {
     skyhook: { name: 'Sky Hook Runner', path: 'skyhook/index.html', stages: 50, worlds: WORLDS, perWorld: 5 },
     helicopter: { name: 'Twin Helicopter', path: 'helicopter/index.html' },
     stairs: { name: '계단 오르기', path: 'stairs/index.html' },
-    shisen: { name: '사천성', path: 'shisen/index.html', stages: 50, worlds: WORLDS, perWorld: 5 },
+    shisen: { name: '사천성', path: 'shisen/index.html', stages: 100, worlds: WORLDS, perWorld: 10 }, // 10개 월드 × 10판 (1-1 ~ 10-10)
     downhill: { name: '다운힐 러너', path: 'downhill/index.html' },
   };
 
@@ -33,8 +33,8 @@
     helicopter: (r) => Math.floor(r.dist / 100) * 5,
     // 50계단(m) 마다 +5
     stairs: (r) => Math.floor(r.dist / 50) * 5,
-    // 스카이훅과 같은 징검다리 규칙
-    shisen: (r, first) => (r.cleared ? 20 + r.stage * 3 + r.stars * 5 + (first ? 30 : 0) : 0),
+    // 스카이훅과 같은 징검다리 규칙 (100판이라 판마다 +1.5: 1-1 +20 … 10-10 +169)
+    shisen: (r, first) => (r.cleared ? 20 + Math.round(r.stage * 1.5) + r.stars * 5 + (first ? 30 : 0) : 0),
     // 100m 마다 +5 (헬리콥터와 같은 거리 규칙)
     downhill: (r) => Math.floor(r.dist / 100) * 5,
   };

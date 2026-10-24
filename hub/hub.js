@@ -143,7 +143,7 @@ const stageSub = (g, c) => `징검다리 ${Hub.stageCleared(g, c)} / ${Hub.GAMES
 const GAME_CARDS = [
   { id: 'skyhook', key: 'hub/intro/skyhook.webp', name: 'Sky Hook Runner', thumb: 'hub/v3/card_skyhook.webp', open: () => go('map-skyhook'),
     sub: (c) => stageSub('skyhook', c),
-    rec: (c, r) => `징검다리 <b>${Hub.stageCleared('skyhook', c)} / 12</b> · ${r.plays}번 도전<br>최고 거리 <b>${r.best}m</b> · 모은 코인 <b>${r.coins}</b>` },
+    rec: (c, r) => `징검다리 <b>${Hub.stageCleared('skyhook', c)} / ${Hub.GAMES.skyhook.stages}</b> · ${r.plays}번 도전<br>최고 거리 <b>${r.best}m</b> · 모은 코인 <b>${r.coins}</b>` },
   { id: 'helicopter', key: 'hub/intro/helicopter.webp', name: 'Twin Helicopter', thumb: 'hub/v3/card_helicopter.webp', open: () => { location.href = Hub.GAMES.helicopter.path; },
     sub: (c, r) => (r.plays ? `BEST ${r.best}m · ${r.plays}번 비행` : '아직 안 해봤어요'),
     rec: (c, r) => `BEST <b>${r.best}m</b> · ${r.plays}번 비행<br>모은 코인 <b>${r.coins}</b>` },
@@ -152,7 +152,7 @@ const GAME_CARDS = [
     rec: (c, r) => `BEST <b>${r.best}m</b> · ${r.plays}번 도전<br>모은 코인 <b>${r.coins}</b>` },
   { id: 'shisen', key: 'hub/intro/shisen.webp', name: '사천성', thumb: 'hub/v3/card_shisen.webp', open: () => go('map-shisen'), portrait: true,
     sub: (c) => stageSub('shisen', c),
-    rec: (c, r) => `징검다리 <b>${Hub.stageCleared('shisen', c)} / 12</b> · ${r.plays}번 도전<br>모은 코인 <b>${r.coins}</b>` },
+    rec: (c, r) => `징검다리 <b>${Hub.stageCleared('shisen', c)} / ${Hub.GAMES.shisen.stages}</b> · ${r.plays}번 도전<br>모은 코인 <b>${r.coins}</b>` },
   { id: 'downhill', key: 'hub/intro/downhill.webp', name: '다운힐 러너', thumb: 'hub/v3/card_downhill.webp', open: () => { location.href = Hub.GAMES.downhill.path; }, portrait: true,
     sub: (c, r) => (r.plays ? `BEST ${r.best.toLocaleString()}m · ${r.plays}번 도전` : '장애물을 피해 끝없이 내려가요!'),
     rec: (c, r) => `BEST <b>${r.best.toLocaleString()}m</b> · ${r.plays}번 도전<br>모은 코인 <b>${r.coins}</b>` },
@@ -269,14 +269,16 @@ $('btnSettings').addEventListener('click', () => { blip(); renderSettings(); ope
 $('setSound').addEventListener('click', () => { Hub.setSound(!Hub.settings.sound); document.body.classList.toggle('muted', !Hub.settings.sound); renderSettings(); blip(); });
 $('setRename').addEventListener('click', () => { closeModals(); renameMe(); });
 // ---------- 3. 스카이훅 징검다리 ----------
-// 월드마다 배경 그림 카드 1장, 그 안에서 5개 돌다리가 아래 → 위로 올라감
+// 월드마다 배경 그림 카드 1장, 그 안에서 돌다리 5개(사천성은 10개)가 아래 → 위로 올라감
 // 가로 화면: 카드가 옆으로 나란히 (좌우로 밀기) / 폰 세로 화면: 카드가 위아래로 (위아래로 밀기)
 let portraitNow = false;
 const WORLD_BG = (w) => `common/worlds/w${w + 1}.jpg?v=20261022n`;
-// 판 위치 (카드 안에서 %): 아래(1판) → 위(5판) 지그재그, 월드마다 조금씩 다르게
-function stoneSpot(w, k) {
-  const ys = [88, 72, 56, 40, 24];
+// 판 위치 (카드 안에서 %): 아래(1판) → 위(마지막 판) 지그재그, 월드마다 조금씩 다르게
+//  · 월드당 5판(스카이훅) / 10판(사천성: 두 줄로 번갈아 올라감)
+function stoneSpot(w, k, K = 5) {
   const flip = w % 2 ? -1 : 1;
+  if (K > 5) return { x: 50 + ((k % 2 ? 70 : 30) + (Math.floor(k / 2) % 2 ? 4 : -4) - 50) * flip, y: 92 - k * (78 / (K - 1)) };
+  const ys = [88, 72, 56, 40, 24];
   const xs = [56, 34, 62, 36, 54];
   return { x: 50 + (xs[k] - 50) * flip, y: ys[k] };
 }
@@ -297,15 +299,16 @@ function renderMap() {
     const worldOpen = Hub.stageUnlocked(mapGame, w * K, c);
     panel.className = 'wpanel' + (worldOpen ? '' : ' locked');
     panel.style.backgroundImage = `url(${WORLD_BG(w)})`;
+    if (K > 5) { if (portraitNow) panel.style.height = '900px'; else panel.style.width = '300px'; } // 10판 월드는 카드를 더 크게
     panel.innerHTML = `<div class="wtitle w${w % 5}">${w + 1}. ${name}</div>`;
     // dotted path through the 5 stones
-    const pts = []; for (let k = 0; k < K; k++) { const p = stoneSpot(w, k); pts.push(`${p.x},${p.y}`); }
+    const pts = []; for (let k = 0; k < K; k++) { const p = stoneSpot(w, k, K); pts.push(`${p.x},${p.y}`); }
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('class', 'wpath'); svg.setAttribute('viewBox', '0 0 100 100'); svg.setAttribute('preserveAspectRatio', 'none');
     svg.innerHTML = `<polyline points="${pts.join(' ')}" fill="none" stroke="#fff" stroke-width="2.4" stroke-dasharray="0.1 5" stroke-linecap="round" vector-effect="non-scaling-stroke" opacity=".95"/>`;
     panel.appendChild(svg);
     for (let k = 0; k < K; k++) {
-      const i = w * K + k, p = stoneSpot(w, k), st = Hub.stage(mapGame, i, c), open = Hub.stageUnlocked(mapGame, i, c);
+      const i = w * K + k, p = stoneSpot(w, k, K), st = Hub.stage(mapGame, i, c), open = Hub.stageUnlocked(mapGame, i, c);
       const b = document.createElement('button');
       b.className = 'stone ' + (st.cleared ? 'cleared' : open ? 'current' : 'locked');
       b.style.left = p.x + '%'; b.style.top = p.y + '%';
