@@ -353,7 +353,12 @@ function showResult(ok, st, earn, reward = []) {
     $('resEarn').innerHTML = `+${earn.earned} 코인 획득!` + (earn.bonus ? ` <small>(클리어 보너스 +${earn.bonus}${earn.firstClear ? ', 첫 클리어!' : ''})</small>` : '') + `<small>내 코인 ${earn.coins}</small>`
       + (items ? `<div class="reward">🎁 보상 아이템: ${items}</div>` : '');
   }
-  $('btnNext').classList.toggle('hidden', !(ok && G.si < STAGES.length - 1));
+  const hasNext = ok && G.si < STAGES.length - 1;
+  $('btnNext').classList.toggle('hidden', !hasNext);
+  // 다음 스테이지가 없으면 다시하기가 그 자리(한 줄 전체·크게)로
+  const rb = $('btnRetry');
+  if (hasNext) $('resRow').prepend(rb); else $('btnNext').after(rb);
+  rb.className = 'btn ' + (hasNext ? 'blue' : 'gold big');
   setState('result');
 }
 

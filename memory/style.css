@@ -63,6 +63,11 @@ button:active { transform: translateY(3px); }
 .btn.gold { background: linear-gradient(#FFE07A, #FFAE2E); color: #7A3E00; box-shadow: 0 5px 0 #C9820F; }
 .btn.blue { background: linear-gradient(#6FC0FF, #2F86E8); box-shadow: 0 5px 0 #1D5DAB; }
 .btn.white { background: #fff; color: #2F6FE0; border-color: #CFE2FA; box-shadow: 0 5px 0 #B9D2F0; }
+/* 결과 버튼: 다음 스테이지(없으면 다시하기)는 한 줄 전체·가장 크게, 그 밑에 다시하기·지도로 */
+.r-acts { width: 100%; display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.r-acts .btn { flex: none; height: 54px; }
+.r-acts .row .btn { flex: 1; }
+.r-acts .btn.big { height: 64px; font-size: 28px; }
 .result { background: linear-gradient(#3E2C66, #2A1E4A); border-color: #8C6BD8; color: #fff; }
 .r-title { font-size: 40px; color: #FFD34D; text-shadow: 0 3px 0 #B5600F, 0 0 14px rgba(255,180,60,.6); transform: rotate(-3deg); }
 .result.fail .r-title { color: #B9C3D6; text-shadow: 0 3px 0 #4D5770; }
@@ -127,3 +132,4 @@ button:active { transform: translateY(3px); }
 .memo.go b { color: #2F86E8; }
 #root.wide .memo { top: auto; bottom: calc(4px + var(--safe-b, 0px)); transform: translateX(-50%); padding: 2px 16px; }
 #root.wide .memo b { font-size: 20px; } #root.wide .memo span { width: 34px; height: 34px; font-size: 24px; }
+#root.wide .r-acts { gap: 8px; } #root.wide .r-acts .btn { height: 46px; } #root.wide .r-acts .btn.big { height: 54px; font-size: 25px; }

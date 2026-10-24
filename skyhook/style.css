@@ -42,7 +42,7 @@ button:focus-visible { outline: 3px solid #fff; box-shadow: 0 0 0 6px rgba(92,16
 
 /* HUD */
 #hud { position: absolute; inset: 0; pointer-events: none; }
-.hud-left { position: absolute; left: calc(16px + var(--safe-l, 0px)); top: calc(14px + var(--safe-t, 0px)); display: flex; gap: 8px; }
+.hud-left { position: absolute; left: calc(16px + var(--safe-l, 0px)); top: calc(12px + var(--safe-t, 0px)); display: flex; gap: 8px; align-items: center; }
 .hud-right { position: absolute; right: calc(16px + var(--safe-r, 0px)); top: calc(12px + var(--safe-t, 0px)); display: flex; gap: 10px; align-items: center; }
 .hud-mid { position: absolute; left: 50%; top: calc(22px + var(--safe-t, 0px)); transform: translateX(-50%); }
 .pill {
@@ -157,8 +157,8 @@ button:focus-visible { outline: 3px solid #fff; box-shadow: 0 0 0 6px rgba(92,16
 @keyframes twinkle { from { transform: scale(.8) rotate(-10deg); opacity: .7; } to { transform: scale(1.15) rotate(10deg); opacity: 1; } }
 .rpanel.over .spark { display: none; }
 .r-label { font-size: 40px; color: #FFB52E; -webkit-text-stroke: 1.5px #C27410; text-shadow: 0 3px 0 #B5600F; margin-top: 4px; }
-.r-body { display: flex; gap: 26px; align-items: center; justify-content: center; margin: 12px 0 10px; }
-.r-face { width: 150px; height: 150px; border-radius: 50%; background: #fff; padding: 6px; box-shadow: 0 6px 16px rgba(24,59,91,.18); flex: 0 0 150px; }
+.r-body { display: flex; gap: 26px; align-items: center; justify-content: center; margin: 8px 0 8px; }
+.r-face { width: 132px; height: 132px; border-radius: 50%; background: #fff; padding: 6px; box-shadow: 0 6px 16px rgba(24,59,91,.18); flex: 0 0 132px; }
 .r-face img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
 .r-stats { text-align: left; font-size: 26px; line-height: 1.55; color: var(--navy); }
 .r-stats b { font-weight: normal; color: #F08A12; font-variant-numeric: tabular-nums; }
@@ -175,8 +175,12 @@ button:focus-visible { outline: 3px solid #fff; box-shadow: 0 0 0 6px rgba(92,16
 .r-earn { border-top: 2px solid #DCEAF7; padding-top: 10px; text-align: center; font-size: 30px; color: #F08A12; }
 .r-earn small { display: block; font-size: 18px; color: #5C6F84; }
 .r-earn small b { color: #F08A12; font-weight: normal; }
-.r-btns { display: flex; gap: 12px; margin-top: 14px; }
-.rb { height: 60px; border-radius: 22px; font-size: 24px; padding: 0 14px; flex: 1; }
+/* 다음 스테이지(없으면 다시하기)는 한 줄 전체·가장 크게, 그 밑에 다시하기·지도로 */
+.r-btns { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.r-row { display: flex; gap: 12px; }
+.rb { height: 52px; border-radius: 22px; font-size: 24px; padding: 0 14px; flex: 1; }
+.r-btns > .rb, .r-btns > .rb.gold { flex: none; }
+.rb.big { height: 60px; font-size: 28px; }
 .rb.white { background: #fff; color: var(--navy); border: 2px solid #D5E6F6; box-shadow: 0 5px 0 #C9DDF0, 0 8px 14px rgba(24,59,91,.12); }
 .rb.gold { flex: 1.5; background: linear-gradient(#FFD86B, #FFAE2E); color: #6A3A00; border: 2px solid #FFE9A8; box-shadow: 0 5px 0 #D9881A, 0 8px 14px rgba(217,136,26,.3); }
 .rb:active { transform: translateY(3px); }

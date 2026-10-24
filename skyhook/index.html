@@ -19,7 +19,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261023k">
+<link rel="stylesheet" href="style.css?v=20261025u">
 </head>
 <body>
 <div id="safe"></div>
@@ -29,13 +29,13 @@
   <!-- HUD -->
   <div id="hud" class="hidden">
     <div class="hud-left">
+      <button id="btnPause" class="round" aria-label="일시정지"><span class="ico ico-pause"></span></button>
       <div class="pill"><span class="ico ico-dist"></span><b id="hudDist">0</b>m</div>
       <div class="pill"><span class="ico ico-coin"></span><b id="hudCoin">0</b></div>
     </div>
     <div class="hud-mid"><div class="prog"><div id="hudProg"></div><span id="hudProgFace"></span></div></div>
     <div class="hud-right">
       <div id="hudHearts" class="hearts"></div>
-      <button id="btnPause" class="round" aria-label="일시정지"><span class="ico ico-pause"></span></button>
     </div>
   </div>
 
@@ -95,9 +95,11 @@
       </div>
       <div id="resEarn" class="r-earn hidden"></div>
       <div class="r-btns">
-        <button id="btnRetry" class="rb white">다시하기</button>
-        <button id="btnNext" class="rb gold">다음 스테이지</button>
-        <button id="btnHomeR" class="rb white">홈으로</button>
+        <button id="btnNext" class="rb gold big">다음 스테이지</button>
+        <div class="r-row" id="resRow">
+          <button id="btnRetry" class="rb white">다시하기</button>
+          <button id="btnHomeR" class="rb white">홈으로</button>
+        </div>
       </div>
     </div>
   </div>
@@ -122,6 +124,6 @@
 <script src="../common/charv2.js?v=202610240907"></script>
 <script src="../common/costume.js?v=20261023k"></script>
 <script src="../common/skins.js?v=20261023k"></script>
-<script src="game.js?v=20261024k"></script>
+<script src="game.js?v=20261025u"></script>
 </body>
 </html>

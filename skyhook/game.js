@@ -1494,11 +1494,15 @@ function showResult(clear) {
   document.querySelector('.panel.result').classList.toggle('over', !clear);
   $('resFace').src = (window.Costume && Costume.src) || `assets/${Save.data.char}_${clear ? 'happy' : 'sad'}.jpg`;
   $('resFace').classList.toggle('cos', !!(window.Costume && Costume.src));
-  $('btnRetry').className = 'rb ' + (clear ? 'white' : 'gold');
   $('resDist').textContent = r.dist; $('resCoin').textContent = G.coins;
   $('resBestVal').textContent = r.best;
   $('resBest').classList.toggle('hidden', !r.isBest);
-  $('btnNext').classList.toggle('hidden', !(clear && G.si < STAGES.length - 1));
+  const hasNext = clear && G.si < STAGES.length - 1;
+  $('btnNext').classList.toggle('hidden', !hasNext);
+  // 다음 스테이지가 없으면 다시하기가 그 자리(한 줄 전체·크게)로
+  const rb = $('btnRetry');
+  if (hasNext) $('resRow').prepend(rb); else $('btnNext').after(rb);
+  rb.className = 'rb ' + (hasNext ? 'white' : 'gold big');
   setState('result');
 }
 function pauseGame() { if (G.state === 'play' && G.endT === 0) { setState('pause'); Audio.stopBgm(); } }
