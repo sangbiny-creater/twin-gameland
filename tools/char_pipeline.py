@@ -462,8 +462,8 @@ def cmd_sheets(eid, cname, folder, refdir=None):
         path = f'{ROOT}/character/{eid}_v4/다시요청.txt'
         if need:
             why = {sid: sorted({ln.split('✕ ')[1] for ln in rep.splitlines() if '✕' in ln and ln.split('. ')[1].split(':')[0] in dict((x[0], x[2]) for x in SHEETS)[sid]}) for sid in need}
-            body = ['아래 그림만 처음 규칙 그대로 다시 그려 줘. 한 답변에 1장씩, 다 그리면 "다음"이라고만 쓰고 멈춰.', '']
-            for sid in need: body += [MP.one_sheet(key, sid), f'  (다시 그리는 이유: {" / ".join(why[sid])})', '']
+            import make_prompts_v6 as MP6  # v6: 비율 규칙(얼굴:몸통:다리 1:1:1)까지 넣은 다시 그리기 글
+            body = [MP6.redo_prompt(key, need), '(자동 검수에서 떨어진 이유 — GPT에 보내지 않아도 돼요)'] + [f'  {sid}: {" / ".join(why[sid])}' for sid in need]
             open(path, 'w', encoding='utf-8').write('\n'.join(body)); print(f'  다시 그릴 시트: {", ".join(need)} → {path}')
     except Exception as e: print('  (다시요청 만들기 실패)', e)
     return res

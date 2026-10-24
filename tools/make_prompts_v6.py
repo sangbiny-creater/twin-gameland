@@ -43,11 +43,43 @@ def prompt(key):
     L.append(f'[지금 {REDO[0]}부터 그려 줘.]')
     return '\n'.join(L)
 
+def full_prompt(key):
+    """새 레퍼런스로 처음부터 14장 전부 받을 때 (v5 순서 + v6 비율 규칙)"""
+    c = CHARS[key]; L = []
+    L.append(f'[트윈 게임랜드 {c["name"]} 게임 그림 요청 v6 — 14장]')
+    L.append(f'첨부한 그림 2장: ① "{c["name"]}" 레퍼런스(얼굴·옷·그림체 기준) ② 비율기준(얼굴:몸통:다리 = 1:1:1).')
+    L.append(f'"{c["name"]}"의 게임 그림 14장을 그려 줘. 한 답변에 1장씩 아래 순서대로 그리고, 다 그리면 "다음: S○○"라고 한 줄만 쓰고 멈춰. 내가 "계속"이라고 하면 다음 장을 그려. 질문하거나 확인을 기다리지 마.')
+    L.append('')
+    L.append(f'[캐릭터 {c["name"]}] {c["desc"].replace("(2.5등신)", "(얼굴:몸통:다리 = 1:1:1, 비율기준 그림과 같음)")}')
+    L.append(''); L.append(RATIO); L.append(''); L.append(COMMON); L.append('')
+    L.append('[그릴 그림 14장 — 컷 순서: 왼쪽에서 오른쪽, 2줄이면 윗줄 먼저]')
+    for sid, title, canvas, rows, rule, cuts in SHEETS:
+        lay = f'{len(cuts)}컷 가로 한 줄' if rows == 1 else f'{len(cuts)}컷, {rows}줄 × {len(cuts)//rows}칸'
+        L.append(''); L.append(f'{sid} {title} — {canvas}, {lay}'); L.append(f'  {rule}')
+        if sid == 'S06': L.append('  매달려도 얼굴·몸통·다리 길이는 서 있을 때와 같음 (비율 규칙 C). 위로 뻗은 팔만 길게 보이고 몸은 늘어나지 않음')
+        for i, cut in enumerate(cuts, 1): L.append(f'  {i}. {cut}')
+    L.append(''); L.append('[지금 S01부터 그려 줘.]')
+    return '\n'.join(L)
+
+def redo_prompt(key, sids):
+    """검수에서 떨어진 시트만 다시 그릴 때"""
+    c = CHARS[key]; L = [f'아래 그림만 처음 요청 규칙(비율 규칙 A~F, 공통 규칙 1~7) 그대로 다시 그려 줘. 비율기준 그림과 얼굴:몸통:다리 1:1:1. 한 답변에 1장씩, 다 그리면 "다음"이라고만 쓰고 멈춰.', '']
+    for s in SHEETS:
+        if s[0] in sids:
+            sid, title, canvas, rows, rule, cuts = s
+            lay = f'{len(cuts)}컷 가로 한 줄' if rows == 1 else f'{len(cuts)}컷, {rows}줄 × {len(cuts)//rows}칸'
+            L += [f'{sid} {title} — {canvas}, {lay} (이미지 생성으로만, 초록 배경, 글자 없음, 레퍼런스와 같은 {c["name"]})', f'  {rule}'] + [f'  {i}. {x}' for i, x in enumerate(cuts, 1)] + ['']
+    return '\n'.join(L)
+
 if __name__ == '__main__':
+    for k, c in CHARS.items():
+        open(f'{ROOT}/character/v6/GPT_요청_v6_전체14장_{c["name"]}.txt', 'w', encoding='utf-8').write(full_prompt(k))
+        open(f'{ROOT}/character/v6/GPT_요청_v6_다시그리기예시_{c["name"]}.txt', 'w', encoding='utf-8').write(redo_prompt(k, ['S06']))
     os.makedirs(f'{ROOT}/character/v6', exist_ok=True)
     for k, c in CHARS.items():
         t = prompt(k)
         open(f'{ROOT}/character/v6/GPT_요청_v6_{c["name"]}.txt', 'w', encoding='utf-8').write(t)
-        d = f'{ROOT}/character/{c["eid"]}_v4'; os.makedirs(d, exist_ok=True)
-        open(f'{d}/다시요청.txt', 'w', encoding='utf-8').write(t)
+        if '--redo' in sys.argv:  # 시트 폴더에 새 그림만 넣으면 그 시트가 바뀌게
+            d = f'{ROOT}/character/{c["eid"]}_v4'; os.makedirs(d, exist_ok=True)
+            open(f'{d}/다시요청.txt', 'w', encoding='utf-8').write(t)
     print('ok')
