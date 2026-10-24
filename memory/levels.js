@@ -3,7 +3,7 @@
 //  · 10개 월드 × 10판 = 100판 (1-1 ~ 10-10)
 //  · 짝 수: 1-1 은 3쌍(6장) → 판이 올라갈수록 늘어 7-3 부터 16쌍(32장)
 //  · 추억 카드(은유·은결 일상 그림): 6월드부터 섞이기 시작해 10월드는 16쌍 중 12쌍 — 비슷한 그림이 많아져 더 헷갈림
-//  · 미리 보기: 처음에 모든 카드를 잠깐 보여 줌. 카드 1장당 0.3초 → 0.08초, 최대 4초 → 2초 (최소 1.5초)
+//  · 미리 보기: 처음에 모든 카드를 잠깐 보여 줌. 카드 1장당 0.2초 → 0.05초, 최대 2.5초 → 1.5초 (최소 1초)
 //  · 제한 시간: 10초 + 짝 수 × 짝당 시간(12초 → 6초로 줄어듦)
 (function (root) {
   const WORLDS = 10, PER_WORLD = 10;
@@ -24,7 +24,7 @@
     const pairs = (PAIRS[w] || PAIRS[6].map(() => 16))[k];
     const prevSc = w ? SCENES[w - 1] : 0;
     const scenes = Math.min(pairs, Math.round(prevSc + (SCENES[w] - prevSc) * (k + 1) / PER_WORLD));
-    const preview = Math.max(1.5, half(Math.min(4 - 2 * i / 99, pairs * 2 * (0.3 - 0.22 * i / 99))));
+    const preview = Math.max(1, half(Math.min(2.7 - 1.4 * i / 99, pairs * 2 * (0.2 - 0.15 * i / 99))));
     const per = 12 - 6 * (i / 99);
     const s = Math.round((10 + pairs * per) / 5) * 5;
     STAGES.push({ pairs, cards: pairs * 2, scenes, preview, s });
