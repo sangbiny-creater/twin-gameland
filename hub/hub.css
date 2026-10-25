@@ -182,7 +182,9 @@ i.star { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .name-row input { width: 230px; height: 46px; border-radius: 14px; border: 3px solid #CDE6FA; padding: 0 14px; font-size: 22px; color: var(--navy); outline: none; }
 .name-row input:focus { border-color: var(--sky); }
 /* 이름 입력 중(키보드 올라옴): 배치는 그대로, 팝업만 화면 위쪽으로 */
-#root.typing .modal { align-items: flex-start; padding-top: calc(var(--safe-t, 0px) + 14px); }
+#root.typing .modal { padding-left: 8px; padding-right: 8px; } /* 위아래 여백은 hub.js fitModals 가 키보드 위 보이는 곳에 맞춰 정함 */
+#root.typing .modal .panel { transform-origin: center center; }
+body.typing, html:has(body.typing) { background: #3B6585; } /* 키보드 올라올 때 화면 밖이 보여도 흰색 대신 어두운 색 */
 .buy-list { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 .buy-list button { display: flex; align-items: center; gap: 8px; background: #fff; border-radius: 18px; padding: 6px 14px 6px 6px; font-size: 18px; box-shadow: 0 3px 0 #CDE6FA; }
 .buy-list button img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }

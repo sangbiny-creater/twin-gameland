@@ -3,7 +3,7 @@
 const $ = (id) => document.getElementById(id);
 const root = $('root');
 // 얼굴: 옷을 입었으면 옷 그림(윗부분을 동그랗게 보여 줌)
-const face = (c) => Hub.costumeImg(c) || `common/faces/${c.look}_base.webp?v=202610251929`;
+const face = (c) => Hub.costumeImg(c) || `common/faces/${c.look}_base.webp?v=202610251942`;
 
 // 버튼 효과음·알림 (common/ui.js)
 const { blip, toast } = window.UI;
@@ -24,14 +24,18 @@ const routeOk = (n) => n in SCREENS || (n.startsWith('map-') && Hub.GAMES[n.slic
 window.addEventListener('pageshow', () => { Hub.reload(); const n = (location.hash || (Hub.active() ? '#lobby' : '#select')).slice(1); go(routeOk(n) ? n : 'select'); });
 window.addEventListener('hashchange', () => { const n = location.hash.slice(1); if (routeOk(n)) go(n); });
 
-function openModal(id) { closeModals(); $(id).classList.remove('hidden'); }
+function openModal(id) { closeModals(); $(id).classList.remove('hidden'); fitModals(); }
 function closeModals() { document.querySelectorAll('.modal').forEach((m) => m.classList.add('hidden')); }
 document.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => { blip(500); closeModals(); }));
 // 바깥(어두운 곳)을 눌러 닫기: 누르기 시작한 곳도 바깥일 때만. 이름 칸을 누르면 팝업이 위로 올라가서(.typing)
 // 손을 뗄 때 그 자리가 바깥이 되어 팝업이 닫히던 것 막음
 document.querySelectorAll('.modal').forEach((m) => {
   let downOut = false;
-  m.addEventListener('pointerdown', (e) => { downOut = e.target === m; });
+  m.addEventListener('pointerdown', (e) => {
+    downOut = e.target === m;
+    // 키보드가 올라와 있으면 바깥을 눌렀을 때 팝업은 두고 키보드만 내림
+    if (downOut && document.activeElement && document.activeElement.tagName === 'INPUT') { document.activeElement.blur(); downOut = false; }
+  });
   m.addEventListener('click', (e) => { if (e.target === m && downOut) closeModals(); downOut = false; });
 });
 document.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => { blip(); go(b.dataset.go); }));
@@ -89,7 +93,7 @@ function setLook(l) { createLook = l; document.querySelectorAll('.look').forEach
     if (l.hidden) continue; // 숨긴 옛 모습은 고를 수 없음
     const b = document.createElement('button');
     b.className = `look base-${l.base}` + (l.atlas ? ' v2' : ''); b.dataset.look = l.look;
-    b.innerHTML = `<img src="common/faces/${l.look}_base.webp?v=202610251929" alt=""><span></span>`;
+    b.innerHTML = `<img src="common/faces/${l.look}_base.webp?v=202610251942" alt=""><span></span>`;
     b.querySelector('span').textContent = l.name;
     if (l.isNew) b.querySelector('span').insertAdjacentHTML('beforeend', ' <i class="new">NEW</i>');
     b.addEventListener('click', () => { blip(); setLook(l.look); });
@@ -158,7 +162,7 @@ const mmss = (t) => `${Math.floor(t / 60)}분 ${String(t % 60).padStart(2, '0')}
 // 레벨: 지금까지 모은 코인 500개마다 1레벨
 const LV_STEP = 500;
 // 보유 아이템 그림 (아이템샵과 같은 그림)
-const itemIcon = (id) => `common/items/${id}.webp?v=202610251929`;
+const itemIcon = (id) => `common/items/${id}.webp?v=202610251942`;
 // 카드 그림에서 BEST 줄이 있는 위치 (카드 높이 %: 위, 아래)
 const BEST_POS = { skyhook: [73.23, 81.36], helicopter: [74.02, 82.15], stairs: [73.23, 81.36], shisen: [74.07, 81.73], downhill: [74.07, 81.73], memory: [74.07, 81.73], mole: [74.07, 81.73] };
 // 게임 카드 아래 한 줄: 징검다리 게임은 깬 판 수, 나머지는 최고 기록
@@ -184,9 +188,9 @@ function renderLobby() {
     card.className = 'lb-card' + (fav ? ' fav' : ''); card.setAttribute('role', 'button'); card.tabIndex = 0;
     // 카드 그림 한 장(제목·게임 시작 버튼 포함) 위에 최고 기록만 실제 값으로 덮어 씀
     const bp = BEST_POS[g.id] || [73.5, 81.5];
-    card.innerHTML = `<img class="lb-cardimg" src="${g.thumb}?v=202610251929" alt="">
+    card.innerHTML = `<img class="lb-cardimg" src="${g.thumb}?v=202610251942" alt="">
       <button class="lb-fav" aria-label="즐겨찾기">★</button>
-      <div class="lb-best" style="top:${bp[0]}%;height:${bp[1] - bp[0]}%"><img src="hub/ui/crown.webp?v=202610251929" alt=""><span class="lb-bt"></span></div>`;
+      <div class="lb-best" style="top:${bp[0]}%;height:${bp[1] - bp[0]}%"><img src="hub/ui/crown.webp?v=202610251942" alt=""><span class="lb-bt"></span></div>`;
     card.querySelector('.lb-cardimg').alt = g.name;
     card.querySelector('.lb-bt').textContent = cardLine(g, c, Hub.rec(g.id, c));
     card.addEventListener('click', () => { blip(880); showTitle(g); });
@@ -200,14 +204,14 @@ function renderLobby() {
     grid.appendChild(card);
   }
   const soon = document.createElement('div'); soon.className = 'lb-card lb-soon'; // .soon 은 작은 딱지 스타일이라 다른 이름
-  soon.innerHTML = '<img class="lb-cardimg" src="hub/cards/soon.webp?v=202610251929" alt="다음 게임 — 곧 새로운 모험이 찾아와요! COMING SOON">';
+  soon.innerHTML = '<img class="lb-cardimg" src="hub/cards/soon.webp?v=202610251942" alt="다음 게임 — 곧 새로운 모험이 찾아와요! COMING SOON">';
   grid.appendChild(soon);
 }
 // 게임 타이틀 화면: 메인 그림을 화면 가득 → START를 누르면 게임(또는 징검다리 지도)으로
 let titleGame = null;
 // 인트로 그림: 화면이 가로면 가로 그림(<id>_land.webp), 세로면 세로 그림 — 폰·태블릿을 돌리면 바로 바뀜
 const landMQ = window.matchMedia('(orientation: landscape)');
-const introSrc = (g) => `${landMQ.matches ? g.key.replace('.webp', '_land.webp') : g.key}?v=202610251929`;
+const introSrc = (g) => `${landMQ.matches ? g.key.replace('.webp', '_land.webp') : g.key}?v=202610251942`;
 function setTitleArt(g) {
   const src = introSrc(g);
   $('tsArt').src = src; $('tsArt').alt = g.name;
@@ -278,7 +282,7 @@ $('setRename').addEventListener('click', () => { closeModals(); renameMe(); });
 // 월드마다 배경 그림 카드 1장, 그 안에서 돌다리 5개(사천성은 10개)가 아래 → 위로 올라감
 // 가로 화면: 카드가 옆으로 나란히 (좌우로 밀기) / 폰 세로 화면: 카드가 위아래로 (위아래로 밀기)
 let portraitNow = false, mapPortrait = null; // mapPortrait: 지도를 그릴 때의 화면 방향
-const WORLD_BG = (w) => `common/worlds/w${w + 1}.webp?v=202610251929`;
+const WORLD_BG = (w) => `common/worlds/w${w + 1}.webp?v=202610251942`;
 // 판 위치 (카드 안에서 %): 아래(1판) → 위(마지막 판) 지그재그, 월드마다 조금씩 다르게
 //  · 월드당 5판(스카이훅) / 10판(사천성: 두 줄로 번갈아 올라감)
 function stoneSpot(w, k, K = 5) {
@@ -366,7 +370,7 @@ function renderRecords() {
   const c = Hub.active();
   $('recTitle').textContent = `${c.name}의 기록`;
   $('recSummary').innerHTML = `<div class="rec-card total"><div class="v">지금 코인 <b>${c.coins}</b> · 지금까지 모은 코인 <b>${c.earned}</b> · 별 <b>${Hub.starsTotal(c)}</b></div></div>`
-    + GAME_CARDS.map((g) => `<div class="rec-card"><div class="thumb" style="background-image:url(${g.thumb}?v=202610251929)"></div>
+    + GAME_CARDS.map((g) => `<div class="rec-card"><div class="thumb" style="background-image:url(${g.thumb}?v=202610251942)"></div>
       <div><div class="t">${g.name}${Hub.isFav(g.id, c) ? ' <span class="star-on">★</span>' : ''}</div><div class="v">${g.rec(c, Hub.rec(g.id, c))}</div></div></div>`).join('');
   const list = $('recList'); list.innerHTML = '';
   if (!c.history.length) list.innerHTML = '<li><span>아직 기록이 없어요. 게임을 해봐요!</span></li>';
@@ -424,14 +428,36 @@ const isStandalone = navigator.standalone === true || window.matchMedia('(displa
 
 // ---------- layout ----------
 // 폰 세로: 세로 전용 배치 (논리 폭 540) / 폰 가로·PC: 가로 배치 (논리 높이 540)
+// 폰 키보드가 올라오면(이름 입력) 화면 배치는 그대로 두고, 열린 팝업만 키보드 위 보이는 곳에 맞춰 넣음
+//  · 키보드 = 폭은 그대로인데 높이가 키보드 없을 때(full)의 80%보다 작아짐 → 그동안은 배치를 다시 하지 않음
+//    (다른 모습을 누르느라 이름 칸에서 손을 떼도 키보드가 내려갈 때까지 화면이 작아졌다 커지지 않게)
 const isTouch = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+let full = null, oyNow = 0;
+const viewSize = () => { const vv = window.visualViewport; return { vw: Math.round(vv ? vv.width : window.innerWidth), vh: Math.round(vv ? vv.height : window.innerHeight), top: vv ? vv.offsetTop : 0 }; };
+function keyboardOn() {
+  if (!isTouch || !full) return false;
+  const { vw, vh } = viewSize();
+  const typing = document.activeElement && document.activeElement.tagName === 'INPUT';
+  return Math.abs(vw - full.w) < 2 && (vh < full.h * 0.8 || typing);
+}
+// 열린 팝업을 지금 보이는 곳(키보드 위)에 맞춤. 팝업이 그보다 크면 작게 줄여서 만들기 버튼까지 다 보이게
+function fitModals() {
+  const kb = root.classList.contains('typing');
+  const { vh, top } = viewSize();
+  document.querySelectorAll('.modal').forEach((m) => {
+    const panel = m.querySelector('.panel');
+    if (!kb || m.classList.contains('hidden')) { m.style.paddingTop = m.style.paddingBottom = ''; if (panel) panel.style.transform = ''; return; }
+    // 어두운 막은 화면 전체에 두고, 팝업은 보이는 곳(t ~ t+h) 가운데에
+    const t = Math.max(0, (top - oyNow) / scaleNow), h = vh / scaleNow;
+    m.style.paddingTop = (t + 8) + 'px'; m.style.paddingBottom = Math.max(8, root.offsetHeight - t - h + 8) + 'px';
+    if (panel) { panel.style.transform = ''; const k = Math.min(1, (h - 16) / panel.offsetHeight); panel.style.transform = k < 1 ? `scale(${k})` : ''; }
+  });
+}
 function resize() {
-  // 이름 입력 중(폰 키보드가 올라옴)에는 화면 배치를 바꾸지 않고 팝업만 위로 올림
-  const typing = isTouch && document.activeElement && document.activeElement.tagName === 'INPUT';
-  root.classList.toggle('typing', typing);
-  if (typing && scaleNow) return;
-  const vv = window.visualViewport;
-  const vw = Math.round(vv ? vv.width : window.innerWidth), vh = Math.round(vv ? vv.height : window.innerHeight);
+  const kb = keyboardOn();
+  root.classList.toggle('typing', kb); document.body.classList.toggle('typing', kb);
+  if (kb) { fitModals(); return; }
+  const { vw, vh } = viewSize();
   const s = $('safe').getBoundingClientRect();
   const inset = { t: s.top, l: s.left, r: vw - s.right, b: vh - s.bottom };
   portraitNow = isTouch && vh > vw;
@@ -439,12 +465,13 @@ function resize() {
   if (portraitNow) { W = 540; H = Math.round(Math.max(W * vh / vw, 860)); }
   else { H = 540; W = Math.round(H * Math.max(vw / vh, 16 / 9)); }
   const scale = Math.min(vw / W, vh / H);
-  rotatedNow = false; scaleNow = scale;
+  rotatedNow = false; scaleNow = scale; full = { w: vw, h: vh };
   root.style.width = W + 'px'; root.style.height = H + 'px';
   root.classList.toggle('portrait', portraitNow);
-  const ox = (vw - W * scale) / 2, oy = (vh - H * scale) / 2;
+  const ox = (vw - W * scale) / 2, oy = (vh - H * scale) / 2; oyNow = oy;
   root.style.transform = `translate(${ox}px, ${oy}px) scale(${scale})`;
   for (const k of ['l', 'r', 't', 'b']) root.style.setProperty('--safe-' + k, Math.max(0, inset[k] / scale - (k === 'l' || k === 'r' ? ox : oy) / scale) + 'px');
+  fitModals();
   // 지도는 화면 방향이 바뀔 때만 다시 그림. 안드로이드는 손가락을 대면 주소창이 숨으며 크기가 바뀌는데,
   // 그때마다 다시 그리면 누르던 돌다리가 사라져서 눌리지 않음
   if (!$('scrMap').classList.contains('hidden') && portraitNow !== mapPortrait) renderMap();
@@ -453,5 +480,7 @@ window.addEventListener('resize', resize);
 document.addEventListener('focusin', resize);
 document.addEventListener('focusout', () => setTimeout(resize, 50));
 window.addEventListener('orientationchange', () => setTimeout(resize, 200));
-if (window.visualViewport) window.visualViewport.addEventListener('resize', resize);
+if (window.visualViewport) { window.visualViewport.addEventListener('resize', resize); window.visualViewport.addEventListener('scroll', fitModals); }
+// 아이폰은 키보드가 올라올 때 페이지 전체를 위로 밀어 올림 → 밀린 만큼 아래에 빈 곳(흰 화면)이 보임. 입력 중엔 제자리로
+window.addEventListener('scroll', () => { if (root.classList.contains('typing') && (window.scrollY || window.scrollX)) window.scrollTo(0, 0); });
 resize();
