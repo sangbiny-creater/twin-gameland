@@ -1,7 +1,9 @@
 'use strict';
 // 은유와 은결의 달콤 베이커리 — 컨베이어로 지나가는 빵 위에 생크림을 짜는 원버튼 타이밍 게임
 //  · 끝없이 이어짐 (다운힐 러너·헬리콥터처럼): 하트가 다 없어질 때까지, 점수가 기록(BEST)
-//  · 하트: 3개로 시작, 최대 5개. Perfect(완벽) 나오면 +1, Bad(놓침·함정·너무 빨리·너무 일찍 뗌) 나오면 -1
+//  · 하트: 3개로 시작, 최대 5개. Bad(놓침·함정·너무 빨리·너무 일찍 뗌) 나오면 -1
+//  · 하트 아이템: 긴 빵 2개에 1개꼴로 위에 떠 있음 → 시작·끝 모두 Perfect 면 하트 +1 (컵케이크에는 안 나옴)
+//  · 하트 그림은 모든 게임 공통 common/ui/heart.webp·heart_empty.webp (계단 오르기·헬리콥터와 같은 그림)
 //  · 컵케이크·금빛 컵케이크: 짤주머니 밑에 올 때 화면을 톡
 //  · 긴 빵(롤케이크·에클레어): 앞 끝이 오면 꾹 누르고, 뒤 끝이 오면 떼기 (끝까지 누르고 있으면 '좋아요')
 //  · 함정(탄 빵·빈 접시): 누르면 안 됨 → 누르면 하트 -1. 빵을 놓쳐도 하트 -1
@@ -13,7 +15,7 @@
 let W = 540, H = 960;
 const L = window.BakeryLevels, A = window.BakeryArt;
 const { PTS, JUDGE } = L;
-const ASSET_V = '202610252225';
+const ASSET_V = '202610252233';
 const MAX_HEARTS = 5;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -35,6 +37,10 @@ const fmt = (n) => Math.round(n).toLocaleString();
 
 // 배경 그림 (GPT G05 빵집). 가로 배경(G06)이 오면 land 를 따로 쓰기
 A.load('assets/sprites/', ASSET_V);
+const HEART = new Image(); HEART.src = `../common/ui/heart.webp?v=${ASSET_V}`;
+const HEART_EMPTY = new Image(); HEART_EMPTY.src = `../common/ui/heart_empty.webp?v=${ASSET_V}`;
+const imgOk = (im) => im.complete && im.naturalWidth > 0;
+const drawHeart = (im, x, y, w) => { if (imgOk(im)) ctx.drawImage(im, x - w / 2, y - w * im.naturalHeight / im.naturalWidth / 2, w, w * im.naturalHeight / im.naturalWidth); };
 const BGS = { port: new Image(), land: new Image() }; BGS.port.src = `assets/bg/port.webp?v=${ASSET_V}`; BGS.land.src = `assets/bg/land.webp?v=${ASSET_V}`;
 const BG_FLOOR = { port: 0.63, land: 0.68 }; // 그림에서 진열대 아래 끝(바닥이 시작하는 높이) → 컨베이어 윗면에 맞춤
 function drawBg() {
@@ -158,7 +164,7 @@ function askStart() {
 function startRun(lv = 1) {
   clearTimers();
   const c0 = (lv - 1) * L.LEVEL;
-  G.gen = L.Gen(Date.now(), c0); G.notes = []; G.shelf = []; G.k = 0;
+  G.gen = L.Gen(Date.now(), c0); G.notes = []; G.shelf = []; G.k = 0; G.longs = 0;
   G.hearts = 3; G.score = 0; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.made = 0; G.perfect = 0; G.level = lv; G.startLv = lv; G.newBest = false;
   G.fx = []; G.t = 0; G.clock = c0; G.slowT = 0; G.x2T = 0; G.shield = 0; G.holdNote = null; G.down = false; G.pointers.clear();
   G.pose = 'idle'; G.poseT = 0;
@@ -182,6 +188,7 @@ function pull() {
   while (G.gen.out.length) {
     const n = G.gen.out.shift(), p = L.params(n.t);
     Object.assign(n, { w: p.win, gd: p.guide, v: G.k % 5, kind: G.k % 2, st: 'wait' }); G.k++;
+    if (n.type === 'long') n.heart = (G.longs++ % 2 === 0); // 긴 빵 2개에 1개꼴로 하트 아이템
     G.notes.push(n);
   }
   G.notes = G.notes.filter((n) => n.st === 'wait' || n.st === 'hold' || xAt(n.t1 || n.t) > -200);
@@ -190,10 +197,10 @@ function pull() {
 function showReady() {
   clearTimers();
   G.notes = [];
-  const items = [['cup', '컵케이크', '톡!'], ['long', '긴 빵', '꾹~ 떼기'], ['gold', '금빛', `+${PTS.gold}`]];
+  const items = [['cup', '컵케이크', '톡!'], ['long', '긴 빵', '꾹~ 떼기'], ['heartlong', '하트 긴 빵', '둘 다 Perfect면 하트 +1'], ['gold', '금빛', `+${PTS.gold}`]];
   $('legend').innerHTML = items.map(([id, nm, p]) => `<div class="lg"><img src="${icon(id)}" alt=""><span>${nm}</span><b>${p}</b></div>`).join('')
     + `<div class="lg no"><img src="${icon('burnt')}" alt=""><img src="${icon('plate')}" alt=""><span>탄 빵·빈 접시</span><b>누르면 안 돼요!</b></div>`;
-  if (!A.ready()) setTimeout(() => { if (G.state === 'ready') showReady(); }, 300); // 그림을 다 받으면 다시 그림
+  if (!A.ready() || !imgOk(HEART)) setTimeout(() => { if (G.state === 'ready') showReady(); }, 300); // 그림을 다 받으면 다시 그림
   $('readyInfo').innerHTML = `BEST <b>${fmt(Save.data.best || 0)}점</b>` + (Save.data.maxLevel > 1 ? ` · 가장 높은 레벨 <b>${Save.data.maxLevel}</b>` : '');
   setState('ready');
 }
@@ -207,7 +214,8 @@ function icon(id) {
   else if (id === 'burnt') A.cupcake(g, 74, 92, 0.85, { burnt: true, t: 0.3 });
   else if (id === 'plate') A.plate(g, 74, 80, 1.2);
   else if (id === 'long') A.longBread(g, 6, 142, 84, 0.8, 0, [6, 142], true);
-  const url = c.toDataURL(); if (A.ready()) ICONS[id] = url; // 그림을 받기 전 코드 그림은 기억하지 않음
+  else if (id === 'heartlong') { A.longBread(g, 6, 142, 96, 0.8, 0, null, false); if (imgOk(HEART)) g.drawImage(HEART, 52, 6, 44, 44 * HEART.naturalHeight / HEART.naturalWidth); }
+  const url = c.toDataURL(); if (A.ready() && imgOk(HEART)) ICONS[id] = url; // 그림을 받기 전 코드 그림은 기억하지 않음
   return url;
 }
 // 다시 하면 남아 있던 setTimeout 은 무시 (판 번호로 구분)
@@ -271,6 +279,18 @@ function finishLong(n, ej) {
   n.st = 'done'; n.j = ej; n.jt = G.clock; G.holdNote = null;
   const v = (JUDGE[n.sj] + JUDGE[ej]) / 2;
   success(n, v, v >= 0.95 ? 'perfect' : v >= 0.65 ? 'good' : 'ok', PTS.long);
+  // 하트 아이템: 시작·끝 모두 Perfect 일 때만 먹음 → HUD 로 날아감
+  if (n.heart && G.hearts < MAX_HEARTS) {
+    const hx = (xAt(n.t) + xAt(n.t1)) / 2, hy = LAY.beltY - 120 * LAY.s;
+    if (n.sj === 'perfect' && ej === 'perfect') {
+      n.heartGot = true; G.hearts++; renderHearts(true); Audio.sfx('life');
+      G.fx.push({ kind: 'heartFly', x: hx, y: hy, t: 0, life: 0.6 });
+      G.fx.push({ kind: 'text', text: '하트 +1', x: W / 2, y: LAY.tipY - 230 * LAY.s, t: 0, life: 1, big: true, pink: true });
+    } else {
+      n.heartLost = true;
+      G.fx.push({ kind: 'heartPop', x: hx, y: hy, t: 0, life: 0.5 });
+    }
+  }
 }
 function success(n, v, j, base) {
   G.combo++; G.maxCombo = Math.max(G.maxCombo, G.combo);
@@ -285,11 +305,6 @@ function success(n, v, j, base) {
   burst(x, LAY.beltY - 110 * LAY.s, j === 'perfect' ? 8 : 4, n.type === 'gold');
   popText(JTXT[j], j, judgeX(), LAY.tipY - 120 * LAY.s);
   G.fx.push({ kind: 'text', text: `+${pts}`, x: judgeX(), y: LAY.tipY - 70 * LAY.s, t: 0, life: 0.7, small: true });
-  // Perfect 면 하트 +1 (최대 5개)
-  if (j === 'perfect' && G.hearts < MAX_HEARTS) {
-    G.hearts++; renderHearts(); Audio.sfx('life');
-    G.fx.push({ kind: 'text', text: '❤ +1', x: judgeX() + 70 * LAY.s, y: LAY.tipY - 70 * LAY.s, t: 0, life: 0.9, small: true, pink: true });
-  }
   if (G.combo >= 5 && G.combo % 5 === 0) {
     Audio.sfx('combo');
     G.fx.push({ kind: 'text', text: `${G.combo} 콤보! ×${comboMul(G.combo)}`, x: W / 2, y: LAY.tipY - 230 * LAY.s, t: 0, life: 1.1, big: true });
@@ -309,7 +324,7 @@ function loseHeart(msg) {
   }
   Audio.sfx(msg.startsWith('앗') ? 'bad' : 'miss'); buzz(40);
   popText('Bad', 'bad', judgeX(), LAY.tipY - 120 * LAY.s, msg);
-  if (!GOD() && G.hearts > 0) G.fx.push({ kind: 'text', text: '❤ -1', x: judgeX() + 70 * LAY.s, y: LAY.tipY - 70 * LAY.s, t: 0, life: 0.9, small: true, bad: true });
+  if (!GOD() && G.hearts > 0) G.fx.push({ kind: 'heartMinus', x: judgeX() + 80 * LAY.s, y: LAY.tipY - 70 * LAY.s, t: 0, life: 0.9 });
   setPose('hit', 0.6);
   if (GOD()) return;
   G.hearts--; renderHearts();
@@ -443,6 +458,11 @@ function render() {
       const top = A.longBread(ctx, x - 8 * s, x1 + 8 * s, by, s, n.kind, cream, n.st === 'done');
       if (n.st === 'hold') creamY = top + 2 * s;
       if (n.st === 'wait') drawLongMarks(n, x, x1, top);
+      // 하트 아이템 (하트가 5개보다 적을 때만 보임)
+      if (n.heart && !n.heartGot && !n.heartLost && n.st !== 'miss' && G.hearts < MAX_HEARTS) {
+        const hx = clamp((x + x1) / 2, Math.min(x + 20 * s, x1), Math.max(x1 - 20 * s, x));
+        drawHeart(HEART, hx, top - 34 * s + Math.sin(G.t * 5 + i) * 4 * s, 44 * s);
+      }
     } else if (n.type === 'plate') A.plate(ctx, x, by, s);
     else {
       const k = n.st === 'done' ? Math.min(1, (G.clock - n.jt) / 0.12) : 0;
@@ -532,7 +552,7 @@ const JCOL = { perfect: ['#FFF27A', '#B5600F'], good: ['#9BF0A8', '#2E7A3A'], ok
 function drawFx() {
   for (const f of G.fx) {
     const k = f.t / f.life;
-    if (f.kind === 'spark') { ctx.save(); ctx.globalAlpha = 1 - k * k; A.heart(ctx, f.x, f.y, f.r, true); ctx.restore(); ctx.save(); ctx.globalAlpha = (1 - k) * 0.6; ctx.fillStyle = f.c; ctx.beginPath(); ctx.arc(f.x, f.y, f.r * 0.5, 0, 7); ctx.fill(); ctx.restore(); continue; }
+    if (f.kind === 'spark') { ctx.save(); ctx.globalAlpha = 1 - k * k; drawHeart(HEART, f.x, f.y, f.r * 2); ctx.restore(); ctx.save(); ctx.globalAlpha = (1 - k) * 0.6; ctx.fillStyle = f.c; ctx.beginPath(); ctx.arc(f.x, f.y, f.r * 0.5, 0, 7); ctx.fill(); ctx.restore(); continue; }
     if (f.kind === 'drip') {
       ctx.save(); ctx.globalAlpha = 1 - k; ctx.fillStyle = '#FFFDF7'; ctx.strokeStyle = '#6B3A1E'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(f.x, f.y + 8 + k * 40, 6 * LAY.s, 0, 7); ctx.fill(); ctx.stroke(); ctx.restore(); continue;
@@ -540,6 +560,16 @@ function drawFx() {
     if (f.kind === 'splat') {
       ctx.save(); ctx.globalAlpha = 1 - k; ctx.translate(f.x, f.y); ctx.scale(0.6 + k * 0.6, 0.6 + k * 0.6); ctx.fillStyle = '#FFFDF7'; ctx.strokeStyle = '#6B3A1E'; ctx.lineWidth = 3;
       ctx.beginPath(); for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2, r = i % 2 ? 14 : 26; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r * 0.6); } ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); continue;
+    }
+    if (f.kind === 'heartFly') { // 먹은 하트가 왼쪽 위 하트 칸으로 날아감
+      const e = k * k, tx = 94 + (G.hearts - 1) * 30, ty = 38;
+      ctx.save(); ctx.globalAlpha = 1 - Math.max(0, k - 0.85) / 0.15; drawHeart(HEART, f.x + (tx - f.x) * e, f.y + (ty - f.y) * e - Math.sin(k * Math.PI) * 60, 44 * LAY.s * (1 - 0.4 * k)); ctx.restore(); continue;
+    }
+    if (f.kind === 'heartPop') { ctx.save(); ctx.globalAlpha = 1 - k; drawHeart(HEART_EMPTY, f.x, f.y - k * 20, 44 * LAY.s * (1 + k * 0.4)); ctx.restore(); continue; }
+    if (f.kind === 'heartMinus') {
+      ctx.save(); ctx.globalAlpha = 1 - Math.max(0, k - 0.6) / 0.4; drawHeart(HEART_EMPTY, f.x - 18, f.y - k * 26, 34);
+      ctx.font = '26px Jua, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.lineWidth = 6; ctx.strokeStyle = '#7A0E1E'; ctx.strokeText('-1', f.x + 2, f.y - k * 26); ctx.fillStyle = '#FF6B7E'; ctx.fillText('-1', f.x + 2, f.y - k * 26);
+      ctx.restore(); continue;
     }
     if (f.kind === 'heartLoss') { ctx.save(); ctx.globalAlpha = 0.35 * (1 - k); ctx.fillStyle = '#FF3A5A'; ctx.fillRect(0, 0, W, H); ctx.restore(); continue; }
     if (f.kind === 'judge') {
@@ -573,11 +603,14 @@ function updateHud() {
   const bs = $('buffSlow'); if (bs) bs.textContent = `🐢 천천히 ${Math.ceil(G.slowT)}초`;
   const bx = $('buffX2'); if (bx) bx.textContent = `🪙 코인 2배 ${Math.ceil(G.x2T)}초`;
 }
-function renderHearts() {
-  const n = MAX_HEARTS; // 늘 5칸 (빈 칸은 회색) → 얼마나 더 모을 수 있는지 보임
-  // ❤ 글자는 폰에서 색 그림 글자(이모지)로 나와 회색이 안 됨 → 하트 모양을 직접 그림
-  const svg = (on) => `<svg viewBox="0 0 32 30" class="${on ? '' : 'off'}"><path d="M16 28C4 19 1 13 1 8.5 1 4.4 4.3 1.5 8.2 1.5c3.2 0 5.8 2 7.8 4.6 2-2.6 4.6-4.6 7.8-4.6 3.9 0 7.2 2.9 7.2 7 0 4.5-3 10.5-15 19.5z"/></svg>`;
-  $('hudHearts').innerHTML = Array.from({ length: n }, (_, i) => svg(i < G.hearts)).join('');
+function renderHearts(pop) {
+  // 다른 게임(계단 오르기·헬리콥터)과 같은 하트 그림: 가진 하트 = heart, 빈 칸 = heart_empty (늘 5칸)
+  const el = $('hudHearts'); el.innerHTML = '';
+  for (let i = 0; i < MAX_HEARTS; i++) {
+    const d = document.createElement('div');
+    d.className = 'heart' + (i >= G.hearts ? ' empty' : '') + (pop && i === G.hearts - 1 ? ' pop' : '');
+    el.appendChild(d);
+  }
 }
 function renderBuffs() {
   const el = $('buffs'); el.innerHTML = '';

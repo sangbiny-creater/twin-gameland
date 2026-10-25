@@ -48,12 +48,12 @@ const $ = (id) => document.getElementById(id);
 
 // ---------- sprites (asset.PNG cut into assets/sprites/sprites.webp + sprites.json) ----------
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
-fetch('assets/sprites/sprites.json?v=202610252225').then((r) => r.json()).then((j) => {
+fetch('assets/sprites/sprites.json?v=202610252233').then((r) => r.json()).then((j) => {
   SP.f = j;
   SP.img.onload = () => { SP.ready = true; };
-  SP.img.src = 'assets/sprites/sprites.webp?v=202610252225';
+  SP.img.src = 'assets/sprites/sprites.webp?v=202610252233';
 });
-for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=202610252225`; SP.bg.push(im); }
+for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=202610252233`; SP.bg.push(im); }
 // draw sprite centered at (x,y) with its width scaled to w (height keeps aspect)
 function spr(g, name, x, y, w, rot = 0, alpha = 1) {
   if (!SP.ready || !SP.f[name]) return;
