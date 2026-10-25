@@ -12,7 +12,7 @@
 let W = 540, H = 960;
 const L = window.BakeryLevels, A = window.BakeryArt;
 const { PTS, JUDGE } = L;
-const ASSET_V = '202610252033';
+const ASSET_V = '202610252040';
 const MAX_HEARTS = 5;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
