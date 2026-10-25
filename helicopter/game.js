@@ -48,12 +48,12 @@ const $ = (id) => document.getElementById(id);
 
 // ---------- sprites (asset.PNG cut into assets/sprites/sprites.webp + sprites.json) ----------
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
-fetch('assets/sprites/sprites.json?v=202610250923').then((r) => r.json()).then((j) => {
+fetch('assets/sprites/sprites.json?v=202610250931').then((r) => r.json()).then((j) => {
   SP.f = j;
   SP.img.onload = () => { SP.ready = true; };
-  SP.img.src = 'assets/sprites/sprites.webp?v=202610250923';
+  SP.img.src = 'assets/sprites/sprites.webp?v=202610250931';
 });
-for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=202610250923`; SP.bg.push(im); }
+for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=202610250931`; SP.bg.push(im); }
 // draw sprite centered at (x,y) with its width scaled to w (height keeps aspect)
 function spr(g, name, x, y, w, rot = 0, alpha = 1) {
   if (!SP.ready || !SP.f[name]) return;
@@ -203,7 +203,7 @@ function resetRun() {
   G.nextPipeX = W * 0.95; G.gapY = H * 0.47;
   G.themeIdx = 0; G.prevTheme = 0; G.themeFade = 1;
   G.magnetT = 0; G.shield = false; G.boostT = 0; G.newBest = false; G.shake = 0; G.crashT = 0;
-  for (let i = 0; i < 4; i++) G.deco.push(makeDeco(rand(0, W * 1.5)));
+  for (let i = 0; i < 4; i++) G.deco.push(makeDeco(i === 0 ? rand(0, W * 0.3) : lastDecoX() + DECO_GAP + rand(0, W * 0.3)));
   // 아이템샵: 적용한 배경 스킨 + '사용중' 부스트 (메인 화면에서 들어왔을 때만)
   G.skin = HUB ? HUB.equippedSkin('helicopter') : 'default';
   G.x2T = 0;
@@ -275,11 +275,14 @@ function spawnAhead() {
   }
 }
 
+// 하늘 장식(구름·풍선·비행선): 모두 같은 속도로 흘러서 서로 겹쳐 지나가지 않게, 새로 나올 때도 앞 장식과 띄워 둠
+const DECO_PAR = 0.25, DECO_GAP = 230;
 function makeDeco(sx) {
   const kinds = ['cloud', 'cloud', 'cloud', 'balloon2', 'airship', 'cloud'];
   const k = kinds[Math.floor(Math.random() * kinds.length)];
-  return { kind: k, sx, y: rand(40, 260), w: k === 'cloud' ? rand(90, 170) : k === 'airship' ? 120 : 46, par: rand(0.15, 0.35), a: k === 'cloud' ? 0.85 : 0.7 };
+  return { kind: k, sx, y: rand(40, 260), w: k === 'cloud' ? rand(90, 170) : k === 'airship' ? 120 : 46, par: DECO_PAR, a: k === 'cloud' ? 0.85 : 0.7 };
 }
+const lastDecoX = () => Math.max(-Infinity, ...G.deco.map((d) => d.sx));
 
 // ---------- update ----------
 function step(dt) {
@@ -380,7 +383,7 @@ function step(dt) {
   for (const o of G.obs) o.y = o.by + Math.sin(G.t * 2 + o.ph) * o.move;
   for (const d of G.deco) {
     d.sx -= spd * d.par * dt;
-    if (d.sx < -200) Object.assign(d, makeDeco(W + rand(50, 400)));
+    if (d.sx < -200) Object.assign(d, makeDeco(Math.max(W + rand(50, 400), lastDecoX() + DECO_GAP)));
   }
   updateFx(dt);
 }
