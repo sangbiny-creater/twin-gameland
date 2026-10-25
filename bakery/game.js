@@ -15,7 +15,7 @@
 let W = 540, H = 960;
 const L = window.BakeryLevels, A = window.BakeryArt;
 const { PTS, JUDGE } = L;
-const ASSET_V = '202610252233';
+const ASSET_V = '202610252238';
 const MAX_HEARTS = 5;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -281,7 +281,7 @@ function finishLong(n, ej) {
   success(n, v, v >= 0.95 ? 'perfect' : v >= 0.65 ? 'good' : 'ok', PTS.long);
   // 하트 아이템: 시작·끝 모두 Perfect 일 때만 먹음 → HUD 로 날아감
   if (n.heart && G.hearts < MAX_HEARTS) {
-    const hx = (xAt(n.t) + xAt(n.t1)) / 2, hy = LAY.beltY - 120 * LAY.s;
+    const hx = xAt(n.t) + 34 * LAY.s, hy = LAY.beltY - 80 * LAY.s;
     if (n.sj === 'perfect' && ej === 'perfect') {
       n.heartGot = true; G.hearts++; renderHearts(true); Audio.sfx('life');
       G.fx.push({ kind: 'heartFly', x: hx, y: hy, t: 0, life: 0.6 });
@@ -339,7 +339,7 @@ function popText(text, j, x, y, sub) {
 function burst(x, y, n, gold) {
   for (let i = 0; i < n; i++) {
     const an = -Math.PI / 2 + rnd(-1.2, 1.2), sp = rnd(140, 260);
-    G.fx.push({ kind: 'spark', x, y, vx: Math.cos(an) * sp, vy: Math.sin(an) * sp, r: rnd(8, 14), c: gold ? '#FFD34D' : ['#FF8FB1', '#FFD34D', '#8FD0FF', '#B9E8B0'][i % 4], t: 0, life: rnd(0.45, 0.7) });
+    G.fx.push({ kind: 'spark', x, y, vx: Math.cos(an) * sp, vy: Math.sin(an) * sp, r: rnd(8, 14), c: gold ? '#FFD34D' : ['#FFD34D', '#FFB84D', '#8FD0FF', '#B9E8B0'][i % 4], t: 0, life: rnd(0.45, 0.7) });
   }
 }
 function splat(x, y) { G.fx.push({ kind: 'splat', x, y, t: 0, life: 0.9 }); }
@@ -460,8 +460,8 @@ function render() {
       if (n.st === 'wait') drawLongMarks(n, x, x1, top);
       // 하트 아이템 (하트가 5개보다 적을 때만 보임)
       if (n.heart && !n.heartGot && !n.heartLost && n.st !== 'miss' && G.hearts < MAX_HEARTS) {
-        const hx = clamp((x + x1) / 2, Math.min(x + 20 * s, x1), Math.max(x1 - 20 * s, x));
-        drawHeart(HEART, hx, top - 34 * s + Math.sin(G.t * 5 + i) * 4 * s, 44 * s);
+        const hx = x + 34 * s; // 빵 앞쪽, 꾹 누르기 시작하는 곳 위에 올려 둠
+        drawHeart(HEART, hx, top + 4 * s - 18 * s + Math.sin(G.t * 6 + i) * 2 * s, 40 * s);
       }
     } else if (n.type === 'plate') A.plate(ctx, x, by, s);
     else {
@@ -475,7 +475,7 @@ function render() {
   }
   // 짤주머니 + 크림 줄기
   const sq = G.sq;
-  if (sq > 0.3) A.stream(ctx, LAY.nozX, LAY.tipY - 2, Math.max(LAY.tipY, creamY), s);
+  if (sq > 0.3) A.stream(ctx, LAY.nozX, LAY.tipY - 4, Math.max(LAY.tipY, creamY), s, G.t);
   A.bag(ctx, LAY.nozX, LAY.tipY + sq * 4, s * 1.05, sq, '#FFC2D4');
   drawFx();
   drawHint();
@@ -552,7 +552,11 @@ const JCOL = { perfect: ['#FFF27A', '#B5600F'], good: ['#9BF0A8', '#2E7A3A'], ok
 function drawFx() {
   for (const f of G.fx) {
     const k = f.t / f.life;
-    if (f.kind === 'spark') { ctx.save(); ctx.globalAlpha = 1 - k * k; drawHeart(HEART, f.x, f.y, f.r * 2); ctx.restore(); ctx.save(); ctx.globalAlpha = (1 - k) * 0.6; ctx.fillStyle = f.c; ctx.beginPath(); ctx.arc(f.x, f.y, f.r * 0.5, 0, 7); ctx.fill(); ctx.restore(); continue; }
+    if (f.kind === 'spark') { // 잘 짰을 때 튀는 별 (하트 모양은 쓰지 않음 — 하트를 얻은 것처럼 보이지 않게)
+      ctx.save(); ctx.globalAlpha = 1 - k * k; ctx.translate(f.x, f.y); ctx.rotate(f.t * 6); ctx.beginPath();
+      for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? f.r * 0.45 : f.r; ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); }
+      ctx.closePath(); ctx.fillStyle = f.c; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.stroke(); ctx.restore(); continue;
+    }
     if (f.kind === 'drip') {
       ctx.save(); ctx.globalAlpha = 1 - k; ctx.fillStyle = '#FFFDF7'; ctx.strokeStyle = '#6B3A1E'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(f.x, f.y + 8 + k * 40, 6 * LAY.s, 0, 7); ctx.fill(); ctx.stroke(); ctx.restore(); continue;

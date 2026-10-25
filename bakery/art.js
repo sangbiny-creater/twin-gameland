@@ -205,9 +205,19 @@
     g.save(); g.translate(x, b0 - H * 0.52); g.scale(s, s);
     g.beginPath(); g.moveTo(0, 8); g.bezierCurveTo(-16, -2, -10, -16, 0, -8); g.bezierCurveTo(10, -16, 16, -2, 0, 8); g.fillStyle = '#FF6B8B'; g.fill(); g.restore();
   }
-  // 깍지에서 나오는 크림 줄기
-  function stream(g, x, y0, y1, s) {
+  // 깍지에서 나오는 크림 줄기: 생크림 줄 그림(B09)을 세로로 돌려 위에서 아래로 흘러내리게 (t: 시간 → 무늬가 내려감)
+  function stream(g, x, y0, y1, s, t = 0) {
     if (y1 <= y0) return;
+    if (ok('cream')) {
+      const im = SPR.cream, th = 22 * s, tw = im.naturalWidth * th / im.naturalHeight, L = y1 - y0 + 6 * s;
+      const top = 0.25; // 깍지 바로 밑은 가늘게 → 아래로 갈수록 굵게
+      g.save(); g.translate(x, y0); g.rotate(Math.PI / 2);
+      g.beginPath(); g.moveTo(0, -th * top); g.lineTo(L, -th * 0.55); g.lineTo(L, th * 0.55); g.lineTo(0, th * top); g.closePath(); g.clip();
+      const off = (t * 260 * s) % tw;
+      for (let d = off - tw; d < L; d += tw) g.drawImage(im, d, -th / 2, tw, th);
+      g.restore();
+      return;
+    }
     rr(g, x - 7 * s, y0, 14 * s, y1 - y0, 7 * s); g.fillStyle = '#FFFDF7'; g.fill(); line(g, 2 * s);
   }
   // 컨베이어: 윗면 y, 두께 h, 무늬 off
