@@ -15,7 +15,7 @@ const SKIN_BG = { forest: 1, sunset: 1, winter: 2, night: 3, space: 4 }; // 공�
 const TRAP_PENALTY = 100; // 함정 캐릭터를 누르면 줄어드는 점수
 const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202610251749';
+const ASSET_V = '202610251827';
 const asset = (p) => `assets/${p}.webp?v=${ASSET_V}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -65,6 +65,11 @@ const twinLook = myBase === 'eungyeol' ? 'eunyu' : 'eungyeol';
 const FACE = {};
 for (const lk of new Set([myLook, twinLook])) FACE[lk] = { base: img(`../common/faces/${lk}_base.webp?v=${ASSET_V}`), sad: img(`../common/faces/${lk}_sad.webp?v=${ASSET_V}`) };
 const RING = { eunyu: '#FF8FB1', eungyeol: '#5FA8FF' };
+// 구멍에서 나온 캐릭터 그림(두더지와 같은 틀). 그림이 있는 캐릭터만 — 없으면(v2·v3 등) 동그란 얼굴로
+//  (tools/mole_assets.py 가 mole/assets/chars/<look>(_hit).webp 를 만듦 — 새 캐릭터 그림을 넣으면 여기에 추가)
+const MOLE_CHARS = ['eunyu', 'eungyeol'];
+const TRAP_SPR = {};
+for (const lk of MOLE_CHARS) TRAP_SPR[lk] = { base: img(asset(`chars/${lk}`)), hit: img(asset(`chars/${lk}_hit`)) };
 
 // ---------- audio ----------
 const Audio = {
@@ -225,7 +230,7 @@ function showReady(si) {
   let html = kinds.filter((k) => k[3]).map(([id, nm, p]) => `<div class="lg"><img src="${asset('sprites/' + id)}" alt=""><span>${nm}</span><b>${p}</b></div>`).join('');
   if (st.trap > 0) {
     const faces = st.both ? [myLook, twinLook] : [myLook];
-    html += `<div class="lg no">${faces.map((lk) => `<i style="background-image:url(../common/faces/${lk}_base.webp?v=${ASSET_V})"></i>`).join('')}<span>누르면 안 돼요!</span><b>-${TRAP_PENALTY}</b></div>`;
+    html += `<div class="lg no">${faces.map((lk) => (TRAP_SPR[lk] ? `<i class="spr" style="background-image:url(${asset('chars/' + lk)})"></i>` : `<i style="background-image:url(../common/faces/${lk}_base.webp?v=${ASSET_V})"></i>`)).join('')}<span>누르면 안 돼요!</span><b>-${TRAP_PENALTY}</b></div>`;
   }
   $('legend').innerHTML = html;
   $('readyInfo').innerHTML = `제한 시간 <b>${st.time}초</b> · 목표 <b>${fmt(st.goal)}점</b>`;
@@ -453,7 +458,10 @@ function drawMole(h) {
   const sh = m.shake > 0 ? Math.sin(m.shake * 70) * s * 0.04 : 0;
   ctx.save();
   ctx.beginPath(); ctx.rect(x - g.hw, g.clipY - s * 3, g.hw * 2, s * 3); ctx.clip();
-  if (m.type === 'trap') {
+  if (m.type === 'trap' && TRAP_SPR[m.who]) {
+    const im = TRAP_SPR[m.who][m.ph === 'ouch' ? 'hit' : 'base'];
+    if (ok(im)) ctx.drawImage(im, x - g.dw / 2 + sh, g.foot + (1 - m.u) * g.dh * 0.95 - g.dh * MOLE_FOOT, g.dw, g.dh);
+  } else if (m.type === 'trap') {
     const r = g.dw * 0.44, cy = g.clipY + r * 1.1 - (r * 2.35) * m.u;
     const f = FACE[m.who] || FACE[myLook], im = m.ph === 'ouch' ? f.sad : f.base;
     ctx.translate(x + sh, cy);

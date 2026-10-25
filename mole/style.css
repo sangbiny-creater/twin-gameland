@@ -142,3 +142,7 @@ button:active { transform: translateY(3px); }
 /* 태블릿 가로(좁은 가로 화면): 점수·콤보·코인 줄은 위 두 번째 줄로 */
 #root.wide.narrow .hud-top { right: calc(14px + var(--safe-r, 0px)); }
 #root.wide.narrow .hud-sub { left: calc(118px + var(--safe-l, 0px)); right: auto; width: auto; top: calc(62px + var(--safe-t, 0px)); }
+/* 함정 캐릭터 그림(구멍에서 나온 은유·은결)은 동그라미 없이 */
+.lg.no i.spr { border-radius: 0; border: 0; box-shadow: none; width: 42px; height: 42px; margin: 6px 0 4px; background-size: contain; background-position: center bottom; }
+.lg.no i.spr::after { right: -4px; top: -8px; font-size: 16px; }
+#root.wide .lg.no i.spr { width: 36px; height: 34px; }

@@ -1,11 +1,12 @@
 """두더지 게임 그림 만들기 → mole/assets/, hub/cards·intro, shop/assets/games, common/items 에 webp로 저장.
   python3 tools/mole_assets.py
-  · GPT 그림: molegame/GPT/G01~G06.PNG(카드·인트로·로고·배경), M01~M10.PNG(두더지·구멍·망치·흙먼지, 초록 바탕)
-    (요청 글: making_GPT/신규게임이미지_템플릿/GPT_요청_두더지게임_그림.txt)
+  · GPT 그림: molegame/GPT/G01~G06.PNG(카드·인트로·로고·배경), M01~M10.PNG(두더지·구멍·망치·흙먼지, 초록 바탕),
+    C01~C04.PNG(구멍에서 나온 은유·은결 기본·맞음)
+    (요청 글: making_GPT/신규게임이미지_템플릿/GPT_요청_두더지게임_그림.txt, GPT_요청_두더지게임_캐릭터.txt)
   · 아이템 아이콘(점수 2배 별, 무지개 망치)만 GPT 기획 시트(molegame/…시트.webp)에서 잘라 씀
     — 크림색 바탕은 가장자리에서 이어진 곳만 지워 투명하게 (그림 속 흰 부분은 그대로)
 """
-import os
+import glob, os
 import numpy as np
 from PIL import Image, ImageFilter
 from scipy import ndimage
@@ -49,9 +50,9 @@ def save(im, name, scale=1.0, q=88):
     print(name, im.size)
 
 
-def chroma(path):
-    """초록(#00FF00) 바탕을 투명하게, 가장자리 초록 번짐은 빼기"""
-    a = np.asarray(Image.open(path).convert('RGB')).astype(np.float32)
+def chroma(src):
+    """초록(#00FF00) 바탕을 투명하게, 가장자리 초록 번짐은 빼기 (src: 파일 경로 또는 그림)"""
+    a = np.asarray((Image.open(src) if isinstance(src, str) else src).convert('RGB')).astype(np.float32)
     r, g, b = a[..., 0], a[..., 1], a[..., 2]
     k = g - np.maximum(r, b)                      # 초록에 가까울수록 큼
     al = np.clip((140 - k) / 80, 0, 1)            # k 60 이하 = 그림, 140 이상 = 바탕
@@ -72,6 +73,20 @@ def main():
     names = ['normal', 'normal_hit', 'fast', 'fast_hit', 'tough', 'tough_crack', 'tough_hit']
     for i, n in enumerate(names):
         save(chroma(f'{GPT}/M{i + 1:02d}.PNG').crop((57, 30, 1197, 1110)), f'sprites/{n}', 0.4)
+    # 함정 캐릭터(구멍에서 나온 은유·은결, C01~C04): 두더지와 같은 틀로 잘라 같은 크기·자리
+    #  새 캐릭터: 신규캐릭터 템플릿 S15·S16 → molegame/GPT/두더지_<영문이름>.PNG, 두더지_<영문이름>_맞음.PNG
+    #  (만든 뒤 mole/game.js MOLE_CHARS 에 <영문이름> 추가)
+    src = {'eunyu': ('C01', 'C02'), 'eungyeol': ('C03', 'C04')}
+    for f in glob.glob(f'{GPT}/두더지_*.PNG') + glob.glob(f'{GPT}/두더지_*.png'):
+        n = os.path.splitext(os.path.basename(f))[0][4:]
+        if not n.endswith('_맞음'): src[n] = (f'두더지_{n}', f'두더지_{n}_맞음')
+    for look, (a, b) in src.items():
+        for name, out in ((a, look), (b, look + '_hit')):
+            path = next((p for p in (f'{GPT}/{name}.PNG', f'{GPT}/{name}.png') if os.path.exists(p)), None)
+            if not path: print('없음:', name); continue
+            im = Image.open(path)
+            if im.size != (1254, 1254): im = im.resize((1254, 1254), Image.LANCZOS)  # 두더지(1254 정사각)와 같은 틀
+            save(chroma(im).crop((57, 30, 1197, 1110)), f'chars/{out}', 0.4)
     # 구멍: 뒤(통째) + 앞(안쪽 가운데 줄보다 아래의 흙 테두리만) — 두더지를 그 사이에 그림
     #  잘라 낸 틀 x 36~1216, y 409~891 → 안쪽(어두운 곳) 가운데 (604, 229), 반지름 416x129 (game.js HOLE_*)
     hole = chroma(f'{GPT}/M08.PNG')
