@@ -13,7 +13,7 @@
 let W = 540, H = 960;
 const L = window.BakeryLevels, A = window.BakeryArt;
 const { PTS, JUDGE } = L;
-const ASSET_V = '202610252143';
+const ASSET_V = '202610252223';
 const MAX_HEARTS = 5;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -34,15 +34,16 @@ const rnd = (a, b) => a + Math.random() * (b - a);
 const fmt = (n) => Math.round(n).toLocaleString();
 
 // 배경 그림 (GPT G05 빵집). 가로 배경(G06)이 오면 land 를 따로 쓰기
-const BG = new Image(); BG.src = `assets/bg/port.webp?v=${ASSET_V}`;
-const BG_FLOOR = 0.63; // 그림에서 진열대 아래 끝(바닥이 시작하는 높이) → 컨베이어 윗면에 맞춤
+A.load('assets/sprites/', ASSET_V);
+const BGS = { port: new Image(), land: new Image() }; BGS.port.src = `assets/bg/port.webp?v=${ASSET_V}`; BGS.land.src = `assets/bg/land.webp?v=${ASSET_V}`;
+const BG_FLOOR = { port: 0.63, land: 0.68 }; // 그림에서 진열대 아래 끝(바닥이 시작하는 높이) → 컨베이어 윗면에 맞춤
 function drawBg() {
-  const by = LAY.beltY;
+  const by = LAY.beltY, kind = wideLayout() ? 'land' : 'port', BG = BGS[kind], FL = BG_FLOOR[kind];
   if (!(BG.complete && BG.naturalWidth)) { A.backdrop(ctx, W, H, by + beltH() + 20, G.t); return; }
   const iw = BG.naturalWidth, ih = BG.naturalHeight;
-  const sc = Math.max(W / iw, by / (BG_FLOOR * ih), (H - by) / ((1 - BG_FLOOR) * ih));
+  const sc = Math.max(W / iw, by / (FL * ih), (H - by) / ((1 - FL) * ih));
   const dw = iw * sc, dh = ih * sc;
-  ctx.drawImage(BG, (W - dw) / 2, by - BG_FLOOR * dh, dw, dh);
+  ctx.drawImage(BG, (W - dw) / 2, by - FL * dh, dw, dh);
   ctx.fillStyle = 'rgba(255,240,245,.18)'; ctx.fillRect(0, 0, W, H); // 빵이 잘 보이게 살짝 흐리게
 }
 
@@ -192,6 +193,7 @@ function showReady() {
   const items = [['cup', '컵케이크', '톡!'], ['long', '긴 빵', '꾹~ 떼기'], ['gold', '금빛', `+${PTS.gold}`]];
   $('legend').innerHTML = items.map(([id, nm, p]) => `<div class="lg"><img src="${icon(id)}" alt=""><span>${nm}</span><b>${p}</b></div>`).join('')
     + `<div class="lg no"><img src="${icon('burnt')}" alt=""><img src="${icon('plate')}" alt=""><span>탄 빵·빈 접시</span><b>누르면 안 돼요!</b></div>`;
+  if (!A.ready()) setTimeout(() => { if (G.state === 'ready') showReady(); }, 300); // 그림을 다 받으면 다시 그림
   $('readyInfo').innerHTML = `BEST <b>${fmt(Save.data.best || 0)}점</b>` + (Save.data.maxLevel > 1 ? ` · 가장 높은 레벨 <b>${Save.data.maxLevel}</b>` : '');
   setState('ready');
 }
@@ -205,7 +207,8 @@ function icon(id) {
   else if (id === 'burnt') A.cupcake(g, 74, 92, 0.85, { burnt: true, t: 0.3 });
   else if (id === 'plate') A.plate(g, 74, 80, 1.2);
   else if (id === 'long') A.longBread(g, 6, 142, 84, 0.8, 0, [6, 142], true);
-  return (ICONS[id] = c.toDataURL());
+  const url = c.toDataURL(); if (A.ready()) ICONS[id] = url; // 그림을 받기 전 코드 그림은 기억하지 않음
+  return url;
 }
 // 다시 하면 남아 있던 setTimeout 은 무시 (판 번호로 구분)
 let runId = 0;

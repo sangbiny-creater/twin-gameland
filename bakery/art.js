@@ -1,11 +1,36 @@
 'use strict';
-// 달콤 베이커리 임시 그림 (코드로 그림) — GPT 그림이 오면 이 함수들만 그림 파일로 바꾸면 됨
+// 달콤 베이커리 그림 — GPT 그림(bakery/assets/sprites, tools/bakery_assets.py 가 만듦)이 있으면 그 그림, 없으면 코드로 그림
+//  · 게임은 BakeryArt.load('assets/sprites/', v) 로 그림을 불러옴 (임시 그림 도구 tools/bakery_placeholder.html 은 안 불러서 코드 그림)
 //  · 모든 빵은 (x = 가운데, y = 컨베이어 윗면) 기준, s = 크기 (1 = 컵케이크 폭 약 92점)
 //  · tools/bakery_placeholder.html 도 이 그림으로 게임 카드·인트로 임시 그림을 만듦
 (function (root) {
   const OUT = '#6B3A1E';
   const CUPS = ['#FFB5C8', '#A8DCF5', '#C9B8FF', '#FFE08A', '#B9E8B0'];
   const TOPS = ['cherry', 'berry', 'sprinkle', 'cherry', 'choco'];
+
+  // ---------- GPT 그림 ----------
+  const SPR = {};
+  const NAMES = ['cup', 'cup_cream', 'gold', 'gold_cream', 'burnt', 'plate', 'roll', 'eclair', 'cream', 'bag'];
+  function load(base, v) { for (const n of NAMES) { const im = new Image(); im.src = `${base}${n}.webp?v=${v}`; SPR[n] = im; } }
+  const ok = (n) => { const im = SPR[n]; return !!(im && im.complete && im.naturalWidth); };
+  const ready = () => NAMES.every(ok);
+  // 컵케이크 그림 틀(tools/bakery_assets.py 출력): 컵 폭 = 그림 폭의 94%, 컵 가운데 = 47.3%, 컵 바닥 = 그림 아래 끝
+  const CUP = { wr: 0.94, cx: 0.473, domeTop: 0.74, creamTop: 0.96 };
+  function cupSprite(g, x, y, s, o) {
+    const base = o.burnt ? 'burnt' : o.gold ? 'gold' : 'cup';
+    if (!ok(base)) return null;
+    const im = SPR[base], dw = 90 * s / CUP.wr, dh = dw * im.naturalHeight / im.naturalWidth, left = x - CUP.cx * dw;
+    g.beginPath(); g.ellipse(x, y - 2 * s, 38 * s, 7 * s, 0, 0, Math.PI * 2); g.fillStyle = 'rgba(0,0,0,.18)'; g.fill();
+    const k = o.burnt ? 0 : (o.cream || 0), cr = SPR[base + '_cream'];
+    if (k < 1 || !ok(base + '_cream')) g.drawImage(im, left, y - dh, dw, dh);
+    if (k > 0 && ok(base + '_cream')) {
+      const pop = k < 1 ? 0.85 + 0.15 * k : 1; // 크림이 뿅 올라옴
+      g.save(); g.globalAlpha *= Math.min(1, k * 1.5); g.translate(x, y); g.scale(1, pop);
+      g.drawImage(cr, left - x, -dh, dw, dh); g.restore();
+      return y - dh * CUP.creamTop;
+    }
+    return y - dh * CUP.domeTop;
+  }
 
   function rr(g, x, y, w, h, r) {
     g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
@@ -52,6 +77,7 @@
   }
   // 컵케이크. o: { v(색 번호), cream(0~1), burnt, gold, heart(하트 컵케이크), top }
   function cupcake(g, x, y, s, o = {}) {
+    const sp = !o.heart ? cupSprite(g, x, y, s, o) : null; if (sp != null) return sp;
     const v = o.v || 0;
     const cupCol = o.burnt ? '#9C9AA5' : o.gold ? '#FFCF3D' : o.heart ? '#FF7FA2' : CUPS[v % CUPS.length];
     const domeCol = o.burnt ? '#3A2A22' : o.gold ? '#F2B53A' : '#D59050';
@@ -99,6 +125,7 @@
   }
   // 빈 접시
   function plate(g, x, y, s) {
+    if (ok('plate')) { const im = SPR.plate, dw = 100 * s, dh = dw * im.naturalHeight / im.naturalWidth; g.drawImage(im, x - dw / 2, y - dh + 2 * s, dw, dh); return; }
     g.beginPath(); g.ellipse(x, y - 1, 46 * s, 8 * s, 0, 0, Math.PI * 2); g.fillStyle = 'rgba(0,0,0,.16)'; g.fill();
     g.beginPath(); g.ellipse(x, y - 9 * s, 48 * s, 13 * s, 0, 0, Math.PI * 2); g.fillStyle = '#FFFFFF'; g.fill(); line(g, 3 * s);
     g.beginPath(); g.ellipse(x, y - 10 * s, 30 * s, 7 * s, 0, 0, Math.PI * 2); g.strokeStyle = '#BFD8EE'; g.lineWidth = 3 * s; g.stroke();
@@ -106,6 +133,19 @@
   }
   // 긴 빵: x0(앞 끝) ~ x1(뒤 끝). kind 0 롤케이크 · 1 에클레어. cream: [c0, c1] 크림이 올라간 x 구간 (없으면 null). done: 다 짜면 딸기
   function longBread(g, x0, x1, y, s, kind, cream, done) {
+    const nm = kind ? 'eclair' : 'roll';
+    if (ok(nm)) { // 3조각: 왼쪽 끝 30% · 가운데(늘림) · 오른쪽 끝 25%
+      const im = SPR[nm], iw = im.naturalWidth, ih = im.naturalHeight, h = (kind ? 50 : 60) * s, k = h / ih, top = y - h + 2 * s;
+      const L = 0.3 * iw, R = 0.25 * iw, w = x1 - x0;
+      let dl = L * k, dr = R * k; if (dl + dr > w) { const f = w / (dl + dr); dl *= f; dr *= f; }
+      g.beginPath(); g.ellipse((x0 + x1) / 2, y - 1, w / 2 + 6 * s, 8 * s, 0, 0, Math.PI * 2); g.fillStyle = 'rgba(0,0,0,.16)'; g.fill();
+      g.drawImage(im, 0, 0, L, ih, x0, top, dl, h);
+      if (w - dl - dr > 0) g.drawImage(im, L, 0, iw - L - R, ih, x0 + dl, top, w - dl - dr, h);
+      g.drawImage(im, iw - R, 0, R, ih, x1 - dr, top, dr, h);
+      const ct = top + h * (kind ? 0.32 : 0.26); // 크림 줄 아래 끝이 빵 윗면에 묻히게
+      if (cream && cream[1] > cream[0]) creamRope(g, Math.max(x0 + 6 * s, cream[0]), Math.min(x1 - 6 * s, cream[1]), ct, s);
+      return ct - 20 * s;
+    }
     const h = (kind ? 40 : 54) * s, top = y - h - 2 * s, w = x1 - x0;
     g.beginPath(); g.ellipse((x0 + x1) / 2, y - 1, w / 2 + 6 * s, 8 * s, 0, 0, Math.PI * 2); g.fillStyle = 'rgba(0,0,0,.16)'; g.fill();
     rr(g, x0, top, w, h, Math.min(h / 2, w / 2));
@@ -129,6 +169,12 @@
   }
   // 빵 위 생크림 줄 (뭉게뭉게)
   function creamRope(g, a, b, y, s) {
+    if (ok('cream')) { // 생크림 줄 그림을 가로로 이어 붙여 a~b 만 보이게
+      const im = SPR.cream, h = 28 * s, tw = im.naturalWidth * h / im.naturalHeight;
+      g.save(); g.beginPath(); g.rect(a, y - h * 1.2, b - a, h * 1.6); g.clip();
+      for (let x = a - ((a % tw) + tw) % tw; x < b; x += tw) g.drawImage(im, x, y - h * 0.75, tw, h);
+      g.restore(); return;
+    }
     const r = 11 * s;
     g.beginPath(); g.moveTo(a, y);
     for (let x = a; x < b; x += r * 1.4) { const nx = Math.min(b, x + r * 1.4); g.quadraticCurveTo((x + nx) / 2, y - r * 1.9, nx, y); }
@@ -137,6 +183,11 @@
   }
   // 짤주머니: (x, tipY) = 깍지 끝. sq: 0~1 누르는 정도
   function bag(g, x, tipY, s, sq = 0, col = '#FFC2D4') {
+    if (ok('bag')) { // 깍지 끝 = 그림 아래 가운데. 누르면 살짝 납작·통통
+      const im = SPR.bag, h = 185 * s * (1 - sq * 0.07), w = h * im.naturalWidth / im.naturalHeight * (1 + sq * 0.1);
+      g.save(); if (col !== '#FFC2D4') g.filter = 'hue-rotate(40deg) saturate(1.3)';
+      g.drawImage(im, x - w / 2, tipY - h, w, h); g.restore(); return;
+    }
     const H = 150 * s * (1 - sq * 0.08), Wt = 64 * s * (1 + sq * 0.12);
     // 깍지
     g.beginPath(); g.moveTo(x - 9 * s, tipY - 2 * s); g.lineTo(x + 9 * s, tipY - 2 * s); g.lineTo(x + 14 * s, tipY - 24 * s); g.lineTo(x - 14 * s, tipY - 24 * s); g.closePath();
@@ -207,5 +258,5 @@
     g.beginPath(); g.moveTo(0, 12); g.bezierCurveTo(-22, -2, -14, -20, 0, -9); g.bezierCurveTo(14, -20, 22, -2, 0, 12); g.closePath();
     g.fillStyle = fill || (on ? '#FF5A7A' : '#B8B2C8'); g.fill(); g.lineWidth = 3; g.strokeStyle = on ? '#A8203E' : '#6E6880'; g.stroke(); g.restore();
   }
-  root.BakeryArt = { cupcake, plate, longBread, bag, stream, belt, backdrop, swirl, topping, sparkle, heart, creamRope, CUPS };
+  root.BakeryArt = { load, ready, cupcake, plate, longBread, bag, stream, belt, backdrop, swirl, topping, sparkle, heart, creamRope, CUPS };
 })(typeof window !== 'undefined' ? window : globalThis);
