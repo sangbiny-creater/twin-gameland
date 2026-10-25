@@ -293,7 +293,7 @@ img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #
 #root:not(.portrait) .lb-itemlist { grid-template-columns: repeat(3, 1fr); }
 #root:not(.portrait) .lb-grid { flex: 0 0 auto; padding: 0; gap: 10px; grid-template-columns: repeat(3, 160px); align-content: start; }
 #root:not(.portrait) .lb-best { font-size: 12px; }
-#root:not(.portrait) .lb-fav { font-size: 14px; top: 9px; right: 9px; }
+#root:not(.portrait) .lb-fav { top: 9px; right: 9px; }
 #root:not(.portrait) .lb-fav::after { font-size: 13px; }
 
 /* ---------- 게임 인트로: 메인 그림을 화면 가득 + START ---------- */
