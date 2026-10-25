@@ -2,7 +2,8 @@
 // 은유와 은결의 달콤 베이커리 — 컨베이어로 지나가는 빵 위에 생크림을 짜는 원버튼 타이밍 게임
 //  · 끝없이 이어짐 (다운힐 러너·헬리콥터처럼): 하트가 다 없어질 때까지, 점수가 기록(BEST)
 //  · 하트: 3개로 시작, 최대 5개. Bad(놓침·함정·너무 빨리·너무 일찍 뗌) 나오면 -1
-//  · 하트 아이템: 긴 빵 2개에 1개꼴로 위에 떠 있음 → 시작·끝 모두 Perfect 면 하트 +1 (컵케이크에는 안 나옴)
+//  · 하트 아이템: 가끔(앞 하트 아이템에서 25초 넘게 지난 뒤 나오는 긴 빵 하나) 빵 앞쪽 위에 올라감 → 시작·끝 모두 Perfect 면 하트 +1
+//    하트가 늘어나는 곳은 이것 하나뿐 (컵케이크 Perfect·다른 판정으로는 절대 안 늘어남)
 //  · 하트 그림은 모든 게임 공통 common/ui/heart.webp·heart_empty.webp (계단 오르기·헬리콥터와 같은 그림)
 //  · 컵케이크·금빛 컵케이크: 짤주머니 밑에 올 때 화면을 톡
 //  · 긴 빵(롤케이크·에클레어): 앞 끝이 오면 꾹 누르고, 뒤 끝이 오면 떼기 (끝까지 누르고 있으면 '좋아요')
@@ -15,8 +16,9 @@
 let W = 540, H = 960;
 const L = window.BakeryLevels, A = window.BakeryArt;
 const { PTS, JUDGE } = L;
-const ASSET_V = '202610252238';
+const ASSET_V = '202610252244';
 const MAX_HEARTS = 5;
+const HEART_GAP = 25; // 하트 아이템 사이 최소 시간(초)
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
 const Save = {
@@ -164,7 +166,7 @@ function askStart() {
 function startRun(lv = 1) {
   clearTimers();
   const c0 = (lv - 1) * L.LEVEL;
-  G.gen = L.Gen(Date.now(), c0); G.notes = []; G.shelf = []; G.k = 0; G.longs = 0;
+  G.gen = L.Gen(Date.now(), c0); G.notes = []; G.shelf = []; G.k = 0; G.heartT = c0 - 10;
   G.hearts = 3; G.score = 0; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.made = 0; G.perfect = 0; G.level = lv; G.startLv = lv; G.newBest = false;
   G.fx = []; G.t = 0; G.clock = c0; G.slowT = 0; G.x2T = 0; G.shield = 0; G.holdNote = null; G.down = false; G.pointers.clear();
   G.pose = 'idle'; G.poseT = 0;
@@ -188,7 +190,7 @@ function pull() {
   while (G.gen.out.length) {
     const n = G.gen.out.shift(), p = L.params(n.t);
     Object.assign(n, { w: p.win, gd: p.guide, v: G.k % 5, kind: G.k % 2, st: 'wait' }); G.k++;
-    if (n.type === 'long') n.heart = (G.longs++ % 2 === 0); // 긴 빵 2개에 1개꼴로 하트 아이템
+    if (n.type === 'long' && n.t - G.heartT >= HEART_GAP) { n.heart = true; G.heartT = n.t; } // 가끔만 하트 아이템
     G.notes.push(n);
   }
   G.notes = G.notes.filter((n) => n.st === 'wait' || n.st === 'hold' || xAt(n.t1 || n.t) > -200);
@@ -640,6 +642,7 @@ function setState(s) {
 }
 function pauseGame() {
   if (G.state === 'play' || G.state === 'count') {
+    $('verTxt').textContent = `버전 ${ASSET_V}`;
     // 긴 빵을 누르던 중이면 그 자리에서 뗀 것으로
     if (G.holdNote) release(G.clock);
     G.down = false; G.pointers.clear();
