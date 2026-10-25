@@ -15,7 +15,7 @@ const SKIN_BG = { forest: 1, sunset: 1, winter: 2, night: 3, space: 4 }; // 공�
 const TRAP_PENALTY = 100; // 함정 캐릭터를 누르면 줄어드는 점수
 const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202610252244';
+const ASSET_V = '202610252249';
 const asset = (p) => `assets/${p}.webp?v=${ASSET_V}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------

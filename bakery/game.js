@@ -16,7 +16,7 @@
 let W = 540, H = 960;
 const L = window.BakeryLevels, A = window.BakeryArt;
 const { PTS, JUDGE } = L;
-const ASSET_V = '202610252244';
+const ASSET_V = '202610252249';
 const MAX_HEARTS = 5;
 const HEART_GAP = 25; // 하트 아이템 사이 최소 시간(초)
 
@@ -477,7 +477,8 @@ function render() {
   }
   // 짤주머니 + 크림 줄기
   const sq = G.sq;
-  if (sq > 0.3) A.stream(ctx, LAY.nozX, LAY.tipY - 4, Math.max(LAY.tipY, creamY), s, G.t);
+  // 크림은 깍지 안쪽(짤주머니에 가려지는 곳)부터 그려서 깍지 끝에서 바로 나오는 것처럼
+  if (sq > 0.3 && (G.down || G.holdNote)) A.stream(ctx, LAY.nozX, LAY.tipY + sq * 4 - 12 * s, Math.max(LAY.tipY, creamY), s, G.t); // 누르고 있는 동안만
   A.bag(ctx, LAY.nozX, LAY.tipY + sq * 4, s * 1.05, sq, '#FFC2D4');
   drawFx();
   drawHint();

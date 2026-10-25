@@ -15,6 +15,7 @@
   const ok = (n) => { const im = SPR[n]; return !!(im && im.complete && im.naturalWidth); };
   const ready = () => NAMES.every(ok);
   // 컵케이크 그림 틀(tools/bakery_assets.py 출력): 컵 폭 = 그림 폭의 94%, 컵 가운데 = 47.3%, 컵 바닥 = 그림 아래 끝
+  const BAG_TIP = 0.445; // 짤주머니 그림에서 깍지 끝의 가로 위치
   const CUP = { wr: 0.94, cx: 0.473, domeTop: 0.74, creamTop: 0.96 };
   function cupSprite(g, x, y, s, o) {
     const base = o.burnt ? 'burnt' : o.gold ? 'gold' : 'cup';
@@ -183,10 +184,10 @@
   }
   // 짤주머니: (x, tipY) = 깍지 끝. sq: 0~1 누르는 정도
   function bag(g, x, tipY, s, sq = 0, col = '#FFC2D4') {
-    if (ok('bag')) { // 깍지 끝 = 그림 아래 가운데. 누르면 살짝 납작·통통
+    if (ok('bag')) { // 깍지 끝 = 그림 아래 끝, 가로 44.5% (그림에서 잰 값). 누르면 살짝 납작·통통
       const im = SPR.bag, h = 185 * s * (1 - sq * 0.07), w = h * im.naturalWidth / im.naturalHeight * (1 + sq * 0.1);
       g.save(); if (col !== '#FFC2D4') g.filter = 'hue-rotate(40deg) saturate(1.3)';
-      g.drawImage(im, x - w / 2, tipY - h, w, h); g.restore(); return;
+      g.drawImage(im, x - BAG_TIP * w, tipY - h, w, h); g.restore(); return;
     }
     const H = 150 * s * (1 - sq * 0.08), Wt = 64 * s * (1 + sq * 0.12);
     // 깍지
@@ -210,7 +211,7 @@
     if (y1 <= y0) return;
     if (ok('cream')) {
       const im = SPR.cream, th = 22 * s, tw = im.naturalWidth * th / im.naturalHeight, L = y1 - y0 + 6 * s;
-      const top = 0.25; // 깍지 바로 밑은 가늘게 → 아래로 갈수록 굵게
+      const top = 0.42; // 깍지 구멍 굵기로 시작 → 아래로 갈수록 조금 굵게
       g.save(); g.translate(x, y0); g.rotate(Math.PI / 2);
       g.beginPath(); g.moveTo(0, -th * top); g.lineTo(L, -th * 0.55); g.lineTo(L, th * 0.55); g.lineTo(0, th * top); g.closePath(); g.clip();
       const off = (t * 260 * s) % tw;
