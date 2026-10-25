@@ -63,12 +63,13 @@ function renderSelect() {
 }
 $('btnSound').addEventListener('click', () => { Hub.setSound(!Hub.settings.sound); document.body.classList.toggle('muted', !Hub.settings.sound); blip(); });
 
-let createLook = 'eunyu';
+let createLook = 'eunyu3';
 function openCreate() {
   const n = Hub.chars().length;
-  const has = (look) => Hub.chars().some((c) => c.look === look);
-  createLook = n === 1 && has('eunyu') ? 'eungyeol' : 'eunyu';
-  const suggest = n === 0 ? '은유' : (n === 1 && createLook === 'eungyeol' && !Hub.chars().some((c) => c.name === '은결')) ? '은결' : '';
+  const hasBase = (b) => Hub.chars().some((c) => Hub.lookBase(c.look) === b);
+  const pick = n === 1 && hasBase('eunyu') ? 'eungyeol' : 'eunyu'; // 은유가 있으면 은결 쪽을 먼저 고름
+  createLook = Hub.latestLook(pick);
+  const suggest = n === 0 ? '은유' : (n === 1 && pick === 'eungyeol' && !Hub.chars().some((c) => c.name === '은결')) ? '은결' : '';
   $('inName').value = suggest;
   setLook(createLook);
   openModal('popCreate');
@@ -79,6 +80,7 @@ function setLook(l) { createLook = l; document.querySelectorAll('.look').forEach
 (function buildLooks() {
   const box = $('lookList'); if (!box) return;
   for (const l of window.CHAR_LOOKS || [{ look: 'eunyu', name: '은유 스타일', base: 'eunyu' }, { look: 'eungyeol', name: '은결 스타일', base: 'eungyeol' }]) {
+    if (l.hidden) continue; // 숨긴 옛 모습은 고를 수 없음
     const b = document.createElement('button');
     b.className = `look base-${l.base}` + (l.atlas ? ' v2' : ''); b.dataset.look = l.look;
     b.innerHTML = `<img src="common/faces/${l.look}_base.webp?v=202610251835" alt=""><span></span>`;

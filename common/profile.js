@@ -159,9 +159,25 @@
     } catch (e) { /* private mode */ }
     return blank();
   }
+  // 숨긴 옛 모습(hidden)은 같은 계열의 가장 새 모습으로 (이름·코인·진행도는 그대로)
+  const lookInfo = (look) => (window.CHAR_LOOKS || []).find((l) => l.look === look);
+  const lookBase = (look) => (lookInfo(look) || {}).base || (String(look).startsWith('eungyeol') ? 'eungyeol' : 'eunyu');
+  const latestLook = (base) => {
+    const shown = (window.CHAR_LOOKS || []).filter((l) => l.base === base && !l.hidden);
+    return shown.length ? shown[shown.length - 1].look : base;
+  };
+  function upgradeLooks(d) {
+    let changed = false;
+    for (const c of d.chars) {
+      const l = lookInfo(c.look);
+      if (l && l.hidden) { c.look = latestLook(l.base); changed = true; }
+    }
+    return changed;
+  }
   let data = load();
+  if (upgradeLooks(data)) try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) { /* ignore */ }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) { /* ignore */ } }
-  function reload() { data = load(); }
+  function reload() { data = load(); upgradeLooks(data); }
 
   function find(id) { return data.chars.find((c) => c.id === id) || null; }
   function gameRec(c, g) {
@@ -205,6 +221,7 @@
     ownsCostume(id, c = this.active()) { return !!(c && (c.costumes || []).includes(id)); },
     costume(c = this.active()) { return (c && c.costume) || null; }, // 입은 옷 id (없으면 기본 옷)
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
+    latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
     costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610251835` : null; },
     buyCostume(id, c = this.active()) {
@@ -311,7 +328,7 @@
     },
     create(name, look) {
       if (!this.canCreate()) return null;
-      const c = { id: 'c' + data.nextId++, name: String(name).trim().slice(0, 8) || '친구', look: LOOKS.includes(look) ? look : 'eunyu', coins: 0, earned: 0, created: Date.now(), games: {}, history: [] };
+      const c = { id: 'c' + data.nextId++, name: String(name).trim().slice(0, 8) || '친구', look: LOOKS.includes(look) && !(lookInfo(look) || {}).hidden ? look : latestLook(lookBase(look)), coins: 0, earned: 0, created: Date.now(), games: {}, history: [] };
       data.chars.push(c);
       if (!data.activeId) data.activeId = c.id;
       save(); return c;
