@@ -50,10 +50,10 @@
       }
     }
   }
-  // 컵케이크. o: { v(색 번호), cream(0~1), burnt, gold, sad, top }
+  // 컵케이크. o: { v(색 번호), cream(0~1), burnt, gold, heart(하트 컵케이크), top }
   function cupcake(g, x, y, s, o = {}) {
     const v = o.v || 0;
-    const cupCol = o.burnt ? '#9C9AA5' : o.gold ? '#FFCF3D' : CUPS[v % CUPS.length];
+    const cupCol = o.burnt ? '#9C9AA5' : o.gold ? '#FFCF3D' : o.heart ? '#FF7FA2' : CUPS[v % CUPS.length];
     const domeCol = o.burnt ? '#3A2A22' : o.gold ? '#F2B53A' : '#D59050';
     // 그림자
     g.beginPath(); g.ellipse(x, y - 1, 38 * s, 7 * s, 0, 0, Math.PI * 2); g.fillStyle = 'rgba(0,0,0,.18)'; g.fill();
@@ -65,6 +65,7 @@
     for (let i = -3; i <= 3; i++) { g.beginPath(); g.moveTo(x + i * 12 * s, top); g.lineTo(x + i * 9 * s, y); g.stroke(); }
     if (o.gold) { g.fillStyle = 'rgba(255,255,255,.45)'; g.fillRect(x - tw, top + 6 * s, tw * 2, 6 * s); }
     g.restore();
+    if (o.heart) heart(g, x, top + 22 * s, 11 * s, true, '#FFFFFF');
     g.beginPath(); g.moveTo(x - tw, top); g.lineTo(x + tw, top); g.lineTo(x + bw, y - 2 * s); g.lineTo(x - bw, y - 2 * s); g.closePath(); line(g, 3 * s);
     // 빵 지붕
     g.beginPath(); g.moveTo(x - 46 * s, top + 2 * s); g.bezierCurveTo(x - 48 * s, top - 34 * s, x + 48 * s, top - 34 * s, x + 46 * s, top + 2 * s); g.closePath();
@@ -83,10 +84,11 @@
     }
     if (o.cream > 0) {
       const yy = swirl(g, x, top - 18 * s, s, o.cream, o.gold ? '#FFF6D0' : '#FFFDF7');
-      if (o.cream >= 1 && yy != null) topping(g, o.top || TOPS[v % TOPS.length], x + 2 * s, yy - 12 * s, s);
+      if (o.cream >= 1 && yy != null) { if (o.heart) heart(g, x + 2 * s, yy - 16 * s, 14 * s, true); else topping(g, o.top || TOPS[v % TOPS.length], x + 2 * s, yy - 12 * s, s); }
       creamTop = yy;
     }
     if (o.gold) sparkle(g, x + 34 * s, top - 26 * s, 9 * s, o.t || 0);
+    if (o.heart && !(o.cream > 0)) heart(g, x, top - 52 * s + Math.sin((o.t || 0) * 5) * 4 * s, 16 * s, true); // 떠 있는 하트
     return creamTop;
   }
   function sparkle(g, x, y, r, t) {
@@ -200,10 +202,10 @@
     for (let y = floorY, r = 0; y < H; y += 44, r++) for (let x = (r % 2) * 44; x < W; x += 88) g.fillRect(x, y, 44, 44);
   }
   // 하트
-  function heart(g, x, y, r, on = true) {
+  function heart(g, x, y, r, on = true, fill) {
     g.save(); g.translate(x, y); g.scale(r / 16, r / 16);
     g.beginPath(); g.moveTo(0, 12); g.bezierCurveTo(-22, -2, -14, -20, 0, -9); g.bezierCurveTo(14, -20, 22, -2, 0, 12); g.closePath();
-    g.fillStyle = on ? '#FF5A7A' : '#B8B2C8'; g.fill(); g.lineWidth = 3; g.strokeStyle = on ? '#A8203E' : '#6E6880'; g.stroke(); g.restore();
+    g.fillStyle = fill || (on ? '#FF5A7A' : '#B8B2C8'); g.fill(); g.lineWidth = 3; g.strokeStyle = on ? '#A8203E' : '#6E6880'; g.stroke(); g.restore();
   }
   root.BakeryArt = { cupcake, plate, longBread, bag, stream, belt, backdrop, swirl, topping, sparkle, heart, creamRope, CUPS };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -160,3 +160,15 @@ button:active { transform: translateY(3px); }
 .stage-lbl { background: rgba(20,16,40,.6); border-radius: 12px; padding: 3px 9px; font-size: 16px; }
 #it_life img { background: linear-gradient(#FF8FA6, #E8456A); box-shadow: 0 5px 0 #A92A4A, 0 8px 14px rgba(0,0,0,.3); }
 #it_auto img { background: linear-gradient(#FFD36B, #F29A1E); box-shadow: 0 5px 0 #B86A0A, 0 8px 14px rgba(0,0,0,.3); }
+
+/* 끝없는 방식: 레벨·BEST·결과 점수 */
+.pill.level { font-size: 18px; padding: 2px 10px; background: linear-gradient(#FF9CBC, #E8456A); }
+.best { color: #fff; font-size: 17px; background: rgba(20,16,40,.6); border-radius: 12px; padding: 3px 10px; }
+.best b { font-weight: normal; color: #FFE07A; }
+.r-score { position: relative; font-size: 58px; line-height: 1; color: #fff; text-shadow: 0 4px 0 #B5600F; }
+.r-score b { font-weight: normal; color: #FFE07A; }
+.r-score small { font-size: 24px; margin-left: 4px; }
+.badge { position: absolute; right: -86px; top: -14px; transform: rotate(12deg); background: #FF5A8C; color: #fff; font-style: normal; font-size: 15px; padding: 3px 9px; border-radius: 10px; text-shadow: none; animation: pulse .5s infinite alternate; }
+#root.wide .r-score { font-size: 42px; }
+#root.wide .hud-top { right: calc(350px + var(--safe-r, 0px)); }
+#root.wide.narrow .hud-sub { left: calc(14px + var(--safe-l, 0px)); }

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8">
 <!-- 달콤 베이커리 임시 그림 만들기 (GPT 그림이 오기 전까지): tools/bakery_placeholder.py 가 헤드리스 크롬으로 캡처함
-     ?kind=card|port|land|shop|slow|auto&w=&h= -->
+     ?kind=card|port|land|shop|slow&w=&h= -->
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <style>html,body{margin:0;background:transparent;overflow:hidden}canvas{display:block}</style>
 </head><body><canvas id="c"></canvas>
@@ -55,7 +55,6 @@ function draw() {
   else if (kind === 'card') { scene(H * 0.62, 0.78, W / 2, 92); logo(W / 2, H * 0.83, 0.62); }
   else if (kind === 'shop') { scene(H * 0.82, 0.4, W / 2, 46); }
   else if (kind === 'slow') { turtle(W / 2, H * 0.58, W * 0.42); }
-  else if (kind === 'auto') { A.bag(g, W / 2, H * 0.86, W / 260, 0, '#FFE07A'); [[0.2, 0.25], [0.8, 0.3], [0.22, 0.7], [0.82, 0.68]].forEach(([a, b], i) => A.sparkle(g, W * a, H * b, W * (0.09 - i * 0.01), 0)); }
   document.title = 'done';
 }
 const wait = () => (CharV2.ready('eunyu3') && CharV2.ready('eungyeol3') ? document.fonts.load('40px Jua').then(draw) : setTimeout(wait, 50));

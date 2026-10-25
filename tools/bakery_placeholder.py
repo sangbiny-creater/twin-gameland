@@ -3,7 +3,7 @@
   · 저장소 루트에서 python3 -m http.server 8765 를 먼저 켜 두기 (캐릭터 그림을 fetch 로 읽어서 file:// 로는 안 됨)
   · tools/bakery_placeholder.html 을 헤드리스 크롬으로 캡처해서
     hub/cards/bakery.webp (두더지 카드 틀에 그림만 바꿔 끼움), hub/intro/bakery(_land).webp,
-    shop/assets/games/bakery.webp, common/items/slow.webp·auto.webp 를 만듦
+    shop/assets/games/bakery.webp, common/items/slow.webp 를 만듦
 """
 import os, subprocess, tempfile
 from PIL import Image, ImageDraw, ImageFilter
@@ -32,7 +32,7 @@ def main():
     save(shot('port', 941, 1672).convert('RGB'), 'hub/intro/bakery.webp')
     save(shot('land', 1536, 1024).convert('RGB'), 'hub/intro/bakery_land.webp', 84)
     save(shot('shop', 164, 134).convert('RGB'), 'shop/assets/games/bakery.webp')
-    for k in ('slow', 'auto'):
+    for k in ('slow',):
         save(shot(k, 256, 256), f'common/items/{k}.webp')
     # 게임 카드: 두더지 카드 틀(흰 테두리·BEST 줄·게임 시작 버튼)에 위쪽 그림 칸만 바꿔 끼움
     frame = Image.open(os.path.join(ROOT, 'hub/cards/mole.webp')).convert('RGBA')
