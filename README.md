@@ -35,16 +35,27 @@ python3 -m http.server 8080 --bind 0.0.0.0
 
 | 경로 | 내용 |
 | --- | --- |
-| `index.html`, `hub/` | 메인 화면(허브) |
-| `common/profile.js` | 모든 게임이 같이 쓰는 저장소: 캐릭터, 코인, 기록, 코인 규칙, 아이템샵 카탈로그(SKINS, BOOSTS) |
-| `common/worlds/` | 징검다리 10개 월드 배경 그림 (지도·스카이훅·사천성 공용) |
-| `common/skins.js` | 게임에 원래 그림이 없는 배경 스킨(야경 도시·우주 여행·사막 오아시스·놀이공원)을 코드로 그리는 렌더러 |
-| `shop/` | 아이템 샵 화면 |
-| `skyhook/` | Sky Hook Runner |
-| `helicopter/` | Twin Helicopter |
-| `stairs/` | 계단 오르기 |
-| `shisen/` | 사천성 |
-| `downhill/` | 다운힐 러너 (그림은 기획 시트에서 잘라 `assets/sprites.png`로 묶음) |
+| `index.html`, `hub/` | 메인 화면(허브): 캐릭터 선택·로비·징검다리 지도·기록·게임 인트로 |
+| `hub/icons/` | 앱 아이콘·즐겨찾기 아이콘 (PNG — 아이폰 홈 화면용) |
+| `hub/intro/` | 게임 인트로 그림 `<게임>.webp`(세로) / `<게임>_land.webp`(가로) |
+| `hub/cards/` | 로비 게임 카드 그림 `<게임>.webp`, `soon.webp` |
+| `hub/ui/` | 로비 배너·아이템샵 버튼·왕관·뒤로 버튼·메뉴 아이콘 |
+| `common/profile.js` | 모든 게임이 같이 쓰는 저장소: 캐릭터, 코인, 기록, 코인 규칙, 아이템샵 카탈로그 |
+| `common/ui.js` | 메인 화면·아이템샵 공용 효과음(blip)·알림(toast) |
+| `common/chars/` | 캐릭터 목록(`looks.js`)과 v2·v3 캐릭터 포즈 그림 묶음(`<look>.webp/.json`, `common/charv2.js`가 읽음) |
+| `common/faces/` | 캐릭터 얼굴 `<look>_base/happy/sad.webp` (메인 화면·아이템샵·스카이훅) |
+| `common/costumes/` | 옷 그림 `<look>_<옷>.webp` + 달리기 `_run0/_run1` (`common/costume.js`) |
+| `common/items/` | 아이템(부스트) 아이콘 `<id>.webp` (메인 화면·아이템샵·메모리 게임) |
+| `common/ui/` | 공용 코인 아이콘 |
+| `common/worlds/` | 징검다리 10개 월드 배경 `w1~w10.webp` (지도·스카이훅·사천성) |
+| `common/skins.js` | 그림이 없는 배경 스킨(야경 도시·우주·사막·놀이공원)을 코드로 그림 |
+| `shop/` | 아이템 샵 (`assets/games`, `assets/skins`, `assets/ui`) |
+| `skyhook/` · `helicopter/` · `stairs/` · `shisen/` · `downhill/` · `memory/` | 게임마다 `index.html`, `game.js`, `style.css`, `assets/` |
+| `<게임>/assets/` | `sprites/`(그림 묶음 webp+json) · `bg/`(배경) · `ui/`(버튼·로고·키아트) · `chars/`(캐릭터별 결과 그림) · `cards/`(메모리 카드) |
+| `tools/` | 캐릭터 그림 자동 도구(`char_pipeline.py`), 캐시 버전 올리기(`bump_version.py`) |
+| `_archive/` | 지금 게임에서 안 쓰는 예전 그림·파일 보관 (원래 위치 그대로, 게임은 안 불러옴) |
+
+그림은 모두 webp(투명 그림은 무손실)예요. 아이콘만 아이폰 때문에 PNG.
 
 ## 코인 규칙 (모든 게임 공통)
 
@@ -66,6 +77,6 @@ python3 -m http.server 8080 --bind 0.0.0.0
 4. 메인 화면 게임 목록에 카드를 추가해요 (`hub/hub.js`의 `GAME_CARDS`에 한 줄).
    아이템샵에도 넣으려면 `common/profile.js`의 `BOOSTS`와 `shop/shop.js`의 `GAMES`에 추가하고,
    게임 시작 때 `Hub.equippedSkin('<게임id>')` / `Hub.takeBoosts('<게임id>')`로 스킨·부스트를 적용해요.
-5. 고친 파일이 바로 반영되도록 각 `index.html`의 `?v=` 버전 번호를 올려요.
+5. 고친 파일이 폰에서 바로 반영되도록 `python3 tools/bump_version.py`로 모든 `?v=` 캐시 버전을 한 번에 올려요.
 
 각 게임 폴더는 메인 화면 없이 단독으로 열어도 동작해요(기록은 그 게임 안에만 저장).

@@ -54,7 +54,6 @@
     { id: 'space', name: '우주 여행', price: 300 },
     { id: 'desert', name: '사막 오아시스', price: 300 },
   ];
-  const skinsFor = () => SKINS; // 예전 코드 호환용
   // 예전(게임별) 스킨 id → 공통 id
   const OLD_SKIN = { autumn: 'forest', moon: 'space' };
   // 게임 부스트: 1개씩 사서 모아 두고, '사용중'으로 켜 둔 것만 게임을 시작할 때 1개씩 쓰임
@@ -191,7 +190,7 @@
   }
 
   const Hub = {
-    GAMES, WORLDS, FREE_SLOTS, MAX_CHARS, SKINS, BOOSTS, skinsFor, COSTUMES,
+    GAMES, WORLDS, FREE_SLOTS, MAX_CHARS, SKINS, BOOSTS, COSTUMES,
 
     // ----- 캐릭터 꾸미기 -----
     ownsCostume(id, c = this.active()) { return !!(c && (c.costumes || []).includes(id)); },
@@ -293,7 +292,6 @@
     active() { return find(data.activeId); },
     setActive(id) { if (find(id)) { data.activeId = id; save(); } },
 
-    slots() { return data.slots; },
     canCreate() { return data.chars.length < data.slots; },
     nextSlotPrice() { return data.slots >= MAX_CHARS ? null : slotPrice(data.slots + 1); },
     // 새 캐릭터 자리 사기 (payerId 캐릭터의 코인으로)
@@ -348,7 +346,6 @@
     skyhookStage(i, c) { return this.stage('skyhook', i, c); },
     skyhookUnlocked(i, c) { return this.stageUnlocked('skyhook', i, c); },
     skyhookNext(c) { return this.stageNext('skyhook', c); },
-    skyhookCleared(c) { return this.stageCleared('skyhook', c); },
 
     // 게임 결과 저장 + 코인 지급. 반환: { earned, bonus, newBest, firstClear, coins }
     //   skyhook:    { stage, cleared, dist, coins, stars }

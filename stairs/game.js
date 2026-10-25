@@ -47,7 +47,7 @@ const rand = (a, b) => a + (b - a) * Math.random();
 const $ = (id) => document.getElementById(id);
 
 // ---------- sprites ----------
-const ASSET_V = '202610250852'; // bump when assets change so phones don't mix old cached files
+const ASSET_V = '202610250852'; // 캐시 버전 (tools/bump_version.py가 올림)
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -160,7 +160,7 @@ const root = $('root');
 let H = 960, scale = 1, dpr = 1;
 
 const G = {
-  state: 'home', // home | ready | play | fall | cont | pause | result
+  state: 'home', // home | ready | play | fall | pause | result
   t: 0, steps: [], idx: 0, dir: 1, hearts: 0, coins: 0, time: CFG.time0,
   anim: null, queue: [], boost: 0, boostT: 0, wing: 0, shield: false, magnetT: 0, x2T: 0,
   cam: { x: 0, y: 0 }, fx: [], texts: [], deco: [], fallT: 0, fallReason: '', pose: 'ready', poseT: 0,
@@ -522,7 +522,7 @@ function render() {
   let frame, flip = !facingRight;
   if (G.state === 'ready') { frame = 'idle'; flip = false; }
   else if (G.state === 'result') { frame = G.fallReason === 'time' ? 'dizzy' : 'dead'; flip = false; }
-  else if (G.state === 'fall' || G.state === 'cont') {
+  else if (G.state === 'fall') {
     frame = G.fallReason === 'spike' ? 'hurt' : G.fallReason === 'time' ? 'dizzy' : 'fall_l';
     if (frame !== 'fall_l') flip = false;
   } else if (G.poseT > 0 && G.pose === 'jump') frame = 'jump_l';
@@ -627,8 +627,7 @@ function setState(s) {
   $('home').classList.toggle('hidden', s !== 'home');
   $('pause').classList.toggle('hidden', s !== 'pause');
   $('result').classList.toggle('hidden', s !== 'result');
-  $('cont').classList.toggle('hidden', s !== 'cont');
-  $('hud').classList.toggle('hidden', !['ready', 'play', 'fall', 'cont', 'pause'].includes(s));
+  $('hud').classList.toggle('hidden', !['ready', 'play', 'fall', 'pause'].includes(s));
   if (s === 'home') refreshHome();
 }
 function refreshHome() {
@@ -636,10 +635,6 @@ function refreshHome() {
   $('totalCoin').textContent = Save.data.totalCoin || 0;
   $('bestAll').textContent = Save.data.best || 0;
   document.body.classList.toggle('muted', !Save.data.sound);
-}
-function showContinue(why) {
-  $('contText').innerHTML = `${why}<br>하트 1개를 사용해서 계속 도전할까요? (남은 하트 ${G.hearts})`;
-  setState('cont');
 }
 function gameOver() { Audio.sfx('gameover'); Audio.stopBgm(); showResult(); }
 function showResult() {
@@ -690,7 +685,6 @@ window.addEventListener('keydown', (e) => {
       btn.classList.add('down'); setTimeout(() => btn.classList.remove('down'), 90);
     } else if (G.state === 'home' || G.state === 'result') startRun();
     else if (G.state === 'pause') resumeGame();
-    else if (G.state === 'cont') $('btnCont').click();
   } else if (k === 'Escape' || k === 'KeyP') {
     if (G.state === 'play' || G.state === 'ready') pauseGame(); else if (G.state === 'pause') resumeGame();
   } else if (k === 'KeyR' && G.state !== 'home') startRun();
@@ -707,8 +701,6 @@ click('btnRetryP', startRun);
 click('btnHomeP', goHome);
 click('btnRetry', startRun);
 click('btnHomeR', goHome);
-click('btnCont', () => { if (G.state !== 'cont') return; G.hearts--; renderHearts(); respawn(); Audio.startBgm(); });
-click('btnGiveUp', () => { if (G.state === 'cont') gameOver(); });
 click('btnSound', () => { Save.data.sound = !Save.data.sound; Save.store(); if (HUB) HUB.setSound(Save.data.sound); Audio.applyMute(); refreshHome(); });
 document.querySelectorAll('.char').forEach((b) => b.addEventListener('click', () => {
   Audio.unlock(); Audio.sfx('ui'); Save.data.char = b.dataset.char; Save.store(); refreshHome();

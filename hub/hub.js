@@ -5,25 +5,8 @@ const root = $('root');
 // 얼굴: 옷을 입었으면 옷 그림(윗부분을 동그랗게 보여 줌)
 const face = (c) => Hub.costumeImg(c) || `common/faces/${c.look}_base.webp?v=202610250852`;
 
-// ---------- sound (tiny UI blips) ----------
-let actx = null;
-function blip(f = 700) {
-  if (!Hub.settings.sound) return;
-  try {
-    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
-    if (actx.state === 'suspended') actx.resume();
-    const o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime;
-    o.type = 'triangle'; o.frequency.value = f;
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.2, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
-    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 0.1);
-  } catch (e) { /* no audio */ }
-}
-
-let toastT = 0;
-function toast(text) {
-  const el = $('toast'); el.textContent = text; el.classList.remove('hidden');
-  clearTimeout(toastT); toastT = setTimeout(() => el.classList.add('hidden'), 1800);
-}
+// 버튼 효과음·알림 (common/ui.js)
+const { blip, toast } = window.UI;
 
 // ---------- routing ----------
 const SCREENS = { select: 'scrSelect', lobby: 'scrLobby', map: 'scrMap', records: 'scrRecords' };

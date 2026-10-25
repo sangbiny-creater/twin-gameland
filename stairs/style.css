@@ -93,7 +93,6 @@ button:active { transform: translateY(3px); }
 .p-title { font-size: 38px; color: #7A3E14; text-shadow: 0 2px 0 #fff; }
 .panel:not(.wood) .p-title { color: var(--reward); text-shadow: 0 3px 0 #B5600F; }
 .p-text { font-size: 21px; line-height: 1.45; }
-.cont-heart { width: 70px; animation: pop 700ms infinite alternate; }
 .res-face { width: 110px; height: 140px; object-fit: contain; }
 .res-big { font-size: 46px; color: #D9761A; line-height: 1; }
 .res-big b { font-weight: normal; }

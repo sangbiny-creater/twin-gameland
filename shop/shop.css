@@ -172,7 +172,6 @@ main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; 
 .dchip .cp img { width: 14px; height: 14px; }
 .dchip .cp.own { color: #2FB86A; }
 .dchip.on { border-color: #2FB86A; }
-.stab.dress { color: #FFD86B; }
 
 /* ---------- 캐릭터 꾸미기 화면 ---------- */
 .dress { position: fixed; inset: 0; z-index: 30; background: linear-gradient(#BFE3FA, #E8F4FE); display: flex; flex-direction: column; }

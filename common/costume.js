@@ -48,14 +48,6 @@
       g.restore();
       return true;
     },
-    // 얼굴만 (윗부분) — 헬리콥터 창문·사천성 타일용
-    drawBust(g, x, y, w, frac = 0.55) {
-      if (!ok) return false;
-      const sw = img.naturalWidth, sh = img.naturalHeight * frac;
-      const h = w * sh / sw;
-      g.drawImage(img, 0, 0, sw, sh, x - w / 2, y - h / 2, w, h);
-      return true;
-    },
   };
   // 달리기 프레임 그리기: 9fps로 두 장을 번갈아, 발 디딜 때마다 살짝 튄다
   function drawRun(g, pose, t, o) {

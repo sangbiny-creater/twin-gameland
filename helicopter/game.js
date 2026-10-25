@@ -229,7 +229,6 @@ function startRun() {
 // x positions are in "world distance px" (G.dist increases as we fly). Screen x = worldX - G.dist + heliScreenX.
 const HELI_SX = () => W * 0.26;
 
-function difficulty() { return clamp(G.dist / CFG.pxPerM / 2500, 0, 1); }
 
 function spawnAhead() {
   const ahead = G.dist + W + 260;

@@ -27,21 +27,8 @@ if (q.get('game')) game = q.get('game');
 if (!GAMES.some((g) => g.id === game && !g.soon)) game = 'skyhook';
 
 // ---------- sound / toast / confirm ----------
-let actx = null;
-function blip(f = 700, d = 0.09) {
-  if (!Hub.settings.sound) return;
-  try {
-    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
-    if (actx.state === 'suspended') actx.resume();
-    const o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime;
-    o.type = 'triangle'; o.frequency.value = f;
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.2, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
-    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + d + 0.02);
-  } catch (e) { /* no audio */ }
-}
+const { blip, toast } = window.UI; // common/ui.js
 const ching = () => { blip(988, 0.08); setTimeout(() => blip(1319, 0.14), 70); };
-let toastT = 0;
-function toast(text) { const el = $('toast'); el.textContent = text; el.classList.remove('hidden'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.add('hidden'), 1800); }
 function confirmBox(title, html, okText, onOk, cancel = true) {
   $('mTitle').textContent = title; $('mBody').innerHTML = html; $('mOk').textContent = okText;
   $('mCancel').classList.toggle('hidden', !cancel);
@@ -97,7 +84,6 @@ function lack(price) {
   if (c.coins >= price) return false;
   blip(300); toast(`코인이 ${price - c.coins}개 모자라요. 게임을 해서 모아요!`); return true;
 }
-function gameName() { return GAMES.find((g) => g.id === game).name; }
 function buySkin(s) {
   if (lack(s.price)) return;
   confirmBox('배경 스킨 구매', `<img class="mthumb" src="${skinThumb(s.id)}" alt="">모든 게임 배경을<br><b>${s.name}</b>(으)로 바꿀까요?<br>${coinImg} ${s.price} 코인`, '구매', () => {
