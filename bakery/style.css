@@ -175,3 +175,6 @@ button:active { transform: translateY(3px); }
 #choose .btn { flex: none; }
 #choose .btn.big { height: 66px; font-size: 27px; }
 .link { font-size: 17px; color: #8A7A99; padding: 4px 10px; }
+.pill.hearts svg { width: 24px; height: 22px; display: block; fill: #FF4D73; stroke: #A8203E; stroke-width: 2.5; }
+.pill.hearts svg.off { fill: #5A546A; stroke: #3A3350; }
+#root.wide .pill.hearts svg { width: 21px; height: 19px; }

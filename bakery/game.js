@@ -13,7 +13,7 @@
 let W = 540, H = 960;
 const L = window.BakeryLevels, A = window.BakeryArt;
 const { PTS, JUDGE } = L;
-const ASSET_V = '202610252223';
+const ASSET_V = '202610252225';
 const MAX_HEARTS = 5;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -575,7 +575,9 @@ function updateHud() {
 }
 function renderHearts() {
   const n = MAX_HEARTS; // 늘 5칸 (빈 칸은 회색) → 얼마나 더 모을 수 있는지 보임
-  $('hudHearts').innerHTML = Array.from({ length: n }, (_, i) => `<i class="${i < G.hearts ? '' : 'off'}">❤</i>`).join('');
+  // ❤ 글자는 폰에서 색 그림 글자(이모지)로 나와 회색이 안 됨 → 하트 모양을 직접 그림
+  const svg = (on) => `<svg viewBox="0 0 32 30" class="${on ? '' : 'off'}"><path d="M16 28C4 19 1 13 1 8.5 1 4.4 4.3 1.5 8.2 1.5c3.2 0 5.8 2 7.8 4.6 2-2.6 4.6-4.6 7.8-4.6 3.9 0 7.2 2.9 7.2 7 0 4.5-3 10.5-15 19.5z"/></svg>`;
+  $('hudHearts').innerHTML = Array.from({ length: n }, (_, i) => svg(i < G.hearts)).join('');
 }
 function renderBuffs() {
   const el = $('buffs'); el.innerHTML = '';
