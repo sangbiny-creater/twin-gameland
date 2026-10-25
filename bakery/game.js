@@ -1,7 +1,8 @@
 'use strict';
 // 은유와 은결의 달콤 베이커리 — 컨베이어로 지나가는 빵 위에 생크림을 짜는 원버튼 타이밍 게임
-//  · 끝없이 이어짐 (다운힐 러너·헬리콥터처럼): 하트 3개가 다 없어질 때까지, 점수가 기록(BEST)
-//  · 컵케이크·금빛 컵케이크: 짤주머니 밑에 올 때 화면을 톡 / 하트 컵케이크: 잘 짜면 하트 +1 (최대 5개)
+//  · 끝없이 이어짐 (다운힐 러너·헬리콥터처럼): 하트가 다 없어질 때까지, 점수가 기록(BEST)
+//  · 하트: 3개로 시작, 최대 5개. Perfect(완벽) 나오면 +1, Bad(놓침·함정·너무 빨리·너무 일찍 뗌) 나오면 -1
+//  · 컵케이크·금빛 컵케이크: 짤주머니 밑에 올 때 화면을 톡
 //  · 긴 빵(롤케이크·에클레어): 앞 끝이 오면 꾹 누르고, 뒤 끝이 오면 떼기 (끝까지 누르고 있으면 '좋아요')
 //  · 함정(탄 빵·빈 접시): 누르면 안 됨 → 누르면 하트 -1. 빵을 놓쳐도 하트 -1
 //  · 판정: 완벽 / 좋아요 / 아쉬워요 (판정 시간은 levels.js, 시간이 갈수록 조금씩 좁아짐)
@@ -12,7 +13,7 @@
 let W = 540, H = 960;
 const L = window.BakeryLevels, A = window.BakeryArt;
 const { PTS, JUDGE } = L;
-const ASSET_V = '202610252040';
+const ASSET_V = '202610252143';
 const MAX_HEARTS = 5;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -31,6 +32,19 @@ const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const $ = (id) => document.getElementById(id);
 const rnd = (a, b) => a + Math.random() * (b - a);
 const fmt = (n) => Math.round(n).toLocaleString();
+
+// 배경 그림 (GPT G05 빵집). 가로 배경(G06)이 오면 land 를 따로 쓰기
+const BG = new Image(); BG.src = `assets/bg/port.webp?v=${ASSET_V}`;
+const BG_FLOOR = 0.63; // 그림에서 진열대 아래 끝(바닥이 시작하는 높이) → 컨베이어 윗면에 맞춤
+function drawBg() {
+  const by = LAY.beltY;
+  if (!(BG.complete && BG.naturalWidth)) { A.backdrop(ctx, W, H, by + beltH() + 20, G.t); return; }
+  const iw = BG.naturalWidth, ih = BG.naturalHeight;
+  const sc = Math.max(W / iw, by / (BG_FLOOR * ih), (H - by) / ((1 - BG_FLOOR) * ih));
+  const dw = iw * sc, dh = ih * sc;
+  ctx.drawImage(BG, (W - dw) / 2, by - BG_FLOOR * dh, dw, dh);
+  ctx.fillStyle = 'rgba(255,240,245,.18)'; ctx.fillRect(0, 0, W, H); // 빵이 잘 보이게 살짝 흐리게
+}
 
 // 내 캐릭터 (짤주머니 옆에서 응원)
 const myLook = (() => {
@@ -163,7 +177,7 @@ function startRun(lv = 1) {
 }
 // 앞으로 8초 안에 도착할 빵을 받아 옴. 지나간 빵은 버림 (만든 케이크는 G.shelf 에 따로 모음)
 function pull() {
-  G.gen.fill(G.clock + 8, () => G.hearts < MAX_HEARTS);
+  G.gen.fill(G.clock + 8);
   while (G.gen.out.length) {
     const n = G.gen.out.shift(), p = L.params(n.t);
     Object.assign(n, { w: p.win, gd: p.guide, v: G.k % 5, kind: G.k % 2, st: 'wait' }); G.k++;
@@ -175,7 +189,7 @@ function pull() {
 function showReady() {
   clearTimers();
   G.notes = [];
-  const items = [['cup', '컵케이크', '톡!'], ['long', '긴 빵', '꾹~ 떼기'], ['gold', '금빛', `+${PTS.gold}`], ['heart', '하트 컵케이크', '하트 +1']];
+  const items = [['cup', '컵케이크', '톡!'], ['long', '긴 빵', '꾹~ 떼기'], ['gold', '금빛', `+${PTS.gold}`]];
   $('legend').innerHTML = items.map(([id, nm, p]) => `<div class="lg"><img src="${icon(id)}" alt=""><span>${nm}</span><b>${p}</b></div>`).join('')
     + `<div class="lg no"><img src="${icon('burnt')}" alt=""><img src="${icon('plate')}" alt=""><span>탄 빵·빈 접시</span><b>누르면 안 돼요!</b></div>`;
   $('readyInfo').innerHTML = `BEST <b>${fmt(Save.data.best || 0)}점</b>` + (Save.data.maxLevel > 1 ? ` · 가장 높은 레벨 <b>${Save.data.maxLevel}</b>` : '');
@@ -188,7 +202,6 @@ function icon(id) {
   const c = document.createElement('canvas'); c.width = 148; c.height = 100; const g = c.getContext('2d');
   if (id === 'cup') A.cupcake(g, 74, 92, 0.85, { v: 0, cream: 1 });
   else if (id === 'gold') A.cupcake(g, 74, 92, 0.85, { gold: true, cream: 1 });
-  else if (id === 'heart') A.cupcake(g, 74, 92, 0.85, { heart: true, cream: 1 });
   else if (id === 'burnt') A.cupcake(g, 74, 92, 0.85, { burnt: true, t: 0.3 });
   else if (id === 'plate') A.plate(g, 74, 80, 1.2);
   else if (id === 'long') A.longBread(g, 6, 142, 84, 0.8, 0, [6, 142], true);
@@ -203,7 +216,7 @@ function clearTimers() { runId++; timers.forEach(clearTimeout); timers.length = 
 const comboMul = (c) => (c >= 20 ? 2 : c >= 10 ? 1.5 : c >= 5 ? 1.2 : 1);
 const isTrap = (n) => n.type === 'burnt' || n.type === 'plate';
 const judgeOf = (n, dt) => { const w = n.w, a = Math.abs(dt); return a <= w.p ? 'perfect' : a <= w.g ? 'good' : a <= w.o ? 'ok' : null; };
-const JTXT = { perfect: '완벽!', good: '좋아요!', ok: '아쉬워요' };
+const JTXT = { perfect: 'Perfect!', good: 'Good!', ok: 'OK' };
 
 // ---------- 누르기 / 떼기 ----------
 function press(tc) {
@@ -269,10 +282,12 @@ function success(n, v, j, base) {
   burst(x, LAY.beltY - 110 * LAY.s, j === 'perfect' ? 8 : 4, n.type === 'gold');
   popText(JTXT[j], j, judgeX(), LAY.tipY - 120 * LAY.s);
   G.fx.push({ kind: 'text', text: `+${pts}`, x: judgeX(), y: LAY.tipY - 70 * LAY.s, t: 0, life: 0.7, small: true });
-  if (n.type === 'heart' && G.hearts < MAX_HEARTS) {
+  // Perfect 면 하트 +1 (최대 5개)
+  if (j === 'perfect' && G.hearts < MAX_HEARTS) {
     G.hearts++; renderHearts(); Audio.sfx('life');
-    G.fx.push({ kind: 'text', text: '하트 +1', x: W / 2, y: LAY.tipY - 230 * LAY.s, t: 0, life: 1.1, big: true });
-  } else if (G.combo >= 5 && G.combo % 5 === 0) {
+    G.fx.push({ kind: 'text', text: '❤ +1', x: judgeX() + 70 * LAY.s, y: LAY.tipY - 70 * LAY.s, t: 0, life: 0.9, small: true, pink: true });
+  }
+  if (G.combo >= 5 && G.combo % 5 === 0) {
     Audio.sfx('combo');
     G.fx.push({ kind: 'text', text: `${G.combo} 콤보! ×${comboMul(G.combo)}`, x: W / 2, y: LAY.tipY - 230 * LAY.s, t: 0, life: 1.1, big: true });
   }
@@ -290,7 +305,8 @@ function loseHeart(msg) {
     return;
   }
   Audio.sfx(msg.startsWith('앗') ? 'bad' : 'miss'); buzz(40);
-  popText(msg, 'bad', judgeX(), LAY.tipY - 120 * LAY.s);
+  popText('Bad', 'bad', judgeX(), LAY.tipY - 120 * LAY.s, msg);
+  if (!GOD() && G.hearts > 0) G.fx.push({ kind: 'text', text: '❤ -1', x: judgeX() + 70 * LAY.s, y: LAY.tipY - 70 * LAY.s, t: 0, life: 0.9, small: true, bad: true });
   setPose('hit', 0.6);
   if (GOD()) return;
   G.hearts--; renderHearts();
@@ -298,9 +314,9 @@ function loseHeart(msg) {
   if (G.hearts <= 0) gameOver();
 }
 function setPose(p, t) { G.pose = p; G.poseT = t; }
-function popText(text, j, x, y) {
+function popText(text, j, x, y, sub) {
   G.fx = G.fx.filter((f) => f.kind !== 'judge');
-  G.fx.push({ kind: 'judge', text, j, x, y, t: 0, life: 0.75 });
+  G.fx.push({ kind: 'judge', text, j, x, y, sub, t: 0, life: sub ? 1 : 0.75 });
 }
 function burst(x, y, n, gold) {
   for (let i = 0; i < n; i++) {
@@ -340,7 +356,7 @@ function showResult() {
   $('resBestVal').textContent = `${fmt(Save.data.best || 0)}점`;
   $('resBest').classList.toggle('hidden', !G.newBest);
   // 오늘 만든 케이크 진열장 (마지막 40개)
-  $('resShelf').innerHTML = G.shelf.slice(-40).map((n) => `<img src="${icon(n.type === 'long' ? 'long' : n.type === 'gold' ? 'gold' : n.type === 'heart' ? 'heart' : 'cup')}" alt="">`).join('');
+  $('resShelf').innerHTML = G.shelf.slice(-40).map((n) => `<img src="${icon(n.type === 'long' ? 'long' : n.type === 'gold' ? 'gold' : 'cup')}" alt="">`).join('');
   if (G.newBest) Audio.sfx('best');
   setState('result');
 }
@@ -400,7 +416,7 @@ function step(dt) {
 function render() {
   ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
   const s = LAY.s, by = LAY.beltY;
-  A.backdrop(ctx, W, H, by + beltH() + 20, G.t);
+  drawBg();
   drawShelf();
   drawChar();
   // 판정 자리 표시 (짤주머니 밑)
@@ -427,7 +443,7 @@ function render() {
     } else if (n.type === 'plate') A.plate(ctx, x, by, s);
     else {
       const k = n.st === 'done' ? Math.min(1, (G.clock - n.jt) / 0.12) : 0;
-      const top = A.cupcake(ctx, x, by, s, { v: n.v, burnt: n.type === 'burnt', gold: n.type === 'gold', heart: n.type === 'heart', cream: k, t: G.t });
+      const top = A.cupcake(ctx, x, by, s, { v: n.v, burnt: n.type === 'burnt', gold: n.type === 'gold', cream: k, t: G.t });
       if (n.st === 'done' && G.clock - n.jt < 0.15) creamY = top;
       if (n.st === 'trap') A.swirl(ctx, x + 4 * s, by - 60 * s, s * 0.7, 0.5);
     }
@@ -491,7 +507,7 @@ function drawShelf() {
   G.shelf.slice(-rows * cols).forEach((n, i) => {
     const r = Math.floor(i / cols), c = i % cols, x = x0 + cw * (c + 0.5), y = y0 + r * 66 + 50;
     if (n.type === 'long') A.longBread(ctx, x - cw * 0.45, x + cw * 0.45, y, s * 0.8, n.kind, [x - cw, x + cw], true);
-    else A.cupcake(ctx, x, y, s, { v: n.v, gold: n.type === 'gold', heart: n.type === 'heart', cream: 1 });
+    else A.cupcake(ctx, x, y, s, { v: n.v, gold: n.type === 'gold', cream: 1 });
   });
 }
 // 처음에만: 큰 안내 (컵케이크 → 처음 나온 긴 빵)
@@ -528,13 +544,14 @@ function drawFx() {
       ctx.save(); ctx.globalAlpha = 1 - Math.max(0, k - 0.65) / 0.35; ctx.translate(f.x, f.y - k * 16); ctx.scale(sc, sc);
       ctx.font = `${f.j === 'bad' ? 34 : 44}px Jua, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.lineWidth = 8; ctx.strokeStyle = stroke; ctx.strokeText(f.text, 0, 0); ctx.fillStyle = fill; ctx.fillText(f.text, 0, 0);
+      if (f.sub) { ctx.font = '24px Jua, sans-serif'; ctx.lineWidth = 6; ctx.strokeText(f.sub, 0, 38); ctx.fillStyle = '#fff'; ctx.fillText(f.sub, 0, 38); } // Bad 이유 (놓쳤어요·탄 빵 등)
       ctx.restore(); continue;
     }
     if (f.kind === 'text') {
       ctx.globalAlpha = 1 - Math.max(0, k - 0.6) / 0.4;
       ctx.font = `${f.big ? 44 : f.small ? 26 : 32}px Jua, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.lineWidth = 7; ctx.strokeStyle = f.bad ? '#7A0E1E' : '#7A3E00'; ctx.strokeText(f.text, f.x, f.y - k * 30);
-      ctx.fillStyle = f.bad ? '#FF6B7E' : f.gold ? '#FFF27A' : '#FFE07A'; ctx.fillText(f.text, f.x, f.y - k * 30);
+      ctx.fillStyle = f.bad ? '#FF6B7E' : f.pink ? '#FF8FB1' : f.gold ? '#FFF27A' : '#FFE07A'; ctx.fillText(f.text, f.x, f.y - k * 30);
       ctx.globalAlpha = 1;
     }
   }
@@ -554,7 +571,7 @@ function updateHud() {
   const bx = $('buffX2'); if (bx) bx.textContent = `🪙 코인 2배 ${Math.ceil(G.x2T)}초`;
 }
 function renderHearts() {
-  const n = Math.max(G.hearts, 3);
+  const n = MAX_HEARTS; // 늘 5칸 (빈 칸은 회색) → 얼마나 더 모을 수 있는지 보임
   $('hudHearts').innerHTML = Array.from({ length: n }, (_, i) => `<i class="${i < G.hearts ? '' : 'off'}">❤</i>`).join('');
 }
 function renderBuffs() {

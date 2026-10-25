@@ -3,10 +3,10 @@
 //  · 끝없이 이어지는 게임: 하트 3개가 다 없어질 때까지 빵이 계속 나옴 (다운힐 러너·헬리콥터처럼)
 //  · 시간이 갈수록 어려워짐 — 0초 쉬움(k=0) → 6분 가장 어려움(k=1), 30초마다 "레벨 업"
 //  · 처음에 하나씩 배움: 컵케이크만 → 7초 긴 빵(꾹 누르기) → 11초 금빛 → 15초 연달아 2개 → 22초 함정(탄 빵·빈 접시)
-//  · 하트 컵케이크: 40개쯤마다 한 번, 잘 짜면 하트 +1 (최대 5개)
+//  · 하트: 3개로 시작, 최대 5개. Perfect(완벽) +1, Bad(놓침·함정·너무 빨리) -1 — game.js
 //  · 빵은 박자(bpm)에 맞춰 짤주머니 밑에 도착 → 노래가 없어도 "통, 통, 통-" 박자가 느껴짐
 (function (root) {
-  const PTS = { cup: 100, gold: 300, heart: 100, long: 200 }; // 완벽일 때 점수 (좋아요 ×0.7, 아쉬워요 ×0.4)
+  const PTS = { cup: 100, gold: 300, long: 200 }; // 완벽일 때 점수 (좋아요 ×0.7, 아쉬워요 ×0.4)
   const JUDGE = { perfect: 1, good: 0.7, ok: 0.4 };
   const RAMP = 360;   // 이 시간(초)에 가장 어려워짐 (6분)
   const LEVEL = 30;   // 레벨 업 간격 (초)
@@ -38,19 +38,16 @@
     return a * RAMP + (b - a) * RAMP / 2 + b * (c - RAMP);
   }
   // 빵 만들기 (start: 시작 시각 — 레벨 N부터 하면 (N-1)×30초): gen.fill(upTo) 가 upTo 초까지 도착할 빵을 gen.out 에 이어 붙임
-  //  빵: { type: cup|gold|heart|long|burnt|plate, t(짤주머니 밑에 도착하는 초), t1(긴 빵 끝) }
+  //  빵: { type: cup|gold|long|burnt|plate, t(짤주머니 밑에 도착하는 초), t1(긴 빵 끝) }
   function Gen(seed = Date.now(), start = 0) {
     let a = seed >>> 0;
     const R = () => { a = (a + 0x6D2B79F5) >>> 0; let x = Math.imul(a ^ (a >>> 15), 1 | a); x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x; return ((x ^ (x >>> 14)) >>> 0) / 4294967296; };
-    const g = { out: [], t: start + LEAD, lastTrap: false, sinceHeart: 0, n: 0 };
-    g.fill = (upTo, wantHeart) => {
+    const g = { out: [], t: start + LEAD, lastTrap: false, n: 0 };
+    g.fill = (upTo) => {
       while (g.t < upTo) {
         const st = params(g.t), beat = 60 / st.bpm, minGap = st.win.o * 2 + 0.08, t = g.t;
         const first = g.n < 2, r = R();
-        g.sinceHeart++;
-        if (!first && wantHeart && wantHeart() && g.sinceHeart > 40) {
-          g.out.push({ type: 'heart', t }); g.sinceHeart = 0; g.lastTrap = false;
-        } else if (!first && !g.lastTrap && r < st.trap) {
+        if (!first && !g.lastTrap && r < st.trap) {
           g.out.push({ type: R() < 0.6 ? 'burnt' : 'plate', t }); g.lastTrap = true;
         } else if (!first && r < st.trap + st.long) {
           const len = Math.max(0.5, Math.max(1, Math.round((1 + R() * (st.longMax - 1)) * 2) / 2) * beat);
