@@ -15,7 +15,7 @@
   const NO_RUN = ['eunyu_dino', 'eungyeol_raincoat'];
   const run = [new Image(), new Image()];
   let runOk = 0;
-  if (src && !NO_RUN.some((k) => src.includes(`/${k}.png`))) run.forEach((im, i) => { im.onload = () => { runOk++; }; im.src = src.replace(/\.png/, `_run${i}.png`); });
+  if (src && !NO_RUN.some((k) => src.includes(`/${k}.webp`))) run.forEach((im, i) => { im.onload = () => { runOk++; }; im.src = src.replace(/\.webp/, `_run${i}.webp`); });
 
   const Costume = {
     id: c ? Hub.costume(c) : null,

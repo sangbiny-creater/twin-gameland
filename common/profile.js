@@ -16,7 +16,7 @@
   const MAX_CHARS = 8;
 
   // 징검다리 게임(스카이훅·사천성·메모리 게임)이 같이 쓰는 10개 월드 (스카이훅 5판씩 50판 1-1 ~ 10-5, 사천성·메모리 게임 10판씩 100판 1-1 ~ 10-10)
-  // 배경 그림은 common/worlds/w1.jpg ~ w10.jpg
+  // 배경 그림은 common/worlds/w1.webp ~ w10.webp
   const WORLDS = ['하늘도시', '숲속 나무마을', '겨울왕국', '석양의 항구', '벚꽃마을', '구름왕국', '바닷속도시', '마법숲', '별빛우주', '황금성'];
   const GAMES = {
     skyhook: { name: 'Sky Hook Runner', path: 'skyhook/index.html', stages: 50, worlds: WORLDS, perWorld: 5 },
@@ -107,7 +107,7 @@
 
   // ---------- 캐릭터 꾸미기 (코스튬) ----------
   // 캐릭터(프로필)마다 산 옷을 따로 저장. 입은 옷은 모든 게임 플레이·메뉴 화면에 보임
-  // 그림: common/costumes/<eunyu|eungyeol>_<id>.png
+  // 그림: common/costumes/<eunyu|eungyeol>_<id>.webp (달리기: _run0, _run1)
   const COSTUMES = [
     { id: 'hanbok', name: '한복', price: 300, desc: '고운 한복을 입었어요!' },
     { id: 'raincoat', name: '우비', price: 300, desc: '비 오는 날에도 신나게!' },
@@ -198,7 +198,7 @@
     costume(c = this.active()) { return (c && c.costume) || null; }, // 입은 옷 id (없으면 기본 옷)
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.png?v=20261023j` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610250852` : null; },
     buyCostume(id, c = this.active()) {
       const it = COSTUMES.find((x) => x.id === id);
       if (!c || !it || this.ownsCostume(id, c)) return { ok: false };

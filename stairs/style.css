@@ -48,8 +48,8 @@ button:active { transform: translateY(3px); }
 .best { font-size: 17px; color: #FFD34D; text-shadow: 0 2px 0 #8A4A0E, 0 0 6px rgba(0,0,0,.35); }
 .best b { font-weight: normal; }
 .hearts { margin-left: auto; display: flex; gap: 2px; }
-.heart { width: 34px; height: 32px; background: center/contain no-repeat url(assets/ui_heart.png); filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); }
-.heart.empty { background-image: url(assets/ui_heart_empty.png); opacity: .8; }
+.heart { width: 34px; height: 32px; background: center/contain no-repeat url(assets/ui/heart.webp); filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); }
+.heart.empty { background-image: url(assets/ui/heart_empty.webp); opacity: .8; }
 .heart.pop { animation: pop 380ms; }
 @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
 .buffs { margin-left: auto; display: flex; gap: 6px; }

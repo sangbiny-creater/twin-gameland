@@ -574,16 +574,17 @@ def cmd_build(eid, cname, base_look):
         # 머리카락 폭이 아니라 같은 크기(얼굴 360 기준)로 잘라서 쌍둥이 얼굴 크기가 같게 (머리카락이 넓으면 옆이 조금 잘림)
         im = L(p); bb = bbox(im); side = 382; cx = (bb[0] + bb[2]) // 2; top = max(0, bb[1] - 8)
         c = im.crop((cx - side // 2, top, cx + side // 2, top + side)); bg = Image.new('RGBA', c.size, BG + (255,)); bg.alpha_composite(c)
-        bg.convert('RGB').resize((240, 240), Image.LANCZOS).save(out, quality=90)
+        bg.convert('RGB').resize((240, 240), Image.LANCZOS).save(out, quality=90, method=6)
     for k, p in [('base', 'face_base'), ('happy', 'face_happy'), ('sad', 'face_sad')]:
-        if have(p): face_jpg(p, f'{ROOT}/skyhook/assets/{eid}_{k}.jpg')
+        if have(p): face_jpg(p, f'{ROOT}/common/faces/{eid}_{k}.webp')
     def trim(im, h):
         im = im.crop(bbox(im)); return im.resize((round(im.width * h / im.height), h), Image.LANCZOS)
-    if have('face_base'): trim(L('face_base'), 138).save(f'{ROOT}/helicopter/assets/face_{eid}.png', optimize=True)
-    if 'heli_crash' in frames: trim(frames['heli_crash'][0], 200).save(f'{ROOT}/helicopter/assets/{eid}_crash.png', optimize=True)
-    for k, p in [('idle', 'stairs_idle'), ('happy', 'stairs_happy'), ('dead', 'stairs_dead')]:
-        if have(p): trim(L(p), 240).save(f'{ROOT}/stairs/assets/{eid}_{k}.png', optimize=True)
-    if have('front_stand'): trim(L('front_stand'), 600).save(f'{ROOT}/common/costumes/{eid}_base.png', optimize=True)
+    WEBP = dict(lossless=True, method=6)  # 투명 그림은 무손실 webp
+    if have('face_base'): trim(L('face_base'), 138).save(f'{ROOT}/helicopter/assets/chars/face_{eid}.webp', **WEBP)
+    if 'heli_crash' in frames: trim(frames['heli_crash'][0], 200).save(f'{ROOT}/helicopter/assets/chars/{eid}_crash.webp', **WEBP)
+    for k, p in [('happy', 'stairs_happy'), ('dead', 'stairs_dead')]:
+        if have(p): trim(L(p), 240).save(f'{ROOT}/stairs/assets/chars/{eid}_{k}.webp', **WEBP)
+    if have('front_stand'): trim(L('front_stand'), 600).save(f'{ROOT}/common/costumes/{eid}_base.webp', **WEBP)
     register(eid, cname, base_look)
     print(f'게임 그림 완료: common/chars/{eid}.webp ({len(meta)}장), 캐릭터 목록 등록: {cname}')
 
@@ -594,12 +595,7 @@ def register(eid, cname, base_look):
     s = s.replace('  // @@NEW_LOOKS@@', line + '\n  // @@NEW_LOOKS@@')
     open(p, 'w', encoding='utf-8').write(s)
     # 캐시 버전 올리기 (폰에서 새 그림이 바로 보이게)
-    v = time.strftime('%Y%m%d%H%M')
-    for f in glob.glob(f'{ROOT}/*/index.html') + [f'{ROOT}/index.html']:
-        t = open(f, encoding='utf-8').read(); t2 = re.sub(r'(chars/looks\.js|common/charv2\.js)\?v=\w+', rf'\1?v={v}', t)
-        if t2 != t: open(f, 'w', encoding='utf-8').write(t2)
-    c = f'{ROOT}/common/charv2.js'; t = open(c, encoding='utf-8').read()
-    open(c, 'w', encoding='utf-8').write(re.sub(r'(common/chars/\$\{look\}\.(?:json|webp))\?v=\w+', rf'\1?v={v}', t))
+    sys.path.insert(0, f'{ROOT}/tools'); import bump_version; bump_version.bump()
 
 # ---------- main ----------
 if __name__ == '__main__':

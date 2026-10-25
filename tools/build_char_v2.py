@@ -170,14 +170,14 @@ def face_jpg(p, out):  # 240×240 동그라미 얼굴 (배경색 있음) — 그
     side = int((bb[2] - bb[0]) * FACE_PAD); cx = (bb[0] + bb[2]) // 2; top = bb[1] - int(side * 0.02)
     c = im.crop((cx - side // 2, top, cx + side // 2, top + side))
     bg = Image.new('RGBA', c.size, BG + (255,)); bg.alpha_composite(c)
-    bg.convert('RGB').resize((240, 240), Image.LANCZOS).save(out, quality=90)
+    bg.convert('RGB').resize((240, 240), Image.LANCZOS).save(out, quality=90, method=6)
 for k, p in [('base', 'face_base'), ('happy', 'face_happy'), ('sad', 'face_sad')]:
-    face_jpg(p, f'{ROOT}/skyhook/assets/{look}_{k}.jpg')
+    face_jpg(p, f'{ROOT}/common/faces/{look}_{k}.webp')
 def trim(im, h):
     im = im.crop(im.getchannel('A').getbbox()); return im.resize((round(im.width * h / im.height), h), Image.LANCZOS)
-trim(load('face_base'), 138).save(f'{ROOT}/helicopter/assets/face_{look}.png', optimize=True)
-trim(hc['heli_crash'], 200).save(f'{ROOT}/helicopter/assets/{look}_crash.png', optimize=True)
-for k, p in [('idle', 'idle'), ('happy', 'happy'), ('dead', 'dead')]:
-    trim(norm.get(p, raw[p]), 240).save(f'{ROOT}/stairs/assets/{look}_{k}.png', optimize=True)
-trim(load('front_stand'), 600 if load('front_stand').width >= 1024 else 460).save(f'{ROOT}/common/costumes/{look}_base.png', optimize=True)
+trim(load('face_base'), 138).save(f'{ROOT}/helicopter/assets/chars/face_{look}.webp', lossless=True, method=6)
+trim(hc['heli_crash'], 200).save(f'{ROOT}/helicopter/assets/chars/{look}_crash.webp', lossless=True, method=6)
+for k, p in [('happy', 'happy'), ('dead', 'dead')]:
+    trim(norm.get(p, raw[p]), 240).save(f'{ROOT}/stairs/assets/chars/{look}_{k}.webp', lossless=True, method=6)
+trim(load('front_stand'), 600 if load('front_stand').width >= 1024 else 460).save(f'{ROOT}/common/costumes/{look}_base.webp', lossless=True, method=6)
 print(look, 'frames', len(meta), 'atlas', atlas.size, os.path.getsize(f'{ROOT}/common/chars/{look}.webp') // 1024, 'KB')

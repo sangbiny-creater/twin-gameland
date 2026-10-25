@@ -46,14 +46,14 @@ const lerp = (a, b, t) => a + (b - a) * t;
 const rand = (a, b) => a + (b - a) * Math.random();
 const $ = (id) => document.getElementById(id);
 
-// ---------- sprites (asset.PNG cut into assets/sprites.webp + sprites.json) ----------
+// ---------- sprites (asset.PNG cut into assets/sprites/sprites.webp + sprites.json) ----------
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
-fetch('assets/sprites.json').then((r) => r.json()).then((j) => {
+fetch('assets/sprites/sprites.json?v=202610250852').then((r) => r.json()).then((j) => {
   SP.f = j;
   SP.img.onload = () => { SP.ready = true; };
-  SP.img.src = 'assets/sprites.webp';
+  SP.img.src = 'assets/sprites/sprites.webp?v=202610250852';
 });
-for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg_${i}.jpg`; SP.bg.push(im); }
+for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=202610250852`; SP.bg.push(im); }
 // draw sprite centered at (x,y) with its width scaled to w (height keeps aspect)
 function spr(g, name, x, y, w, rot = 0, alpha = 1) {
   if (!SP.ready || !SP.f[name]) return;
@@ -216,7 +216,7 @@ function resetRun() {
   if (boosts.length) banner('부스트: ' + boosts.map((b) => HUB.boostName('helicopter', b)).join(' · '));
   renderHearts(); renderBuffs();
   $('hudBest').textContent = Save.data.best;
-  $('hudProgFace').style.backgroundImage = `url(${(window.Costume && Costume.src) || `assets/face_${Save.data.char}.png`})`;
+  $('hudProgFace').style.backgroundImage = `url(${(window.Costume && Costume.src) || `assets/chars/face_${Save.data.char}.webp`})`;
 }
 
 function startRun() {
@@ -674,7 +674,7 @@ function showResult() {
     const h = HUB.record('helicopter', { dist: m, coins: G.coins });
     $('resEarn').innerHTML = `+${h.earned} 코인 획득!` + (h.bonus ? ` <small>(거리 보너스 +${h.bonus})</small>` : '') + `<small>내 코인 ${h.coins}</small>`;
   }
-  $('resFace').src = (window.Costume && Costume.src) || (window.CharV2 && CharV2.is(Save.data.char) ? `assets/${Save.data.char}_crash.png` : `assets/${Save.data.char === 'eunyu' ? 'eunyu_crash' : 'eungyeol_6'}.png`);
+  $('resFace').src = (window.Costume && Costume.src) || (window.CharV2 && CharV2.is(Save.data.char) ? `assets/chars/${Save.data.char}_crash.webp` : `assets/chars/${Save.data.char === 'eunyu' ? 'eunyu_crash' : 'eungyeol_6'}.webp`);
   $('resDist').textContent = m; $('resCoin').textContent = G.coins; $('resBestVal').textContent = Save.data.best;
   $('resTheme').textContent = THEMES[G.themeIdx].name;
   $('resBest').classList.toggle('hidden', !isBest);

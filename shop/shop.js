@@ -4,22 +4,21 @@
 //  · 게임 카드(스크롤해도 고정)로 게임을 고르면 그 게임의 게임 부스트 / 보유 아이템이 보임
 //  · 게임 부스트: 1개씩 사서 모음. 수량은 구매·게임 보상·게임에서 사용 모두 같은 숫자(common/profile.js)
 const $ = (id) => document.getElementById(id);
-const V = '?v=20261023j'; // bump when images change so phones don't show old cached ones
+const V = '?v=202610250852'; // bump when images change so phones don't show old cached ones
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 
 const GAMES = [
-  { id: 'skyhook', name: '스카이훅', img: 'assets/v2/game_skyhook.jpg' },
-  { id: 'helicopter', name: '트윈 헬리콥터', img: 'assets/v2/game_helicopter.jpg' },
-  { id: 'stairs', name: '계단 오르기', img: 'assets/v2/game_stairs.jpg' },
-  { id: 'shisen', name: '사천성', img: 'assets/v2/game_shisen.jpg' },
-  { id: 'downhill', name: '다운힐 러너', img: 'assets/v2/game_downhill.jpg' },
-  { id: 'memory', name: '메모리 게임', img: 'assets/v2/game_memory.jpg' },
+  { id: 'skyhook', name: '스카이훅', img: 'assets/games/skyhook.webp' },
+  { id: 'helicopter', name: '트윈 헬리콥터', img: 'assets/games/helicopter.webp' },
+  { id: 'stairs', name: '계단 오르기', img: 'assets/games/stairs.webp' },
+  { id: 'shisen', name: '사천성', img: 'assets/games/shisen.webp' },
+  { id: 'downhill', name: '다운힐 러너', img: 'assets/games/downhill.webp' },
+  { id: 'memory', name: '메모리 게임', img: 'assets/games/memory.webp' },
 ];
 // 부스트 그림: 새 아이콘이 있으면 그것, 없으면 예전 아이콘
-const NEW_ICON = { hint: 'boost_hint', shuffle: 'boost_shuffle', time: 'boost_time', bomb: 'boost_bomb', find: 'boost_find', combo: 'boost_combo' };
-const boostIcon = (id) => (NEW_ICON[id] ? `assets/v2/${NEW_ICON[id]}.png${V}` : `assets/icons/${id}.png${V}`);
-const skinThumb = (id) => `assets/skins/${id}.jpg${V}`;
-const COIN = `assets/v2/coin.png${V}`;
+const boostIcon = (id) => `../common/items/${id}.webp${V}`;
+const skinThumb = (id) => `assets/skins/${id}.webp${V}`;
+const COIN = `assets/ui/coin.webp${V}`;
 
 let game = 'skyhook';
 try { game = sessionStorage.getItem('shop_game') || game; } catch (e) { /* ignore */ }
@@ -147,9 +146,9 @@ function renderOwned() {
   }
 }
 // ---------- 캐릭터 꾸미기 ----------
-const COS_IMG = (look, id) => (id ? `../common/costumes/${look}_${id}.png${V}` : `../skyhook/assets/${look}_base.jpg${V}`);
-const BASE_FULL = (look) => `../common/costumes/${look}_base.png${V}`; // 기본 옷 전신 그림
-const faceOf = (c) => Hub.costumeImg(c, '../') || `../skyhook/assets/${c.look}_base.jpg${V}`;
+const COS_IMG = (look, id) => (id ? `../common/costumes/${look}_${id}.webp${V}` : `../common/faces/${look}_base.webp${V}`);
+const BASE_FULL = (look) => `../common/costumes/${look}_base.webp${V}`; // 기본 옷 전신 그림
+const faceOf = (c) => Hub.costumeImg(c, '../') || `../common/faces/${c.look}_base.webp${V}`;
 const fullOf = (look, id) => (id ? COS_IMG(look, id) : BASE_FULL(look));
 const DRESS_ALL = [{ id: null, name: '기본 옷', price: 0, desc: '처음 입고 있던 옷이에요' }, ...Hub.COSTUMES];
 // 새 캐릭터(v2)는 아직 옷 그림이 없어서 기본 옷만

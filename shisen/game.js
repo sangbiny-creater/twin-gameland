@@ -17,7 +17,7 @@ function tilePool(si) {
   const themed = w >= 4 ? Array.from({ length: 14 }, (_, k) => `w${w + 1}_${k}`).filter((n) => !(w === 4 && (n === 'w5_2' || n === 'w5_3'))) : [];
   return ['t_eunyu', 't_eungyeol', ...shuffleArr(themed), ...shuffleArr(BASE_TILES.slice())];
 }
-const SKIN_BG = { forest: 1, sunset: 1, winter: 2, night: 3, space: 4 }; // 공통 배경 스킨 → assets/bg_*.jpg (나머지는 skins.js로 그림)
+const SKIN_BG = { forest: 1, sunset: 1, winter: 2, night: 3, space: 4 }; // 공통 배경 스킨 → assets/bg/bg_*.webp (나머지는 skins.js로 그림)
 const COMBO_WINDOW = 4;  // 초: 이 안에 다음 짝을 없애면 콤보
 const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
@@ -41,12 +41,12 @@ const mmss = (t) => { t = Math.max(0, Math.ceil(t)); return `${String(Math.floor
 function shuffleArr(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 // ---------- sprites ----------
-const ASSET_V = '20261022n';
+const ASSET_V = '202610250852';
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
-fetch(`assets/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => { SP.f = j; SP.img.onload = () => { SP.ready = true; }; SP.img.src = `assets/sprites.webp?v=${ASSET_V}`; });
-for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg_${i}.jpg?v=${ASSET_V}`; SP.bg.push(im); }
+fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => { SP.f = j; SP.img.onload = () => { SP.ready = true; }; SP.img.src = `assets/sprites/sprites.webp?v=${ASSET_V}`; });
+for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=${ASSET_V}`; SP.bg.push(im); }
 // 월드 배경 (메인 화면 지도와 같은 그림)
-SP.world = WORLDS.map((_, w) => { const im = new Image(); im.src = `../common/worlds/w${w + 1}.jpg?v=${ASSET_V}`; return im; });
+SP.world = WORLDS.map((_, w) => { const im = new Image(); im.src = `../common/worlds/w${w + 1}.webp?v=${ASSET_V}`; return im; });
 function spr(name, x, y, w, h, alpha = 1) {
   if (!SP.ready || !SP.f[name]) return;
   const [sx, sy, sw, sh] = SP.f[name];

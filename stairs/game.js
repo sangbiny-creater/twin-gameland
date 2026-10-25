@@ -47,16 +47,16 @@ const rand = (a, b) => a + (b - a) * Math.random();
 const $ = (id) => document.getElementById(id);
 
 // ---------- sprites ----------
-const ASSET_V = '20261022c'; // bump when assets change so phones don't mix old cached files
+const ASSET_V = '202610250852'; // bump when assets change so phones don't mix old cached files
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
-fetch(`assets/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
+fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
   SP.img.onload = () => { SP.ready = true; renderBuffs(); };
-  SP.img.src = `assets/sprites.webp?v=${ASSET_V}`;
+  SP.img.src = `assets/sprites/sprites.webp?v=${ASSET_V}`;
 });
-for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg_${i}.jpg`; SP.bg.push(im); }
+for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=${ASSET_V}`; SP.bg.push(im); }
 // preload both arrows so the turn button never blinks while switching
-const ARROWS = ['btn_left', 'btn_right'].map((n) => { const im = new Image(); im.src = `assets/${n}.png`; return im; });
+const ARROWS = ['btn_left', 'btn_right'].map((n) => { const im = new Image(); im.src = `assets/ui/${n}.webp`; return im; });
 // draw sprite with its width scaled to w; anchor: 'c' center, 'b' bottom-center
 function spr(g, name, x, y, w, { rot = 0, alpha = 1, flip = false, anchor = 'c' } = {}) {
   if (!SP.ready || !SP.f[name]) return 0;
@@ -619,7 +619,7 @@ function renderBuffs() {
   if (G.x2T > 0) add('x2', '2배');
   if (G.boost > 0) add('bolt', '슝~');
 }
-function updateTurnBtn() { $('turnImg').src = G.dir > 0 ? 'assets/btn_left.png' : 'assets/btn_right.png'; }
+function updateTurnBtn() { $('turnImg').src = G.dir > 0 ? 'assets/ui/btn_left.webp' : 'assets/ui/btn_right.webp'; }
 
 // ---------- screens ----------
 function setState(s) {
@@ -653,7 +653,7 @@ function showResult() {
     const h = HUB.record('stairs', { dist: m, coins: G.coins });
     $('resEarn').innerHTML = `+${h.earned} 코인 획득!` + (h.bonus ? ` <small>(높이 보너스 +${h.bonus})</small>` : '') + `<small>내 코인 ${h.coins}</small>`;
   }
-  $('resFace').src = (window.Costume && Costume.src) || `assets/${Save.data.char}_${isBest && m > 0 ? 'happy' : 'dead'}.png`;
+  $('resFace').src = (window.Costume && Costume.src) || `assets/chars/${Save.data.char}_${isBest && m > 0 ? 'happy' : 'dead'}.webp`;
   $('resHeight').textContent = m; $('resCoin').textContent = G.coins; $('resBestVal').textContent = Save.data.best;
   $('resBest').classList.toggle('hidden', !isBest || m === 0);
   setState('result');

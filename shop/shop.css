@@ -189,7 +189,7 @@ main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; 
 .dwho.on.eunyu { border-color: #FF8FB5; background: #FFF0F6; color: #E05A8C; }
 .dwho.on.eungyeol { border-color: #4FA3F0; background: #EEF6FF; color: #2265C9; }
 .dress-main { display: flex; flex-direction: column; gap: 10px; background: #fff; border-radius: 22px; padding: 10px; box-shadow: 0 6px 16px rgba(24,59,91,.12); }
-.dress-stage { position: relative; height: 300px; border-radius: 16px; background: url(../common/worlds/w1.jpg) center/cover; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.dress-stage { position: relative; height: 300px; border-radius: 16px; background: url(../common/worlds/w1.webp) center/cover; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .dress-stage img { height: 86%; max-width: 70%; object-fit: contain; filter: drop-shadow(0 8px 10px rgba(24,59,91,.3)); animation: dressIn .35s; }
 @keyframes dressIn { from { transform: scale(.85); opacity: .3; } }
 .dnav { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,.92); color: #2F7FE8; font-size: 30px; line-height: 40px; box-shadow: 0 3px 8px rgba(24,59,91,.25); }

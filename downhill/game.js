@@ -61,12 +61,12 @@ const $ = (id) => document.getElementById(id);
 const rng = (seed) => { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let x = s; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; };
 
 // ---------- sprites ----------
-const ASSET_V = '20261023a';
+const ASSET_V = '202610250852';
 const SP = { img: new Image(), f: null, ready: false };
-fetch(`assets/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
+fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
   SP.img.onload = () => { SP.ready = true; fillIcons(); renderHearts(); renderBuffs(); };
-  SP.img.src = `assets/sprites.png?v=${ASSET_V}`;
+  SP.img.src = `assets/sprites/sprites.webp?v=${ASSET_V}`;
 });
 function spr(g, name, x, y, w, { rot = 0, alpha = 1, flip = false, anchor = 'c', sx = 1 } = {}) {
   if (!SP.ready || !SP.f[name]) return 0;

@@ -98,7 +98,7 @@ const THEMES = {
     roof: ['#6E4C74', '#7D5583', '#5E4166'], grass: '#C9A06A', grassDark: '#9C7446', dirt: '#B9804F', dirtDark: '#86552F',
     wood: true,
   },
-  // 월드 5~10: 월드 그림(common/worlds/wN.jpg)을 먼 배경으로 깔고, 발판 색만 테마에 맞춤
+  // 월드 5~10: 월드 그림(common/worlds/wN.webp)을 먼 배경으로 깔고, 발판 색만 테마에 맞춤
   cherry: {
     img: 5, sky: ['#F7A8C8', '#FCD3E2', '#FFF0F5'], far: '#F5C2D6', mid: ['#E99AB8', '#F2B3CA', '#D98AAE', '#F7C6D8'],
     roof: ['#B44A6A', '#C9566E', '#8E3A58'], grass: '#FFC2D6', grassDark: '#E58AAE', dirt: '#C98B6A', dirtDark: '#9A5E44',
@@ -126,7 +126,7 @@ const THEMES = {
 };
 // 월드 그림 (메인 화면 지도와 같은 그림)
 const WORLD_IMG = {};
-for (const th of Object.values(THEMES)) if (th.img && !WORLD_IMG[th.img]) { const im = new Image(); im.src = `../common/worlds/w${th.img}.jpg?v=20261022n`; WORLD_IMG[th.img] = im; }
+for (const th of Object.values(THEMES)) if (th.img && !WORLD_IMG[th.img]) { const im = new Image(); im.src = `../common/worlds/w${th.img}.webp?v=202610250852`; WORLD_IMG[th.img] = im; }
 
 // ---------- save ----------
 const Save = {
@@ -688,13 +688,13 @@ function drawKid(g, who, pose, t, opt = {}) {
   g.restore();
 }
 
-// ---------- character sprites (은유 / 은결 sheet, assets/kids.webp) ----------
+// ---------- character sprites (은유 / 은결 sheet, assets/sprites/kids.webp) ----------
 // Frames were cut from the character sprite sheet; the vector drawKid() above is only a fallback.
 const Sprites = { img: new Image(), frames: null, scale: 3, ready: false };
-fetch('assets/kids.json').then((r) => r.json()).then((j) => {
+fetch('assets/sprites/kids.json?v=202610250852').then((r) => r.json()).then((j) => {
   Sprites.frames = j.frames; Sprites.scale = j.scale;
   Sprites.img.onload = () => { Sprites.ready = true; };
-  Sprites.img.src = 'assets/kids.webp';
+  Sprites.img.src = 'assets/sprites/kids.webp?v=202610250852';
 }).catch(() => { /* opened from file:// — keep vector fallback */ });
 const SPRITE_SIZE = 1.55; // sheet pixel -> game pixel
 function drawKidSprite(g, who, pose, t) {
@@ -766,7 +766,7 @@ function startStage(si) {
   if (!THEMES[skinTheme() || STAGES[si].theme].img) getBG(skinTheme() || STAGES[si].theme);
   setState('play');
   renderHearts();
-  $('hudProgFace').style.backgroundImage = `url(${(window.Costume && Costume.src) || `assets/${Save.data.char}_base.jpg?v=20261023x`})`;
+  $('hudProgFace').style.backgroundImage = `url(${(window.Costume && Costume.src) || `../common/faces/${Save.data.char}_base.webp?v=202610250852`})`;
   Audio.startBgm();
 }
 
@@ -1455,7 +1455,7 @@ function renderStageList() {
   const list = $('stageList'); list.innerHTML = '';
   STAGES.forEach((st, i) => {
     const b = document.createElement('button'); b.className = 'stage' + (i === G.si ? ' on' : '');
-    b.innerHTML = `<div class="thumb" style="background-image:url(../common/worlds/w${st.world + 1}.jpg)"><span class="num">${st.label}</span>${Save.data.cleared[i] ? '<span class="clear">CLEAR</span>' : ''}</div><div class="name">${st.name}</div><div class="best">최고 ${Save.data.best[i] || 0}m</div>`;
+    b.innerHTML = `<div class="thumb" style="background-image:url(../common/worlds/w${st.world + 1}.webp)"><span class="num">${st.label}</span>${Save.data.cleared[i] ? '<span class="clear">CLEAR</span>' : ''}</div><div class="name">${st.name}</div><div class="best">최고 ${Save.data.best[i] || 0}m</div>`;
     b.addEventListener('click', () => { Audio.unlock(); Audio.sfx('ui'); startStage(i); });
     list.appendChild(b);
   });
@@ -1492,7 +1492,7 @@ function showResult(clear) {
   $('resTitle').textContent = clear ? 'STAGE CLEAR!' : 'GAME OVER';
   $('resLabel').textContent = STAGES[G.si].label;
   document.querySelector('.panel.result').classList.toggle('over', !clear);
-  $('resFace').src = (window.Costume && Costume.src) || `assets/${Save.data.char}_${clear ? 'happy' : 'sad'}.jpg`;
+  $('resFace').src = (window.Costume && Costume.src) || `../common/faces/${Save.data.char}_${clear ? 'happy' : 'sad'}.webp`;
   $('resFace').classList.toggle('cos', !!(window.Costume && Costume.src));
   $('resDist').textContent = r.dist; $('resCoin').textContent = G.coins;
   $('resBestVal').textContent = r.best;
@@ -1515,7 +1515,7 @@ function goHome() {
 function showReady(si) {
   G.si = si;
   $('readyTitle').textContent = `${STAGES[si].label} ${STAGES[si].name}`;
-  $('readyFace').src = (window.Costume && Costume.src) || `assets/${Save.data.char}_base.jpg?v=20261023x`;
+  $('readyFace').src = (window.Costume && Costume.src) || `../common/faces/${Save.data.char}_base.webp?v=202610250852`;
   $('readyFace').classList.toggle('cos', !!(window.Costume && Costume.src));
   setState('ready');
 }
