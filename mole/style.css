@@ -51,7 +51,7 @@ button:active { transform: translateY(3px); }
 .screen { z-index: 4; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 20px; }
 .screen.dim, #ready { background: rgba(20,14,40,.55); }
 .panel { background: linear-gradient(#FFF8EE, #FBE9D2); border-radius: 26px; padding: 20px 24px 22px; text-align: center; width: min(440px, 100%); border: 5px solid #fff; box-shadow: 0 14px 34px rgba(0,0,0,.45); display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.logo { width: 300px; margin-top: -6px; border-radius: 18px; box-shadow: 0 4px 10px rgba(0,0,0,.2); }
+.logo { width: 300px; margin-top: -10px; filter: drop-shadow(0 3px 4px rgba(0,0,0,.2)); }
 .p-title { font-size: 32px; color: #C25E12; }
 .p-text { font-size: 18px; line-height: 1.5; }
 .p-text b { color: #D23A63; font-weight: normal; }

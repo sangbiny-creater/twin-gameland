@@ -1,7 +1,9 @@
-"""두더지 게임 그림 만들기: GPT 기획 시트 한 장(molegame/…시트.webp)에서 잘라 mole/assets/ 에 webp로 저장.
+"""두더지 게임 그림 만들기 → mole/assets/, hub/cards·intro, shop/assets/games, common/items 에 webp로 저장.
   python3 tools/mole_assets.py
-  · 크림색 바탕은 가장자리에서 이어진 곳만 지워 투명하게 (그림 속 흰 부분은 그대로)
-  · GPT 그림(making_GPT/신규게임이미지_템플릿/GPT_요청_두더지게임_그림.txt)이 오면 같은 이름으로 바꿔 넣으면 됨
+  · GPT 그림: molegame/GPT/G01~G06.PNG(카드·인트로·로고·배경), M01~M10.PNG(두더지·구멍·망치·흙먼지, 초록 바탕)
+    (요청 글: making_GPT/신규게임이미지_템플릿/GPT_요청_두더지게임_그림.txt)
+  · 아이템 아이콘(점수 2배 별, 무지개 망치)만 GPT 기획 시트(molegame/…시트.webp)에서 잘라 씀
+    — 크림색 바탕은 가장자리에서 이어진 곳만 지워 투명하게 (그림 속 흰 부분은 그대로)
 """
 import os
 import numpy as np
@@ -11,6 +13,7 @@ from scipy import ndimage
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SHEET = f'{ROOT}/molegame/두더지게임_기획_비주얼시트_채팅첨부.webp'
 OUT = f'{ROOT}/mole/assets'
+GPT = f'{ROOT}/molegame/GPT'
 
 
 def cutout(im, box, tol=34, keep=1):
@@ -46,36 +49,53 @@ def save(im, name, scale=1.0, q=88):
     print(name, im.size)
 
 
+def chroma(path):
+    """초록(#00FF00) 바탕을 투명하게, 가장자리 초록 번짐은 빼기"""
+    a = np.asarray(Image.open(path).convert('RGB')).astype(np.float32)
+    r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    k = g - np.maximum(r, b)                      # 초록에 가까울수록 큼
+    al = np.clip((140 - k) / 80, 0, 1)            # k 60 이하 = 그림, 140 이상 = 바탕
+    a[..., 1] = np.minimum(g, np.maximum(r, b) + 12)  # 초록 번짐 빼기
+    out = Image.fromarray(a.astype(np.uint8)).convert('RGBA')
+    out.putalpha(Image.fromarray((al * 255).astype(np.uint8)))
+    return out
+
+
 def main():
     sh = Image.open(SHEET).convert('RGB')
-    # 두더지 (3번 칸). 2대 두더지: 왼쪽 = 처음(헬멧), 오른쪽 = 한 대 맞은 뒤(화난 얼굴)
-    save(cutout(sh, (28, 508, 246, 668)), 'sprites/mole_normal', 2)
-    save(cutout(sh, (258, 508, 478, 668)), 'sprites/mole_fast', 2)
-    save(cutout(sh, (490, 508, 655, 668)), 'sprites/mole_tough', 2)
-    save(cutout(sh, (662, 508, 818, 668)), 'sprites/mole_tough2', 2)
-    # 이펙트·아이템
-    save(cutout(sh, (1290, 870, 1375, 950)), 'sprites/star', 2)
-    save(cutout(sh, (1395, 862, 1510, 955)), 'sprites/rainbow', 2)
-    # 배경: 시트의 가로 배경 칸에는 구멍이 그려져 있어 위쪽 하늘·울타리 띠와 맨 아래 꽃밭 띠만 씀 (풀밭·구멍은 게임이 그림)
-    sky = sh.crop((330, 738, 812, 864))
-    save(sky.resize((sky.width * 3, sky.height * 3), Image.LANCZOS).filter(ImageFilter.GaussianBlur(1.0)), 'bg/sky', q=80)
-    fl = sh.crop((330, 952, 812, 996))
-    save(fl.resize((fl.width * 3, fl.height * 3), Image.LANCZOS).filter(ImageFilter.GaussianBlur(0.8)), 'bg/flowers', q=80)
-    # 로고 + 대표 그림 (시트 왼쪽 위)
-    key = sh.crop((12, 2, 448, 452))
-    save(key.crop((0, 0, 436, 200)), 'ui/logo', 1, q=90)
     # 아이템 아이콘 (아이템샵·로비·게임이 같이 씀): 점수 2배 = 별, 한번에 제거 = 무지개 망치
     for name, box in (('double', (1290, 870, 1375, 950)), ('rainbow', (1395, 862, 1510, 955))):
         im = cutout(sh, box); im.thumbnail((140, 140), Image.LANCZOS)
         im.save(f'{ROOT}/common/items/{name}.webp', 'WEBP', quality=90, method=6); print('items', name, im.size)
-    hub_images(key)
-
-
-def rounded(im, r):
-    m = Image.new('L', im.size, 0)
-    from PIL import ImageDraw
-    ImageDraw.Draw(m).rounded_rectangle((0, 0, im.width - 1, im.height - 1), r, fill=255)
-    im = im.convert('RGBA'); im.putalpha(m); return im
+    # 두더지 7장: 모두 같은 틀로 잘라 크기·위치(몸 아래 끝)가 그대로 맞게. 1254 그림의 x 57~1197, y 30~1110
+    #  → 456x432, 몸 아래 끝은 높이의 약 95.5% (game.js MOLE_FOOT)
+    names = ['normal', 'normal_hit', 'fast', 'fast_hit', 'tough', 'tough_crack', 'tough_hit']
+    for i, n in enumerate(names):
+        save(chroma(f'{GPT}/M{i + 1:02d}.PNG').crop((57, 30, 1197, 1110)), f'sprites/{n}', 0.4)
+    # 구멍: 뒤(통째) + 앞(안쪽 가운데 줄보다 아래의 흙 테두리만) — 두더지를 그 사이에 그림
+    #  잘라 낸 틀 x 36~1216, y 409~891 → 안쪽(어두운 곳) 가운데 (604, 229), 반지름 416x129 (game.js HOLE_*)
+    hole = chroma(f'{GPT}/M08.PNG')
+    dark = (np.asarray(hole.convert('L')) < 60) & (np.asarray(hole.getchannel('A')) > 200)
+    lab, n = ndimage.label(dark); sz = ndimage.sum(dark, lab, range(1, n + 1))
+    inner = ndimage.binary_fill_holes(lab == np.argmax(sz) + 1)
+    ys, xs = np.nonzero(inner); cy = (ys.min() + ys.max()) // 2
+    print('hole inner', xs.min(), xs.max(), ys.min(), ys.max(), 'cy', cy)
+    front = np.asarray(hole).copy()
+    keep = np.zeros(inner.shape, bool); keep[cy:] = True; keep &= ~inner
+    front[..., 3] = np.where(keep, front[..., 3], 0)
+    box = (36, 409, 1216, 891)
+    save(hole.crop(box), 'sprites/hole_back', 0.34)
+    save(Image.fromarray(front).crop(box), 'sprites/hole_front', 0.34)
+    # 망치·흙먼지
+    save(chroma(f'{GPT}/M09.PNG').crop((57, 59, 1148, 1191)), 'sprites/hammer', 0.26)
+    save(chroma(f'{GPT}/M10.PNG').crop((47, 282, 1212, 1035)), 'sprites/dust', 0.26)
+    # 배경 (구멍 없음): 세로 G05, 가로 G06 — 울타리 아래 잔디가 시작하는 높이는 game.js BG_GRASS
+    save(Image.open(f'{GPT}/G05.PNG').convert('RGB'), 'bg/port', 1, q=82)
+    save(Image.open(f'{GPT}/G06.PNG').convert('RGB'), 'bg/land', 1, q=82)
+    # 로고 (초록 지우고 꼭 맞게 잘라 가로 720)
+    logo = chroma(f'{GPT}/G04.PNG'); logo = logo.crop(logo.getchannel('A').point(lambda v: 255 if v > 30 else 0).getbbox())
+    save(logo, 'ui/logo', 720 / logo.width, q=90)
+    hub_images()
 
 
 def cover(im, w, h, ay=0.5):
@@ -85,23 +105,28 @@ def cover(im, w, h, ay=0.5):
     return r.crop((x, y, x + w, y + h))
 
 
-def hub_images(key):
-    """GPT 그림(G01~G03)이 오기 전 임시: 시트 대표 그림으로 게임 카드·인트로·아이템샵 카드"""
-    # 게임 카드: 사천성 카드 틀(테두리·BEST 줄·게임 시작 버튼)에 그림 칸(x10~470, y10~446)만 바꿔 끼움
+def rounded(im, r):
+    from PIL import ImageDraw
+    m = Image.new('L', im.size, 0)
+    ImageDraw.Draw(m).rounded_rectangle((0, 0, im.width - 1, im.height - 1), r, fill=255)
+    im = im.convert('RGBA'); im.putalpha(m); return im
+
+
+def hub_images():
+    g1 = Image.open(f'{GPT}/G01.PNG').convert('RGB')
+    # 게임 카드: 사천성 카드 틀(테두리·BEST 줄·게임 시작 버튼)에 그림 칸(x10~470, y10~446)만 바꿔 끼움. 로고가 그림 칸 아래쪽에
+    pic = g1.crop((0, 215, 1024, 215 + round(1024 * 436 / 460))).resize((460, 436), Image.LANCZOS)
     card = Image.open(f'{ROOT}/hub/cards/shisen.webp').convert('RGBA')
-    card.alpha_composite(rounded(cover(key, 460, 436, 0.0), 30), (10, 10))
+    card.alpha_composite(rounded(pic, 30), (10, 10))
     card.save(f'{ROOT}/hub/cards/mole.webp', 'WEBP', quality=88, method=6)
-    # 인트로 세로 941x1672: 흐린 바탕 + 대표 그림을 위쪽에 크게
-    blur = lambda w, h: cover(key, w, h).filter(ImageFilter.GaussianBlur(28)).point(lambda v: min(255, int(v * 0.95)))
-    pt = blur(941, 1672).convert('RGBA'); k = key.resize((941, round(450 * 941 / 436)), Image.LANCZOS)
-    pt.alpha_composite(rounded(k, 0), (0, 300))
-    pt.convert('RGB').save(f'{ROOT}/hub/intro/mole.webp', 'WEBP', quality=84, method=6)
-    # 인트로 가로 1536x1024: 폰 가로는 아래 28%가 잘리므로 그림을 위쪽 3%~75%에
-    ld = blur(1536, 1024).convert('RGBA'); hh = 740; k = key.resize((round(436 * hh / 450), hh), Image.LANCZOS)
-    ld.alpha_composite(rounded(k, 40), ((1536 - k.width) // 2, 30))
-    ld.convert('RGB').save(f'{ROOT}/hub/intro/mole_land.webp', 'WEBP', quality=84, method=6)
-    # 아이템샵 게임 카드 164x134: 캐릭터 부분
-    cover(key.crop((0, 170, 436, 450)), 164, 134).save(f'{ROOT}/shop/assets/games/mole.webp', 'WEBP', quality=88, method=6)
+    # 인트로: 세로 G02 → 9:16 로 잘라 941x1672, 가로 G03 → 1536x1024 그대로. 원본은 intro/ 에 보관
+    g2 = Image.open(f'{GPT}/G02.PNG').convert('RGB'); g3 = Image.open(f'{GPT}/G03.PNG').convert('RGB')
+    g2.save(f'{ROOT}/intro/세로원본_7_두더지게임.png'); g3.save(f'{ROOT}/intro/가로_7_두더지게임.png')
+    w = round(1536 * 9 / 16)
+    g2.crop(((1024 - w) // 2, 0, (1024 + w) // 2, 1536)).resize((941, 1672), Image.LANCZOS).save(f'{ROOT}/hub/intro/mole.webp', 'WEBP', quality=84, method=6)
+    g3.save(f'{ROOT}/hub/intro/mole_land.webp', 'WEBP', quality=84, method=6)
+    # 아이템샵 게임 카드 164x134: G01 캐릭터 부분
+    cover(g1.crop((0, 0, 1024, 720)), 164, 134).save(f'{ROOT}/shop/assets/games/mole.webp', 'WEBP', quality=88, method=6)
     print('hub images ok')
 
 

@@ -15,7 +15,7 @@ const SKIN_BG = { forest: 1, sunset: 1, winter: 2, night: 3, space: 4 }; // 공�
 const TRAP_PENALTY = 100; // 함정 캐릭터를 누르면 줄어드는 점수
 const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202610251706';
+const ASSET_V = '202610251749';
 const asset = (p) => `assets/${p}.webp?v=${ASSET_V}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -41,13 +41,22 @@ const fmt = (n) => Math.round(n).toLocaleString();
 const img = (src) => { const im = new Image(); im.src = src; return im; };
 const ok = (im) => im && im.complete && im.naturalWidth > 0;
 const SPR = {
-  normal: img(asset('sprites/mole_normal')), fast: img(asset('sprites/mole_fast')),
-  tough: img(asset('sprites/mole_tough')), tough2: img(asset('sprites/mole_tough2')),
+  normal: img(asset('sprites/normal')), normal_hit: img(asset('sprites/normal_hit')),
+  fast: img(asset('sprites/fast')), fast_hit: img(asset('sprites/fast_hit')),
+  tough: img(asset('sprites/tough')), tough_crack: img(asset('sprites/tough_crack')), tough_hit: img(asset('sprites/tough_hit')),
+  holeBack: img(asset('sprites/hole_back')), holeFront: img(asset('sprites/hole_front')),
+  hammer: img(asset('sprites/hammer')), dust: img(asset('sprites/dust')),
   star: img(`../common/items/double.webp?v=${ASSET_V}`),
 };
-// 두더지 그림 아래쪽 흙더미는 잘라 내고 구멍 앞 흙으로 가림 (그림 높이 중 쓰는 비율)
-const CUT = { normal: 0.76, fast: 0.78, tough: 0.8, tough2: 0.8 };
-const BG = { sky: img(asset('bg/sky')), flowers: img(asset('bg/flowers')), skin: [] };
+// 그림 치수 (tools/mole_assets.py 가 자른 틀 기준 비율)
+//  · 두더지 7장은 같은 틀(456x432): 몸 아래 끝 = 높이의 95.6%
+//  · 구멍(401x164): 어두운 안쪽 가운데 = (50.3%, 47.5%), 안쪽 세로 반지름 = 높이의 26.7%. 앞 그림 = 안쪽 가운데 줄 아래 흙 테두리
+//  · 망치(284x294): 머리 가운데 (25%, 24%), 손잡이 끝 (93%, 94%)
+const MOLE_AR = 432 / 456, MOLE_FOOT = 0.956;
+const HOLE = { ar: 164 / 401, cx: 0.503, cy: 0.475, ry: 0.267 };
+const HAMMER = { ar: 294 / 284, head: [0.25, 0.24], end: [0.93, 0.94] };
+const BG = { port: img(asset('bg/port')), land: img(asset('bg/land')), skin: [] };
+const BG_GRASS = { port: 0.38, land: 0.48 }; // 배경 그림에서 울타리 아래 잔디가 시작하는 높이
 for (let i = 0; i < 5; i++) BG.skin.push(img(`../shisen/assets/bg/bg_${i}.webp?v=${ASSET_V}`));
 // 함정 캐릭터 얼굴: 내 캐릭터 + (5월드부터) 쌍둥이 다른 한 명
 const myLook = (() => { const c = HUB && HUB.active(); return (c && c.look) || 'eunyu'; })();
@@ -167,6 +176,11 @@ function spawn() {
   Audio.sfx('pop');
 }
 const RISE = { normal: 0.16, fast: 0.1, tough: 0.2, trap: 0.18 };
+// 구멍 하나의 그림 크기: hw·hh 구멍, dw·dh 두더지, clipY 두더지가 보이는 아래 끝, foot 다 올라왔을 때 몸 아래 끝
+function geom(h) {
+  const hw = h.s * 1.2, hh = hw * HOLE.ar, ryIn = HOLE.ry * hh, dw = hw * 0.82, dh = dw * MOLE_AR;
+  return { hw, hh, dw, dh, clipY: h.y + ryIn * 0.7, foot: h.y + ryIn * 0.85 };
+}
 
 function stepHoles(dt) {
   const playing = G.state === 'play';
@@ -208,7 +222,7 @@ function showReady(si) {
   $('readyTitle').textContent = `${label(si)} ${stageName(si)}`;
   // 이 판에 나오는 두더지만 보여 줌
   const kinds = [['normal', '일반', `+${PTS.normal}`, true], ['fast', '빠른', `+${PTS.fast}`, st.fast > 0], ['tough', '2대', `+${PTS.tough}`, st.tough > 0]];
-  let html = kinds.filter((k) => k[3]).map(([id, nm, p]) => `<div class="lg"><img src="${asset('sprites/mole_' + id)}" alt=""><span>${nm}</span><b>${p}</b></div>`).join('');
+  let html = kinds.filter((k) => k[3]).map(([id, nm, p]) => `<div class="lg"><img src="${asset('sprites/' + id)}" alt=""><span>${nm}</span><b>${p}</b></div>`).join('');
   if (st.trap > 0) {
     const faces = st.both ? [myLook, twinLook] : [myLook];
     html += `<div class="lg no">${faces.map((lk) => `<i style="background-image:url(../common/faces/${lk}_base.webp?v=${ASSET_V})"></i>`).join('')}<span>누르면 안 돼요!</span><b>-${TRAP_PENALTY}</b></div>`;
@@ -230,8 +244,8 @@ function pick(x, y) {
   let best = null, bd = 1e9;
   for (const h of G.holes) {
     const m = h.m; if (!m || m.ph === 'down' || m.ph === 'hit' || m.ph === 'ouch' || m.u < 0.35) continue;
-    const top = h.y - h.s * 0.95 * m.u - h.s * 0.12, bottom = h.y + h.s * 0.22;
-    if (Math.abs(x - h.x) > h.s * 0.6 || y < top || y > bottom) continue;
+    const g = geom(h), top = g.clipY - g.dh * 0.9 * m.u - h.s * 0.08, bottom = h.y + g.hh * 0.5;
+    if (Math.abs(x - h.x) > g.dw * 0.55 || y < top || y > bottom) continue;
     const d = Math.abs(x - h.x) + Math.abs(y - (top + bottom) / 2) * 0.5;
     if (d < bd) { bd = d; best = h; }
   }
@@ -241,7 +255,7 @@ function tapAt(x, y) {
   if (G.state !== 'play') return;
   G.fx.push({ kind: 'hammer', x, y, t: 0, life: 0.26 });
   const h = pick(x, y);
-  if (!h) { Audio.sfx('miss'); dust(x, y + 10, 4, 0.6); return; } // 빈 구멍·풀밭: 감점 없음, 콤보 그대로
+  if (!h) { Audio.sfx('miss'); dust(x, y + 10, 0.55); return; } // 빈 구멍·풀밭: 감점 없음, 콤보 그대로
   hitMole(h);
 }
 function hitMole(h, byItem = false) {
@@ -271,7 +285,7 @@ function hitMole(h, byItem = false) {
   // 코인: 두더지 1마리 = 1코인, 콤보 5번마다 +1 (콤보 보너스 부스트면 +2)
   if (!GOD()) G.coins += 1 + (G.combo > 0 && G.combo % 5 === 0 ? (G.comboX2 ? 2 : 1) : 0);
   Audio.sfx('hit', G.combo);
-  stars(h.x, h.y - h.s * 0.45, 7); dust(h.x, h.y, 6, 1);
+  stars(h.x, h.y - h.s * 0.45, 7); dust(h.x, h.y - h.s * 0.05, 1.1);
   G.fx.push({ kind: 'text', text: `+${pts}`, x: h.x, y: h.y - h.s * 0.85, t: 0, life: 0.8, gold: G.dblT > 0 });
   if (G.combo >= 5 && G.combo % 5 === 0) {
     Audio.sfx('combo');
@@ -284,9 +298,8 @@ function stars(x, y, n) {
     G.fx.push({ kind: 'star', x, y, vx: Math.cos(an) * sp, vy: Math.sin(an) * sp, r: rnd(12, 22), rot: rnd(0, 6), t: 0, life: rnd(0.45, 0.7) });
   }
 }
-function dust(x, y, n, k) {
-  for (let i = 0; i < n; i++) G.fx.push({ kind: 'dust', x: x + rnd(-30, 30) * k, y: y + rnd(-6, 8), vx: rnd(-70, 70) * k, vy: rnd(-50, -10), r: rnd(10, 20) * k, t: 0, life: rnd(0.4, 0.6) });
-}
+// 흙먼지: 그림 한 덩이가 부풀며 사라짐 (k = 크기)
+function dust(x, y, k) { G.fx.push({ kind: 'dust', x, y, w: 150 * k, rot: rnd(-0.2, 0.2), flip: Math.random() < 0.5, t: 0, life: 0.5 }); }
 
 // ---------- items ----------
 // 시간 추가: +10초 / 점수 2배: 10초 동안 / 무지개 망치: 지금 나와 있는 두더지를 한꺼번에 (함정 캐릭터는 그대로)
@@ -373,7 +386,7 @@ function showResult(ok, st, earn, reward, stage) {
 // ---------- update ----------
 function step(dt) {
   G.t += dt;
-  for (const f of G.fx) { f.t += dt; if (f.vx != null) { f.x += f.vx * dt; f.y += f.vy * dt; if (f.kind === 'star') f.vy += 700 * dt; if (f.kind === 'dust') { f.vx *= 0.92; } } }
+  for (const f of G.fx) { f.t += dt; if (f.vx != null) { f.x += f.vx * dt; f.y += f.vy * dt; if (f.kind === 'star') f.vy += 700 * dt; } }
   G.fx = G.fx.filter((f) => f.t < f.life);
   if (G.state === 'pause') return;
   stepHoles(dt);
@@ -400,64 +413,48 @@ function step(dt) {
 
 // ---------- render ----------
 function drawBg() {
-  const skyH = wideLayout() ? Math.max(120, G.fieldTop + 20) : Math.max(250, G.fieldTop + 70);
+  // 구멍 없는 초원 그림: 울타리 아래 잔디가 맨 윗줄 구멍 바로 위에 오게 놓음 (위쪽 하늘은 화면 모양에 따라 잘림)
+  const kind = W > H ? 'land' : 'port', im = BG[kind], gl = BG_GRASS[kind], grassY = G.fieldTop + 10;
+  let top = 0, bh = H;
+  if (ok(im)) {
+    const sc = Math.max(W / im.naturalWidth, (H - grassY) / ((1 - gl) * im.naturalHeight), H / im.naturalHeight);
+    const bw = im.naturalWidth * sc; bh = im.naturalHeight * sc; top = Math.min(0, grassY - gl * bh);
+    ctx.drawImage(im, (W - bw) / 2, top, bw, bh);
+  } else { ctx.fillStyle = '#BCDA52'; ctx.fillRect(0, 0, W, H); }
+  // 배경 스킨: 울타리 위 하늘만 바꿈
   const drawn = SKIN_BG[G.skin] == null && G.skin && G.skin !== 'default' && window.Skins && window.Skins.has(G.skin);
-  const im = SKIN_BG[G.skin] != null ? BG.skin[SKIN_BG[G.skin]] : BG.sky;
-  // 잔디
-  const g = ctx.createLinearGradient(0, skyH - 40, 0, H);
-  g.addColorStop(0, '#E4EC6E'); g.addColorStop(0.45, '#BCDA52'); g.addColorStop(1, '#93C43E');
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  // 하늘 (아랫부분 울타리가 잔디에 닿게)
-  ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, skyH); ctx.clip();
-  if (drawn) window.Skins.draw(ctx, G.skin, W, skyH, 0, 0, G.t);
-  else if (ok(im)) {
-    const s = Math.max(W / im.naturalWidth, skyH / im.naturalHeight), bw = im.naturalWidth * s, bh = im.naturalHeight * s;
-    ctx.drawImage(im, (W - bw) / 2, skyH - bh, bw, bh);
-  } else { ctx.fillStyle = '#8CC9F0'; ctx.fillRect(0, 0, W, skyH); }
-  ctx.restore();
-  const fade = ctx.createLinearGradient(0, skyH - 26, 0, skyH + 4);
-  fade.addColorStop(0, 'rgba(228,236,110,0)'); fade.addColorStop(1, 'rgba(228,236,110,1)');
-  ctx.fillStyle = fade; ctx.fillRect(0, skyH - 26, W, 30);
-  // 잔디 무늬
-  ctx.fillStyle = 'rgba(255,255,255,.07)';
-  for (let y = skyH + 30, k = 0; y < H; y += 46, k++) { ctx.beginPath(); ctx.ellipse(W / 2, y, W * 0.75, 12, 0, 0, Math.PI * 2); if (k % 2) ctx.fill(); }
-  // 맨 아래 꽃밭
-  if (ok(BG.flowers)) {
-    const fh = wideLayout() ? 46 : 110, fw = Math.max(W, fh * BG.flowers.naturalWidth / BG.flowers.naturalHeight);
-    ctx.drawImage(BG.flowers, (W - fw) / 2, H - fh, fw, fh);
+  const sk = SKIN_BG[G.skin] != null ? BG.skin[SKIN_BG[G.skin]] : null;
+  if (drawn || ok(sk)) {
+    const skyH = top + (gl - 0.075) * bh;
+    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, skyH); ctx.clip();
+    if (drawn) window.Skins.draw(ctx, G.skin, W, skyH, 0, 0, G.t);
+    else { const s = Math.max(W / sk.naturalWidth, skyH / sk.naturalHeight), bw = sk.naturalWidth * s, bh2 = sk.naturalHeight * s; ctx.drawImage(sk, (W - bw) / 2, skyH - bh2, bw, bh2); }
+    ctx.restore();
   }
 }
-// 구멍 뒤쪽 (어두운 구멍 + 흙 테두리)
+// 구멍 뒤쪽 (어두운 안쪽 + 흙 테두리 전체)
 function drawHoleBack(h) {
-  const { x, y, s } = h;
-  ctx.fillStyle = 'rgba(60,90,20,.25)'; ctx.beginPath(); ctx.ellipse(x, y + s * 0.06, s * 0.54, s * 0.2, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#9A6534'; ctx.beginPath(); ctx.ellipse(x, y, s * 0.5, s * 0.18, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#B97B43'; ctx.beginPath(); ctx.ellipse(x, y - s * 0.015, s * 0.47, s * 0.155, 0, Math.PI, Math.PI * 2); ctx.fill();
-  const g = ctx.createRadialGradient(x, y + s * 0.03, 2, x, y, s * 0.4);
-  g.addColorStop(0, '#1E120A'); g.addColorStop(1, '#4A2C17');
-  ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, y + s * 0.01, s * 0.39, s * 0.12, 0, 0, Math.PI * 2); ctx.fill();
+  const g = geom(h);
+  if (ok(SPR.holeBack)) ctx.drawImage(SPR.holeBack, h.x - HOLE.cx * g.hw, h.y - HOLE.cy * g.hh, g.hw, g.hh);
 }
-// 구멍 앞쪽 흙 (두더지 아랫몸을 가림)
+// 구멍 앞쪽 흙 테두리 (두더지 아랫몸을 가림)
 function drawHoleFront(h) {
-  const { x, y, s } = h;
-  ctx.fillStyle = '#A86E3A';
-  ctx.beginPath(); ctx.ellipse(x, y + s * 0.01, s * 0.5, s * 0.18, 0, 0, Math.PI); ctx.ellipse(x, y + s * 0.01, s * 0.39, s * 0.12, 0, Math.PI, 0, true); ctx.fill();
-  ctx.fillStyle = '#C48A52';
-  ctx.beginPath(); ctx.ellipse(x, y + s * 0.02, s * 0.46, s * 0.15, 0, 0.15, Math.PI - 0.15); ctx.ellipse(x, y + s * 0.02, s * 0.4, s * 0.12, 0, Math.PI - 0.2, 0.2, true); ctx.fill();
-  // 흙 덩이
-  ctx.fillStyle = '#8B5A2B';
-  for (const [dx, dy, r] of [[-0.42, 0.1, 0.05], [-0.2, 0.17, 0.045], [0.12, 0.18, 0.05], [0.38, 0.11, 0.045], [0.5, 0.02, 0.035], [-0.52, 0.0, 0.035]]) {
-    ctx.beginPath(); ctx.ellipse(x + dx * s, y + dy * s, r * s * 1.3, r * s, 0, 0, Math.PI * 2); ctx.fill();
-  }
+  const g = geom(h);
+  if (ok(SPR.holeFront)) ctx.drawImage(SPR.holeFront, h.x - HOLE.cx * g.hw, h.y - HOLE.cy * g.hh, g.hw, g.hh);
+}
+// 두더지 그림: 상태에 따라 (맞음·헬멧 깨짐)
+function moleImg(m) {
+  if (m.type === 'tough') return SPR[m.ph === 'hit' ? 'tough_hit' : m.hp < 2 ? 'tough_crack' : 'tough'];
+  return SPR[m.ph === 'hit' ? m.type + '_hit' : m.type];
 }
 function drawMole(h) {
   const m = h.m; if (!m || m.u <= 0) return;
-  const { x, y, s } = h;
+  const { x, s } = h, g = geom(h);
   const sh = m.shake > 0 ? Math.sin(m.shake * 70) * s * 0.04 : 0;
   ctx.save();
-  ctx.beginPath(); ctx.rect(x - s, y - s * 2, s * 2, s * 2 + s * 0.03); ctx.clip();
+  ctx.beginPath(); ctx.rect(x - g.hw, g.clipY - s * 3, g.hw * 2, s * 3); ctx.clip();
   if (m.type === 'trap') {
-    const r = s * 0.4, cy = y + r * 1.15 - (r * 2.25) * m.u;
+    const r = g.dw * 0.44, cy = g.clipY + r * 1.1 - (r * 2.35) * m.u;
     const f = FACE[m.who] || FACE[myLook], im = m.ph === 'ouch' ? f.sad : f.base;
     ctx.translate(x + sh, cy);
     ctx.fillStyle = RING[m.who.startsWith('eungyeol') ? 'eungyeol' : 'eunyu'];
@@ -466,35 +463,25 @@ function drawMole(h) {
     ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.clip();
     if (ok(im)) ctx.drawImage(im, -r * 1.06, -r * 1.06, r * 2.12, r * 2.12); else { ctx.fillStyle = '#FFE3D0'; ctx.fill(); }
   } else {
-    const key = m.type === 'tough' && m.hp < 2 ? 'tough2' : m.type;
-    const im = SPR[key];
+    const im = moleImg(m);
     if (ok(im)) {
-      const dw = s * (m.type === 'fast' ? 1.38 : m.type === 'tough' ? 1.3 : 1.4), sw = im.naturalWidth, shh = im.naturalHeight * CUT[key];
-      let dh = dw * shh / sw, w2 = dw;
-      if (m.ph === 'hit') { const k = Math.min(1, m.t / 0.08); dh *= 1 - 0.18 * k; w2 *= 1 + 0.1 * k; } // 맞으면 납작
-      const bottom = y + s * 0.06 + (1 - m.u) * dh;
-      ctx.drawImage(im, 0, 0, sw, shh, x - w2 / 2 + sh, bottom - dh, w2, dh);
-      // 맞은 두더지: 머리 위 빙글빙글 별
-      if (m.ph === 'hit' && ok(SPR.star)) {
-        for (let k = 0; k < 3; k++) {
-          const a = G.t * 9 + k * 2.1, r = s * 0.06;
-          ctx.drawImage(SPR.star, x + Math.cos(a) * s * 0.22 - r, bottom - dh + Math.sin(a) * s * 0.05 - r, r * 2, r * 2);
-        }
-      }
+      let dw = g.dw, dh = g.dh;
+      if (m.ph === 'hit') { const k = Math.min(1, m.t / 0.08); dh *= 1 - 0.12 * k; dw *= 1 + 0.06 * k; } // 맞으면 살짝 납작
+      const foot = g.foot + (1 - m.u) * dh * 0.95;
+      ctx.drawImage(im, x - dw / 2 + sh, foot - dh * MOLE_FOOT, dw, dh);
     }
   }
   ctx.restore();
 }
+// 누른 자리 뿅망치: 손잡이 끝을 축으로 들었다가 내리침
 function drawHammer(f) {
-  const k = f.t / f.life, a = k < 0.35 ? -1.1 + (k / 0.35) * 1.1 : 0, s = 1;
+  if (!ok(SPR.hammer)) return;
+  const k = f.t / f.life, a = k < 0.35 ? 0.7 * (1 - k / 0.35) : 0;
+  const w = 118, hgt = w * HAMMER.ar;
+  const px = (HAMMER.end[0] - HAMMER.head[0]) * w, py = (HAMMER.end[1] - HAMMER.head[1]) * hgt;
   ctx.save(); ctx.globalAlpha = k > 0.6 ? 1 - (k - 0.6) / 0.4 : 1;
-  ctx.translate(f.x + 46 * s, f.y + 52 * s); ctx.rotate(a);
-  ctx.fillStyle = '#B5733A'; ctx.strokeStyle = '#6B3A16'; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.roundRect(-7, -64, 14, 70, 6); ctx.fill(); ctx.stroke();
-  ctx.translate(-8, -74); ctx.rotate(-0.15);
-  ctx.fillStyle = '#E8384D'; ctx.beginPath(); ctx.roundRect(-46, -24, 92, 48, 18); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#C21F37'; ctx.beginPath(); ctx.roundRect(-46, 6, 92, 18, [0, 0, 18, 18]); ctx.fill();
-  ctx.fillStyle = '#FFD34D'; starPath(0, -2, 15, 7); ctx.fill();
+  ctx.translate(f.x + px, f.y + py); ctx.rotate(a);
+  ctx.drawImage(SPR.hammer, -HAMMER.end[0] * w, -HAMMER.end[1] * hgt, w, hgt);
   ctx.restore();
 }
 function starPath(x, y, R, r) {
@@ -511,7 +498,12 @@ function drawFx() {
       if (ok(SPR.star)) ctx.drawImage(SPR.star, -f.r, -f.r, f.r * 2, f.r * 2); else { ctx.fillStyle = '#FFD34D'; starPath(0, 0, f.r, f.r / 2); ctx.fill(); }
       ctx.restore(); continue;
     }
-    if (f.kind === 'dust') { ctx.globalAlpha = 0.75 * (1 - k); ctx.fillStyle = '#E9D2AE'; ctx.beginPath(); ctx.arc(f.x, f.y, f.r * (0.6 + k), 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; continue; }
+    if (f.kind === 'dust') {
+      if (!ok(SPR.dust)) continue;
+      const w = f.w * (0.6 + 0.6 * k), hh = w * SPR.dust.naturalHeight / SPR.dust.naturalWidth;
+      ctx.save(); ctx.globalAlpha = 0.9 * (1 - k * k); ctx.translate(f.x, f.y - k * 14); ctx.rotate(f.rot); if (f.flip) ctx.scale(-1, 1);
+      ctx.drawImage(SPR.dust, -w / 2, -hh * 0.7, w, hh); ctx.restore(); continue;
+    }
     if (f.kind === 'hammer') { drawHammer(f); continue; }
     if (f.kind === 'x') {
       ctx.save(); ctx.globalAlpha = k > 0.7 ? 1 - (k - 0.7) / 0.3 : 1; ctx.translate(f.x, f.y);
