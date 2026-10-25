@@ -6,7 +6,7 @@
 import glob, os, re, sys, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SKIP = ('_archive/', 'tools/', 'character/', 'image/', 'intro/', 'making_GPT/', 'memorygame/', 'molegame/', 'sacheonseong_game_assets_01_10/')
+SKIP = ('_archive/', 'tools/', 'character/', 'image/', 'intro/', 'making_GPT/', 'memorygame/', 'molegame/', 'bakerygame/', 'sacheonseong_game_assets_01_10/')
 
 
 def files():

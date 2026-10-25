@@ -4,7 +4,7 @@
 //  · 게임 카드(스크롤해도 고정)로 게임을 고르면 그 게임의 게임 부스트 / 보유 아이템이 보임
 //  · 게임 부스트: 1개씩 사서 모음. 수량은 구매·게임 보상·게임에서 사용 모두 같은 숫자(common/profile.js)
 const $ = (id) => document.getElementById(id);
-const V = '?v=202610251942'; // bump when images change so phones don't show old cached ones
+const V = '?v=202610252005'; // bump when images change so phones don't show old cached ones
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 
 const GAMES = [
@@ -15,6 +15,7 @@ const GAMES = [
   { id: 'downhill', name: '다운힐 러너', img: 'assets/games/downhill.webp' },
   { id: 'memory', name: '메모리 게임', img: 'assets/games/memory.webp' },
   { id: 'mole', name: '두더지 게임', img: 'assets/games/mole.webp' },
+  { id: 'bakery', name: '달콤 베이커리', img: 'assets/games/bakery.webp' },
 ];
 // 부스트 그림: 새 아이콘이 있으면 그것, 없으면 예전 아이콘
 const boostIcon = (id) => `../common/items/${id}.webp${V}`;
@@ -242,8 +243,8 @@ document.querySelectorAll('[data-scroll]').forEach((b) => {
 })();
 
 // ---------- start ----------
-Hub.starterKit('shisen'); Hub.starterKit('memory'); Hub.starterKit('mole'); // 사천성·메모리·두더지 게임 기본 아이템을 아직 안 받았으면 지금 지급 (게임과 같은 수량을 보여 주려고)
-window.addEventListener('pageshow', () => { Hub.reload(); Hub.starterKit('shisen'); Hub.starterKit('memory'); Hub.starterKit('mole'); renderHeader(); renderAll(); });
+Hub.starterKit('shisen'); Hub.starterKit('memory'); Hub.starterKit('mole'); Hub.starterKit('bakery'); // 사천성·메모리·두더지·베이커리 게임 기본 아이템을 아직 안 받았으면 지금 지급 (게임과 같은 수량을 보여 주려고)
+window.addEventListener('pageshow', () => { Hub.reload(); Hub.starterKit('shisen'); Hub.starterKit('memory'); Hub.starterKit('mole'); Hub.starterKit('bakery'); renderHeader(); renderAll(); });
 renderHeader(); renderAll();
 // 고른 게임 카드가 보이게
 requestAnimationFrame(() => { const on = document.querySelector('.game.on'); if (on) on.scrollIntoView({ inline: 'center', block: 'nearest' }); window.scrollTo(0, 0); });

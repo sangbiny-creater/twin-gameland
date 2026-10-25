@@ -26,6 +26,7 @@
     downhill: { name: '다운힐 러너', path: 'downhill/index.html' },
     memory: { name: '메모리 게임', path: 'memory/index.html', stages: 100, worlds: WORLDS, perWorld: 10 }, // 사천성처럼 10개 월드 × 10판
     mole: { name: '두더지 게임', path: 'mole/index.html', stages: 100, worlds: WORLDS, perWorld: 10 }, // 10개 월드 × 10판, 기록(best) = 최고 점수
+    bakery: { name: '달콤 베이커리', path: 'bakery/index.html', stages: 100, worlds: WORLDS, perWorld: 10 }, // 두더지 게임처럼 기록(best) = 최고 점수
   };
 
   const COIN_RULES = {
@@ -43,6 +44,8 @@
     memory: (r, first) => (r.cleared ? 20 + Math.round(r.stage * 1.5) + r.stars * 5 + (first ? 30 : 0) : 0),
     // 사천성과 같은 징검다리 규칙
     mole: (r, first) => (r.cleared ? 20 + Math.round(r.stage * 1.5) + r.stars * 5 + (first ? 30 : 0) : 0),
+    // 사천성과 같은 징검다리 규칙
+    bakery: (r, first) => (r.cleared ? 20 + Math.round(r.stage * 1.5) + r.stars * 5 + (first ? 30 : 0) : 0),
   };
 
   // ---------- 아이템샵 카탈로그 ----------
@@ -109,6 +112,12 @@
       { id: 'time', name: '시간 추가', desc: '제한 시간 +10초', price: 80, manual: true },
       { id: 'double', name: '점수 2배', desc: '10초 동안 점수 2배', price: 100, manual: true },
       { id: 'rainbow', name: '무지개 망치', desc: '나온 두더지를 한꺼번에', price: 150, manual: true },
+      { id: 'combo', name: '콤보 보너스', desc: '콤보 코인 2배', price: 300 },
+    ],
+    bakery: [
+      { id: 'life', name: '하트 +1', desc: '하트를 1개 더 (최대 5개)', price: 100, manual: true },
+      { id: 'slow', name: '느리게', desc: '8초 동안 천천히', price: 80, manual: true },
+      { id: 'auto', name: '자동 짜기', desc: '5초 동안 자동으로 완벽', price: 150, manual: true },
       { id: 'combo', name: '콤보 보너스', desc: '콤보 코인 2배', price: 300 },
     ],
   };
@@ -223,7 +232,7 @@
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610251942` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610252005` : null; },
     buyCostume(id, c = this.active()) {
       const it = COSTUMES.find((x) => x.id === id);
       if (!c || !it || this.ownsCostume(id, c)) return { ok: false };
@@ -299,7 +308,7 @@
     },
     // 캐릭터마다 한 번만 주는 기본 아이템
     starterKit(game, c = this.active()) {
-      const KITS = { shisen: { hint: 3, shuffle: 2, time: 1 }, memory: { hint: 3, find: 1, time: 1 }, mole: { time: 1, double: 1, rainbow: 1 } };
+      const KITS = { shisen: { hint: 3, shuffle: 2, time: 1 }, memory: { hint: 3, find: 1, time: 1 }, mole: { time: 1, double: 1, rainbow: 1 }, bakery: { life: 1, slow: 1, auto: 1 } };
       if (!c || !KITS[game]) return false;
       const sh = shopOf(c); sh.starter = sh.starter || {};
       if (sh.starter[game]) return false;
@@ -379,6 +388,7 @@
     //   shisen:     { stage, cleared, dist: 0, coins, stars, time(클리어까지 걸린 초) }
     //   memory:     shisen 과 같음
     //   mole:       { stage, cleared, dist(점수), coins, stars }
+    //   bakery:     mole 과 같음
   //   downhill:   { dist, coins }
     record(game, r) {
       reload(); // 다른 탭/게임에서 바뀌었을 수 있음
