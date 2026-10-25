@@ -12,18 +12,18 @@
 let W = 540, H = 960;
 const L = window.BakeryLevels, A = window.BakeryArt;
 const { PTS, JUDGE } = L;
-const ASSET_V = '202610252022';
+const ASSET_V = '202610252033';
 const MAX_HEARTS = 5;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
 const Save = {
-  data: { best: 0, sound: true },
+  data: { best: 0, maxLevel: 1, sound: true },
   load() { try { Object.assign(this.data, JSON.parse(localStorage.getItem('bakery_v2') || '{}')); } catch (e) { /* private mode */ } },
   store() { try { localStorage.setItem('bakery_v2', JSON.stringify(this.data)); } catch (e) { /* ignore */ } },
 };
 Save.load();
 const HUB = window.Hub && window.Hub.active() ? window.Hub : null;
-if (HUB) { Save.data.sound = HUB.settings.sound; Save.data.best = HUB.rec('bakery').best; }
+if (HUB) { Save.data.sound = HUB.settings.sound; Save.data.best = HUB.rec('bakery').best; Save.data.maxLevel = HUB.rec('bakery').maxLevel || 1; }
 const GOD = () => !!(window.Hub && window.Hub.god); // 무적 쿠폰 (테스트용)
 
 // ---------- utils ----------
@@ -133,13 +133,21 @@ const nowClock = () => G.clock + (G.state === 'play' ? Math.min(0.05, (performan
 const guideNow = () => L.params(G.clock).guide;
 
 // ---------- run ----------
-function startRun() {
+// 시작하기: 전에 레벨 2 이상까지 갔으면 '처음부터 하기' / '레벨 N부터 시작하기' 고르는 창
+function askStart() {
+  const lv = Save.data.maxLevel || 1;
+  if (lv < 2) { startRun(1); return; }
+  $('btnFromLv').textContent = `레벨 ${lv}부터 시작하기`;
+  setState('choose');
+}
+function startRun(lv = 1) {
   clearTimers();
-  G.gen = L.Gen(); G.notes = []; G.shelf = []; G.k = 0;
-  G.hearts = 3; G.score = 0; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.made = 0; G.perfect = 0; G.level = 1; G.newBest = false;
-  G.fx = []; G.t = 0; G.clock = 0; G.slowT = 0; G.x2T = 0; G.shield = 0; G.holdNote = null; G.down = false; G.pointers.clear();
+  const c0 = (lv - 1) * L.LEVEL;
+  G.gen = L.Gen(Date.now(), c0); G.notes = []; G.shelf = []; G.k = 0;
+  G.hearts = 3; G.score = 0; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.made = 0; G.perfect = 0; G.level = lv; G.startLv = lv; G.newBest = false;
+  G.fx = []; G.t = 0; G.clock = c0; G.slowT = 0; G.x2T = 0; G.shield = 0; G.holdNote = null; G.down = false; G.pointers.clear();
   G.pose = 'idle'; G.poseT = 0;
-  Audio.step = 0; Audio.at = 0;
+  Audio.step = 0; Audio.at = c0;
   // 아이템샵 부스트 (사용중으로 켜 둔 것만 1개씩)
   const boosts = HUB ? HUB.takeBoosts('bakery') : [];
   if (boosts.includes('life')) G.hearts = 4;
@@ -170,7 +178,7 @@ function showReady() {
   const items = [['cup', '컵케이크', '톡!'], ['long', '긴 빵', '꾹~ 떼기'], ['gold', '금빛', `+${PTS.gold}`], ['heart', '하트 컵케이크', '하트 +1']];
   $('legend').innerHTML = items.map(([id, nm, p]) => `<div class="lg"><img src="${icon(id)}" alt=""><span>${nm}</span><b>${p}</b></div>`).join('')
     + `<div class="lg no"><img src="${icon('burnt')}" alt=""><img src="${icon('plate')}" alt=""><span>탄 빵·빈 접시</span><b>누르면 안 돼요!</b></div>`;
-  $('readyInfo').innerHTML = `BEST <b>${fmt(Save.data.best || 0)}점</b>`;
+  $('readyInfo').innerHTML = `BEST <b>${fmt(Save.data.best || 0)}점</b>` + (Save.data.maxLevel > 1 ? ` · 가장 높은 레벨 <b>${Save.data.maxLevel}</b>` : '');
   setState('ready');
 }
 // 준비·결과 창 그림 (코드로 그린 빵을 그림으로)
@@ -316,10 +324,11 @@ function showResult() {
   const score = G.score;
   G.newBest = score > (Save.data.best || 0) && score > 0;
   if (G.newBest) Save.data.best = score;
+  if (G.level > (Save.data.maxLevel || 1)) Save.data.maxLevel = G.level;
   if (!HUB) Save.store();
   $('resEarn').classList.toggle('hidden', !HUB);
   if (HUB) {
-    const h = HUB.record('bakery', { dist: score, coins: G.coins });
+    const h = HUB.record('bakery', { dist: score, coins: G.coins, level: G.level });
     $('resEarn').innerHTML = h.god ? '무적 모드라서 기록·코인이 없어요' : `+${h.earned} 코인 획득!` + (h.bonus ? ` <small>(점수 보너스 +${h.bonus})</small>` : '') + `<small>내 코인 ${h.coins}</small>`;
   }
   $('resScore').textContent = fmt(score);
@@ -489,7 +498,8 @@ function drawShelf() {
 function drawHint() {
   if (G.state !== 'play' && G.state !== 'count') return;
   let txt = '';
-  if (G.clock < 10) txt = '컵케이크가 노란 자리에 오면 화면을 톡!';
+  if (G.startLv > 1) txt = G.clock < (G.startLv - 1) * L.LEVEL + 4 ? `레벨 ${G.startLv}부터 시작!` : '';
+  else if (G.clock < 10) txt = '컵케이크가 노란 자리에 오면 화면을 톡!';
   else if (G.clock < 60 && G.notes.some((n) => n.type === 'long' && n.st === 'wait' && xAt(n.t) < W)) txt = '긴 빵은 앞에서 꾹~ 누르고 끝에서 떼요!';
   else if (G.clock < 80 && G.notes.some((n) => isTrap(n) && n.st === 'wait' && xAt(n.t) < W)) txt = '탄 빵·빈 접시는 누르면 안 돼요!';
   if (!txt) return;
@@ -564,6 +574,7 @@ function setState(s) {
   $('ready').classList.toggle('hidden', s !== 'ready');
   $('pause').classList.toggle('hidden', s !== 'pause');
   $('result').classList.toggle('hidden', s !== 'result');
+  $('choose').classList.toggle('hidden', s !== 'choose');
   $('hud').classList.toggle('hidden', !['count', 'play', 'pause', 'done'].includes(s));
   if (s !== 'count' && s !== 'play' && s !== 'pause') $('memo').classList.add('hidden');
   lastKey = '';
@@ -598,6 +609,7 @@ cv.addEventListener('pointerup', (e) => up('p' + e.pointerId));
 cv.addEventListener('pointercancel', (e) => up('p' + e.pointerId));
 window.addEventListener('keydown', (e) => {
   Audio.unlock();
+  if ((e.code === 'Space' || e.code === 'Enter') && G.state === 'choose') { e.preventDefault(); $('btnFromLv').click(); return; }
   if ((e.code === 'Space' || e.code === 'Enter') && G.state === 'ready') { e.preventDefault(); $('btnGo').click(); return; }
   if (e.code === 'Space' || e.code === 'KeyJ' || e.code === 'KeyF') { e.preventDefault(); if (!e.repeat) down('k' + e.code); return; }
   if (e.code === 'Escape' || e.code === 'KeyP') { if (G.state === 'play' || G.state === 'count') pauseGame(); else if (G.state === 'pause') resumeGame(); }
@@ -606,10 +618,12 @@ window.addEventListener('keyup', (e) => { if (e.code === 'Space' || e.code === '
 document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); });
 window.addEventListener('blur', () => pauseGame());
 const click = (id, fn) => $(id).addEventListener('click', () => { Audio.unlock(); Audio.sfx('ui'); fn(); });
-click('btnGo', startRun);
+click('btnGo', askStart);
+click('btnFromStart', () => startRun(1)); click('btnFromLv', () => startRun(Save.data.maxLevel || 1));
+click('btnChooseBack', () => (G.prev === 'result' ? setState('result') : showReady()));
 click('btnReadyHome', goHome); click('btnHomeP', goHome); click('btnHomeR', goHome);
 click('btnPause', pauseGame); click('btnResume', resumeGame);
-click('btnRetryP', startRun); click('btnRetry', startRun);
+click('btnRetryP', () => { G.prev = 'ready'; askStart(); }); click('btnRetry', () => { G.prev = 'result'; askStart(); });
 $('btnReadyHome').classList.toggle('hidden', !HUB);
 
 // ---------- layout: 세로 화면은 세로 배치, 가로 화면은 가로 배치 (돌리지 않음) ----------
@@ -647,7 +661,7 @@ function frame(now) {
 }
 resize();
 showReady();
-if (new URLSearchParams(location.search).get('go') === '1') startRun(); // 인트로 START: 준비 창 없이 바로
+if (new URLSearchParams(location.search).get('go') === '1') askStart(); // 인트로 START: 준비 창 없이 바로 (전에 간 레벨이 있으면 고르는 창)
 requestAnimationFrame(frame);
 
 // debug/test hook

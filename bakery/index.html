@@ -10,16 +10,16 @@
 <meta name="theme-color" content="#FF8FAE">
 <meta name="application-name" content="은유와 은결">
 <title>은유와 은결</title>
-<link rel="manifest" href="../hub/manifest.json?v=202610252022">
-<link rel="apple-touch-icon" href="../hub/icons/icon-180.png?v=202610252022">
-<link rel="icon" type="image/png" sizes="32x32" href="../hub/icons/favicon-32.png?v=202610252022">
-<link rel="icon" type="image/png" sizes="16x16" href="../hub/icons/favicon-16.png?v=202610252022">
-<link rel="icon" type="image/png" sizes="192x192" href="../hub/icons/favicon-192.png?v=202610252022">
-<link rel="shortcut icon" href="../favicon.ico?v=202610252022">
+<link rel="manifest" href="../hub/manifest.json?v=202610252033">
+<link rel="apple-touch-icon" href="../hub/icons/icon-180.png?v=202610252033">
+<link rel="icon" type="image/png" sizes="32x32" href="../hub/icons/favicon-32.png?v=202610252033">
+<link rel="icon" type="image/png" sizes="16x16" href="../hub/icons/favicon-16.png?v=202610252033">
+<link rel="icon" type="image/png" sizes="192x192" href="../hub/icons/favicon-192.png?v=202610252033">
+<link rel="shortcut icon" href="../favicon.ico?v=202610252033">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=202610252022">
+<link rel="stylesheet" href="style.css?v=202610252033">
 </head>
 <body>
 <div id="safe"></div>
@@ -54,6 +54,16 @@
         <button id="btnReadyHome" class="btn white">게임 선택</button>
         <button id="btnGo" class="btn gold">출발!</button>
       </div>
+    </div>
+  </div>
+
+  <!-- 어디서부터 할까요? (전에 레벨 2 이상까지 갔을 때) -->
+  <div id="choose" class="screen dim hidden">
+    <div class="panel">
+      <div class="p-title">어디서부터 할까요?</div>
+      <button id="btnFromLv" class="btn gold big">레벨 5부터 시작하기</button>
+      <button id="btnFromStart" class="btn white">처음부터 하기</button>
+      <button id="btnChooseBack" class="link">← 뒤로</button>
     </div>
   </div>
 
@@ -93,11 +103,11 @@
 
   <div id="toast" class="toast hidden"></div>
 </div>
-<script src="../common/chars/looks.js?v=202610252022"></script>
-<script src="../common/profile.js?v=202610252022"></script>
-<script src="../common/charv2.js?v=202610252022"></script>
-<script src="art.js?v=202610252022"></script>
-<script src="levels.js?v=202610252022"></script>
-<script src="game.js?v=202610252022"></script>
+<script src="../common/chars/looks.js?v=202610252033"></script>
+<script src="../common/profile.js?v=202610252033"></script>
+<script src="../common/charv2.js?v=202610252033"></script>
+<script src="art.js?v=202610252033"></script>
+<script src="levels.js?v=202610252033"></script>
+<script src="game.js?v=202610252033"></script>
 </body>
 </html>

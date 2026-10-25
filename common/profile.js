@@ -232,7 +232,7 @@
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610252022` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610252033` : null; },
     buyCostume(id, c = this.active()) {
       const it = COSTUMES.find((x) => x.id === id);
       if (!c || !it || this.ownsCostume(id, c)) return { ok: false };
@@ -388,7 +388,7 @@
     //   shisen:     { stage, cleared, dist: 0, coins, stars, time(클리어까지 걸린 초) }
     //   memory:     shisen 과 같음
     //   mole:       { stage, cleared, dist(점수), coins, stars }
-    //   bakery:     { dist(점수), coins }
+    //   bakery:     { dist(점수), coins, level(도착한 레벨) }
   //   downhill:   { dist, coins }
     record(game, r) {
       reload(); // 다른 탭/게임에서 바뀌었을 수 있음
@@ -408,6 +408,7 @@
         if (r.cleared && r.time > 0 && (!st.bestTime || r.time < st.bestTime)) { st.bestTime = r.time; newBest = true; } // 빠를수록 좋은 기록
       }
       if (r.dist > g.best) { g.best = r.dist; if (!staged) newBest = true; }
+      if (r.level > (g.maxLevel || 0)) g.maxLevel = r.level; // 끝없는 게임에서 도착한 가장 높은 레벨 (베이커리: 그 레벨부터 다시 시작)
       const bonus = COIN_RULES[game] ? COIN_RULES[game](r, first) : 0;
       const earned = (r.coins || 0) + bonus;
       g.coins += earned; c.coins += earned; c.earned += earned;

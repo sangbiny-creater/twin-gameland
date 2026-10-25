@@ -172,3 +172,6 @@ button:active { transform: translateY(3px); }
 #root.wide .r-score { font-size: 42px; }
 #root.wide .hud-top { right: calc(350px + var(--safe-r, 0px)); }
 #root.wide.narrow .hud-sub { left: calc(14px + var(--safe-l, 0px)); }
+#choose .btn { flex: none; }
+#choose .btn.big { height: 66px; font-size: 27px; }
+.link { font-size: 17px; color: #8A7A99; padding: 4px 10px; }

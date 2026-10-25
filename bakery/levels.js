@@ -37,12 +37,12 @@
     if (c <= RAMP) return a * c + (b - a) * c * c / (2 * RAMP);
     return a * RAMP + (b - a) * RAMP / 2 + b * (c - RAMP);
   }
-  // 빵 만들기: gen.fill(upTo) 가 upTo 초까지 도착할 빵을 gen.out 에 이어 붙임
+  // 빵 만들기 (start: 시작 시각 — 레벨 N부터 하면 (N-1)×30초): gen.fill(upTo) 가 upTo 초까지 도착할 빵을 gen.out 에 이어 붙임
   //  빵: { type: cup|gold|heart|long|burnt|plate, t(짤주머니 밑에 도착하는 초), t1(긴 빵 끝) }
-  function Gen(seed = Date.now()) {
+  function Gen(seed = Date.now(), start = 0) {
     let a = seed >>> 0;
     const R = () => { a = (a + 0x6D2B79F5) >>> 0; let x = Math.imul(a ^ (a >>> 15), 1 | a); x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x; return ((x ^ (x >>> 14)) >>> 0) / 4294967296; };
-    const g = { out: [], t: LEAD, lastTrap: false, sinceHeart: 0, n: 0 };
+    const g = { out: [], t: start + LEAD, lastTrap: false, sinceHeart: 0, n: 0 };
     g.fill = (upTo, wantHeart) => {
       while (g.t < upTo) {
         const st = params(g.t), beat = 60 / st.bpm, minGap = st.win.o * 2 + 0.08, t = g.t;
