@@ -1,9 +1,10 @@
 'use strict';
-// 케이크 탭탭 난이도 (게임과 Node 시험 스크립트가 같이 씀) — 달콤 베이커리와 같은 시간 기반 방식
-//  · 3줄(왼쪽·가운데·오른쪽)로 빵이 위에서 떨어짐 → 아래 판정선에서 그 줄 버튼을 톡 / 긴 빵은 꾹~ 떼기
+// 멍멍이 간식 타임 난이도 (게임과 Node 시험 스크립트가 같이 씀) — 달콤 베이커리와 같은 시간 기반 방식
+//  · 3줄(왼쪽·가운데·오른쪽)로 간식이 위에서 떨어짐 → 아래 판정선에서 그 줄 강아지를 톡 / 긴 소시지는 꾹~ 떼기
 //  · 끝없이 이어짐: 하트가 다 없어질 때까지. 0초 쉬움 → 6분 가장 어려움, 30초마다 레벨 업
-//  · 처음에 하나씩 배움: 컵케이크만 → 7초 긴 빵 → 11초 금빛 → 18초 두 줄 같이(쌍둥이 케이크) → 25초 함정(탄 빵·빈 접시)
-//  · 노래 없이 효과음만: 빵은 박자(bpm)에 맞춰 판정선에 도착
+//  · 처음에 하나씩 배움: 뼈다귀만 → 7초 긴 소시지 → 11초 금빛 뼈다귀 → 18초 두 줄 같이(쌍둥이 간식) → 25초 함정(양파·초콜릿)
+//  · 노래 없이 효과음만: 간식은 박자(bpm)에 맞춰 판정선에 도착
+//  · 간식 종류 이름은 베이커리 코드와 같게 둠: cup=뼈다귀 · gold=금빛 뼈다귀 · long=긴 소시지 · burnt=양파 · plate=초콜릿
 (function (root) {
   const LANES = 3;
   const PTS = { cup: 100, gold: 300, long: 200 }; // 완벽일 때 점수 (좋아요 ×0.7, 아쉬워요 ×0.4)
@@ -62,5 +63,5 @@
     return g;
   }
   const api = { LANES, PTS, JUDGE, RAMP, LEVEL, LEAD, params, speedAt, dist, Gen };
-  if (typeof module !== 'undefined') module.exports = api; else root.CakeTapLevels = api;
+  if (typeof module !== 'undefined') module.exports = api; else root.SnackLevels = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -27,7 +27,7 @@
     memory: { name: '메모리 게임', path: 'memory/index.html', stages: 100, worlds: WORLDS, perWorld: 10 }, // 사천성처럼 10개 월드 × 10판
     mole: { name: '두더지 게임', path: 'mole/index.html', stages: 100, worlds: WORLDS, perWorld: 10 }, // 10개 월드 × 10판, 기록(best) = 최고 점수
     bakery: { name: '달콤 베이커리', path: 'bakery/index.html' }, // 끝없이 이어지는 게임, 기록(best) = 최고 점수
-    caketap: { name: '케이크 탭탭', path: 'caketap/index.html' }, // 베이커리의 3줄 버전 (같은 규칙·같은 기록 방식)
+    dogsnack: { name: '멍멍이 간식 타임', path: 'dogsnack/index.html' }, // 3줄 버튼 리듬 게임 (베이커리와 같은 규칙·같은 기록 방식). 예전 이름 caketap(케이크 탭탭)
   };
 
   const COIN_RULES = {
@@ -47,7 +47,7 @@
     mole: (r, first) => (r.cleared ? 20 + Math.round(r.stage * 1.5) + r.stars * 5 + (first ? 30 : 0) : 0),
     // 1000점마다 +5 (오래 버틸수록 빨라지므로 점수 = 난이도)
     bakery: (r) => Math.floor(r.dist / 1000) * 5,
-    caketap: (r) => Math.floor(r.dist / 1000) * 5,
+    dogsnack: (r) => Math.floor(r.dist / 1000) * 5,
   };
 
   // ---------- 아이템샵 카탈로그 ----------
@@ -122,7 +122,7 @@
       { id: 'slow', name: '천천히 시작', desc: '처음 20초 천천히', price: 200 },
       { id: 'x2', name: '코인 2배', desc: '처음 30초 코인 2배', price: 300 },
     ],
-    caketap: [
+    dogsnack: [
       { id: 'life', name: '추가 하트', desc: '하트 4개로 시작', price: 300 },
       { id: 'shield', name: '1회 보호', desc: '처음 한 번 실수해도 OK', price: 200 },
       { id: 'slow', name: '천천히 시작', desc: '처음 20초 천천히', price: 200 },
@@ -191,10 +191,26 @@
     }
     return changed;
   }
+  // 게임 이름이 바뀐 것: 예전 기록·아이템·즐겨찾기를 새 이름으로 옮김 (케이크 탭탭 → 멍멍이 간식 타임, 2026-10-26)
+  const RENAMED = { caketap: 'dogsnack' };
+  function upgradeGames(d) {
+    let changed = false;
+    for (const c of d.chars) {
+      for (const [o, n] of Object.entries(RENAMED)) {
+        if (c.games && c.games[o]) { if (!c.games[n]) c.games[n] = c.games[o]; delete c.games[o]; changed = true; }
+        for (const h of c.history || []) if (h.game === o) { h.game = n; changed = true; }
+        if (c.favs && c.favs.includes(o)) { c.favs = c.favs.map((g) => (g === o ? n : g)); changed = true; }
+        const sh = c.shop;
+        if (sh) for (const k of ['boosts', 'using']) if (sh[k] && sh[k][o]) { if (!sh[k][n]) sh[k][n] = sh[k][o]; delete sh[k][o]; changed = true; }
+      }
+    }
+    return changed;
+  }
+  const upgrade = (d) => upgradeGames(d) | upgradeLooks(d);
   let data = load();
-  if (upgradeLooks(data)) try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) { /* ignore */ }
+  if (upgrade(data)) try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) { /* ignore */ }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) { /* ignore */ } }
-  function reload() { data = load(); upgradeLooks(data); }
+  function reload() { data = load(); upgrade(data); }
 
   function find(id) { return data.chars.find((c) => c.id === id) || null; }
   function gameRec(c, g) {
@@ -240,7 +256,7 @@
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610262058` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610262140` : null; },
     buyCostume(id, c = this.active()) {
       const it = COSTUMES.find((x) => x.id === id);
       if (!c || !it || this.ownsCostume(id, c)) return { ok: false };
@@ -397,7 +413,7 @@
     //   memory:     shisen 과 같음
     //   mole:       { stage, cleared, dist(점수), coins, stars }
     //   bakery:     { dist(점수), coins, level(도착한 레벨) }
-    //   caketap:    bakery 와 같음
+    //   dogsnack:   bakery 와 같음
   //   downhill:   { dist, coins }
     record(game, r) {
       reload(); // 다른 탭/게임에서 바뀌었을 수 있음

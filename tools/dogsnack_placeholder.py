@@ -1,16 +1,16 @@
-"""케이크 탭탭 임시 그림 만들기 (GPT 그림이 오기 전까지 쓰는 그림)
-  python3 tools/caketap_placeholder.py
+"""멍멍이 간식 타임 임시 그림 만들기 (GPT 그림이 오기 전까지 쓰는 그림)
+  python3 tools/dogsnack_placeholder.py
   · 저장소 루트에서 python3 -m http.server 8765 를 먼저 켜 두기 (캐릭터 그림을 fetch 로 읽어서 file:// 로는 안 됨)
-  · tools/caketap_placeholder.html 을 헤드리스 크롬으로 캡처해서
-    hub/cards/caketap.webp (두더지 카드 틀에 그림만 바꿔 끼움), hub/intro/caketap(_land).webp,
-    shop/assets/games/caketap.webp 를 만듦
+  · tools/dogsnack_placeholder.html 을 헤드리스 크롬으로 캡처해서
+    hub/cards/dogsnack.webp (두더지 카드 틀에 그림만 바꿔 끼움), hub/intro/dogsnack(_land).webp,
+    shop/assets/games/dogsnack.webp 를 만듦
 """
 import os, subprocess, tempfile
 from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-URL = 'http://localhost:8765/tools/caketap_placeholder.html?kind='
+URL = 'http://localhost:8765/tools/dogsnack_placeholder.html?kind='
 TMP = tempfile.mkdtemp()
 
 
@@ -29,9 +29,9 @@ def save(im, rel, q=86):
 
 
 def main():
-    save(shot('port', 941, 1672).convert('RGB'), 'hub/intro/caketap.webp')
-    save(shot('land', 1536, 1024).convert('RGB'), 'hub/intro/caketap_land.webp', 84)
-    save(shot('shop', 164, 134).convert('RGB'), 'shop/assets/games/caketap.webp')
+    save(shot('port', 941, 1672).convert('RGB'), 'hub/intro/dogsnack.webp')
+    save(shot('land', 1536, 1024).convert('RGB'), 'hub/intro/dogsnack_land.webp', 84)
+    save(shot('shop', 164, 134).convert('RGB'), 'shop/assets/games/dogsnack.webp')
     # 게임 카드: 두더지 카드 틀(흰 테두리·BEST 줄·게임 시작 버튼)에 위쪽 그림 칸만 바꿔 끼움
     frame = Image.open(os.path.join(ROOT, 'hub/cards/mole.webp')).convert('RGBA')
     pic = shot('card', 460, 436)
@@ -43,7 +43,7 @@ def main():
         d.line((0, 435 - i, 459, 435 - i), fill=int(255 * i / 22))
     m = Image.composite(mask, Image.new('L', mask.size, 0), fade)
     frame.paste(pic, (10, 10), m)
-    save(frame.convert('RGB'), 'hub/cards/caketap.webp', 88)
+    save(frame.convert('RGB'), 'hub/cards/dogsnack.webp', 88)
 
 
 if __name__ == '__main__':

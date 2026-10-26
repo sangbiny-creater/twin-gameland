@@ -146,3 +146,18 @@ button:active { transform: translateY(3px); }
 .lg.no i.spr { border-radius: 0; border: 0; box-shadow: none; width: 42px; height: 42px; margin: 6px 0 4px; background-size: contain; background-position: center bottom; }
 .lg.no i.spr::after { right: -4px; top: -8px; font-size: 16px; }
 #root.wide .lg.no i.spr { width: 36px; height: 34px; }
+
+/* 하트: 모든 게임 공통 그림 (common/ui/heart.webp · heart_empty.webp) */
+.pill.hearts { padding: 3px 8px; gap: 2px; }
+.heart { display: inline-block; width: 28px; height: 26px; background: center/contain no-repeat url(../common/ui/heart.webp?v=202610262140); filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); }
+.heart.empty { background-image: url(../common/ui/heart_empty.webp?v=202610262140); opacity: .85; }
+.heart.pop { animation: heartPop 380ms; }
+@keyframes heartPop { 40% { transform: scale(1.5); } }
+#root.wide .heart { width: 25px; height: 23px; }
+i.hrt { display: inline-block; width: 15px; height: 14px; vertical-align: -1px; margin-right: 1px; background: center/contain no-repeat url(../common/ui/heart.webp?v=202610262140); }
+/* 준비 창: 하트 두더지 (그림이 오기 전엔 일반 두더지 위에 하트) */
+.lg.yes { background: #FFF3F6; box-shadow: 0 3px 0 #F6C3D0; position: relative; }
+.lg.yes.tmp img { filter: hue-rotate(-25deg) saturate(1.4); }
+.lg.yes i.hat { position: absolute; left: 50%; top: 0; width: 26px; height: 24px; transform: translateX(-50%); background: center/contain no-repeat url(../common/ui/heart.webp?v=202610262140); }
+.lg.yes b { color: #E8456A; }
+.r-why { color: #FFD9E0; font-size: 18px; margin-top: -6px; }

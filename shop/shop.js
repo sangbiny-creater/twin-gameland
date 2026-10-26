@@ -4,7 +4,7 @@
 //  · 게임 카드(스크롤해도 고정)로 게임을 고르면 그 게임의 게임 부스트 / 보유 아이템이 보임
 //  · 게임 부스트: 1개씩 사서 모음. 수량은 구매·게임 보상·게임에서 사용 모두 같은 숫자(common/profile.js)
 const $ = (id) => document.getElementById(id);
-const V = '?v=202610262058'; // bump when images change so phones don't show old cached ones
+const V = '?v=202610262140'; // bump when images change so phones don't show old cached ones
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 
 const GAMES = [
@@ -16,7 +16,7 @@ const GAMES = [
   { id: 'memory', name: '메모리 게임', img: 'assets/games/memory.webp' },
   { id: 'mole', name: '두더지 게임', img: 'assets/games/mole.webp' },
   { id: 'bakery', name: '달콤 베이커리', img: 'assets/games/bakery.webp' },
-  { id: 'caketap', name: '케이크 탭탭', img: 'assets/games/caketap.webp' },
+  { id: 'dogsnack', name: '멍멍이 간식 타임', img: 'assets/games/dogsnack.webp' },
 ];
 // 부스트 그림: 새 아이콘이 있으면 그것, 없으면 예전 아이콘
 const boostIcon = (id) => `../common/items/${id}.webp${V}`;

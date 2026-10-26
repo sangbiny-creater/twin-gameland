@@ -1,8 +1,10 @@
 'use strict';
 // 은유와 은결의 두더지 게임 — 구멍 9개에서 튀어나오는 두더지를 톡톡 치기
 //  · 일반 두더지(노란 안전모) +100 / 빠른 두더지(빨간 모자, 금방 숨음) +200 / 2대 두더지(빨간 헬멧, 두 번 쳐야 함) +300
-//  · 함정: 내 캐릭터 얼굴이 나오면 누르면 안 됨 (누르면 -100점·콤보 0). 5월드부터는 은유·은결 둘 다 나옴
-//  · 빈 구멍을 눌러도 감점 없음. 두더지를 놓치면 콤보만 0
+//  · 함정: 내 캐릭터 얼굴이 나오면 누르면 안 됨. 5월드부터는 은유·은결 둘 다 나옴
+//  · 하트: 2개로 시작, 최대 3개. 두더지를 놓치거나 함정 캐릭터를 누르면 하트 -1, 하트가 다 없어지면 실패
+//  · 하트 두더지: 아주 가끔(약 20초에 한 번꼴) 나와서 아주 빨리 숨음. 잡으면 하트 +1 (하트가 꽉 차 있으면 +300점). 놓쳐도 괜찮음
+//  · 빈 구멍을 눌러도 감점 없음
 //  · 콤보 5번 ×1.2, 10번 ×1.5, 20번 ×2 점수
 //  · 시간이 끝났을 때 목표 점수를 넘으면 클리어 → 점수로 별 1~3개
 //  · 징검다리: 10개 월드 × 10판 = 100판 (1-1 ~ 10-10). 판별 시간·목표·두더지 표는 levels.js
@@ -12,10 +14,14 @@ let W = 540, H = 960;
 const WORLDS = ['하늘도시', '숲속 나무마을', '겨울왕국', '석양의 항구', '벚꽃마을', '구름왕국', '바닷속도시', '마법숲', '별빛우주', '황금성'];
 const { PER_WORLD, STAGES, PTS } = window.MoleLevels;
 const SKIN_BG = { forest: 1, sunset: 1, winter: 2, night: 3, space: 4 }; // 공통 배경 스킨 → 사천성 배경 그림 (나머지는 skins.js로 그림)
-const TRAP_PENALTY = 100; // 함정 캐릭터를 누르면 줄어드는 점수
+const START_HEARTS = 2, MAX_HEARTS = 3;
+const HEART_GAP = 15;      // 하트 두더지는 앞 하트 두더지 뒤로 최소 15초 지나야 다시 나옴
+const HEART_CHANCE = 0.12; // 그 뒤 새 두더지가 나올 때마다 이 확률로 하트 두더지 (→ 평균 약 20초에 한 번)
+const HEART_STAY = 0.6;    // 하트 두더지가 다 올라와 머무는 시간 (초) — 아주 빨리 숨음
+const HEART_FULL_PTS = 300; // 하트가 꽉 찼을 때 하트 두더지를 잡으면 받는 점수
 const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202610262058';
+const ASSET_V = '202610262140';
 const asset = (p) => `assets/${p}.webp?v=${ASSET_V}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -40,6 +46,8 @@ const fmt = (n) => Math.round(n).toLocaleString();
 // ---------- images ----------
 const img = (src) => { const im = new Image(); im.src = src; return im; };
 const ok = (im) => im && im.complete && im.naturalWidth > 0;
+// 하트 두더지 그림(GPT M11·M12 → sprites/heart, heart_hit)이 생기면 true. 그전엔 일반 두더지 머리 위에 하트를 얹어 그림
+const HAS_HEART_ART = false;
 const SPR = {
   normal: img(asset('sprites/normal')), normal_hit: img(asset('sprites/normal_hit')),
   fast: img(asset('sprites/fast')), fast_hit: img(asset('sprites/fast_hit')),
@@ -47,11 +55,13 @@ const SPR = {
   holeBack: img(asset('sprites/hole_back')), holeFront: img(asset('sprites/hole_front')),
   hammer: img(asset('sprites/hammer')), dust: img(asset('sprites/dust')),
   star: img(`../common/items/double.webp?v=${ASSET_V}`),
+  heartIcon: img(`../common/ui/heart.webp?v=${ASSET_V}`),
 };
 // 그림 치수 (tools/mole_assets.py 가 자른 틀 기준 비율)
 //  · 두더지 7장은 같은 틀(456x432): 몸 아래 끝 = 높이의 95.6%
 //  · 구멍(401x164): 어두운 안쪽 가운데 = (50.3%, 47.5%), 안쪽 세로 반지름 = 높이의 26.7%. 앞 그림 = 안쪽 가운데 줄 아래 흙 테두리
 //  · 망치(284x294): 머리 가운데 (25%, 24%), 손잡이 끝 (93%, 94%)
+if (HAS_HEART_ART) { SPR.heart = img(asset('sprites/heart')); SPR.heart_hit = img(asset('sprites/heart_hit')); }
 const MOLE_AR = 432 / 456, MOLE_FOOT = 0.956;
 const HOLE = { ar: 164 / 401, cx: 0.503, cy: 0.475, ry: 0.267 };
 const HAMMER = { ar: 294 / 284, head: [0.25, 0.24], end: [0.93, 0.94] };
@@ -113,6 +123,8 @@ const Audio = {
       case 'clear': [523, 659, 784, 1046, 1318].forEach((f, i) => this.tone(f, 0.22, 'square', 0.16, 0, i * 0.11)); break;
       case 'fail': [523, 440, 349, 262].forEach((f, i) => this.tone(f, 0.3, 'triangle', 0.3, 0, i * 0.17)); break;
       case 'ui': this.tone(700, 0.06, 'triangle', 0.25); break;
+      case 'heartPop': [1320, 1760].forEach((f, i) => this.tone(f, 0.07, 'sine', 0.2, 0, i * 0.05)); break;
+      case 'life': [784, 988, 1175, 1568].forEach((f, i) => this.tone(f, 0.12, 'triangle', 0.28, 0, i * 0.06)); break;
     }
   },
   // 통통 튀는 행진곡
@@ -144,12 +156,13 @@ let scale = 1, dpr = 1;
 const G = {
   state: 'ready', si: 0, holes: [], fx: [], t: 0, time: 0, limit: 0, countT: 0,
   score: 0, coins: 0, combo: 0, maxCombo: 0, caught: 0, spawnT: 0, dblT: 0, comboX2: false,
+  hearts: START_HEARTS, heartT: 0, dead: false,
   skin: 'default', tickT: 0, pausedFrom: 'play',
 };
 
 // ---------- holes ----------
 // 구멍: { x, y(구멍 가운데), s(구멍 크기), m(지금 나와 있는 두더지), cool(다시 나오기까지 쉬는 시간) }
-// 두더지: { type: normal|fast|tough|trap, who(함정 얼굴), ph: up|stay|down|hit|ouch, t, stay, hp, u(올라온 정도 0~1) }
+// 두더지: { type: normal|fast|tough|trap|heart, who(함정 얼굴), ph: up|stay|down|hit|ouch, t, stay, hp, u(올라온 정도 0~1) }
 function layoutHoles() {
   const sv = (k) => parseFloat(getComputedStyle(root).getPropertyValue('--safe-' + k)) || 0;
   // 가로 화면이 좁으면(태블릿 4:3) 점수 줄이 위 두 번째 줄로 내려옴 (style.css #root.narrow)
@@ -168,21 +181,29 @@ function layoutHoles() {
 
 function spawn() {
   const st = STAGES[G.si];
-  const live = G.holes.filter((h) => h.m && h.m.type !== 'trap' && h.m.ph !== 'hit').length;
+  const live = G.holes.filter((h) => h.m && h.m.type !== 'trap' && h.m.type !== 'heart' && h.m.ph !== 'hit').length;
   const traps = G.holes.filter((h) => h.m && h.m.type === 'trap').length;
   const free = G.holes.filter((h) => !h.m && h.cool <= 0);
   if (!free.length) return;
+  // 하트 두더지: 아주 가끔, 다른 두더지와 따로 (한꺼번에 나오는 수에 안 셈)
+  if (G.t - G.heartT >= HEART_GAP && Math.random() < HEART_CHANCE) {
+    G.heartT = G.t;
+    const hh = free[Math.floor(Math.random() * free.length)];
+    hh.m = { type: 'heart', who: null, ph: 'up', t: 0, stay: HEART_STAY, hp: 1, u: 0, shake: 0 };
+    Audio.sfx('heartPop');
+    return;
+  }
   const isTrap = st.trap > 0 && traps === 0 && Math.random() < st.trap * 1.4;
   if (!isTrap && live >= st.maxOn) return;
   const h = free[Math.floor(Math.random() * free.length)];
   let type = 'normal';
   if (isTrap) type = 'trap';
   else { const r = Math.random(); if (r < st.fast) type = 'fast'; else if (r < st.fast + st.tough) type = 'tough'; }
-  const stay = { normal: st.stay, fast: st.stay * 0.55, tough: st.stay * 1.4, trap: st.stay * 1.25 }[type];
+  const stay = { normal: st.stay, fast: st.stay * 0.62, tough: st.stay * 1.4, trap: st.stay * 1.25 }[type];
   h.m = { type, who: type === 'trap' ? (st.both && Math.random() < 0.5 ? twinLook : myLook) : null, ph: 'up', t: 0, stay, hp: type === 'tough' ? 2 : 1, u: 0, shake: 0 };
   Audio.sfx('pop');
 }
-const RISE = { normal: 0.16, fast: 0.1, tough: 0.2, trap: 0.18 };
+const RISE = { normal: 0.16, fast: 0.1, tough: 0.2, trap: 0.18, heart: 0.08 };
 // 구멍 하나의 그림 크기: hw·hh 구멍, dw·dh 두더지, clipY 두더지가 보이는 아래 끝, foot 다 올라왔을 때 몸 아래 끝
 function geom(h) {
   const hw = h.s * 1.2, hh = hw * HOLE.ar, ryIn = HOLE.ry * hh, dw = hw * 0.82, dh = dw * MOLE_AR;
@@ -196,7 +217,13 @@ function stepHoles(dt) {
     const m = h.m; if (!m) continue;
     m.t += dt; m.shake = Math.max(0, m.shake - dt);
     if (m.ph === 'up') { m.u = Math.min(1, m.t / RISE[m.type]); if (m.u >= 1) { m.ph = 'stay'; m.t = 0; } }
-    else if (m.ph === 'stay') { if (m.t >= m.stay || !playing) { m.ph = 'down'; m.t = 0; if (playing && m.type !== 'trap') G.combo = 0; } }
+    else if (m.ph === 'stay') {
+      if (m.t >= m.stay || !playing) {
+        m.ph = 'down'; m.t = 0;
+        // 두더지를 놓치면 콤보 0·하트 -1 (함정 캐릭터·하트 두더지는 놓쳐도 괜찮음)
+        if (playing && m.type !== 'trap' && m.type !== 'heart') { G.combo = 0; loseHeart(h, '놓쳤어요!'); }
+      }
+    }
     else if (m.ph === 'down') { m.u = Math.max(0, 1 - m.t / 0.16); if (m.u <= 0) { h.m = null; h.cool = 0.25; } }
     else if (m.ph === 'hit') { if (m.t > 0.14) m.u = Math.max(0, 1 - (m.t - 0.14) / 0.2); if (m.u <= 0) { h.m = null; h.cool = 0.3; } }
     else if (m.ph === 'ouch') { if (m.t > 0.7) m.u = Math.max(0, 1 - (m.t - 0.7) / 0.18); if (m.u <= 0) { h.m = null; h.cool = 0.4; } }
@@ -209,6 +236,7 @@ function startStage(si) {
   clearTimers();
   G.limit = st.time; G.time = st.time; G.score = 0; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.caught = 0;
   G.fx = []; G.t = 0; G.dblT = 0; G.comboX2 = false; G.spawnT = 0.3; G.tickT = 0;
+  G.hearts = START_HEARTS; G.heartT = 0; G.dead = false; renderHearts();
   for (const h of G.holes) { h.m = null; h.cool = 0; }
   if (HUB) HUB.starterKit('mole');
   G.skin = HUB ? HUB.equippedSkin('mole') : 'default';
@@ -232,8 +260,9 @@ function showReady(si) {
   let html = kinds.filter((k) => k[3]).map(([id, nm, p]) => `<div class="lg"><img src="${asset('sprites/' + id)}" alt=""><span>${nm}</span><b>${p}</b></div>`).join('');
   if (st.trap > 0) {
     const faces = st.both ? [myLook, twinLook] : [myLook];
-    html += `<div class="lg no">${faces.map((lk) => (TRAP_SPR[sprLook(lk)] ? `<i class="spr" style="background-image:url(${asset('chars/' + sprLook(lk))})"></i>` : `<i style="background-image:url(../common/faces/${lk}_base.webp?v=${ASSET_V})"></i>`)).join('')}<span>누르면 안 돼요!</span><b>-${TRAP_PENALTY}</b></div>`;
+    html += `<div class="lg no">${faces.map((lk) => (TRAP_SPR[sprLook(lk)] ? `<i class="spr" style="background-image:url(${asset('chars/' + sprLook(lk))})"></i>` : `<i style="background-image:url(../common/faces/${lk}_base.webp?v=${ASSET_V})"></i>`)).join('')}<span>누르면 안 돼요!</span><b>${HEART_TAG}-1</b></div>`;
   }
+  html += `<div class="lg yes${HAS_HEART_ART ? '' : ' tmp'}"><img src="${asset(HAS_HEART_ART ? 'sprites/heart' : 'sprites/normal')}" alt="">${HAS_HEART_ART ? '' : '<i class="hat"></i>'}<span>하트 두더지</span><b>${HEART_TAG}+1</b></div>`;
   $('legend').innerHTML = html;
   $('readyInfo').innerHTML = `제한 시간 <b>${st.time}초</b> · 목표 <b>${fmt(st.goal)}점</b>`;
   setState('ready');
@@ -265,15 +294,36 @@ function tapAt(x, y) {
   if (!h) { Audio.sfx('miss'); dust(x, y + 10, 0.55); return; } // 빈 구멍·풀밭: 감점 없음, 콤보 그대로
   hitMole(h);
 }
+const HEART_TAG = `<i class="hrt"></i>`;
+// 하트 -1: 다 없어지면 실패 (무적 쿠폰이면 안 줄어듦)
+function loseHeart(h, why) {
+  if (G.state !== 'play' || GOD()) return;
+  G.hearts = Math.max(0, G.hearts - 1); renderHearts(); buzz(40);
+  G.fx.push({ kind: 'heartLost', x: h.x, y: h.y - h.s * 0.7, t: 0, life: 0.8 });
+  G.fx.push({ kind: 'text', text: why, x: h.x, y: h.y - h.s * 1.05, t: 0, life: 0.9, bad: true });
+  if (G.hearts <= 0) { G.dead = true; endStage(); }
+}
 function hitMole(h, byItem = false) {
   const m = h.m;
   if (m.type === 'trap') {
     m.ph = 'ouch'; m.t = 0; m.shake = 0.4;
     G.combo = 0;
-    if (!GOD()) G.score = Math.max(0, G.score - TRAP_PENALTY);
-    Audio.sfx('bad'); buzz(40);
-    G.fx.push({ kind: 'text', text: `-${TRAP_PENALTY}`, x: h.x, y: h.y - h.s * 0.9, t: 0, life: 0.9, bad: true });
+    Audio.sfx('bad');
     G.fx.push({ kind: 'x', x: h.x, y: h.y - h.s * 0.45, s: h.s, t: 0, life: 0.8 });
+    loseHeart(h, '아야!');
+    return;
+  }
+  if (m.type === 'heart') {
+    m.ph = 'hit'; m.t = 0;
+    stars(h.x, h.y - h.s * 0.45, 6);
+    if (G.hearts < MAX_HEARTS) {
+      G.hearts++; renderHearts(true); Audio.sfx('life');
+      G.fx.push({ kind: 'heartFly', x: h.x, y: h.y - h.s * 0.6, t: 0, life: 0.7 });
+      G.fx.push({ kind: 'text', text: '하트 +1', x: h.x, y: h.y - h.s * 0.95, t: 0, life: 0.9, gold: true });
+    } else {
+      G.score += HEART_FULL_PTS; Audio.sfx('hit', G.combo);
+      G.fx.push({ kind: 'text', text: `+${HEART_FULL_PTS}`, x: h.x, y: h.y - h.s * 0.85, t: 0, life: 0.8, gold: true });
+    }
     return;
   }
   if (m.type === 'tough' && m.hp > 1 && !byItem) {
@@ -342,7 +392,7 @@ function endStage() {
   if (G.state !== 'play') return;
   setState('done'); Audio.stopBgm();
   const st = STAGES[G.si];
-  let s = starsOf(G.score);
+  let s = G.dead ? 0 : starsOf(G.score);
   if (GOD() && !s) s = 1; // 무적: 언제나 클리어
   const ok = s > 0;
   Audio.sfx(ok ? 'clear' : 'fail');
@@ -352,7 +402,7 @@ function endStage() {
     earn = HUB.record('mole', { stage: G.si, cleared: ok, dist: G.score, coins: G.coins, stars: s });
     reward = ok && !earn.god ? clearReward(s, earn.firstClear) : [];
   } else if (ok) { Save.data.cleared[G.si] = true; Save.store(); }
-  G.fx.push({ kind: 'text', text: ok ? '타임 업! 클리어!' : '타임 업!', x: W / 2, y: H * 0.45, t: 0, life: 1.2, big: true, bad: !ok });
+  G.fx.push({ kind: 'text', text: G.dead ? '하트가 없어요!' : ok ? '타임 업! 클리어!' : '타임 업!', x: W / 2, y: H * 0.45, t: 0, life: 1.2, big: true, bad: !ok });
   later(() => showResult(ok, s, earn, reward, st), 1200);
 }
 // 클리어 보상 아이템 (캐릭터 보유 수량에 바로 더해짐)
@@ -367,6 +417,8 @@ function clearReward(st, first) {
 }
 function showResult(ok, st, earn, reward, stage) {
   $('resTitle').textContent = ok ? '스테이지 클리어!' : '아쉬워요!';
+  $('resWhy').textContent = ok ? '' : G.dead ? '하트를 다 잃었어요' : '목표 점수를 못 넘었어요';
+  $('resWhy').classList.toggle('hidden', ok);
   document.querySelector('.panel.result').classList.toggle('fail', !ok);
   $('resStars').innerHTML = [0, 1, 2].map((k) => `<span class="${k < st ? '' : 'off'}">★</span>`).join('');
   $('resScore').textContent = `${fmt(G.score)}점`;
@@ -451,6 +503,7 @@ function drawHoleFront(h) {
 }
 // 두더지 그림: 상태에 따라 (맞음·헬멧 깨짐)
 function moleImg(m) {
+  if (m.type === 'heart') return HAS_HEART_ART ? SPR[m.ph === 'hit' ? 'heart_hit' : 'heart'] : SPR[m.ph === 'hit' ? 'normal_hit' : 'normal'];
   if (m.type === 'tough') return SPR[m.ph === 'hit' ? 'tough_hit' : m.hp < 2 ? 'tough_crack' : 'tough'];
   return SPR[m.ph === 'hit' ? m.type + '_hit' : m.type];
 }
@@ -478,7 +531,14 @@ function drawMole(h) {
       let dw = g.dw, dh = g.dh;
       if (m.ph === 'hit') { const k = Math.min(1, m.t / 0.08); dh *= 1 - 0.12 * k; dw *= 1 + 0.06 * k; } // 맞으면 살짝 납작
       const foot = g.foot + (1 - m.u) * dh * 0.95;
+      if (m.type === 'heart' && !HAS_HEART_ART) ctx.filter = 'hue-rotate(-25deg) saturate(1.4)'; // 임시: 분홍빛 두더지
       ctx.drawImage(im, x - dw / 2 + sh, foot - dh * MOLE_FOOT, dw, dh);
+      ctx.filter = 'none';
+      // 임시 하트 두더지: 머리 위에 하트가 통통 (그림이 오면 빼기)
+      if (m.type === 'heart' && !HAS_HEART_ART && m.ph !== 'hit' && ok(SPR.heartIcon)) {
+        const hw2 = dw * 0.42, hh2 = hw2 * SPR.heartIcon.naturalHeight / SPR.heartIcon.naturalWidth, bob = Math.sin(G.t * 14) * dh * 0.03;
+        ctx.drawImage(SPR.heartIcon, x - hw2 / 2 + sh, foot - dh * 0.98 - hh2 * 0.35 + bob, hw2, hh2);
+      }
     }
   }
   ctx.restore();
@@ -515,6 +575,13 @@ function drawFx() {
       ctx.drawImage(SPR.dust, -w / 2, -hh * 0.7, w, hh); ctx.restore(); continue;
     }
     if (f.kind === 'hammer') { drawHammer(f); continue; }
+    if ((f.kind === 'heartLost' || f.kind === 'heartFly') && ok(SPR.heartIcon)) {
+      // 잃은 하트: 커지며 흐려짐 / 얻은 하트: 위로 날아가며 사라짐
+      const lost = f.kind === 'heartLost', w = (lost ? 44 + 30 * k : 50 - 10 * k), hh = w * SPR.heartIcon.naturalHeight / SPR.heartIcon.naturalWidth;
+      ctx.save(); ctx.globalAlpha = 1 - k; ctx.translate(f.x, f.y - (lost ? 0 : k * 120));
+      if (lost) ctx.filter = 'grayscale(1)';
+      ctx.drawImage(SPR.heartIcon, -w / 2, -hh / 2, w, hh); ctx.restore(); continue;
+    }
     if (f.kind === 'x') {
       ctx.save(); ctx.globalAlpha = k > 0.7 ? 1 - (k - 0.7) / 0.3 : 1; ctx.translate(f.x, f.y);
       const r = f.s * 0.3 * Math.min(1, k * 6); ctx.lineCap = 'round';
@@ -563,6 +630,11 @@ function updateHud() {
   s1.style.left = (st.goal / st.s3 * 100) + '%'; s2.style.left = (st.s2 / st.s3 * 100) + '%';
   s1.classList.toggle('off', G.score < st.goal); s2.classList.toggle('off', G.score < st.s2); s3.classList.toggle('off', G.score < st.s3);
   if (G.dblT > 0) { const b = $('buffDbl'); if (b) b.textContent = `⭐ 점수 2배 ${Math.ceil(G.dblT)}초`; }
+}
+// 하트 칸 (모든 게임 같은 그림 common/ui/heart·heart_empty)
+function renderHearts(pop) {
+  const el = $('hudHearts'); if (!el) return;
+  el.innerHTML = Array.from({ length: MAX_HEARTS }, (_, k) => `<i class="heart${k < G.hearts ? '' : ' empty'}${pop && k === G.hearts - 1 ? ' pop' : ''}"></i>`).join('');
 }
 function renderItems() {
   for (const id of ['time', 'double', 'rainbow']) {

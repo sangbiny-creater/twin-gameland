@@ -1,8 +1,10 @@
 'use strict';
-// 은유와 은결의 케이크 탭탭 — 3줄로 떨어지는 빵을 아래 버튼 3개로 맞추는 리듬 게임 (달콤 베이커리와 같은 빵집·같은 그림·같은 판정)
-//  · 컵케이크·금빛 컵케이크: 판정선에 오면 그 줄을 톡 / 쌍둥이 케이크(두 줄 같이): 두 줄을 같이 톡
-//  · 긴 빵(롤케이크·에클레어): 앞 끝이 오면 꾹 누르고, 뒤 끝이 오면 떼기 (끝까지 누르고 있으면 '좋아요')
-//  · 함정(탄 빵·빈 접시): 그 줄을 누르면 안 됨
+// 은유와 은결의 멍멍이 간식 타임 — 은유·은결이 던져 주는 간식을 아래 강아지 3마리가 받아먹는 3줄 리듬 게임 (달콤 베이커리와 같은 판정·규칙)
+//  · 강아지 3마리 = 버튼 3개: 흰 시츄 · 크림 포메라니안 · 갈색 막내. 간식이 판정선에 오면 그 강아지를 톡 → "냠!"
+//  · 뼈다귀·금빛 뼈다귀: 톡 / 쌍둥이 간식(두 줄 같이): 두 강아지를 같이 톡
+//  · 긴 소시지: 앞 끝이 오면 꾹 누르고(냠냠냠~ 먹으면서 짧아짐), 뒤 끝이 오면 떼기 (끝까지 누르고 있으면 '좋아요')
+//  · 함정(양파·초콜릿): 강아지가 먹으면 안 됨 → 그 줄을 누르면 안 됨
+//  · 은유·은결: 세로 화면은 위 양옆에서 간식을 던지고, 가로 화면은 줄 양옆에서 응원 (내 캐릭터 왼쪽, 쌍둥이 오른쪽)
 //  · 하트: 3개로 시작, 최대 5개. Bad(놓침·함정·너무 빨리·너무 일찍 뗌) 나오면 -1
 //  · 하트 아이템: 가끔(25초에 한 번꼴) 긴 빵 앞쪽에 올라감 → 시작·끝 모두 Perfect 면 하트 +1 (하트가 늘어나는 곳은 이것뿐)
 //  · 끝없이 이어짐: 하트가 다 없어질 때까지, 30초마다 레벨 업. 전에 간 가장 높은 레벨부터 다시 시작할 수 있음
@@ -10,24 +12,25 @@
 // 폰 세로: 논리 폭 540 / 폰 가로·태블릿 가로·PC: 논리 높이 540 — 3줄은 늘 화면 가운데
 
 let W = 540, H = 960;
-const L = window.CakeTapLevels, A = window.BakeryArt;
+const L = window.SnackLevels, D = window.DogArt;
 const { PTS, JUDGE, LANES } = L;
-const ASSET_V = '202610262058';
+const ASSET_V = '202610262140';
 const MAX_HEARTS = 5;
 const HEART_GAP = 25; // 하트 아이템 사이 최소 시간(초)
-const LANE_COL = ['#FF8FB1', '#8FD0FF', '#FFD34D']; // 딸기·소다·바닐라
-const LANE_DARK = ['#C2456A', '#2F6FA8', '#B5760F'];
+const LANE_COL = ['#FF8FB1', '#FFD34D', '#8FD0FF']; // 시츄(분홍)·포메(노랑)·막내(하늘)
+const LANE_DARK = ['#C2456A', '#B5760F', '#2F6FA8'];
+const DOG_NAME = ['시츄', '포메', '막내'];
 const LANE_KEYS = [['KeyA', 'KeyJ', 'Digit1', 'ArrowLeft'], ['KeyS', 'KeyK', 'Digit2', 'ArrowDown'], ['KeyD', 'KeyL', 'Digit3', 'ArrowRight']];
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
 const Save = {
   data: { best: 0, maxLevel: 1, sound: true },
-  load() { try { Object.assign(this.data, JSON.parse(localStorage.getItem('caketap_v1') || '{}')); } catch (e) { /* private mode */ } },
-  store() { try { localStorage.setItem('caketap_v1', JSON.stringify(this.data)); } catch (e) { /* ignore */ } },
+  load() { try { Object.assign(this.data, JSON.parse(localStorage.getItem('dogsnack_v1') || '{}')); } catch (e) { /* private mode */ } },
+  store() { try { localStorage.setItem('dogsnack_v1', JSON.stringify(this.data)); } catch (e) { /* ignore */ } },
 };
 Save.load();
 const HUB = window.Hub && window.Hub.active() ? window.Hub : null;
-if (HUB) { Save.data.sound = HUB.settings.sound; Save.data.best = HUB.rec('caketap').best; Save.data.maxLevel = HUB.rec('caketap').maxLevel || 1; }
+if (HUB) { Save.data.sound = HUB.settings.sound; Save.data.best = HUB.rec('dogsnack').best; Save.data.maxLevel = HUB.rec('dogsnack').maxLevel || 1; }
 const GOD = () => !!(window.Hub && window.Hub.god); // 무적 쿠폰 (테스트용)
 
 // ---------- utils ----------
@@ -36,10 +39,9 @@ const $ = (id) => document.getElementById(id);
 const rnd = (a, b) => a + Math.random() * (b - a);
 const fmt = (n) => Math.round(n).toLocaleString();
 
-// ---------- 그림: 달콤 베이커리 그림을 같이 씀 ----------
-A.load('../bakery/assets/sprites/', ASSET_V);
+// ---------- 그림: 배경은 두더지 게임 초원(울타리·풍차)을 같이 씀, 강아지·간식은 art.js ----------
 const BGS = { port: new Image(), land: new Image() };
-BGS.port.src = `../bakery/assets/bg/port.webp?v=${ASSET_V}`; BGS.land.src = `../bakery/assets/bg/land.webp?v=${ASSET_V}`;
+BGS.port.src = `../mole/assets/bg/port.webp?v=${ASSET_V}`; BGS.land.src = `../mole/assets/bg/land.webp?v=${ASSET_V}`;
 const HEART = new Image(); HEART.src = `../common/ui/heart.webp?v=${ASSET_V}`;
 const HEART_EMPTY = new Image(); HEART_EMPTY.src = `../common/ui/heart_empty.webp?v=${ASSET_V}`;
 const imgOk = (im) => im.complete && im.naturalWidth > 0;
@@ -49,7 +51,8 @@ const myLook = (() => {
   if (window.CharV2 && window.CharV2.is(lk)) return lk;
   return lk.startsWith('eungyeol') ? 'eungyeol3' : 'eunyu3';
 })();
-if (window.CharV2) window.CharV2.load(myLook);
+const twinLook = myLook.startsWith('eungyeol') ? 'eunyu3' : 'eungyeol3';
+if (window.CharV2) { window.CharV2.load(myLook); window.CharV2.load(twinLook); }
 
 // ---------- audio (효과음만) ----------
 const Audio = {
@@ -72,17 +75,19 @@ const Audio = {
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
     o.connect(g); g.connect(this.gain); o.start(t); o.stop(t + d + 0.02);
   },
-  // 줄마다 다른 음 (도·미·솔): 잘 맞추면 화음처럼 들림
-  laneF: [523, 659, 784],
+  // 강아지마다 목소리 높이가 다름 (시츄·포메·막내) — "냠!" "멍!"
+  laneF: [520, 660, 780],
+  bark(k, v = 0.22) { const f = this.laneF[k]; this.tone(f, 0.09, 'square', v * 0.6, -f * 0.45); this.tone(f * 1.5, 0.07, 'triangle', v * 0.5, -f * 0.6, 0.01); },
+  chomp(k, v = 0.2) { this.tone(180 + k * 30, 0.06, 'square', v * 0.5, -60); this.tone(900 + k * 80, 0.03, 'triangle', v * 0.4, 0, 0.02); },
   sfx(n, k = 0) {
     switch (n) {
-      case 'perfect': this.tone(this.laneF[k] * 2, 0.14, 'triangle', 0.3); this.tone(this.laneF[k] * 3, 0.1, 'sine', 0.12, 0, 0.04); break;
-      case 'good': this.tone(this.laneF[k] * 2, 0.12, 'triangle', 0.24); break;
-      case 'ok': this.tone(this.laneF[k], 0.1, 'triangle', 0.2); break;
-      case 'press': this.tone(this.laneF[k], 0.06, 'sine', 0.12, 120); break;
-      case 'hold': this.tone(this.laneF[k] + 40, 0.06, 'sine', 0.06); break;
+      case 'perfect': this.chomp(k); this.bark(k, 0.26); this.tone(this.laneF[k] * 2, 0.12, 'sine', 0.14, 0, 0.08); break;
+      case 'good': this.chomp(k); this.bark(k, 0.18); break;
+      case 'ok': this.chomp(k, 0.16); break;
+      case 'press': this.chomp(k, 0.14); break;
+      case 'hold': this.chomp(k, 0.08); break;
       case 'empty': this.tone(220, 0.06, 'triangle', 0.08, -40); break;
-      case 'miss': this.tone(200, 0.18, 'square', 0.12, -80); break;
+      case 'miss': this.tone(700, 0.25, 'sine', 0.12, -350); break; // 낑~
       case 'bad': this.tone(330, 0.16, 'square', 0.14, -150); this.tone(220, 0.22, 'square', 0.12, -80, 0.12); break;
       case 'combo': [1046, 1318, 1568].forEach((f, i) => this.tone(f, 0.1, 'triangle', 0.22, 0, i * 0.05)); break;
       case 'gold': [1318, 1568, 2093].forEach((f, i) => this.tone(f, 0.1, 'sine', 0.24, 0, i * 0.04)); break;
@@ -108,6 +113,7 @@ const G = {
   state: 'ready', gen: null, notes: [], fx: [], t: 0, clock: 0, countT: 0, frameAt: 0, k: 0, heartT: 0,
   hearts: 3, score: 0, coins: 0, combo: 0, maxCombo: 0, made: 0, perfect: 0, level: 1, startLv: 1,
   ptr: new Map(), laneDown: [0, 0, 0], laneGlow: [0, 0, 0], hold: [null, null, null], holdSnd: 0,
+  mood: ['idle', 'idle', 'idle'], moodT: [0, 0, 0], chompT: [0, 0, 0], thr: [0, 0],
   slowT: 0, x2T: 0, shield: 0, pose: 'idle', poseT: 0, pausedFrom: 'play', newBest: false, prev: 'ready',
 };
 // LAY: 줄 폭 lw, 가운데 cx, 판정선 jy, 위 끝 top, 버튼 by·br, 그림 크기 s, 떨어지는 속도 배율 vs
@@ -116,10 +122,10 @@ function layout() {
   const sv = (k) => parseFloat(getComputedStyle(root).getPropertyValue('--safe-' + k)) || 0;
   if (wideLayout()) {
     LAY.s = 0.82; LAY.vs = 0.72; LAY.lw = 140; LAY.cx = W / 2; LAY.br = 40;
-    LAY.by = H - 52 - sv('b'); LAY.jy = LAY.by - 78; LAY.top = 70 + sv('t');
+    LAY.by = H - 56 - sv('b'); LAY.jy = LAY.by - 62; LAY.top = 70 + sv('t');
   } else {
     LAY.s = 1; LAY.vs = 1; LAY.lw = Math.min(166, (W - 30) / 3); LAY.cx = W / 2; LAY.br = 56;
-    LAY.by = H - 90 - sv('b'); LAY.jy = LAY.by - 116; LAY.top = 128 + sv('t');
+    LAY.by = H - 92 - sv('b'); LAY.jy = LAY.by - 86; LAY.top = 128 + sv('t');
   }
 }
 const laneX = (i) => LAY.cx + (i - 1) * LAY.lw;
@@ -142,12 +148,12 @@ function startRun(lv = 1) {
   G.hearts = 3; G.score = 0; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.made = 0; G.perfect = 0; G.level = lv; G.startLv = lv; G.newBest = false;
   G.fx = []; G.t = 0; G.clock = c0; G.slowT = 0; G.x2T = 0; G.shield = 0; G.hold = [null, null, null]; G.ptr.clear(); G.laneDown = [0, 0, 0];
   G.pose = 'idle'; G.poseT = 0;
-  const boosts = HUB ? HUB.takeBoosts('caketap') : [];
+  const boosts = HUB ? HUB.takeBoosts('dogsnack') : [];
   if (boosts.includes('life')) G.hearts = 4;
   if (boosts.includes('shield')) G.shield = 1;
   if (boosts.includes('slow')) G.slowT = 20;
   if (boosts.includes('x2')) G.x2T = 30;
-  if (boosts.length) toast('부스트: ' + boosts.map((b) => HUB.boostName('caketap', b)).join(' · '));
+  if (boosts.length) toast('부스트: ' + boosts.map((b) => HUB.boostName('dogsnack', b)).join(' · '));
   pull();
   renderBuffs(); renderHearts();
   $('hudBest').textContent = fmt(Save.data.best || 0);
@@ -160,6 +166,7 @@ function pull() {
     const n = G.gen.out.shift(), p = L.params(n.t);
     Object.assign(n, { w: p.win, gd: p.guide, kind: G.k % 2, st: 'wait' }); G.k++;
     if (n.type === 'long' && n.t - G.heartT >= HEART_GAP) { n.heart = true; G.heartT = n.t; } // 가끔만 하트 아이템
+    n.from = n.lane === 1 ? (G.k % 2) : n.lane === 0 ? 0 : 1; // 던지는 사람: 0 내 캐릭터(왼쪽) · 1 쌍둥이(오른쪽)
     G.notes.push(n);
   }
   G.notes = G.notes.filter((n) => n.st === 'wait' || n.st === 'hold' || G.clock - (n.jt != null ? n.jt : (n.t1 || n.t)) < 1);
@@ -167,10 +174,10 @@ function pull() {
 function showReady() {
   clearTimers();
   G.notes = [];
-  const items = [['cup', '컵케이크', '톡!'], ['chord', '쌍둥이', '두 줄 같이'], ['long', '긴 빵', '꾹~ 떼기'], ['heartlong', '하트 빵', '둘 다 Perfect']];
+  const items = [['cup', '뼈다귀', '톡!'], ['chord', '쌍둥이 간식', '두 줄 같이'], ['long', '긴 소시지', '꾹~ 떼기'], ['heartlong', '하트 소시지', '둘 다 Perfect']];
   $('legend').innerHTML = items.map(([id, nm, p]) => `<div class="lg"><img src="${icon(id)}" alt=""><span>${nm}</span><b>${p}</b></div>`).join('')
-    + `<div class="lg no"><img src="${icon('burnt')}" alt=""><img src="${icon('plate')}" alt=""><span>탄 빵·접시</span><b>누르면 안 돼요</b></div>`;
-  if (!A.ready() || !imgOk(HEART)) setTimeout(() => { if (G.state === 'ready') showReady(); }, 300); // 그림을 다 받으면 다시 그림
+    + `<div class="lg no"><img src="${icon('burnt')}" alt=""><img src="${icon('plate')}" alt=""><span>양파·초콜릿</span><b>주면 안 돼요</b></div>`;
+  if (!imgOk(HEART)) setTimeout(() => { if (G.state === 'ready') showReady(); }, 300); // 그림을 다 받으면 다시 그림
   $('readyInfo').innerHTML = `BEST <b>${fmt(Save.data.best || 0)}점</b>` + (Save.data.maxLevel > 1 ? ` · 가장 높은 레벨 <b>${Save.data.maxLevel}</b>` : '');
   setState('ready');
 }
@@ -178,13 +185,13 @@ const ICONS = {};
 function icon(id) {
   if (ICONS[id]) return ICONS[id];
   const c = document.createElement('canvas'); c.width = 148; c.height = 100; const g = c.getContext('2d');
-  if (id === 'cup') A.cupcake(g, 74, 96, 0.8, { v: 0 });
-  else if (id === 'chord') { A.cupcake(g, 42, 96, 0.62, { v: 0 }); A.cupcake(g, 106, 96, 0.62, { v: 0 }); }
-  else if (id === 'burnt') A.cupcake(g, 74, 96, 0.8, { burnt: true, t: 0.3 });
-  else if (id === 'plate') A.plate(g, 74, 80, 1.2);
-  else if (id === 'long') A.longBread(g, 6, 142, 84, 0.8, 0, [6, 142], true);
-  else if (id === 'heartlong') { A.longBread(g, 6, 142, 96, 0.8, 0, null, false); if (imgOk(HEART)) g.drawImage(HEART, 20, 22, 40, 40 * HEART.naturalHeight / HEART.naturalWidth); }
-  const url = c.toDataURL(); if (A.ready() && imgOk(HEART)) ICONS[id] = url; // 그림을 받기 전 코드 그림은 기억하지 않음
+  if (id === 'cup') D.bone(g, 74, 50, 1);
+  else if (id === 'chord') { g.strokeStyle = '#FF6B95'; g.lineWidth = 8; g.beginPath(); g.moveTo(40, 52); g.lineTo(108, 52); g.stroke(); D.bone(g, 40, 50, 0.6); D.bone(g, 108, 50, 0.6); }
+  else if (id === 'burnt') D.onion(g, 74, 52, 0.9);
+  else if (id === 'plate') D.choco(g, 74, 50, 0.9);
+  else if (id === 'long') { g.translate(74, 50); g.rotate(-Math.PI / 2); g.translate(-74, -50); D.sausage(g, 74, -10, 110, 0.9); }
+  else if (id === 'heartlong') { g.save(); g.translate(74, 50); g.rotate(-Math.PI / 2); g.translate(-74, -50); D.sausage(g, 74, -10, 110, 0.9); g.restore(); if (imgOk(HEART)) g.drawImage(HEART, 54, 18, 40, 40 * HEART.naturalHeight / HEART.naturalWidth); }
+  const url = c.toDataURL(); if (imgOk(HEART)) ICONS[id] = url; // 그림을 받기 전 코드 그림은 기억하지 않음
   return url;
 }
 let runId = 0;
@@ -196,7 +203,7 @@ const comboMul = (c) => (c >= 20 ? 2 : c >= 10 ? 1.5 : c >= 5 ? 1.2 : 1);
 const isTrap = (n) => n.type === 'burnt' || n.type === 'plate';
 const judgeOf = (n, dt) => { const w = n.w, a = Math.abs(dt); return a <= w.p ? 'perfect' : a <= w.g ? 'good' : a <= w.o ? 'ok' : null; };
 const JTXT = { perfect: 'Perfect!', good: 'Good!', ok: 'OK' };
-const jy = () => LAY.jy - 120 * LAY.s;
+const jy = () => LAY.jy - 110 * LAY.s;
 
 // ---------- 누르기 / 떼기 (줄마다 따로) ----------
 function press(lane, tc) {
@@ -227,10 +234,13 @@ function release(lane, tc) {
   else if ((tc - n.t) / (n.t1 - n.t) >= 0.6) finishLong(n, 'ok');
   else { G.hold[lane] = null; missNote(n, '너무 일찍 뗐어요'); }
 }
+function setMood(lane, m, t) { G.mood[lane] = m; G.moodT[lane] = t; }
 function hitNote(n, tc) {
+  G.chompT[n.lane] = 0.18;
   if (isTrap(n)) {
     n.st = 'trap'; n.jt = tc;
-    loseHeart(n.type === 'burnt' ? '앗! 탄 빵이에요' : '앗! 빈 접시예요', n.lane);
+    setMood(n.lane, 'sad', 0.9);
+    loseHeart(n.type === 'burnt' ? '앗! 양파는 안 돼요' : '앗! 초콜릿은 안 돼요', n.lane);
     return;
   }
   const j = judgeOf(n, tc - n.t) || 'ok';
@@ -277,9 +287,11 @@ function success(n, v, j, base) {
     G.fx.push({ kind: 'text', text: `${G.combo} 콤보! ×${comboMul(G.combo)}`, x: W / 2, y: LAY.top + 70, t: 0, life: 1.1, big: true });
   }
   setPose(j === 'perfect' || G.combo % 5 === 0 ? 'cheer' : 'happy', 0.5);
+  setMood(n.lane, 'happy', 0.5);
 }
 function missNote(n, msg) {
   n.st = 'miss'; n.jt = G.clock;
+  setMood(n.lane, 'sad', 0.9);
   loseHeart(msg, n.lane);
 }
 function loseHeart(msg, lane) {
@@ -330,7 +342,7 @@ function showResult() {
   if (!HUB) Save.store();
   $('resEarn').classList.toggle('hidden', !HUB);
   if (HUB) {
-    const h = HUB.record('caketap', { dist: score, coins: G.coins, level: G.level });
+    const h = HUB.record('dogsnack', { dist: score, coins: G.coins, level: G.level });
     $('resEarn').innerHTML = h.god ? '무적 모드라서 기록·코인이 없어요' : `+${h.earned} 코인 획득!` + (h.bonus ? ` <small>(점수 보너스 +${h.bonus})</small>` : '') + `<small>내 코인 ${h.coins}</small>`;
   }
   $('resScore').textContent = fmt(score);
@@ -352,6 +364,8 @@ function step(dt) {
   G.fx = G.fx.filter((f) => f.t < f.life);
   for (let i = 0; i < LANES; i++) G.laneGlow[i] = Math.max(G.laneDown[i] ? 0.6 : 0, G.laneGlow[i] - dt * 4);
   if (G.poseT > 0) { G.poseT -= dt; if (G.poseT <= 0) G.pose = 'idle'; }
+  for (let i = 0; i < LANES; i++) { G.chompT[i] = Math.max(0, G.chompT[i] - dt); if (G.moodT[i] > 0) { G.moodT[i] -= dt; if (G.moodT[i] <= 0) G.mood[i] = 'idle'; } }
+  G.thr = G.thr.map((v) => Math.max(0, v - dt));
   if (G.state === 'pause') return;
   if (G.state === 'count') {
     const before = Math.ceil(G.countT);
@@ -401,37 +415,38 @@ function drawBg() {
   if (imgOk(BG)) {
     const iw = BG.naturalWidth, ih = BG.naturalHeight, sc = Math.max(W / iw, H / ih), dw = iw * sc, dh = ih * sc;
     ctx.drawImage(BG, (W - dw) / 2, (H - dh) / 2, dw, dh);
-  } else A.backdrop(ctx, W, H, H * 0.7, G.t);
-  ctx.fillStyle = 'rgba(60,30,60,.18)'; ctx.fillRect(0, 0, W, H); // 줄이 잘 보이게 살짝 어둡게
+  } else { ctx.fillStyle = '#BCDA52'; ctx.fillRect(0, 0, W, H); }
+  ctx.fillStyle = 'rgba(40,60,20,.12)'; ctx.fillRect(0, 0, W, H); // 줄이 잘 보이게 살짝 어둡게
 }
 function render() {
   ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
   const s = LAY.s, lw = LAY.lw, x0 = LAY.cx - lw * 1.5;
   drawBg();
-  drawChar();
+  if (wideLayout()) drawTwins();
   // 3줄
   for (let i = 0; i < LANES; i++) {
     const x = x0 + i * lw;
     ctx.save();
     ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x + 5, LAY.top - 20, lw - 10, LAY.by - LAY.top + 20, 22); else ctx.rect(x + 5, LAY.top - 20, lw - 10, LAY.by - LAY.top + 20);
     const gr = ctx.createLinearGradient(0, LAY.top, 0, LAY.by);
-    gr.addColorStop(0, 'rgba(255,255,255,.35)'); gr.addColorStop(0.75, 'rgba(255,255,255,.62)'); gr.addColorStop(1, LANE_COL[i] + 'AA');
+    gr.addColorStop(0, 'rgba(255,255,255,.3)'); gr.addColorStop(0.7, 'rgba(255,255,255,.58)'); gr.addColorStop(1, LANE_COL[i] + 'AA');
     ctx.fillStyle = gr; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,.95)'; ctx.stroke(); // 줄이 또렷하게
     if (G.laneGlow[i] > 0) { ctx.globalAlpha = G.laneGlow[i] * 0.55; ctx.fillStyle = LANE_COL[i]; ctx.fill(); }
     ctx.restore();
   }
-  // 판정선 + 줄마다 과녁
+  if (!wideLayout()) drawTwins();
+  // 판정선 + 줄마다 과녁 (강아지 머리 바로 위)
   const soon = (i) => G.state === 'play' && G.notes.some((n) => n.lane === i && n.st === 'wait' && !isTrap(n) && Math.abs(n.t - G.clock) <= n.w.o);
   ctx.save(); ctx.setLineDash([12, 10]); ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(255,224,122,.95)';
   ctx.beginPath(); ctx.moveTo(x0 + 8, LAY.jy); ctx.lineTo(x0 + lw * 3 - 8, LAY.jy); ctx.stroke(); ctx.restore();
   for (let i = 0; i < LANES; i++) {
     ctx.save(); ctx.globalAlpha = soon(i) ? 0.95 : 0.55; ctx.lineWidth = 5 * s; ctx.strokeStyle = soon(i) ? '#FFE07A' : '#FFFFFF';
-    ctx.beginPath(); ctx.ellipse(laneX(i), LAY.jy, 54 * s, 18 * s, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    ctx.beginPath(); ctx.ellipse(laneX(i), LAY.jy, 50 * s, 18 * s, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
   }
-  // 빵: 위(나중 것)부터 그려서 아래(먼저 오는 것)가 위로 보이게
-  ctx.save(); ctx.beginPath(); ctx.rect(0, LAY.top - 20, W, LAY.by - LAY.top + 20); ctx.clip();
-  const sp = L.speedAt(G.clock) * LAY.vs;
-  // 쌍둥이 케이크: 같이 눌러야 하는 두 빵을 분홍 막대로 이어 줌 (빵 뒤에)
+  drawDogs();
+  // 간식: 위(나중 것)부터 그려서 아래(먼저 오는 것)가 위로 보이게
+  ctx.save(); ctx.beginPath(); ctx.rect(0, LAY.top - 30, W, LAY.jy - LAY.top + 90 * s); ctx.clip();
+  // 쌍둥이 간식: 같이 줘야 하는 두 간식을 분홍 막대로 이어 줌 (간식 뒤에)
   for (const n of G.notes) {
     if (!n.chord || n.st !== 'wait') continue;
     const mate = G.notes.find((m) => m !== n && m.chord && m.t === n.t && m.lane > n.lane); if (!mate) continue;
@@ -442,49 +457,46 @@ function render() {
   for (let i = G.notes.length - 1; i >= 0; i--) {
     const n = G.notes[i], x = laneX(n.lane);
     let y = yAt(n.t);
+    if (!n.thrown && y > LAY.top - 30) { n.thrown = true; G.thr[n.from] = 0.35; } // 은유·은결이 던지는 몸짓
     const done = n.st === 'done' || n.st === 'trap';
-    if (done) y = Math.min(y, LAY.jy); // 맞힌 빵은 판정선에 멈춰서 사라짐
+    if (done) y = Math.min(y, LAY.jy) + clamp((G.clock - n.jt) / 0.2, 0, 1) * 40 * s; // 먹은 간식은 강아지 입으로 쏙
     const yb = n.type === 'long' ? yAt(n.t1) : y;
     if (y < LAY.top - 200 || yb > LAY.by + 160) continue;
-    const fade = done ? 1 - clamp((G.clock - n.jt) / 0.35, 0, 1) : n.st === 'miss' ? 1 - clamp((G.clock - n.jt) / 0.6, 0, 1) : 1;
+    const fade = done ? 1 - clamp((G.clock - n.jt) / 0.22, 0, 1) : n.st === 'miss' ? 1 - clamp((G.clock - n.jt) / 0.6, 0, 1) : 1;
     if (fade <= 0) continue;
     ctx.save(); ctx.globalAlpha = fade;
-    if (n.type === 'long') drawLong(n, x, y, yAt(n.t1), sp);
-    else if (n.type === 'plate') A.plate(ctx, x, y + 26 * s, s * 0.95);
+    if (n.type === 'long') drawLong(n, x, yAt(n.t), yAt(n.t1));
     else {
-      const k = n.st === 'done' ? Math.min(1, (G.clock - n.jt) / 0.1) : 0;
-      if (done) { ctx.translate(x, y); ctx.scale(1 + (1 - fade) * 0.3, 1 + (1 - fade) * 0.3); ctx.translate(-x, -y); }
-      A.cupcake(ctx, x, y + 36 * s, s * 0.95, { v: 0, burnt: n.type === 'burnt', gold: n.type === 'gold', cream: k, t: G.t });
+      if (done) { ctx.translate(x, y); ctx.scale(0.5 + fade * 0.5, 0.5 + fade * 0.5); ctx.translate(-x, -y); }
+      if (n.type === 'burnt') D.onion(ctx, x, y, s * 0.95);
+      else if (n.type === 'plate') D.choco(ctx, x, y, s * 0.95);
+      else D.bone(ctx, x, y, s, { gold: n.type === 'gold', t: G.t });
     }
     ctx.restore();
-    if (n.st === 'miss' && !n.early && G.clock - n.jt < 0.6) drawX(x, Math.min(y, LAY.jy + 20), 1 - (G.clock - n.jt) / 0.6);
+    if (n.st === 'miss' && !n.early && G.clock - n.jt < 0.6) drawX(x, Math.min(y, LAY.jy), 1 - (G.clock - n.jt) / 0.6);
     if (n.st === 'wait' && !isTrap(n)) drawGuide(n, x, y);
   }
   ctx.restore();
-  drawButtons();
   drawFx();
   drawHint();
 }
-// 긴 빵: 세로로 세운 롤케이크·에클레어. 앞 끝(아래)이 판정선에 오면 꾹, 뒤 끝(위)이 오면 떼기
-function drawLong(n, x, yF, yB, sp) {
-  const s = LAY.s, len = Math.max(10, yF - yB);
-  let cream = null;
-  if (n.hs != null) cream = [0, Math.min(len, (n.he - n.t) * sp)];
-  ctx.save(); ctx.translate(x, yF); ctx.rotate(-Math.PI / 2); // 누르는 동안 빵은 계속 내려가고, 판정선을 지난 만큼 크림이 올라감
-  A.longBread(ctx, -10 * s, len + 10 * s, 26 * s, s * 0.9, n.kind, cream, false);
-  ctx.restore();
-  if (n.heart && !n.heartGot && !n.heartLost && n.st !== 'miss' && G.hearts < MAX_HEARTS) drawHeart(HEART, x, yF - 30 * s + Math.sin(G.t * 6) * 2 * s, 40 * s);
+// 긴 소시지: 세로로 내려옴. 앞 끝(아래)이 판정선에 오면 꾹 → 강아지가 냠냠 먹어서 판정선 아래는 없어짐, 뒤 끝(위)이 오면 떼기
+function drawLong(n, x, yF, yB) {
+  const s = LAY.s;
+  const eating = n.st === 'hold' || n.st === 'done';
+  D.sausage(ctx, x, yB, yF, s, eating ? LAY.jy : null);
+  if (n.heart && !n.heartGot && !n.heartLost && n.st !== 'miss' && G.hearts < MAX_HEARTS) drawHeart(HEART, x, Math.min(yF, eating ? LAY.jy : yF) - 22 * s + Math.sin(G.t * 6) * 2 * s, 38 * s);
   if (n.st === 'wait' && n.gd > 0) {
     ctx.save(); ctx.globalAlpha = n.gd; ctx.font = `${20 * s}px Jua, sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.lineWidth = 5; ctx.strokeStyle = '#fff';
-    ctx.strokeText('꾹', x + 30 * s, yF); ctx.fillStyle = '#E8456A'; ctx.fillText('꾹', x + 30 * s, yF);
-    ctx.strokeText('떼기', x + 30 * s, yB); ctx.fillStyle = '#2F86E8'; ctx.fillText('떼기', x + 30 * s, yB);
+    ctx.strokeText('꾹', x + 26 * s, yF - 10 * s); ctx.fillStyle = '#E8456A'; ctx.fillText('꾹', x + 26 * s, yF - 10 * s);
+    ctx.strokeText('떼기', x + 26 * s, yB + 10 * s); ctx.fillStyle = '#2F86E8'; ctx.fillText('떼기', x + 26 * s, yB + 10 * s);
     ctx.restore();
   }
 }
-// 타이밍 도우미: 빵 둘레의 동그라미가 줄어들다가 딱 맞는 순간 과녁 크기
+// 타이밍 도우미: 간식 둘레의 동그라미가 줄어들다가 딱 맞는 순간 과녁 크기
 function drawGuide(n, x, y) {
   const dtt = n.t - G.clock; if (n.gd <= 0 || dtt > 1.1 || dtt < -0.1) return;
-  const s = LAY.s, r = 54 * s + Math.max(0, dtt) * 70 * s;
+  const s = LAY.s, r = 50 * s + Math.max(0, dtt) * 70 * s;
   ctx.save(); ctx.globalAlpha = n.gd * clamp(1 - dtt / 1.1, 0, 1) * 0.9;
   ctx.strokeStyle = dtt < 0.12 ? '#FFD34D' : '#FFFFFF'; ctx.lineWidth = 5 * s;
   ctx.beginPath(); ctx.ellipse(x, y, r, r * 0.9, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
@@ -495,39 +507,48 @@ function drawX(x, y, a) {
   ctx.strokeStyle = '#fff'; ctx.lineWidth = 13; ctx.beginPath(); ctx.moveTo(-r, -r); ctx.lineTo(r, r); ctx.moveTo(r, -r); ctx.lineTo(-r, r); ctx.stroke();
   ctx.strokeStyle = '#E8384D'; ctx.lineWidth = 7; ctx.stroke(); ctx.restore();
 }
-// 아래 버튼 3개 (짤주머니 그림 + 줄 색)
-function drawButtons() {
+// 아래 강아지 3마리 = 버튼 3개. 누르면 입을 벌리고, 긴 소시지를 먹는 동안 냠냠
+function drawDogs() {
+  const ds = LAY.br / 50;
   for (let i = 0; i < LANES; i++) {
-    const x = laneX(i), y = LAY.by, r = LAY.br, dn = G.laneDown[i] > 0;
-    ctx.save(); ctx.translate(x, y + (dn ? 4 : 0));
-    ctx.beginPath(); ctx.arc(0, dn ? 2 : 6, r, 0, Math.PI * 2); ctx.fillStyle = LANE_DARK[i]; ctx.fill();
-    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2);
-    const gr = ctx.createLinearGradient(0, -r, 0, r); gr.addColorStop(0, '#FFFFFF'); gr.addColorStop(0.35, LANE_COL[i]); gr.addColorStop(1, LANE_DARK[i]);
-    ctx.fillStyle = gr; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = '#fff'; ctx.stroke();
-    A.bag(ctx, 0, r * 0.62, r / 140, dn ? 0.8 : 0, '#FFC2D4');
+    const x = laneX(i), y = LAY.by, dn = G.laneDown[i] > 0, h = G.hold[i];
+    ctx.save();
+    ctx.beginPath(); ctx.ellipse(x, y + LAY.br * 0.95, LAY.br * 1.25, LAY.br * 0.38, 0, 0, Math.PI * 2); // 방석
+    ctx.fillStyle = LANE_COL[i]; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.stroke();
     ctx.restore();
+    let open = G.chompT[i] > 0 ? 1 : dn ? 0.7 : 0;
+    if (h && h.st === 'hold') open = 0.35 + 0.65 * Math.abs(Math.sin(G.t * 14)); // 냠냠냠
+    const bob = G.mood[i] === 'happy' ? -Math.abs(Math.sin(G.t * 12)) * 6 : (dn ? 3 : 0);
+    D.dog(ctx, x, y + bob, ds, i, open, G.mood[i], G.t + i);
   }
 }
-// 가로 화면: 줄 왼쪽에 내 캐릭터가 응원
-function drawChar() {
-  const CV = window.CharV2; if (!wideLayout() || !CV || !CV.ready(myLook)) return;
-  const x = LAY.cx - LAY.lw * 1.5 - 110, pose = CV.has(myLook, G.pose) ? G.pose : 'idle';
-  if (x < 60) return;
-  const bob = G.pose === 'cheer' ? -Math.abs(Math.sin(G.t * 10)) * 10 : Math.sin(G.t * 3) * 2;
-  ctx.save(); ctx.translate(x, LAY.by + 30 + bob); CV.draw(ctx, myLook, pose, { h: 190 }); ctx.restore();
+// 은유·은결: 세로 화면은 위 양옆에서 간식을 던지고, 가로 화면은 줄 양옆에 서서 응원
+function drawTwins() {
+  const CV = window.CharV2; if (!CV) return;
+  const wide = wideLayout(), x0 = LAY.cx - LAY.lw * 1.5, x1 = LAY.cx + LAY.lw * 1.5;
+  const spots = wide ? [[x0 - 100, LAY.by + 40, 190], [x1 + 100, LAY.by + 40, 190]] : [[62, LAY.top + 96, 116], [W - 62, LAY.top + 96, 116]];
+  [myLook, twinLook].forEach((lk, k) => {
+    if (!CV.ready(lk)) return;
+    const [x, y, h] = spots[k]; if (wide && (x < 70 || x > W - 70)) return;
+    const thr = G.thr[k] > 0, pose0 = k === 0 ? G.pose : (G.pose === 'hit' || G.pose === 'dizzy' ? G.pose : 'idle');
+    const pose = thr ? 'cheer' : pose0, use = CV.has(lk, pose) ? pose : 'idle';
+    const bob = use === 'cheer' ? -Math.abs(Math.sin(G.t * 10)) * 8 : Math.sin(G.t * 3 + k) * 2;
+    ctx.save(); ctx.translate(x, y + bob); CV.draw(ctx, lk, use, { h, flip: k === 1 }); ctx.restore();
+  });
 }
 function drawHint() {
   if (G.state !== 'play' && G.state !== 'count') return;
   let txt = '';
   if (G.startLv > 1) txt = G.clock < (G.startLv - 1) * L.LEVEL + 4 ? `레벨 ${G.startLv}부터 시작!` : '';
-  else if (G.clock < 9) txt = '빵이 노란 줄에 오면 그 줄 버튼을 톡!';
-  else if (G.clock < 60 && G.notes.some((n) => n.type === 'long' && n.st === 'wait' && yAt(n.t) > LAY.top)) txt = '긴 빵은 꾹~ 누르고 끝에서 떼요!';
-  else if (G.clock < 60 && G.notes.some((n) => n.chord && n.st === 'wait' && yAt(n.t) > LAY.top)) txt = '쌍둥이 케이크는 두 줄을 같이 톡!';
-  else if (G.clock < 80 && G.notes.some((n) => isTrap(n) && n.st === 'wait' && yAt(n.t) > LAY.top)) txt = '탄 빵·빈 접시는 누르면 안 돼요!';
+  else if (G.clock < 9) txt = '간식이 노란 줄에 오면 그 강아지를 톡!';
+  else if (G.clock < 60 && G.notes.some((n) => n.type === 'long' && n.st === 'wait' && yAt(n.t) > LAY.top)) txt = '긴 소시지는 꾹~ 누르고 끝에서 떼요!';
+  else if (G.clock < 60 && G.notes.some((n) => n.chord && n.st === 'wait' && yAt(n.t) > LAY.top)) txt = '쌍둥이 간식은 두 강아지를 같이 톡!';
+  else if (G.clock < 80 && G.notes.some((n) => isTrap(n) && n.st === 'wait' && yAt(n.t) > LAY.top)) txt = '양파·초콜릿은 주면 안 돼요!';
   if (!txt) return;
   ctx.save(); ctx.font = '24px Jua, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(122,62,0,.9)'; ctx.strokeText(txt, LAY.cx, LAY.top + 24);
-  ctx.fillStyle = '#FFF6D0'; ctx.fillText(txt, LAY.cx, LAY.top + 24);
+  const hy = LAY.top + (wideLayout() ? 24 : 170); // 세로 화면은 위 양옆 은유·은결 아래로
+  ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(60,40,0,.9)'; ctx.strokeText(txt, LAY.cx, hy);
+  ctx.fillStyle = '#FFF6D0'; ctx.fillText(txt, LAY.cx, hy);
   ctx.restore();
 }
 const JCOL = { perfect: ['#FFF27A', '#B5600F'], good: ['#9BF0A8', '#2E7A3A'], ok: ['#A8DCFF', '#2F5FA8'], bad: ['#FF8FA0', '#7A0E1E'] };
@@ -712,4 +733,4 @@ if (new URLSearchParams(location.search).get('go') === '1') askStart(); // 인�
 requestAnimationFrame(frame);
 
 // debug/test hook
-window.__caketap = { G, step, render, updateHud, startRun, showReady, press, release, gameOver, showResult, LAY, laneX, yAt };
+window.__dogsnack = { G, step, render, updateHud, startRun, showReady, press, release, gameOver, showResult, LAY, laneX, yAt };
