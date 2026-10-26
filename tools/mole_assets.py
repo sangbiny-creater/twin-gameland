@@ -73,6 +73,12 @@ def main():
     names = ['normal', 'normal_hit', 'fast', 'fast_hit', 'tough', 'tough_crack', 'tough_hit']
     for i, n in enumerate(names):
         save(chroma(f'{GPT}/M{i + 1:02d}.PNG').crop((57, 30, 1197, 1110)), f'sprites/{n}', 0.4)
+    # 하트 두더지 M11·M12 (요청 글: GPT_요청_두더지게임_하트두더지.txt) — 있으면 같은 틀로. 넣은 뒤 game.js HAS_HEART_ART = true
+    for i, n in ((11, 'heart'), (12, 'heart_hit')):
+        if os.path.exists(f'{GPT}/M{i}.PNG'):
+            im = Image.open(f'{GPT}/M{i}.PNG')
+            if im.size != (1254, 1254): im = im.resize((1254, 1254), Image.LANCZOS)
+            save(chroma(im).crop((57, 30, 1197, 1110)), f'sprites/{n}', 0.4)
     # 함정 캐릭터(구멍에서 나온 은유·은결, C01~C04): 두더지와 같은 틀로 잘라 같은 크기·자리
     #  새 캐릭터: 신규캐릭터 템플릿 S15·S16 → molegame/GPT/두더지_<영문이름>.PNG, 두더지_<영문이름>_맞음.PNG
     #  (만든 뒤 mole/game.js MOLE_CHARS 에 <영문이름> 추가)
