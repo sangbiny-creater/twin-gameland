@@ -1,6 +1,6 @@
 'use strict';
 // 은유와 은결의 멍멍이 간식 타임 — 은유·은결이 던져 주는 간식을 아래 강아지 3마리가 받아먹는 3줄 리듬 게임 (달콤 베이커리와 같은 판정·규칙)
-//  · 강아지 3마리 = 버튼 3개: 흰 시츄 · 크림 포메라니안 · 갈색 막내. 간식이 판정선에 오면 그 강아지를 톡 → "냠!"
+//  · 강아지 3마리 = 버튼 3개: 아리(은유의 시츄) · 콩이(새 친구 푸들) · 포미(은결의 포메라니안). 간식이 판정선에 오면 그 강아지를 톡 → "냠!"
 //  · 뼈다귀·금빛 뼈다귀: 톡 / 쌍둥이 간식(두 줄 같이): 두 강아지를 같이 톡
 //  · 긴 소시지: 앞 끝이 오면 꾹 누르고(냠냠냠~ 먹으면서 짧아짐), 뒤 끝이 오면 떼기 (끝까지 누르고 있으면 '좋아요')
 //  · 함정(양파·초콜릿): 강아지가 먹으면 안 됨 → 그 줄을 누르면 안 됨
@@ -14,12 +14,12 @@
 let W = 540, H = 960;
 const L = window.SnackLevels, D = window.DogArt;
 const { PTS, JUDGE, LANES } = L;
-const ASSET_V = '202610262140';
+const ASSET_V = '202610270427';
 const MAX_HEARTS = 5;
 const HEART_GAP = 25; // 하트 아이템 사이 최소 시간(초)
-const LANE_COL = ['#FF8FB1', '#FFD34D', '#8FD0FF']; // 시츄(분홍)·포메(노랑)·막내(하늘)
+const LANE_COL = ['#FF8FB1', '#FFD34D', '#8FD0FF']; // 아리(분홍)·콩이(노랑)·포미(하늘)
 const LANE_DARK = ['#C2456A', '#B5760F', '#2F6FA8'];
-const DOG_NAME = ['시츄', '포메', '막내'];
+const DOG_NAME = ['아리', '콩이', '포미']; // 아리=은유의 시츄 · 콩이=새 친구 푸들 · 포미=은결의 포메라니안 (은유 왼쪽·은결 오른쪽 옆에)
 const LANE_KEYS = [['KeyA', 'KeyJ', 'Digit1', 'ArrowLeft'], ['KeyS', 'KeyK', 'Digit2', 'ArrowDown'], ['KeyD', 'KeyL', 'Digit3', 'ArrowRight']];
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -75,7 +75,7 @@ const Audio = {
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
     o.connect(g); g.connect(this.gain); o.start(t); o.stop(t + d + 0.02);
   },
-  // 강아지마다 목소리 높이가 다름 (시츄·포메·막내) — "냠!" "멍!"
+  // 강아지마다 목소리 높이가 다름 (아리·콩이·포미) — "냠!" "멍!"
   laneF: [520, 660, 780],
   bark(k, v = 0.22) { const f = this.laneF[k]; this.tone(f, 0.09, 'square', v * 0.6, -f * 0.45); this.tone(f * 1.5, 0.07, 'triangle', v * 0.5, -f * 0.6, 0.01); },
   chomp(k, v = 0.2) { this.tone(180 + k * 30, 0.06, 'square', v * 0.5, -60); this.tone(900 + k * 80, 0.03, 'triangle', v * 0.4, 0, 0.02); },

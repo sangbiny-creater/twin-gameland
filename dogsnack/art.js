@@ -1,6 +1,6 @@
 'use strict';
 // 멍멍이 간식 타임 그림 — 지금은 코드로 그린 임시 그림 (GPT 그림이 오면 이 함수들만 그림 파일로 바꾸면 됨)
-//  · 강아지 3마리: 0 흰 시츄 · 1 크림 포메라니안 · 2 갈색 막내 강아지 (은유·은결의 강아지 친구들)
+//  · 강아지 3마리 (캐릭터 레퍼런스 그림 기준): 0 아리(은유의 시츄) · 1 콩이(새 친구, 갈색 아기 푸들) · 2 포미(은결의 크림 포메라니안)
 //  · 간식: 뼈다귀 과자(톡) · 금빛 뼈다귀 · 긴 소시지(꾹) / 함정: 양파 · 초콜릿 (강아지가 먹으면 안 됨)
 //  · 모든 그림은 (x, y) = 가운데, s = 크기 (1 = 뼈다귀 폭 약 84점)
 (function (root) {
@@ -73,9 +73,9 @@
   }
   // 강아지 (머리 + 앞발). (x, y) = 머리 가운데, open: 입 벌림 0~1, mood: idle | happy | sad, t: 시간
   const DOGS = [
-    { fur: '#FFFFFF', fur2: '#F1E6DA', ear: '#D9B48A', earLong: true, top: true },   // 흰 시츄 (머리 위 방울)
-    { fur: '#FFE2B0', fur2: '#F7C77E', ear: '#F2B261', pointy: true },                // 크림 포메라니안
-    { fur: '#C98B5A', fur2: '#B87444', ear: '#8A5530', earLong: true, spot: true },   // 갈색 막내
+    { fur: '#FFFFFF', fur2: '#F1E6DA', ear: '#A8693E', earLong: true, bow: true, patch: '#B97A48' }, // 아리: 하얀 얼굴·갈색 귀·분홍 리본
+    { fur: '#C98B5A', fur2: '#B87444', ear: '#9A6038', earLong: true, curly: true, scarf: '#FFD34D' }, // 콩이: 갈색 곱슬 푸들·노란 스카프
+    { fur: '#FFE2B0', fur2: '#F7C77E', ear: '#F2B261', pointy: true, scarf: '#5CA9E6' },             // 포미: 크림 포메라니안·파란 반다나
   ];
   function dog(g, x, y, s, kind, open = 0, mood = 'idle', t = 0) {
     const d = DOGS[kind % 3], R = 50 * s;
@@ -96,10 +96,22 @@
     g.beginPath();
     for (let i = 0; i <= 28; i++) { const a = i / 28 * Math.PI * 2, rr2 = R * (1 + (i % 2) * 0.05); g.quadraticCurveTo(Math.cos(a - 0.11) * R * 1.08, Math.sin(a - 0.11) * R * 1.0, Math.cos(a) * rr2, Math.sin(a) * rr2 * 0.92); }
     g.closePath(); g.fillStyle = d.fur; g.fill(); line(g, 3 * s);
-    if (d.spot) { g.beginPath(); g.ellipse(-R * 0.38, -R * 0.3, R * 0.3, R * 0.26, -0.3, 0, Math.PI * 2); g.fillStyle = d.fur2; g.fill(); }
-    if (d.top) { // 시츄 머리 위 방울
-      g.beginPath(); g.ellipse(0, -R * 0.98, R * 0.2, R * 0.15, 0, 0, Math.PI * 2); g.fillStyle = '#FF8FB1'; g.fill(); line(g, 2.5 * s);
-      g.beginPath(); g.ellipse(0, -R * 1.15, R * 0.16, R * 0.14, 0, 0, Math.PI * 2); g.fillStyle = d.fur; g.fill(); line(g, 2.5 * s);
+    if (d.patch) { // 아리: 눈 둘레 갈색 얼룩
+      g.fillStyle = d.patch; for (const sd of [-1, 1]) { g.beginPath(); g.ellipse(sd * R * 0.42, -R * 0.22, R * 0.3, R * 0.34, sd * 0.3, 0, Math.PI * 2); g.fill(); }
+      g.beginPath(); g.ellipse(0, -R * 0.5, R * 0.12, R * 0.35, 0, 0, Math.PI * 2); g.fillStyle = d.fur; g.fill();
+    }
+    if (d.curly) { // 콩이: 머리 위 곱슬 털 뭉치
+      g.fillStyle = d.fur2; for (const [cx, cy, cr] of [[-0.3, -0.82, 0.24], [0, -0.92, 0.26], [0.3, -0.82, 0.24]]) { g.beginPath(); g.arc(cx * R, cy * R, cr * R, 0, Math.PI * 2); g.fill(); line(g, 2 * s); }
+    }
+    if (d.bow) { // 아리: 머리 위 작은 분홍 리본
+      g.save(); g.translate(0, -R * 0.95); g.fillStyle = '#FF8FB1';
+      for (const sd of [-1, 1]) { g.beginPath(); g.moveTo(0, 0); g.quadraticCurveTo(sd * R * 0.4, -R * 0.3, sd * R * 0.36, R * 0.12); g.closePath(); g.fill(); line(g, 2.5 * s); }
+      g.beginPath(); g.arc(0, -R * 0.02, R * 0.09, 0, Math.PI * 2); g.fill(); line(g, 2.5 * s); g.restore();
+    }
+    if (d.scarf) { // 목 스카프·반다나
+      g.beginPath(); g.moveTo(-R * 0.62, R * 0.72); g.quadraticCurveTo(0, R * 0.98, R * 0.62, R * 0.72); g.lineTo(R * 0.5, R * 0.86); g.lineTo(0, R * 1.18); g.lineTo(-R * 0.5, R * 0.86); g.closePath();
+      g.fillStyle = d.scarf; g.fill(); line(g, 2.5 * s);
+      g.fillStyle = 'rgba(255,255,255,.7)'; for (const [cx, cy] of [[-0.25, 0.86], [0.2, 0.9], [0, 1.04]]) { g.beginPath(); g.arc(cx * R, cy * R, R * 0.04, 0, 7); g.fill(); }
     }
     // 주둥이
     g.beginPath(); g.ellipse(0, R * 0.32, R * 0.42, R * 0.32, 0, 0, Math.PI * 2); g.fillStyle = d.fur === '#FFFFFF' ? '#FFF8F0' : '#FFF1DC'; g.fill();
