@@ -7,7 +7,7 @@
 - 쌍둥이 **은유(여자아이)·은결(남자아이)** 이 주인공인 어린이용 HTML5 미니게임 모음.
 - 빌드 도구 없는 순수 HTML·JavaScript·CSS. 서버 없이 정적 파일로 동작.
 - 사이트: https://sangbiny-creater.github.io/twin-gameland/ — **`main` 브랜치에 올라가면 1~2분 안에 GitHub Pages로 바로 배포**돼요.
-- 게임: `skyhook`(스카이훅 50판) · `helicopter`(구름 타기) · `stairs`(계단 오르기) · `shisen`(사천성 100판) · `downhill`(다운힐) · `memory`(메모리 100판) · `mole`(두더지 100판) · `bakery`(달콤 베이커리 100판).
+- 게임: `skyhook`(스카이훅 50판) · `helicopter`(구름 타기) · `stairs`(계단 오르기) · `shisen`(사천성 100판) · `downhill`(다운힐) · `memory`(메모리 100판) · `mole`(두더지 100판) · `bakery`(달콤 베이커리, 끝없이 이어짐·원버튼) · `caketap`(케이크 탭탭, 끝없이 이어짐·3줄 버튼 — 베이커리 그림을 같이 씀).
 - 사용자(저장소 주인)는 **개발자가 아니에요.** 휴대폰으로 직접 해 보며 피드백해요.
 
 ## 2. 같이 일하는 방식 (사람 → ChatGPT → GitHub ← Claude)
@@ -34,7 +34,7 @@
 이 저장소는 **공개(Public)** 예요. 올린 파일은 누구나 볼 수 있어요.
 
 - 개인 사진·업무 자료·비밀번호·토큰·API 키 절대 금지.
-- GPT 원본 그림 폴더는 올리지 않아요 (컴퓨터에만 보관, `.gitignore`에 있음): `character/`, `image/`, `intro/`, `memorygame/`, `molegame/`, `bakerygame/`, `making_GPT/`의 그림·PDF·PPT.
+- GPT 원본 그림 폴더는 올리지 않아요 (컴퓨터에만 보관, `.gitignore`에 있음): `character/`, `image/`, `intro/`, `memorygame/`, `molegame/`, `bakerygame/`, `caketapgame/`, `making_GPT/`의 그림·PDF·PPT.
 - `making_GPT/`에서는 **요청 글(`.txt`)만** 올려요.
 - 게임에 실제로 쓰는 그림만 잘라서 webp로 게임 폴더에 넣어 올려요.
 
@@ -44,7 +44,7 @@
 - **저장 데이터를 깨지 않기:** 모든 진행도·코인·캐릭터는 브라우저 `localStorage`의 `twin_gameland_v1`(`common/profile.js`)에 있어요. 키 이름·형식을 바꾸지 말고, 바꿔야 하면 예전 데이터를 옮겨 주는 코드를 같이 넣어요.
 - 파일을 고치면 폰에서 바로 보이도록 캐시 버전(`?v=`)을 올려요: `python3 tools/bump_version.py`.
 - 그림은 webp(투명 그림은 무손실). 아이폰 홈 화면 아이콘만 PNG.
-- 새 게임은 README의 "새 게임 추가하는 법"과 최근 게임(`memory/`, `mole/`, `bakery/`) 구조를 따라요.
+- 새 게임은 README의 "새 게임 추가하는 법"과 최근 게임(`memory/`, `mole/`, `bakery/`, `caketap/`) 구조를 따라요. 일시정지 창은 `common/pause.css`, 하트는 `common/ui/heart.webp`·`heart_empty.webp` (모든 게임 같은 모양).
 
 ## 6. 게임 공통 규칙 (사용자가 정한 것 — 바꾸지 않기)
 
