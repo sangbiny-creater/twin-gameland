@@ -9,13 +9,18 @@
 let W = 540, H = 960;
 const BASE_TILES = ['strawberry', 'banana', 'grape', 'cherry', 'orange', 'peach', 'watermelon', 'carrot', 'corn', 'mushroom',
   'clover', 'flower', 'star', 'heart', 'leaf', 'snowflake', 'sun', 'cloud', 'moon', 'cat', 'dog', 'paw'].map((n) => 't_' + n);
+// 다른 게임(메모리·두더지·베이커리·헬리콥터·다운힐·계단)에서 가져온 아이콘 타일 34종 → assets/sprites/extra.webp
+//  (tools/shisen_extra_tiles.py 로 만듦). 기본 그림과 섞여서 판마다 무작위로 뽑힘
+const EXTRA_TILES = ['mem_raincoat', 'mem_hug', 'mem_book', 'mem_explorer', 'mem_pinkhat', 'mem_bluehat', 'mem_pom', 'mem_dogs', 'mem_heli', 'mem_cake',
+  'mole', 'mole_fast', 'mole_tough', 'hammer', 'cupcake', 'muffin', 'burnt', 'eclair', 'roll', 'piping',
+  'windmill', 'airship', 'seagull', 'bolt', 'magnet', 'flag', 'penguin', 'snowman', 'pines', 'log', 'fence', 'gift', 'mystery', 'alarm'].map((n) => 'x_' + n);
 // 10개 월드 × 10판 = 100판. 월드 5~10은 그 월드 전용 그림 타일(14종)을 먼저 쓰고, 은유·은결 얼굴 타일은 항상 들어감
 const WORLDS = ['하늘도시', '숲속 나무마을', '겨울왕국', '석양의 항구', '벚꽃마을', '구름왕국', '바닷속도시', '마법숲', '별빛우주', '황금성'];
 const { PER_WORLD, STAGES } = window.ShisenLevels; // 스테이지 i: { c, r(판 크기), tiles, t(그림 종류), s(제한 초) }
 function tilePool(si) {
   const w = Math.floor(si / PER_WORLD);
   const themed = w >= 4 ? Array.from({ length: 14 }, (_, k) => `w${w + 1}_${k}`).filter((n) => !(w === 4 && (n === 'w5_2' || n === 'w5_3'))) : [];
-  return ['t_eunyu', 't_eungyeol', ...shuffleArr(themed), ...shuffleArr(BASE_TILES.slice())];
+  return ['t_eunyu', 't_eungyeol', ...shuffleArr(themed), ...shuffleArr(BASE_TILES.concat(EXTRA_TILES))];
 }
 const SKIN_BG = { forest: 1, sunset: 1, winter: 2, night: 3, space: 4 }; // 공통 배경 스킨 → assets/bg/bg_*.webp (나머지는 skins.js로 그림)
 const COMBO_WINDOW = 4;  // 초: 이 안에 다음 짝을 없애면 콤보
@@ -44,14 +49,23 @@ function shuffleArr(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math
 const ASSET_V = '202610252249';
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => { SP.f = j; SP.img.onload = () => { SP.ready = true; }; SP.img.src = `assets/sprites/sprites.webp?v=${ASSET_V}`; });
+const EXTRA_V = '20261026d';
+SP.ex = { img: new Image(), f: null, ready: false };
+fetch(`assets/sprites/extra.json?v=${EXTRA_V}`).then((r) => r.json()).then((j) => { SP.ex.f = j; SP.ex.img.onload = () => { SP.ex.ready = true; }; SP.ex.img.src = `assets/sprites/extra.webp?v=${EXTRA_V}`; });
+// 그림 이름 → [묶음 그림, x, y, w, h] (기본 묶음 또는 추가 묶음), 아직 안 불러왔으면 null
+function frameOf(name) {
+  if (SP.ready && SP.f[name]) return [SP.img, ...SP.f[name]];
+  if (SP.ex.ready && SP.ex.f[name]) return [SP.ex.img, ...SP.ex.f[name]];
+  return null;
+}
 for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=${ASSET_V}`; SP.bg.push(im); }
 // 월드 배경 (메인 화면 지도와 같은 그림)
 SP.world = WORLDS.map((_, w) => { const im = new Image(); im.src = `../common/worlds/w${w + 1}.webp?v=${ASSET_V}`; return im; });
 function spr(name, x, y, w, h, alpha = 1) {
-  if (!SP.ready || !SP.f[name]) return;
-  const [sx, sy, sw, sh] = SP.f[name];
+  const fr = frameOf(name); if (!fr) return;
+  const [img, sx, sy, sw, sh] = fr;
   if (h == null) h = w * sh / sw;
-  ctx.globalAlpha = alpha; ctx.drawImage(SP.img, sx, sy, sw, sh, x - w / 2, y - h / 2, w, h); ctx.globalAlpha = 1;
+  ctx.globalAlpha = alpha; ctx.drawImage(img, sx, sy, sw, sh, x - w / 2, y - h / 2, w, h); ctx.globalAlpha = 1;
 }
 
 // 내 캐릭터 얼굴 타일은 입은 옷 모습으로 (타일 판은 그대로, 안쪽 그림만 바꿈)
@@ -64,15 +78,17 @@ const UPPER_BG = '#D6E9FF', UP_SPR = {};
 const isCream = (d, i) => d[i + 3] > 200 && d[i] > 196 && d[i + 1] > 172 && d[i + 2] > 140 && d[i] >= d[i + 2] && d[i] - d[i + 2] < 80;
 function upperSprite(name) {
   if (name in UP_SPR) return UP_SPR[name];
-  if (!SP.ready || !SP.f[name]) return null;
-  const [sx, sy, sw, sh] = SP.f[name];
+  const fr = frameOf(name); if (!fr) return null;
+  const [img, sx, sy, sw, sh] = fr;
   const cv = document.createElement('canvas'); cv.width = sw; cv.height = sh;
-  const c = cv.getContext('2d'); c.drawImage(SP.img, sx, sy, sw, sh, 0, 0, sw, sh);
+  const c = cv.getContext('2d'); c.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
   try {
     const im = c.getImageData(0, 0, sw, sh), d = im.data, seen = new Uint8Array(sw * sh), st = [];
-    const ix = Math.round(sw * 0.14), iy = Math.round(sh * 0.14);
-    for (let x = ix; x < sw - ix; x += 2) st.push(iy * sw + x, (sh - 1 - iy) * sw + x);
-    for (let y = iy; y < sh - iy; y += 2) st.push(y * sw + ix, y * sw + sw - 1 - ix);
+    for (const f of [0.08, 0.14]) { // 판 가장자리 가까이 두 줄 (그림이 판을 거의 채우는 추가 타일도 바탕을 찾게)
+      const ix = Math.round(sw * f), iy = Math.round(sh * f);
+      for (let x = ix; x < sw - ix; x += 2) st.push(iy * sw + x, (sh - 1 - iy) * sw + x);
+      for (let y = iy; y < sh - iy; y += 2) st.push(y * sw + ix, y * sw + sw - 1 - ix);
+    }
     while (st.length) {
       const p = st.pop(); if (seen[p]) continue; seen[p] = 1;
       const i = p * 4; if (!isCream(d, i)) continue;

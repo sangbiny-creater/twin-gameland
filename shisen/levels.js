@@ -39,8 +39,8 @@
     const w = Math.floor(i / PER_WORLD), k = i % PER_WORLD;
     const [c, r] = (w === 0 ? BASE[0] : w === 1 ? BASE[1] : w <= 4 ? BASE.mid : w <= 6 ? BASE.late : [[8, 12]])[w <= 6 ? k : 0];
     const [w2, h2] = upperSize(c, r, i);
-    // 그림 종류: 8종 → 36종 (1~4월드는 기본 그림 24장 안에서, 5월드부터는 월드 전용 그림까지)
-    const t = Math.min(w < 4 ? 24 : 36, 8 + Math.floor(i * 0.3));
+    // 그림 종류: 8종 → 36종 (판마다 기본 그림 + 다른 게임 아이콘 그림 + 5월드부터 월드 전용 그림 중에서 무작위로 뽑음)
+    const t = Math.min(36, 8 + Math.floor(i * 0.3));
     STAGES.push({ c, r, w2, h2, n2: w2 * h2, tiles: c * r + w2 * h2, t });
   }
   // 제한 시간
