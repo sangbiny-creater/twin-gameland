@@ -27,3 +27,12 @@
 /downhill/D2134A2A-93E1-4C00-9FBC-7EEB871C1B67.PNG
 /molegame/
 /bakerygame/
+
+# GPT 작업 자료: 요청 글(.txt)만 올리고 그림·매뉴얼 문서·캐릭터 템플릿은 올리지 않음
+making_GPT/**/*.png
+making_GPT/**/*.PNG
+making_GPT/*.png
+making_GPT/*.pdf
+making_GPT/*.pptx
+making_GPT/신규캐릭터_템플릿/
+_archive/
