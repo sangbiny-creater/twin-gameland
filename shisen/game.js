@@ -388,9 +388,11 @@ function step(dt) {
 }
 
 // ---------- layout of the board ----------
+// 폰 세로: 위쪽 줄(일시정지·시간·별) 바로 아래부터, 아래쪽 코인·남은 짝 줄 바로 위까지 (노치·홈 막대 여백만큼 비켜 줌)
 function boardArea() {
   if (wideLayout()) return { x: 170, y: 140, w: W - 200, h: H - 170 };
-  return { x: 12, y: 130, w: W - 24, h: H - 130 - 150 };
+  const top = 74 + SAFE.t, bottom = H - 180 - SAFE.b;
+  return { x: 12, y: top, w: W - 24, h: bottom - top };
 }
 let BL = { tw: 50, th: 54, ox: 0, oy: 0 };
 function layoutBoard() {
@@ -630,6 +632,7 @@ $('btnBomb').addEventListener('click', () => { Audio.unlock(); useBomb(); });
 // ---------- layout: phones portrait (rotate if held sideways), PC full window ----------
 const isTouch = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
 let rotated = false;
+const SAFE = { t: 0, b: 0 }; // 노치·홈 막대 여백 (게임 좌표)
 function wideLayout() { return W > H; }
 function resize() {
   const vv = window.visualViewport;
@@ -648,8 +651,9 @@ function resize() {
   const ox = (sw - W * scale) / 2, oy = (sh - H * scale) / 2;
   root.style.transform = rotated ? `translate(${oy}px, ${vh - ox}px) rotate(-90deg) scale(${scale})` : `translate(${ox}px, ${oy}px) scale(${scale})`;
   const insT = rotated ? inset.l : inset.t, insB = rotated ? inset.r : inset.b;
-  root.style.setProperty('--safe-t', Math.max(0, (insT - oy) / scale) + 'px');
-  root.style.setProperty('--safe-b', Math.max(0, (insB - oy) / scale) + 'px');
+  SAFE.t = Math.max(0, (insT - oy) / scale); SAFE.b = Math.max(0, (insB - oy) / scale);
+  root.style.setProperty('--safe-t', SAFE.t + 'px');
+  root.style.setProperty('--safe-b', SAFE.b + 'px');
   canvas.width = Math.round(W * scale * dpr); canvas.height = Math.round(H * scale * dpr);
   // PC window switched between wide/tall mid-game: turn the board to match
   if (G.cols && wasWide !== wideLayout() && (G.state === 'play' || G.state === 'pause')) transposeBoard();

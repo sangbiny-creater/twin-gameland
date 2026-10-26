@@ -21,7 +21,9 @@ button:active { transform: translateY(3px); }
 /* HUD */
 #hud { position: absolute; inset: 0; pointer-events: none; }
 .hud-top { position: absolute; left: 14px; right: 14px; top: calc(12px + var(--safe-t, 0px)); display: flex; align-items: center; gap: 8px; }
-.hud-sub { position: absolute; left: 14px; right: 14px; top: calc(70px + var(--safe-t, 0px)); display: flex; align-items: center; gap: 8px; }
+/* 코인·남은 짝: 판을 가리지 않게 아래쪽 아이템 버튼 바로 위 (PC 가로 화면은 위쪽 그대로) */
+.hud-sub { position: absolute; left: 14px; right: 14px; bottom: calc(132px + var(--safe-b, 0px)); display: flex; align-items: center; justify-content: center; gap: 10px; }
+#root.wide .hud-sub { bottom: auto; top: calc(70px + var(--safe-t, 0px)); justify-content: flex-start; }
 .sq { pointer-events: auto; width: 50px; height: 50px; border-radius: 14px; font-size: 24px; color: #fff; background: linear-gradient(#5FA8FF, #2F6FE0); box-shadow: 0 4px 0 #1F4FA8; flex: 0 0 50px; }
 .pill { background: rgba(20,16,40,.78); color: #fff; border-radius: 14px; padding: 4px 12px 4px 8px; font-size: 22px; display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; border: 2px solid rgba(255,255,255,.2); }
 .pill b { font-weight: normal; }
@@ -37,7 +39,8 @@ button:active { transform: translateY(3px); }
 .starbar .s.off { color: #7A7190; text-shadow: 0 2px 0 #3A3350; }
 .starbar .s1 { left: 25%; } .starbar .s2 { left: 50%; } .starbar .s3 { left: 96%; }
 .stage-lbl { color: #fff; font-size: 18px; text-shadow: 0 2px 0 rgba(0,0,0,.5); white-space: nowrap; }
-.buffs { margin-left: auto; display: flex; gap: 6px; }
+.buffs { display: flex; gap: 6px; }
+#root.wide .buffs { margin-left: auto; }
 .buff { background: rgba(255,255,255,.9); border-radius: 12px; padding: 2px 8px; font-size: 15px; }
 .items { position: absolute; left: 0; right: 0; bottom: calc(14px + var(--safe-b, 0px)); display: flex; justify-content: center; gap: 18px; }
 .item { pointer-events: auto; position: relative; width: 92px; display: flex; flex-direction: column; align-items: center; }
