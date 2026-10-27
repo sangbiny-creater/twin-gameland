@@ -9,10 +9,12 @@
 
 let W = 540, H = 960;
 const D = window.DartArt;
-const ASSET_V = '202610272244';
+const ASSET_V = '202610272252';
 const ROUNDS = 8, PER = 3;
 const AMP = 1.2; // 줄이 움직이는 범위 (더블 링 바깥 = 1, 조금 밖까지 나감)
-const period = () => 0.9; // 줄이 한 번 갔다 오는 시간(초): 모든 라운드 같은 빠르기 (사용자 요청: 1라운드 1초 기준일 때의 3라운드 빠르기)
+// 한 번 갔다 오는 시간(초), 모든 라운드 같음 (사용자 요청으로 맞춘 값)
+const period = () => 0.99;   // 좌우: 막대 안 분홍 점 (0.9초에서 10% 느리게)
+const periodY = () => 1.24;  // 상하: 누르고 있는 동안 다트 핀 (0.83초에서 50% 느리게)
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
 const Save = {
@@ -200,7 +202,7 @@ function press() {
 }
 function release() {
   if (G.state !== 'play' || G.phase !== 'y') return;
-  G.ay = sweep(G.pt, period(G.round) * 0.92); throwDart(G.ax, G.ay);
+  G.ay = sweep(G.pt, periodY()); throwDart(G.ax, G.ay);
 }
 const tap = press; // 시험용 (예전 이름)
 function throwDart(x, y) {
@@ -377,7 +379,7 @@ function drawAim() {
   // 고른 가로 위치: 판 위·아래 테두리에 분홍 세모
   const X = toX(G.ax); markTri(X, LAY.cy - rim() - 2, 1); markTri(X, LAY.cy + rim() + 2, -1);
   if (yLive) { // 다트 핀이 위·아래로 (핀 끝이 꽂힐 곳)
-    const Y = toY(sweep(G.pt, T * 0.92));
+    const Y = toY(sweep(G.pt, periodY()));
     ctx.save(); ctx.globalAlpha = 0.9; ctx.lineWidth = 3; ctx.strokeStyle = '#fff';
     ctx.beginPath(); ctx.arc(X, Y, 9, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
     D.dart(ctx, X, Y, (LAY.s / 170) * 1.35, DART_COL, 0);
