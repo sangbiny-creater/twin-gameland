@@ -5,7 +5,7 @@
 //  · 긴 소시지: 앞 끝이 오면 꾹 누르고(냠냠냠~ 먹으면서 짧아짐), 뒤 끝이 오면 떼기 (끝까지 누르고 있으면 '좋아요')
 //  · 함정(양파·초콜릿): 강아지가 먹으면 안 됨 → 그 줄을 누르면 안 됨
 //  · 은유·은결: 세로 화면은 위 양옆에서 간식을 던지고, 가로 화면은 줄 양옆에서 응원 (내 캐릭터 왼쪽, 쌍둥이 오른쪽)
-//  · 하트: 3개로 시작, 최대 5개. Bad(놓침·함정·너무 빨리·너무 일찍 뗌) 나오면 -1
+//  · 하트: 2개로 시작, 최대 3개 (2026-10-27 달콤 베이커리와 같게). 하트가 가득(3개)이면 하트 아이템이 안 보이고 늘지 않음. Bad(놓침·함정·너무 빨리·너무 일찍 뗌) 나오면 -1
 //  · 하트 아이템: 가끔(25초에 한 번꼴) 긴 빵 앞쪽에 올라감 → 시작·끝 모두 Perfect 면 하트 +1 (하트가 늘어나는 곳은 이것뿐)
 //  · 끝없이 이어짐: 하트가 다 없어질 때까지, 30초마다 레벨 업. 전에 간 가장 높은 레벨부터 다시 시작할 수 있음
 //  · 노래 없이 효과음만 (줄마다 다른 음)
@@ -14,8 +14,9 @@
 let W = 540, H = 960;
 const L = window.SnackLevels, D = window.DogArt;
 const { PTS, JUDGE, LANES } = L;
-const ASSET_V = '202610272337';
-const MAX_HEARTS = 5;
+const ASSET_V = '202610272345';
+const MAX_HEARTS = 3;
+const START_HEARTS = 2;
 const HEART_GAP = 25; // 하트 아이템 사이 최소 시간(초)
 const LANE_COL = ['#FF8FB1', '#FFD34D', '#8FD0FF']; // 아리(분홍)·콩이(노랑)·포미(하늘)
 const LANE_DARK = ['#C2456A', '#B5760F', '#2F6FA8'];
@@ -112,7 +113,7 @@ let scale = 1, dpr = 1;
 // 빵: { type, lane, t, t1, w(판정 시간), gd(도우미), kind, st: wait|hold|done|miss|trap|passed, j, jt, hs·he, heart }
 const G = {
   state: 'ready', gen: null, notes: [], fx: [], t: 0, clock: 0, countT: 0, frameAt: 0, k: 0, heartT: 0,
-  hearts: 3, score: 0, coins: 0, combo: 0, maxCombo: 0, made: 0, perfect: 0, level: 1, startLv: 1,
+  hearts: START_HEARTS, score: 0, coins: 0, combo: 0, maxCombo: 0, made: 0, perfect: 0, level: 1, startLv: 1,
   ptr: new Map(), laneDown: [0, 0, 0], laneGlow: [0, 0, 0], hold: [null, null, null], holdSnd: 0,
   mood: ['idle', 'idle', 'idle'], moodT: [0, 0, 0], chompT: [0, 0, 0], thr: [0, 0],
   slowT: 0, x2T: 0, shield: 0, pose: 'idle', poseT: 0, pausedFrom: 'play', newBest: false, prev: 'ready',
@@ -146,11 +147,11 @@ function startRun(lv = 1) {
   clearTimers();
   const c0 = (lv - 1) * L.LEVEL;
   G.gen = L.Gen(Date.now(), c0); G.notes = []; G.k = 0; G.heartT = c0 - 10;
-  G.hearts = 3; G.score = 0; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.made = 0; G.perfect = 0; G.level = lv; G.startLv = lv; G.newBest = false;
+  G.hearts = START_HEARTS; G.score = 0; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.made = 0; G.perfect = 0; G.level = lv; G.startLv = lv; G.newBest = false;
   G.fx = []; G.t = 0; G.clock = c0; G.slowT = 0; G.x2T = 0; G.shield = 0; G.hold = [null, null, null]; G.ptr.clear(); G.laneDown = [0, 0, 0];
   G.pose = 'idle'; G.poseT = 0; G.poseLog = [];
   const boosts = HUB ? HUB.takeBoosts('dogsnack') : [];
-  if (boosts.includes('life')) G.hearts = 4;
+  if (boosts.includes('life')) G.hearts = MAX_HEARTS; // 추가 하트 부스트: 3개(최대)로 시작
   if (boosts.includes('shield')) G.shield = 1;
   if (boosts.includes('slow')) G.slowT = 20;
   if (boosts.includes('x2')) G.x2T = 30;
@@ -630,7 +631,7 @@ function updateHud() {
   const bx = $('buffX2'); if (bx) bx.textContent = `🪙 코인 2배 ${Math.ceil(G.x2T)}초`;
 }
 function renderHearts(pop) {
-  // 다른 게임(계단 오르기·헬리콥터·베이커리)과 같은 하트 그림: 가진 하트 = heart, 빈 칸 = heart_empty (늘 5칸)
+  // 다른 게임(계단 오르기·헬리콥터·베이커리)과 같은 하트 그림: 가진 하트 = heart, 빈 칸 = heart_empty (늘 3칸 = 최대 하트 수)
   const el = $('hudHearts'); el.innerHTML = '';
   for (let i = 0; i < MAX_HEARTS; i++) {
     const d = document.createElement('div');

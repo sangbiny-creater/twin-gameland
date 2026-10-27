@@ -126,7 +126,7 @@
       { id: 'x2', name: '코인 2배', desc: '처음 30초 코인 2배', price: 300 },
     ],
     dogsnack: [
-      { id: 'life', name: '추가 하트', desc: '하트 4개로 시작', price: 300 },
+      { id: 'life', name: '추가 하트', desc: '하트 3개(최대)로 시작', price: 300 },
       { id: 'shield', name: '1회 보호', desc: '처음 한 번 실수해도 OK', price: 200 },
       { id: 'slow', name: '천천히 시작', desc: '처음 20초 천천히', price: 200 },
       { id: 'x2', name: '코인 2배', desc: '처음 30초 코인 2배', price: 300 },
@@ -259,7 +259,7 @@
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610272337` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610272345` : null; },
     buyCostume(id, c = this.active()) {
       const it = COSTUMES.find((x) => x.id === id);
       if (!c || !it || this.ownsCostume(id, c)) return { ok: false };
