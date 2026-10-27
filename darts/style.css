@@ -139,7 +139,7 @@ button:active { transform: translateY(3px); }
 #root.wide .bx b { font-size: 22px; }
 #root.wide .head.col .boxes { flex-direction: column; }
 /* 세로 화면: 총점·점수 칸 크게 */
-#root:not(.wide) .total > b { font-size: 88px; -webkit-text-stroke: 3px #7A3E00; }
+#root:not(.wide) .total > b { font-size: 82px; -webkit-text-stroke: 3px #7A3E00; }
 #root:not(.wide) .total > small { font-size: 30px; }
 #root:not(.wide) .total .rnd { font-size: 19px; padding: 4px 12px; } #root:not(.wide) .total .rnd b { font-size: 23px; }
 #root:not(.wide) .boxes { gap: 14px; margin-top: 4px; }

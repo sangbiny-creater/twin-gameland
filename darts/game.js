@@ -10,7 +10,7 @@
 
 let W = 540, H = 960;
 const D = window.DartArt;
-const ASSET_V = '202610280004';
+const ASSET_V = '202610280012';
 const ROUNDS = 8, PER = 3;
 const AMP = 1.2; // 줄이 움직이는 범위 (더블 링 바깥 = 1, 조금 밖까지 나감)
 // 한 번 갔다 오는 시간(초), 모든 라운드 같음 (사용자 요청으로 맞춘 값)
@@ -102,32 +102,22 @@ const LAY = { cx: 270, cy: 300, s: 170, gx: 270, gy: 640, gw: 200, ch: [[270, 90
 const rim = () => LAY.s * D.R.rim;
 function layout() {
   const sv = (k) => parseFloat(getComputedStyle(root).getPropertyValue('--safe-' + k)) || 0;
-  const st = sv('t'), sb = sv('b'), sl = sv('l'), sr = sv('r');
+  const st = sv('t'), sb = sv('b');
   const head = $('head');
-  if (wideLayout()) {
-    LAY.s = clamp((H - st - sb - 250) / (2 * D.R.rim), 95, 135); LAY.cx = W / 2; LAY.cy = st + 16 + rim();
-    LAY.gy = LAY.cy + rim() + 24; LAY.gx = W / 2; LAY.gw = Math.min(rim() * 1.15, 200);
-    const feet = H - sb - 28, h = clamp((feet - LAY.gy - 30) / 1.05, 100, 170);
-    const lx = 14 + sl, rx = W - 14 - sr, colL = LAY.cx - rim() - 16 - lx, colR = rx - (LAY.cx + rim() + 16);
-    LAY.ch = [[LAY.cx, feet, h], [rx - colR / 2, feet, Math.min(170, H * 0.34)]];
-    const hw = clamp(colL, 110, 260);
-    head.classList.toggle('col', colL < 220); // 좁은 가로 화면(태블릿): 점수 칸 3개를 세로로
-    Object.assign(head.style, { left: (lx + (colL - hw) / 2) + 'px', top: (st + 76) + 'px', width: hw + 'px' });
-  } else {
-    // 위에서부터: 총점·점수 칸(HEAD_H) → (넉넉한 틈) → 다트판 → 게이지 → 바로 아래 캐릭터 버튼. 남는 높이는 위쪽 틈에 나눠 줌
-    const HEAD_H = 182, h = clamp(H * 0.17, 150, 210), avail = H - st - sb;
-    LAY.s = clamp((avail - 392 - 1.05 * h) / (2 * D.R.rim), 115, 180);
-    const extra = Math.max(0, avail - (392 + 1.05 * h + 2 * rim()));
-    const headTop = st + 62 + extra * 0.25;
-    LAY.cx = W / 2; LAY.cy = headTop + HEAD_H + 34 + extra * 0.45 + rim();
-    LAY.gy = LAY.cy + rim() + 30; LAY.gx = W / 2; LAY.gw = 200;
-    const feet = LAY.gy + 27 + 1.06 * h;
-    LAY.ch = [[W / 2, feet, h], [W - 62, feet + 10, Math.min(130, h * 0.62)]];
-    head.classList.remove('col');
-    Object.assign(head.style, { left: '30px', top: headTop + 'px', width: (W - 60) + 'px' });
-  }
-  const [x, y, h] = LAY.ch[0];
-  LAY.hand = [x + h * 0.3, y - h * 0.95];
+  // 세로 화면만: 위에서부터 총점·점수 칸(HEAD_H) → 다트판(화면 가로 가득) → 게이지 → 바로 아래 캐릭터 버튼
+  // 키가 작은 폰은 캐릭터를 줄이고, 그래도 모자라면 다트판을 조금 줄임. 남는 높이는 위쪽 틈에 나눠 줌
+  const HEAD_H = 168, FIXED = 56 + HEAD_H + 24 + 30 + 27 + 26, avail = H - st - sb;
+  const sFull = (W / 2 - 2) / D.R.rim;
+  LAY.s = clamp((avail - FIXED - 1.05 * 140) / (2 * D.R.rim), 115, sFull);
+  const h = clamp((avail - FIXED - 2 * rim()) / 1.05, 140, 210);
+  const extra = Math.max(0, avail - (FIXED + 2 * rim() + 1.05 * h));
+  const headTop = st + 56 + extra * 0.3;
+  LAY.cx = W / 2; LAY.cy = headTop + HEAD_H + 24 + extra * 0.4 + rim();
+  LAY.gy = LAY.cy + rim() + 30; LAY.gx = W / 2; LAY.gw = 220;
+  const feet = LAY.gy + 27 + 1.06 * h;
+  LAY.ch = [[W / 2, feet, h], [W - 62, feet + 10, Math.min(130, h * 0.62)]];
+  Object.assign(head.style, { left: '30px', top: headTop + 'px', width: (W - 60) + 'px' });
+  LAY.hand = [W / 2 + h * 0.3, feet - h * 0.95];
 }
 // 판 좌표 ↔ 화면 좌표
 const toX = (u) => LAY.cx + u * LAY.s, toY = (v) => LAY.cy + v * LAY.s;
@@ -541,14 +531,14 @@ click('btnRetryP', startRun); click('btnRetry', startRun);
 $('btnReadyHome').classList.toggle('hidden', !HUB);
 
 // ---------- layout ----------
-function wideLayout() { return W > H; }
+function wideLayout() { return false; } // 세로 화면만
 function resize() {
   const vv = window.visualViewport;
   const vw = Math.round(vv ? vv.width : window.innerWidth), vh = Math.round(vv ? vv.height : window.innerHeight);
   const s = $('safe').getBoundingClientRect();
   const inset = { t: s.top, l: s.left, r: vw - s.right, b: vh - s.bottom };
-  if (vh > vw) { W = 540; H = Math.round(clamp(W * vh / vw, 860, 1240)); }
-  else { H = 540; W = Math.round(clamp(H * vw / vh, 720, 1300)); }
+  // 이 게임은 세로 화면만: 가로로 돌리면 세로 화면을 가운데에 그대로 보여 줌
+  W = 540; H = vh > vw ? Math.round(clamp(W * vh / vw, 860, 1240)) : 960;
   scale = Math.min(vw / W, vh / H);
   dpr = Math.min(window.devicePixelRatio || 1, 3);
   root.style.width = W + 'px'; root.style.height = H + 'px';
