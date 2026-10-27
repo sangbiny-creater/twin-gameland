@@ -73,7 +73,28 @@ def main():
     save(Image.open(f'{GPT}/G06.PNG').convert('RGB'), 'bg/land', q=82)
     logo = chroma(f'{GPT}/G04.PNG'); logo = logo.crop(bbox(logo, 30))
     save(logo, 'ui/logo', 720, q=90)
+    twins()
     hub_images()
+
+
+def twins():
+    """간식 던지는 은유·은결 T01~T08 (은유: 기본·던지기·기뻐함·아쉬움, 은결 같은 순서)
+    캐릭터마다 4장을 같은 틀(합친 테두리)로 잘라 표정이 바뀌어도 발 자리가 그대로.
+    기본 그림의 몸 높이를 360px 로 맞춤(쌍둥이 키 같게) → game.js TWIN_ART 의 ax(기본 몸 가운데 x 비율)·body(몸 높이 px)"""
+    for c, (name, first) in enumerate((('eunyu', 1), ('eungyeol', 5))):
+        ims = []
+        for i in range(4):
+            f = next(p for p in (f'{GPT}/T{first + i:02d}.PNG', f'{GPT}/T{first + i:02d}.png') if os.path.exists(p))
+            ims.append(chroma(f))
+        bs = [bbox(im) for im in ims]
+        box = (min(b[0] for b in bs), min(b[1] for b in bs), max(b[2] for b in bs), max(b[3] for b in bs))
+        idle = bs[0]; k = 360 / (idle[3] - idle[1])
+        for im, pose in zip(ims, ('idle', 'throw', 'happy', 'sad')):
+            out = im.crop(box); out = out.resize((round(out.width * k), round(out.height * k)), Image.LANCZOS)
+            p = f'{OUT}/chars/{name}_{pose}.webp'; os.makedirs(os.path.dirname(p), exist_ok=True)
+            out.save(p, 'WEBP', quality=88, method=6)
+        print(name, 'size', out.size, 'ax', round(((idle[0] + idle[2]) / 2 - box[0]) / (box[2] - box[0]), 3),
+              'foot', round((box[3] - idle[3]) * k), 'body', 360)
 
 
 def hub_images():
@@ -89,4 +110,5 @@ def hub_images():
 
 
 if __name__ == '__main__':
-    main()
+    import sys
+    twins() if sys.argv[1:] == ['twins'] else main()

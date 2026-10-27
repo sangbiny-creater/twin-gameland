@@ -177,8 +177,8 @@ button:active { transform: translateY(3px); }
 .link { font-size: 17px; color: #8A7A99; padding: 4px 10px; }
 /* 하트: 모든 게임 공통 그림 (common/ui/heart.webp · heart_empty.webp) */
 .pill.hearts { padding: 3px 8px; }
-.heart { width: 28px; height: 26px; background: center/contain no-repeat url(../common/ui/heart.webp?v=202610272252); filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); }
-.heart.empty { background-image: url(../common/ui/heart_empty.webp?v=202610272252); opacity: .85; }
+.heart { width: 28px; height: 26px; background: center/contain no-repeat url(../common/ui/heart.webp?v=202610272318); filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); }
+.heart.empty { background-image: url(../common/ui/heart_empty.webp?v=202610272318); opacity: .85; }
 .heart.pop { animation: pop 380ms; }
 @keyframes pop { 40% { transform: scale(1.5); } }
 #root.wide .heart { width: 25px; height: 23px; }

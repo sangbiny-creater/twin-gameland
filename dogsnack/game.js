@@ -14,7 +14,7 @@
 let W = 540, H = 960;
 const L = window.SnackLevels, D = window.DogArt;
 const { PTS, JUDGE, LANES } = L;
-const ASSET_V = '202610272252';
+const ASSET_V = '202610272318';
 const MAX_HEARTS = 5;
 const HEART_GAP = 25; // 하트 아이템 사이 최소 시간(초)
 const LANE_COL = ['#FF8FB1', '#FFD34D', '#8FD0FF']; // 아리(분홍)·콩이(노랑)·포미(하늘)
@@ -523,16 +523,35 @@ function drawDogs() {
     D.dog(ctx, x, y + bob, ds, i, open, G.mood[i], G.t + i);
   }
 }
-// 은유·은결: 세로 화면은 위 양옆에서 간식을 던지고, 가로 화면은 줄 양옆에 서서 응원
+// 은유·은결: 세로 화면은 위 양옆에서 간식을 던지고, 가로 화면은 줄 양옆에 서서 응원 (내 캐릭터 왼쪽, 쌍둥이 오른쪽)
+//  이 게임 전용 그림(간식 바구니를 낀 은유·은결, tools/dogsnack_assets.py twins): 기본·던지기·기뻐함·아쉬움
+//  그림은 은유가 오른쪽, 은결이 왼쪽을 봄 → 가운데(강아지 쪽)를 보도록 자리에 따라 좌우 뒤집기
+//  그림을 아직 못 받았으면 공통 캐릭터 그림(CharV2)
+const TWIN_ART = { body: 360, foot: 21 }; // 기본 그림의 몸 높이(px), 그림 아래 끝이 발보다 내려간 만큼(px)
+const TWIN_IMG = {};
+for (const nm of ['eunyu', 'eungyeol']) for (const p of ['idle', 'throw', 'happy', 'sad']) { const im = new Image(); im.src = `assets/chars/${nm}_${p}.webp?v=${ASSET_V}`; TWIN_IMG[`${nm}_${p}`] = im; }
 function drawTwins() {
-  const CV = window.CharV2; if (!CV) return;
+  const CV = window.CharV2;
   const wide = wideLayout(), x0 = LAY.cx - LAY.lw * 1.5, x1 = LAY.cx + LAY.lw * 1.5;
-  const spots = wide ? [[x0 - 100, LAY.by + 40, 190], [x1 + 100, LAY.by + 40, 190]] : [[62, LAY.top + 96, 116], [W - 62, LAY.top + 96, 116]];
+  // 가로: 줄 양옆 빈자리 폭(x0)에 맞춰 크기를 줄임 (태블릿처럼 옆자리가 좁아도 보이게) / 세로: 위 양옆 구석
+  const side = Math.min(100, x0 / 2), wh = Math.min(190, x0 * 1.25);
+  const spots = wide ? [[x0 - side, LAY.by + 40, wh], [x1 + side, LAY.by + 40, wh]] : [[66, LAY.top + 112, 140], [W - 66, LAY.top + 112, 140]];
   [myLook, twinLook].forEach((lk, k) => {
-    if (!CV.ready(lk)) return;
-    const [x, y, h] = spots[k]; if (wide && (x < 70 || x > W - 70)) return;
-    const thr = G.thr[k] > 0, pose0 = k === 0 ? G.pose : (G.pose === 'hit' || G.pose === 'dizzy' ? G.pose : 'idle');
-    const pose = thr ? 'cheer' : pose0, use = CV.has(lk, pose) ? pose : 'idle';
+    const [x, y, h] = spots[k]; if (h < 90) return;
+    const thr = G.thr[k] > 0, pose0 = G.pose; // 쌍둥이도 같이 기뻐하고 같이 아쉬워함
+    const nm = lk.startsWith('eungyeol') ? 'eungyeol' : 'eunyu';
+    const pose = thr ? 'throw' : pose0 === 'cheer' || pose0 === 'happy' ? 'happy' : pose0 === 'hit' || pose0 === 'dizzy' ? 'sad' : 'idle';
+    const im = TWIN_IMG[`${nm}_${pose}`];
+    if (imgOk(im)) {
+      const sc = h / TWIN_ART.body, w = im.naturalWidth * sc, ih = im.naturalHeight * sc;
+      const bob = pose === 'happy' ? -Math.abs(Math.sin(G.t * 10)) * 8 : pose === 'throw' ? -4 : Math.sin(G.t * 3 + k) * 2;
+      const flip = (nm === 'eunyu') !== (k === 0); // 왼쪽 자리는 오른쪽을, 오른쪽 자리는 왼쪽을 보게
+      ctx.save(); ctx.translate(x, y + bob); if (flip) ctx.scale(-1, 1);
+      ctx.drawImage(im, -w / 2, TWIN_ART.foot * sc - ih, w, ih); ctx.restore();
+      return;
+    }
+    if (!CV || !CV.ready(lk)) return;
+    const cvPose = thr ? 'cheer' : pose0, use = CV.has(lk, cvPose) ? cvPose : 'idle';
     const bob = use === 'cheer' ? -Math.abs(Math.sin(G.t * 10)) * 8 : Math.sin(G.t * 3 + k) * 2;
     ctx.save(); ctx.translate(x, y + bob); CV.draw(ctx, lk, use, { h, flip: k === 1 }); ctx.restore();
   });
