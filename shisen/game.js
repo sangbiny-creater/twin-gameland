@@ -46,7 +46,7 @@ const mmss = (t) => { t = Math.max(0, Math.ceil(t)); return `${String(Math.floor
 function shuffleArr(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 // ---------- sprites ----------
-const ASSET_V = '202610271958';
+const ASSET_V = '202610272023';
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => { SP.f = j; SP.img.onload = () => { SP.ready = true; }; SP.img.src = `assets/sprites/sprites.webp?v=${ASSET_V}`; });
 const EXTRA_V = '20261026d';

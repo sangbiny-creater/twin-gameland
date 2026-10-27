@@ -21,8 +21,8 @@
     const t = kAt(c), i = Math.round(t * 99);
     return {
       bpm: Math.round(lerp(84, 132, Math.pow(t, 0.9)) * FAST / 2) * 2,
-      // 완벽·좋아요·아쉬워요 (± 초). 아쉬워요(OK) 바깥 = Bad → 2026-10-27 OK 범위를 10% 좁혀 Bad 가 더 잘 뜨게
-      win: { p: r2(lerp(0.08, 0.05, t)), g: r2(lerp(0.15, 0.1, t)), o: Math.round(lerp(0.25, 0.17, t) * 0.9 * 1000) / 1000 },
+      // 완벽·좋아요·아쉬워요 (± 초). 아쉬워요(OK) 바깥 = Bad → 2026-10-27 OK 범위를 두 번 10%씩 좁혀(×0.9×0.9) Bad 가 더 잘 뜨게
+      win: { p: r2(lerp(0.08, 0.05, t)), g: r2(lerp(0.15, 0.1, t)), o: Math.round(lerp(0.25, 0.17, t) * 0.81 * 1000) / 1000 },
       long: i < 2 ? 0 : r2(Math.min(0.35, 0.18 + t * 0.2)),
       longMax: r2(lerp(2, 4, t)),                           // 긴 빵 최대 길이 (박자)
       dbl: i < 4 ? 0 : r2(Math.min(0.25, 0.1 + t * 0.18)),  // 컵케이크 2개 연달아
