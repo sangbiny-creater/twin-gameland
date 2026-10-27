@@ -17,7 +17,7 @@ const MISS_SHOW = 0.75;  // 틀린 두 장을 보여 주는 시간 (초)
 const MISS_TIME = 0.2;   // 틀리면 줄어드는 시간 (초)
 const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202610272124';
+const ASSET_V = '202610272132';
 const cardSrc = (n) => `assets/cards/${n}.webp?v=${ASSET_V}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -42,7 +42,7 @@ function shuffleArr(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math
 // ---------- images ----------
 const BG = { port: new Image(), land: new Image(), skin: [] };
 BG.port.src = `assets/bg/port.webp?v=${ASSET_V}`; BG.land.src = `assets/bg/land.webp?v=${ASSET_V}`;
-for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `../shisen/assets/bg/bg_${i}.webp?v=202610272124`; BG.skin.push(im); }
+for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `../shisen/assets/bg/bg_${i}.webp?v=202610272132`; BG.skin.push(im); }
 const BACK = `assets/cards/back.webp?v=${ASSET_V}`;
 // 그림을 미리 받아 둠 (첫 판부터 뒤집을 때 바로 보이게)
 [BACK, ...FRONTS.map(cardSrc)].forEach((s) => { const im = new Image(); im.src = s; });
