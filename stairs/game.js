@@ -47,7 +47,7 @@ const rand = (a, b) => a + (b - a) * Math.random();
 const $ = (id) => document.getElementById(id);
 
 // ---------- sprites ----------
-const ASSET_V = '202610272234'; // 캐시 버전 (tools/bump_version.py가 올림)
+const ASSET_V = '202610272244'; // 캐시 버전 (tools/bump_version.py가 올림)
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;

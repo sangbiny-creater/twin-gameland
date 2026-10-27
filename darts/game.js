@@ -1,7 +1,7 @@
 'use strict';
 // 은유와 은결의 다트 게임 — 카운트업: 한 라운드에 다트 3개, 8라운드(24개) 점수를 모두 더함
-//  · 던지기: ① 게이지 막대 안에서 왔다 갔다 하는 분홍 점을 톡 → 가로 위치  ② 막대 위 반원을 왔다 갔다 하는 파란 점을 톡 → 세로 위치
-//           → 그 자리로 다트가 날아감 (손이 흔들리는 일 없이 고른 곳 그대로). 다트판 위에서는 아무것도 움직이지 않음
+//  · 던지기: ① 게이지 막대 안에서 왔다 갔다 하는 분홍 점이 원하는 곳에 오면 꾹 누름 → 가로 위치
+//           ② 누르고 있는 동안 그 가로 위치에서 다트판 위를 다트 핀이 위·아래로 왔다 갔다 → 손을 떼면 그 높이로 다트가 날아감
 //  · 점수: 진짜 다트판처럼 1~20 칸, 트리플(3배)·더블(2배) 링, 불 50점·바깥 불 25점, 판 밖 0점 (art.js score)
 //  · 줄 속도: 모든 라운드 같음 (0.9초에 한 번 왕복)
 //  · 은유·은결: 내 캐릭터가 왼쪽에서 던지고, 쌍둥이는 오른쪽에서 응원 (잘 맞히면 기뻐하고, 밖으로 나가면 아쉬워함)
@@ -9,7 +9,7 @@
 
 let W = 540, H = 960;
 const D = window.DartArt;
-const ASSET_V = '202610272234';
+const ASSET_V = '202610272244';
 const ROUNDS = 8, PER = 3;
 const AMP = 1.2; // 줄이 움직이는 범위 (더블 링 바깥 = 1, 조금 밖까지 나감)
 const period = () => 0.9; // 줄이 한 번 갔다 오는 시간(초): 모든 라운드 같은 빠르기 (사용자 요청: 1라운드 1초 기준일 때의 3라운드 빠르기)
@@ -90,10 +90,10 @@ const G = {
   pose: ['idle', 'idle'], poseT: [0, 0], say: ['', ''], sayT: [0, 0], pausedFrom: 'play', newBest: false,
 };
 // LAY: 판 가운데 cx·cy, 더블 링 반지름 s, 캐릭터 자리 ch[[x, 발 y, 키]], 던지는 손 hand
-//      조준 게이지: 막대 가운데 gx·gy, 막대 반폭 gw, 막대 위 반원 높이 ary
-const LAY = { cx: 270, cy: 300, s: 170, hintY: 0, gx: 270, gy: 640, gw: 190, ary: 78, ch: [[70, 900, 160], [470, 900, 160]], hand: [90, 800] };
+//      조준 게이지: 막대 가운데 gx·gy, 막대 반폭 gw
+const LAY = { cx: 270, cy: 300, s: 170, hintY: 0, gx: 270, gy: 640, gw: 190, ch: [[70, 900, 160], [470, 900, 160]], hand: [90, 800] };
 const rim = () => LAY.s * D.R.rim;
-const GAUGE_H = 128; // 게이지 묶음 높이 (반원 + 막대 + 글자)
+const GAUGE_H = 50; // 게이지 막대 자리 높이
 function layout() {
   const sv = (k) => parseFloat(getComputedStyle(root).getPropertyValue('--safe-' + k)) || 0;
   const st = sv('t'), sb = sv('b'), sl = sv('l'), sr = sv('r');
@@ -106,7 +106,7 @@ function layout() {
     const sTop = st + 58;
     Object.assign(sheet.style, { left: pl + 'px', top: sTop + 'px', width: P + 'px' });
     const sBot = sTop + 10 * 24 + 16;
-    LAY.gw = P / 2 - 38; LAY.ary = 64; LAY.gx = pl + P / 2; LAY.gy = sBot + GAUGE_H - 32;
+    LAY.gw = P / 2 - 24; LAY.gx = pl + P / 2; LAY.gy = sBot + 34;
     Object.assign(btn.style, { left: (pl + P / 2 - 70) + 'px', top: (H - 74 - sb) + 'px' });
     btn.classList.add('mini');
     if (roomy) { // 넓은 가로 화면(폰 가로): 은유·은결은 판 양옆
@@ -118,9 +118,9 @@ function layout() {
     }
     LAY.hintY = 0;
   } else { // 위에서부터: 다트판 · 조준 게이지 · 점수판 · (은유 · 던지기 버튼 · 은결)
-    LAY.s = clamp((H - st - sb - 520) / (2 * D.R.rim), 120, 180); LAY.cx = W / 2; LAY.cy = st + 78 + rim();
+    LAY.s = clamp((H - st - sb - 445) / (2 * D.R.rim), 120, 180); LAY.cx = W / 2; LAY.cy = st + 78 + rim();
     const gTop = LAY.cy + rim() + 8;
-    LAY.gw = 200; LAY.ary = 78; LAY.gx = W / 2; LAY.gy = gTop + GAUGE_H - 30;
+    LAY.gw = 210; LAY.gx = W / 2; LAY.gy = gTop + 24;
     const sTop = gTop + GAUGE_H + 4;
     Object.assign(sheet.style, { left: '14px', top: sTop + 'px', width: (W - 28) + 'px' });
     const sBot = sTop + 5 * 26 + 38, by = Math.max(sBot + 14, H - 104 - sb);
@@ -189,16 +189,20 @@ function newDart() {
 function updateThrowBtn() {
   const b = $('btnThrow');
   b.classList.toggle('y', G.phase === 'y'); b.classList.toggle('wait', G.phase !== 'x' && G.phase !== 'y');
-  $('throwT').textContent = G.phase === 'y' ? '세로 멈추기' : G.phase === 'x' ? '가로 멈추기' : '슝~';
-  $('throwS').textContent = G.phase === 'y' ? '파란 점 톡! → 다트 발사' : G.phase === 'x' ? '분홍 점을 톡!' : `${G.round}라운드 · ${Math.min(PER, G.dart + 1)}번째 다트`;
+  $('throwT').textContent = G.phase === 'y' ? '손 떼면 발사!' : G.phase === 'x' ? '꾹 누르기' : '슝~';
+  $('throwS').textContent = G.phase === 'y' ? '원하는 높이에서 떼요' : G.phase === 'x' ? '좋은 곳에서 꾹!' : `${G.round}라운드 · ${Math.min(PER, G.dart + 1)}번째 다트`;
 }
-// 톡: 가로 멈추기 → 세로 멈추기(=던지기)
-function tap() {
-  if (G.state !== 'play' || G.pt < 0.12) return;
+// 꾹 누르기: 가로 위치를 정하고 다트 핀이 위·아래로 움직이기 시작 → 손 떼기: 그 높이로 던지기
+function press() {
+  if (G.state !== 'play' || G.phase !== 'x' || G.pt < 0.12) return;
   Audio.unlock();
-  if (G.phase === 'x') { G.ax = sweep(G.pt, period(G.round)); G.phase = 'y'; G.pt = 0; Audio.sfx('stopX'); updateThrowBtn(); }
-  else if (G.phase === 'y') { G.ay = sweep(G.pt, period(G.round) * 0.92); throwDart(G.ax, G.ay); }
+  G.ax = sweep(G.pt, period(G.round)); G.phase = 'y'; G.pt = 0; Audio.sfx('stopX'); updateThrowBtn();
 }
+function release() {
+  if (G.state !== 'play' || G.phase !== 'y') return;
+  G.ay = sweep(G.pt, period(G.round) * 0.92); throwDart(G.ax, G.ay);
+}
+const tap = press; // 시험용 (예전 이름)
 function throwDart(x, y) {
   G.ax = x; G.ay = y; G.phase = 'fly'; G.pt = 0; G.sx0 = LAY.hand[0]; G.sy0 = LAY.hand[1];
   setPose(0, 'cheer', 0.3); Audio.sfx('whoosh'); updateThrowBtn();
@@ -340,60 +344,43 @@ function render() {
   drawDartsLeft();
   drawFx();
 }
-// 조준 게이지 (다트판 위에는 아무것도 움직이지 않음)
-//  · 가로: 막대 안에서 분홍 점이 왼쪽·오른쪽으로 → 톡 하면 가로 위치
-//  · 세로: 막대 위 반원(무지개 모양) 위를 파란 점이 왔다 갔다 → 톡 하면 세로 위치 (왼쪽 끝 = 판 맨 위, 꼭대기 = 가운데, 오른쪽 끝 = 맨 아래)
-//  · 막대·반원 색은 그 줄을 따라 다트판에 있는 칸 색 그대로 (불·트리플·더블이 어디쯤인지 보임)
+// 조준
+//  · 가로: 다트판 아래 막대 안에서 분홍 점이 왼쪽·오른쪽으로 (막대 색 = 다트판 가운데 줄 칸 색)
+//  · 세로: 꾹 누르고 있는 동안, 고른 가로 위치에서 다트 핀이 다트판 위를 위·아래로 → 핀 끝이 다트가 꽂힐 곳
 const GSTEP = 72;
-const arcPt = (v) => { const p = Math.PI * (v + AMP) / (2 * AMP); return [LAY.gx - (LAY.gw - 8) * Math.cos(p), LAY.gy - 16 - LAY.ary * Math.sin(p)]; };
 const barX = (u) => LAY.gx + u / AMP * LAY.gw;
 function drawAim() {
   const ph = G.phase, T = period(G.round);
   if (ph === 'round') return;
-  const { gx, gy, gw } = LAY;
-  const xLive = ph === 'x', yLive = ph === 'y';
-  const xv = xLive ? sweep(G.pt, T) : G.ax, yv = yLive ? sweep(G.pt, T * 0.92) : G.ay;
-  ctx.save(); ctx.lineCap = 'butt';
-  // 반원 (세로 위치)
-  ctx.lineWidth = 26; ctx.strokeStyle = '#2A2348';
-  ctx.beginPath(); for (let i = 0; i <= GSTEP; i++) { const [x, y] = arcPt(-AMP + 2 * AMP * i / GSTEP); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); } ctx.stroke();
-  ctx.lineWidth = 18;
-  for (let i = 0; i < GSTEP; i++) {
-    const v0 = -AMP + 2 * AMP * i / GSTEP, v1 = v0 + 2 * AMP / GSTEP, [x0, y0] = arcPt(v0), [x1, y1] = arcPt(v1 + 0.004);
-    ctx.strokeStyle = xLive ? '#8F86A3' : D.colorAt(G.ax, (v0 + v1) / 2);
-    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
-  }
-  // 막대 (가로 위치): 판 가운데 줄 모양
-  const bh = 20;
-  ctx.fillStyle = '#2A2348'; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(gx - gw - 6, gy - bh / 2 - 4, gw * 2 + 12, bh + 8, 8); else ctx.rect(gx - gw - 6, gy - bh / 2 - 4, gw * 2 + 12, bh + 8); ctx.fill();
+  const { gx, gy, gw } = LAY, xLive = ph === 'x', yLive = ph === 'y';
+  const xv = xLive ? sweep(G.pt, T) : G.ax;
+  ctx.save();
+  const bh = 22;
+  ctx.fillStyle = '#2A2348'; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(gx - gw - 6, gy - bh / 2 - 4, gw * 2 + 12, bh + 8, 9); else ctx.rect(gx - gw - 6, gy - bh / 2 - 4, gw * 2 + 12, bh + 8); ctx.fill();
   for (let i = 0; i < GSTEP; i++) {
     const u0 = -AMP + 2 * AMP * i / GSTEP;
     ctx.fillStyle = D.colorAt(u0 + AMP / GSTEP, 0); ctx.fillRect(barX(u0), gy - bh / 2, gw * 2 / GSTEP + 0.6, bh);
   }
-  // 글자
-  ctx.font = '15px Jua, sans-serif'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#5B3A22';
-  const [lx, ly] = arcPt(-AMP), [rx2, ry2] = arcPt(AMP);
-  ctx.textAlign = 'center'; ctx.fillText('위', lx - 18, ly - LAY.ary * 0.42 - 14); ctx.fillText('아래', rx2 + 22, ry2 - LAY.ary * 0.42 - 14);
-  // 점
-  const pulse = 1 + 0.12 * Math.sin(G.t * 12);
-  const dot = (x, y, col, live) => {
-    const r = (live ? 14 : 11) * (live ? pulse : 1);
-    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill();
-    ctx.lineWidth = 5; ctx.strokeStyle = col; ctx.stroke();
-    ctx.beginPath(); ctx.arc(x, y, r * 0.38, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill();
-  };
-  dot(barX(xv), gy, '#FF5A8C', xLive);
-  if (!xLive) { const [x, y] = arcPt(yv); dot(x, y, '#2F9AE8', yLive); }
+  const r = xLive ? 15 * (1 + 0.12 * Math.sin(G.t * 12)) : 12, x = barX(xv);
+  ctx.beginPath(); ctx.arc(x, gy, r, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill();
+  ctx.lineWidth = 5; ctx.strokeStyle = '#FF5A8C'; ctx.stroke();
+  ctx.beginPath(); ctx.arc(x, gy, r * 0.38, 0, Math.PI * 2); ctx.fillStyle = '#FF5A8C'; ctx.fill();
   ctx.restore();
-  // 다트판 위: 가로 위치를 정한 뒤에만 판 위·아래 테두리에 작은 분홍 표시 (움직이지 않음)
-  if (!xLive) { const X = toX(G.ax); markTri(X, LAY.cy - rim() - 2, 1); markTri(X, LAY.cy + rim() + 2, -1); }
-  // 안내 글 (세로 화면)
-  if (LAY.hintY && (xLive || yLive)) {
-    const txt = xLive ? '분홍 점이 원하는 곳에 오면 톡!' : '파란 점이 원하는 곳에 오면 톡!';
+  if (LAY.hintY && (xLive || yLive)) { // 안내 글 (세로 화면)
+    const txt = xLive ? '분홍 점이 원하는 곳에 오면 꾹!' : '다트가 원하는 높이에 오면 손을 떼요!';
     ctx.save(); ctx.font = '22px Jua, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(60,30,0,.85)'; ctx.strokeText(txt, LAY.cx, LAY.hintY);
     ctx.fillStyle = xLive ? '#FFD6E2' : '#D6EEFF'; ctx.fillText(txt, LAY.cx, LAY.hintY);
     ctx.restore();
+  }
+  if (xLive) return;
+  // 고른 가로 위치: 판 위·아래 테두리에 분홍 세모
+  const X = toX(G.ax); markTri(X, LAY.cy - rim() - 2, 1); markTri(X, LAY.cy + rim() + 2, -1);
+  if (yLive) { // 다트 핀이 위·아래로 (핀 끝이 꽂힐 곳)
+    const Y = toY(sweep(G.pt, T * 0.92));
+    ctx.save(); ctx.globalAlpha = 0.9; ctx.lineWidth = 3; ctx.strokeStyle = '#fff';
+    ctx.beginPath(); ctx.arc(X, Y, 9, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    D.dart(ctx, X, Y, (LAY.s / 170) * 1.35, DART_COL, 0);
   }
 }
 // 작은 세모 (dir 1: 아래를 가리킴, -1: 위를 가리킴)
@@ -490,7 +477,11 @@ function setState(s) {
   lastKey = '';
 }
 function pauseGame() {
-  if (G.state === 'play') { $('verTxt').textContent = `버전 ${ASSET_V}`; G.pausedFrom = G.state; setState('pause'); }
+  if (G.state === 'play') {
+    $('verTxt').textContent = `버전 ${ASSET_V}`; G.pausedFrom = G.state;
+    if (G.phase === 'y') { G.phase = 'x'; G.pt = 0; updateThrowBtn(); } // 누르던 중이면 그 다트는 처음부터 다시 조준
+    setState('pause');
+  }
 }
 function resumeGame() { if (G.state === 'pause') { setState(G.pausedFrom); last = performance.now(); } }
 function goHome() { clearTimers(); if (HUB) location.href = '../index.html#lobby'; else showReady(); }
@@ -499,15 +490,17 @@ function goHome() { clearTimers(); if (HUB) location.href = '../index.html#lobby
 document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
 document.addEventListener('gesturestart', (e) => e.preventDefault());
 document.addEventListener('dblclick', (e) => e.preventDefault());
-cv.addEventListener('pointerdown', (e) => { e.preventDefault(); tap(); });
-$('btnThrow').addEventListener('pointerdown', (e) => { e.preventDefault(); tap(); });
+cv.addEventListener('pointerdown', (e) => { e.preventDefault(); press(); });
+$('btnThrow').addEventListener('pointerdown', (e) => { e.preventDefault(); press(); });
+window.addEventListener('pointerup', release); window.addEventListener('pointercancel', release);
 $('sheet').style.pointerEvents = 'auto';
-$('sheet').addEventListener('pointerdown', (e) => { e.preventDefault(); tap(); });
+$('sheet').addEventListener('pointerdown', (e) => { e.preventDefault(); press(); });
+window.addEventListener('keyup', (e) => { if (e.code === 'Space' || e.code === 'Enter') release(); });
 window.addEventListener('keydown', (e) => {
   Audio.unlock();
   if (e.code === 'Space' || e.code === 'Enter') {
     e.preventDefault(); if (e.repeat) return;
-    if (G.state === 'ready') $('btnGo').click(); else tap();
+    if (G.state === 'ready') $('btnGo').click(); else press();
     return;
   }
   if (e.code === 'Escape' || e.code === 'KeyP') { if (G.state === 'play') pauseGame(); else if (G.state === 'pause') resumeGame(); }
@@ -560,4 +553,4 @@ requestAnimationFrame(frame);
 if (document.fonts) document.fonts.ready.then(() => { lastKey = ''; });
 
 // debug/test hook
-window.__darts = { G, step, render, tap, throwDart, startRun, showResult, LAY, score: D.score, sweep, period, toast };
+window.__darts = { G, step, render, tap, press, release, throwDart, startRun, showResult, LAY, score: D.score, sweep, period, toast };
