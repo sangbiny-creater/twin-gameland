@@ -102,5 +102,15 @@
       if (on) { g.globalAlpha = 0.35; g.beginPath(); g.arc(x, 44, 13, 0, Math.PI * 2); g.fill(); g.globalAlpha = 1; }
     }
   }
-  window.DartArt = { ORDER, R, score, board, dart, bg };
+  // 다트판 (x, y) 자리의 색 (조준 게이지에 판 모양을 그대로 보여 줄 때 씀). 판 밖은 회색
+  function colorAt(x, y) {
+    const r = Math.hypot(x, y);
+    if (r <= R.bull) return COL.red;
+    if (r <= R.outer) return COL.green;
+    if (r > R.dOut) return '#B9B2C6';
+    let a = Math.atan2(x, -y) * 180 / Math.PI; if (a < 0) a += 360;
+    const even = Math.floor(((a + 9) % 360) / 18) % 2 === 0, ring = r >= R.dIn || (r >= R.tIn && r <= R.tOut);
+    return ring ? (even ? COL.red : COL.green) : (even ? COL.dark : COL.light);
+  }
+  window.DartArt = { ORDER, R, score, board, dart, bg, colorAt };
 })();

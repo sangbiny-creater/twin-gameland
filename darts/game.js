@@ -1,7 +1,7 @@
 'use strict';
 // 은유와 은결의 다트 게임 — 카운트업: 한 라운드에 다트 3개, 8라운드(24개) 점수를 모두 더함
-//  · 던지기: ① 다트판 위를 왼쪽·오른쪽으로 움직이는 세로 줄을 톡 → 가로 위치  ② 위·아래로 움직이는 가로 줄을 톡 → 세로 위치
-//           → 두 줄이 만난 곳으로 다트가 날아감 (손이 흔들리는 일 없이 고른 곳 그대로)
+//  · 던지기: ① 게이지 막대 안에서 왔다 갔다 하는 분홍 점을 톡 → 가로 위치  ② 막대 위 반원을 왔다 갔다 하는 파란 점을 톡 → 세로 위치
+//           → 그 자리로 다트가 날아감 (손이 흔들리는 일 없이 고른 곳 그대로). 다트판 위에서는 아무것도 움직이지 않음
 //  · 점수: 진짜 다트판처럼 1~20 칸, 트리플(3배)·더블(2배) 링, 불 50점·바깥 불 25점, 판 밖 0점 (art.js score)
 //  · 줄 속도: 모든 라운드 같음 (0.9초에 한 번 왕복)
 //  · 은유·은결: 내 캐릭터가 왼쪽에서 던지고, 쌍둥이는 오른쪽에서 응원 (잘 맞히면 기뻐하고, 밖으로 나가면 아쉬워함)
@@ -9,7 +9,7 @@
 
 let W = 540, H = 960;
 const D = window.DartArt;
-const ASSET_V = '202610272224';
+const ASSET_V = '202610272234';
 const ROUNDS = 8, PER = 3;
 const AMP = 1.2; // 줄이 움직이는 범위 (더블 링 바깥 = 1, 조금 밖까지 나감)
 const period = () => 0.9; // 줄이 한 번 갔다 오는 시간(초): 모든 라운드 같은 빠르기 (사용자 요청: 1라운드 1초 기준일 때의 3라운드 빠르기)
@@ -90,39 +90,43 @@ const G = {
   pose: ['idle', 'idle'], poseT: [0, 0], say: ['', ''], sayT: [0, 0], pausedFrom: 'play', newBest: false,
 };
 // LAY: 판 가운데 cx·cy, 더블 링 반지름 s, 캐릭터 자리 ch[[x, 발 y, 키]], 던지는 손 hand
-const LAY = { cx: 270, cy: 300, s: 170, hintY: 0, ch: [[70, 900, 160], [470, 900, 160]], hand: [90, 800] };
+//      조준 게이지: 막대 가운데 gx·gy, 막대 반폭 gw, 막대 위 반원 높이 ary
+const LAY = { cx: 270, cy: 300, s: 170, hintY: 0, gx: 270, gy: 640, gw: 190, ary: 78, ch: [[70, 900, 160], [470, 900, 160]], hand: [90, 800] };
 const rim = () => LAY.s * D.R.rim;
+const GAUGE_H = 128; // 게이지 묶음 높이 (반원 + 막대 + 글자)
 function layout() {
   const sv = (k) => parseFloat(getComputedStyle(root).getPropertyValue('--safe-' + k)) || 0;
   const st = sv('t'), sb = sv('b'), sl = sv('l'), sr = sv('r');
   const sheet = $('sheet'), btn = $('btnThrow');
-  if (wideLayout()) {
+  if (wideLayout()) { // 왼쪽: 다트판 / 오른쪽 칸: 점수판 · 조준 게이지 · 던지기 버튼
     const P = 290, pr = W - 14 - sr, pl = pr - P, left = 14 + sl, avail = pl - 20 - left;
     LAY.s = Math.min(158, (H - 96) / 2 / D.R.rim, (avail - 30) / 2 / D.R.rim);
     const roomy = avail - 2 * rim() >= 230;
     LAY.cx = left + avail / 2; LAY.cy = Math.max(H / 2 + 14, st + 64 + rim());
-    const sTop = st + 62;
+    const sTop = st + 58;
     Object.assign(sheet.style, { left: pl + 'px', top: sTop + 'px', width: P + 'px' });
     const sBot = sTop + 10 * 24 + 16;
-    if (roomy) {
+    LAY.gw = P / 2 - 38; LAY.ary = 64; LAY.gx = pl + P / 2; LAY.gy = sBot + GAUGE_H - 32;
+    Object.assign(btn.style, { left: (pl + P / 2 - 70) + 'px', top: (H - 74 - sb) + 'px' });
+    btn.classList.add('mini');
+    if (roomy) { // 넓은 가로 화면(폰 가로): 은유·은결은 판 양옆
       const side = (avail / 2 - rim()) / 2 + rim(), h = Math.min(200, H - 330);
       LAY.ch = [[LAY.cx - side, H - 24 - sb, h], [LAY.cx + side, H - 24 - sb, h]];
-      Object.assign(btn.style, { left: (pl + P / 2 - 100) + 'px', top: Math.max(sBot + 18, H - 100 - sb) + 'px' });
-    } else { // 좁은 가로 화면(태블릿): 은유·은결은 오른쪽 점수판 아래 양옆, 작은 던지기 버튼은 그 사이
-      const h = clamp(H - sBot - 50 - sb, 100, 150);
-      LAY.ch = [[pl + 38, H - 14 - sb, h], [pr - 38, H - 14 - sb, h]];
-      Object.assign(btn.style, { left: (pl + P / 2 - 70) + 'px', top: (H - 96 - sb) + 'px' });
+    } else { // 좁은 가로 화면(태블릿): 은유·은결은 판 아래 양쪽 구석에 작게
+      const dx = rim() * 0.86;
+      LAY.ch = [[LAY.cx - dx, H - 10 - sb, 96], [LAY.cx + dx, H - 10 - sb, 96]];
     }
-    btn.classList.toggle('mini', !roomy);
     LAY.hintY = 0;
-  } else {
-    LAY.s = H >= 1000 ? 180 : 164; LAY.cx = W / 2; LAY.cy = st + 78 + rim();
-    const sTop = LAY.cy + rim() + 34;
+  } else { // 위에서부터: 다트판 · 조준 게이지 · 점수판 · (은유 · 던지기 버튼 · 은결)
+    LAY.s = clamp((H - st - sb - 520) / (2 * D.R.rim), 120, 180); LAY.cx = W / 2; LAY.cy = st + 78 + rim();
+    const gTop = LAY.cy + rim() + 8;
+    LAY.gw = 200; LAY.ary = 78; LAY.gx = W / 2; LAY.gy = gTop + GAUGE_H - 30;
+    const sTop = gTop + GAUGE_H + 4;
     Object.assign(sheet.style, { left: '14px', top: sTop + 'px', width: (W - 28) + 'px' });
-    const sBot = sTop + 5 * 26 + 38, by = Math.max(sBot + 14, H - 112 - sb);
+    const sBot = sTop + 5 * 26 + 38, by = Math.max(sBot + 14, H - 104 - sb);
     Object.assign(btn.style, { left: (W / 2 - 115) + 'px', top: by + 'px' });
     const h = clamp(H - sBot - 40 - sb, 110, 250);
-    btn.classList.remove('mini'); LAY.hintY = sBot + 30;
+    btn.classList.remove('mini'); LAY.hintY = sBot + 30 < by - 16 ? sBot + 30 : 0;
     LAY.ch = [[74, H - 18 - sb, h], [W - 74, H - 18 - sb, h]];
   }
   LAY.hand = [LAY.ch[0][0] + LAY.ch[0][2] * 0.25, LAY.ch[0][1] - LAY.ch[0][2] * 0.7];
@@ -186,7 +190,7 @@ function updateThrowBtn() {
   const b = $('btnThrow');
   b.classList.toggle('y', G.phase === 'y'); b.classList.toggle('wait', G.phase !== 'x' && G.phase !== 'y');
   $('throwT').textContent = G.phase === 'y' ? '세로 멈추기' : G.phase === 'x' ? '가로 멈추기' : '슝~';
-  $('throwS').textContent = G.phase === 'y' ? '파란 줄 톡! → 다트 발사' : G.phase === 'x' ? '분홍 줄을 톡!' : `${G.round}라운드 · ${Math.min(PER, G.dart + 1)}번째 다트`;
+  $('throwS').textContent = G.phase === 'y' ? '파란 점 톡! → 다트 발사' : G.phase === 'x' ? '분홍 점을 톡!' : `${G.round}라운드 · ${Math.min(PER, G.dart + 1)}번째 다트`;
 }
 // 톡: 가로 멈추기 → 세로 멈추기(=던지기)
 function tap() {
@@ -336,50 +340,67 @@ function render() {
   drawDartsLeft();
   drawFx();
 }
-// 조준 줄: 가로 단계는 세로 줄이 좌우로, 세로 단계는 가로 줄이 위아래로. 판 밖 아래·왼쪽에 작은 눈금 막대
+// 조준 게이지 (다트판 위에는 아무것도 움직이지 않음)
+//  · 가로: 막대 안에서 분홍 점이 왼쪽·오른쪽으로 → 톡 하면 가로 위치
+//  · 세로: 막대 위 반원(무지개 모양) 위를 파란 점이 왔다 갔다 → 톡 하면 세로 위치 (왼쪽 끝 = 판 맨 위, 꼭대기 = 가운데, 오른쪽 끝 = 맨 아래)
+//  · 막대·반원 색은 그 줄을 따라 다트판에 있는 칸 색 그대로 (불·트리플·더블이 어디쯤인지 보임)
+const GSTEP = 72;
+const arcPt = (v) => { const p = Math.PI * (v + AMP) / (2 * AMP); return [LAY.gx - (LAY.gw - 8) * Math.cos(p), LAY.gy - 16 - LAY.ary * Math.sin(p)]; };
+const barX = (u) => LAY.gx + u / AMP * LAY.gw;
 function drawAim() {
-  const s = LAY.s, cx = LAY.cx, cy = LAY.cy, A = AMP * s;
   const ph = G.phase, T = period(G.round);
-  if (ph !== 'x' && ph !== 'y') return;
-  const x = ph === 'x' ? sweep(G.pt, T) : G.ax, y = ph === 'y' ? sweep(G.pt, T * 0.92) : null;
-  const X = toX(x);
-  ctx.save();
-  // 막대 (판 아래: 가로, 판 왼쪽: 세로)
-  const by = cy + A + 18, bx = cx - A - 18;
-  ctx.lineCap = 'round';
-  ctx.strokeStyle = 'rgba(42,35,72,.55)'; ctx.lineWidth = 12;
-  ctx.beginPath(); ctx.moveTo(cx - A, by); ctx.lineTo(cx + A, by); ctx.stroke();
-  if (ph === 'y') { ctx.beginPath(); ctx.moveTo(bx, cy - A); ctx.lineTo(bx, cy + A); ctx.stroke(); }
-  // 세로 줄 (가로 위치)
-  const pulse = 0.75 + 0.25 * Math.sin(G.t * 10);
-  ctx.lineWidth = ph === 'x' ? 6 : 4; ctx.strokeStyle = ph === 'x' ? `rgba(255,90,140,${pulse})` : 'rgba(255,90,140,.85)';
-  ctx.setLineDash(ph === 'x' ? [] : [10, 8]);
-  ctx.beginPath(); ctx.moveTo(X, cy - A); ctx.lineTo(X, cy + A); ctx.stroke();
-  ctx.setLineDash([]);
-  marker(X, by, '#FF5A8C', 'up');
-  if (y != null) {
-    const Y = toY(y);
-    ctx.lineWidth = 6; ctx.strokeStyle = `rgba(47,154,232,${pulse})`;
-    ctx.beginPath(); ctx.moveTo(cx - A, Y); ctx.lineTo(cx + A, Y); ctx.stroke();
-    marker(bx, Y, '#2F9AE8', 'right');
-    // 만나는 곳: 과녁 표시
-    ctx.lineWidth = 4; ctx.strokeStyle = '#fff'; ctx.beginPath(); ctx.arc(X, Y, 14, 0, Math.PI * 2); ctx.stroke();
-    ctx.lineWidth = 2; ctx.strokeStyle = '#2A2348'; ctx.beginPath(); ctx.arc(X, Y, 18, 0, Math.PI * 2); ctx.stroke();
+  if (ph === 'round') return;
+  const { gx, gy, gw } = LAY;
+  const xLive = ph === 'x', yLive = ph === 'y';
+  const xv = xLive ? sweep(G.pt, T) : G.ax, yv = yLive ? sweep(G.pt, T * 0.92) : G.ay;
+  ctx.save(); ctx.lineCap = 'butt';
+  // 반원 (세로 위치)
+  ctx.lineWidth = 26; ctx.strokeStyle = '#2A2348';
+  ctx.beginPath(); for (let i = 0; i <= GSTEP; i++) { const [x, y] = arcPt(-AMP + 2 * AMP * i / GSTEP); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); } ctx.stroke();
+  ctx.lineWidth = 18;
+  for (let i = 0; i < GSTEP; i++) {
+    const v0 = -AMP + 2 * AMP * i / GSTEP, v1 = v0 + 2 * AMP / GSTEP, [x0, y0] = arcPt(v0), [x1, y1] = arcPt(v1 + 0.004);
+    ctx.strokeStyle = xLive ? '#8F86A3' : D.colorAt(G.ax, (v0 + v1) / 2);
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
   }
-  ctx.restore();
-  // 안내 글
-  const txt = ph === 'x' ? '분홍 줄을 원하는 곳에서 톡!' : '파란 줄을 원하는 곳에서 톡!';
-  ctx.save(); ctx.font = '22px Jua, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  if (LAY.hintY) { // 세로 화면만: 점수판 아래 (가로 화면은 던지기 버튼 글로 안내)
-    ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(60,30,0,.85)'; ctx.strokeText(txt, cx, LAY.hintY);
-    ctx.fillStyle = ph === 'x' ? '#FFD6E2' : '#D6EEFF'; ctx.fillText(txt, cx, LAY.hintY);
+  // 막대 (가로 위치): 판 가운데 줄 모양
+  const bh = 20;
+  ctx.fillStyle = '#2A2348'; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(gx - gw - 6, gy - bh / 2 - 4, gw * 2 + 12, bh + 8, 8); else ctx.rect(gx - gw - 6, gy - bh / 2 - 4, gw * 2 + 12, bh + 8); ctx.fill();
+  for (let i = 0; i < GSTEP; i++) {
+    const u0 = -AMP + 2 * AMP * i / GSTEP;
+    ctx.fillStyle = D.colorAt(u0 + AMP / GSTEP, 0); ctx.fillRect(barX(u0), gy - bh / 2, gw * 2 / GSTEP + 0.6, bh);
   }
+  // 글자
+  ctx.font = '15px Jua, sans-serif'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#5B3A22';
+  const [lx, ly] = arcPt(-AMP), [rx2, ry2] = arcPt(AMP);
+  ctx.textAlign = 'center'; ctx.fillText('위', lx - 18, ly - LAY.ary * 0.42 - 14); ctx.fillText('아래', rx2 + 22, ry2 - LAY.ary * 0.42 - 14);
+  // 점
+  const pulse = 1 + 0.12 * Math.sin(G.t * 12);
+  const dot = (x, y, col, live) => {
+    const r = (live ? 14 : 11) * (live ? pulse : 1);
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.lineWidth = 5; ctx.strokeStyle = col; ctx.stroke();
+    ctx.beginPath(); ctx.arc(x, y, r * 0.38, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill();
+  };
+  dot(barX(xv), gy, '#FF5A8C', xLive);
+  if (!xLive) { const [x, y] = arcPt(yv); dot(x, y, '#2F9AE8', yLive); }
   ctx.restore();
+  // 다트판 위: 가로 위치를 정한 뒤에만 판 위·아래 테두리에 작은 분홍 표시 (움직이지 않음)
+  if (!xLive) { const X = toX(G.ax); markTri(X, LAY.cy - rim() - 2, 1); markTri(X, LAY.cy + rim() + 2, -1); }
+  // 안내 글 (세로 화면)
+  if (LAY.hintY && (xLive || yLive)) {
+    const txt = xLive ? '분홍 점이 원하는 곳에 오면 톡!' : '파란 점이 원하는 곳에 오면 톡!';
+    ctx.save(); ctx.font = '22px Jua, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(60,30,0,.85)'; ctx.strokeText(txt, LAY.cx, LAY.hintY);
+    ctx.fillStyle = xLive ? '#FFD6E2' : '#D6EEFF'; ctx.fillText(txt, LAY.cx, LAY.hintY);
+    ctx.restore();
+  }
 }
-function marker(x, y, col, dir) {
-  ctx.save(); ctx.translate(x, y); if (dir === 'right') ctx.rotate(-Math.PI / 2);
-  ctx.beginPath(); ctx.moveTo(0, -14); ctx.lineTo(13, 8); ctx.lineTo(-13, 8); ctx.closePath();
-  ctx.fillStyle = col; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.stroke(); ctx.restore();
+// 작은 세모 (dir 1: 아래를 가리킴, -1: 위를 가리킴)
+function markTri(x, y, dir) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(1, dir);
+  ctx.beginPath(); ctx.moveTo(0, 2); ctx.lineTo(-10, -14); ctx.lineTo(10, -14); ctx.closePath();
+  ctx.fillStyle = '#FF5A8C'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.stroke(); ctx.restore();
 }
 // 날아가는 다트: 은유(은결)의 손에서 고른 곳까지 포물선, 점점 작아짐
 function drawFlying() {
@@ -388,11 +409,11 @@ function drawFlying() {
   const x = G.sx0 + (tx - G.sx0) * e, y = G.sy0 + (ty - G.sy0) * e - Math.sin(k * Math.PI) * 90;
   D.dart(ctx, x, y, (LAY.s / 170) * (2.4 - 1.2 * e), DART_COL, -0.5 - (1 - k) * 0.6);
 }
-// 남은 다트 (판 오른쪽 아래)
+// 남은 다트 (판 오른쪽 위 구석)
 function drawDartsLeft() {
   if (G.state !== 'play' && G.state !== 'pause') return;
   const left = PER - G.dart - (G.phase === 'fly' ? 1 : 0);
-  const x0 = LAY.cx + rim() * 0.78, y0 = LAY.cy + rim() * 0.98;
+  const x0 = LAY.cx + rim() * 0.72, y0 = LAY.cy - rim() * 0.78;
   for (let i = 0; i < PER; i++) {
     ctx.save(); ctx.globalAlpha = i < left ? 1 : 0.25; D.dart(ctx, x0 + i * 20, y0, 0.62, DART_COL, 0.15); ctx.restore();
   }
