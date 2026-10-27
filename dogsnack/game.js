@@ -14,7 +14,7 @@
 let W = 540, H = 960;
 const L = window.SnackLevels, D = window.DogArt;
 const { PTS, JUDGE, LANES } = L;
-const ASSET_V = '202610280001';
+const ASSET_V = '202610280004';
 const MAX_HEARTS = 3;
 const START_HEARTS = 2;
 const HEART_GAP = 50; // 하트 아이템 사이 최소 시간(초) — 2026-10-28 달콤 베이커리와 같게(25→50초)
@@ -124,10 +124,10 @@ function layout() {
   const sv = (k) => parseFloat(getComputedStyle(root).getPropertyValue('--safe-' + k)) || 0;
   if (wideLayout()) {
     LAY.s = 0.82; LAY.vs = 0.72; LAY.lw = 140; LAY.cx = W / 2; LAY.br = 40;
-    LAY.by = H - 56 - sv('b'); LAY.jy = LAY.by - 62; LAY.top = 70 + sv('t');
+    LAY.by = H - 56 - sv('b'); LAY.jy = LAY.by - 82; LAY.top = 70 + sv('t'); // 판정선: 방석 가운데(by+0.95br)와 판정 타원 거리 1.2배 (2026-10-28, 전 by-62)
   } else {
     LAY.s = 1; LAY.vs = 1; LAY.lw = Math.min(166, (W - 30) / 3); LAY.cx = W / 2; LAY.br = 56;
-    LAY.by = H - 92 - sv('b'); LAY.jy = LAY.by - 86; LAY.top = 128 + sv('t');
+    LAY.by = H - 92 - sv('b'); LAY.jy = LAY.by - 114; LAY.top = 128 + sv('t'); // 판정선: 방석 가운데와 판정 타원 거리 1.2배 (2026-10-28, 전 by-86)
   }
 }
 const laneX = (i) => LAY.cx + (i - 1) * LAY.lw;

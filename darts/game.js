@@ -10,7 +10,7 @@
 
 let W = 540, H = 960;
 const D = window.DartArt;
-const ASSET_V = '202610280001';
+const ASSET_V = '202610280004';
 const ROUNDS = 8, PER = 3;
 const AMP = 1.2; // 줄이 움직이는 범위 (더블 링 바깥 = 1, 조금 밖까지 나감)
 // 한 번 갔다 오는 시간(초), 모든 라운드 같음 (사용자 요청으로 맞춘 값)
@@ -114,12 +114,17 @@ function layout() {
     head.classList.toggle('col', colL < 220); // 좁은 가로 화면(태블릿): 점수 칸 3개를 세로로
     Object.assign(head.style, { left: (lx + (colL - hw) / 2) + 'px', top: (st + 76) + 'px', width: hw + 'px' });
   } else {
-    LAY.s = clamp((H - st - sb - 490) / (2 * D.R.rim), 115, 180); LAY.cx = W / 2; LAY.cy = st + 200 + rim();
+    // 위에서부터: 총점·점수 칸(HEAD_H) → (넉넉한 틈) → 다트판 → 게이지 → 바로 아래 캐릭터 버튼. 남는 높이는 위쪽 틈에 나눠 줌
+    const HEAD_H = 182, h = clamp(H * 0.17, 150, 210), avail = H - st - sb;
+    LAY.s = clamp((avail - 392 - 1.05 * h) / (2 * D.R.rim), 115, 180);
+    const extra = Math.max(0, avail - (392 + 1.05 * h + 2 * rim()));
+    const headTop = st + 62 + extra * 0.25;
+    LAY.cx = W / 2; LAY.cy = headTop + HEAD_H + 34 + extra * 0.45 + rim();
     LAY.gy = LAY.cy + rim() + 30; LAY.gx = W / 2; LAY.gw = 200;
-    const feet = H - sb - 34, h = clamp((feet - LAY.gy - 30) / 1.05, 110, 220);
+    const feet = LAY.gy + 27 + 1.06 * h;
     LAY.ch = [[W / 2, feet, h], [W - 62, feet + 10, Math.min(130, h * 0.62)]];
     head.classList.remove('col');
-    Object.assign(head.style, { left: '60px', top: (st + 62) + 'px', width: (W - 120) + 'px' });
+    Object.assign(head.style, { left: '30px', top: headTop + 'px', width: (W - 60) + 'px' });
   }
   const [x, y, h] = LAY.ch[0];
   LAY.hand = [x + h * 0.3, y - h * 0.95];
