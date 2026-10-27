@@ -1,10 +1,18 @@
 'use strict';
-// 멍멍이 간식 타임 그림 — 지금은 코드로 그린 임시 그림 (GPT 그림이 오면 이 함수들만 그림 파일로 바꾸면 됨)
+// 멍멍이 간식 타임 그림 — GPT 그림(assets/sprites, tools/dogsnack_assets.py)을 그리고, 그림을 아직 못 받았으면 코드로 그린 그림
 //  · 강아지 3마리 (캐릭터 레퍼런스 그림 기준): 0 아리(은유의 시츄) · 1 콩이(새 친구, 갈색 아기 푸들) · 2 포미(은결의 크림 포메라니안)
 //  · 간식: 뼈다귀 과자(톡) · 금빛 뼈다귀 · 줄줄이 소시지(꾹) / 함정: 양파 · 초콜릿 (강아지가 먹으면 안 됨)
 //  · 모든 그림은 (x, y) = 가운데, s = 크기 (1 = 뼈다귀 폭 약 84점)
 (function (root) {
   const OUT = '#5B3A22';
+  // GPT 그림: DogArt.load(버전) 으로 읽음. 강아지는 표정 3장(기본·입 벌림·슬픔)이 같은 틀 → 바꿔 그려도 자리가 그대로
+  const SPR = {};
+  const NAMES = ['bone', 'bone_gold', 'onion', 'choco', 'sausage_top', 'sausage_mid', 'sausage_bot'];
+  for (let k = 0; k < 3; k++) for (const f of ['idle', 'open', 'sad']) NAMES.push(`dog${k}_${f}`);
+  function load(v) { for (const n of NAMES) { const im = new Image(); im.src = `assets/sprites/${n}.webp?v=${v}`; SPR[n] = im; } }
+  const ok = (n) => SPR[n] && SPR[n].complete && SPR[n].naturalWidth > 0;
+  // 그림을 (x, y) 가운데에 폭 w 로
+  function img(g, n, x, y, w) { const im = SPR[n], h = w * im.naturalHeight / im.naturalWidth; g.drawImage(im, x - w / 2, y - h / 2, w, h); }
   const line = (g, w) => { g.lineWidth = w; g.strokeStyle = OUT; g.lineJoin = 'round'; g.lineCap = 'round'; g.stroke(); };
   function rr(g, x, y, w, h, r) {
     g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
@@ -12,6 +20,11 @@
   }
   // 뼈다귀 과자
   function bone(g, x, y, s, o = {}) {
+    if (ok(o.gold ? 'bone_gold' : 'bone')) {
+      img(g, o.gold ? 'bone_gold' : 'bone', x, y, 92 * s);
+      if (o.gold) sparkle(g, x + 30 * s, y - 24 * s, 8 * s, o.t || 0);
+      return;
+    }
     const c = o.gold ? '#FFD34D' : '#F2C98A', sh = o.gold ? '#E8A800' : '#D9A35E';
     g.save(); g.translate(x, y); g.rotate(-0.25);
     g.beginPath(); g.ellipse(0, 30 * s, 34 * s, 6 * s, 0.25, 0, Math.PI * 2); g.fillStyle = 'rgba(0,0,0,.15)'; g.fill();
@@ -40,6 +53,14 @@
     if (bot - yTop < 4) return;
     g.save();
     if (cut != null) { g.beginPath(); g.rect(x - w, yTop - w, w * 2, bot - yTop + w); g.clip(); }
+    if (ok('sausage_top') && ok('sausage_mid') && ok('sausage_bot')) {
+      // GPT 그림: 위 마디 + 가운데 마디 × (n-2) + 아래 마디 (매듭에서 자른 조각이라 이어 붙이면 줄줄이 소시지)
+      const sw = 40 * s, m = Math.max(2, Math.round(len / (60 * s))), ML = len / m;
+      for (let i = 0; i < m; i++) g.drawImage(SPR[i === 0 ? 'sausage_top' : i === m - 1 ? 'sausage_bot' : 'sausage_mid'], x - sw / 2, yTop + i * ML, sw, ML + 0.5);
+      g.restore();
+      if (cut != null && cut < yBot) { g.save(); g.fillStyle = '#F6B08A'; g.beginPath(); g.ellipse(x, bot, sw / 2 - 4 * s, 6 * s, 0, 0, Math.PI * 2); g.fill(); line(g, 2 * s); g.restore(); }
+      return;
+    }
     for (let i = 0; i < n; i++) {
       const y0 = yTop + i * L + 2 * s, y1 = yTop + (i + 1) * L - 2 * s;
       rr(g, x - w / 2, y0, w, y1 - y0, Math.min(w / 2, (y1 - y0) / 2));
@@ -60,6 +81,7 @@
   }
   // 함정: 양파
   function onion(g, x, y, s) {
+    if (ok('onion')) { img(g, 'onion', x, y - 4 * s, 72 * s); return; }
     g.save(); g.translate(x, y);
     g.beginPath(); g.ellipse(0, 32 * s, 28 * s, 5 * s, 0, 0, Math.PI * 2); g.fillStyle = 'rgba(0,0,0,.15)'; g.fill();
     g.beginPath(); g.moveTo(0, -36 * s); g.bezierCurveTo(10 * s, -24 * s, 34 * s, -14 * s, 32 * s, 8 * s); g.bezierCurveTo(30 * s, 30 * s, -30 * s, 30 * s, -32 * s, 8 * s); g.bezierCurveTo(-34 * s, -14 * s, -10 * s, -24 * s, 0, -36 * s);
@@ -72,6 +94,7 @@
   }
   // 함정: 초콜릿
   function choco(g, x, y, s) {
+    if (ok('choco')) { img(g, 'choco', x, y, 66 * s); return; }
     g.save(); g.translate(x, y); g.rotate(0.12);
     g.beginPath(); g.ellipse(0, 30 * s, 34 * s, 5 * s, 0, 0, Math.PI * 2); g.fillStyle = 'rgba(0,0,0,.15)'; g.fill();
     rr(g, -32 * s, -26 * s, 64 * s, 52 * s, 6 * s); g.fillStyle = '#6B3A1E'; g.fill(); line(g, 3 * s);
@@ -89,6 +112,12 @@
   ];
   function dog(g, x, y, s, kind, open = 0, mood = 'idle', t = 0) {
     const d = DOGS[kind % 3], R = 50 * s;
+    const face = mood === 'sad' ? 'sad' : open > 0.5 || mood === 'happy' ? 'open' : 'idle', nm = `dog${kind % 3}_${face}`;
+    if (ok(nm)) { // GPT 그림: 높이 2.6R, 앞발 아래 끝 = 머리 가운데 + 1.25R
+      const im = SPR[nm], h = 2.6 * R, w = h * im.naturalWidth / im.naturalHeight;
+      g.drawImage(im, x - w / 2, y + 1.25 * R - h, w, h);
+      return;
+    }
     g.save(); g.translate(x, y);
     // 몸·앞발
     g.beginPath(); g.ellipse(0, R * 1.05, R * 0.95, R * 0.55, 0, Math.PI, 0); g.fillStyle = d.fur2; g.fill(); line(g, 3 * s);
@@ -149,5 +178,6 @@
     }
     g.restore();
   }
-  root.DogArt = { bone, sausage, onion, choco, dog, sparkle, DOGS };
+  const ready = () => NAMES.every(ok);
+  root.DogArt = { load, ready, bone, sausage, onion, choco, dog, sparkle, DOGS };
 })(typeof window !== 'undefined' ? window : globalThis);

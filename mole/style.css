@@ -149,22 +149,22 @@ button:active { transform: translateY(3px); }
 
 /* 하트: 모든 게임 공통 그림 (common/ui/heart.webp · heart_empty.webp) */
 .pill.hearts { padding: 3px 8px; gap: 2px; }
-.heart { display: inline-block; width: 28px; height: 26px; background: center/contain no-repeat url(../common/ui/heart.webp?v=202610272153); filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); }
-.heart.empty { background-image: url(../common/ui/heart_empty.webp?v=202610272153); opacity: .85; }
+.heart { display: inline-block; width: 28px; height: 26px; background: center/contain no-repeat url(../common/ui/heart.webp?v=202610272224); filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); }
+.heart.empty { background-image: url(../common/ui/heart_empty.webp?v=202610272224); opacity: .85; }
 .heart.pop { animation: heartPop 380ms; }
 @keyframes heartPop { 40% { transform: scale(1.5); } }
 #root.wide .heart { width: 25px; height: 23px; }
-i.hrt { display: inline-block; width: 15px; height: 14px; vertical-align: -1px; margin-right: 1px; background: center/contain no-repeat url(../common/ui/heart.webp?v=202610272153); }
+i.hrt { display: inline-block; width: 15px; height: 14px; vertical-align: -1px; margin-right: 1px; background: center/contain no-repeat url(../common/ui/heart.webp?v=202610272224); }
 /* 준비 창: 하트 두더지 (그림이 오기 전엔 일반 두더지 위에 하트) */
 .lg.yes { background: #FFF3F6; box-shadow: 0 3px 0 #F6C3D0; position: relative; }
 .lg.yes.tmp img { filter: hue-rotate(-25deg) saturate(1.4); }
-.lg.yes i.hat { position: absolute; left: 50%; top: 0; width: 26px; height: 24px; transform: translateX(-50%); background: center/contain no-repeat url(../common/ui/heart.webp?v=202610272153); }
+.lg.yes i.hat { position: absolute; left: 50%; top: 0; width: 26px; height: 24px; transform: translateX(-50%); background: center/contain no-repeat url(../common/ui/heart.webp?v=202610272224); }
 .lg.yes b { color: #E8456A; }
 .r-why { color: #FFD9E0; font-size: 18px; margin-top: -6px; }
 /* 준비 창 칸 5개가 한 줄에 들어가게, 하트 아이콘은 동그라미 꾸밈 없이 */
 .lg { min-width: 0; padding-left: 2px; padding-right: 2px; }
 .lg.no { flex-grow: 1.5; max-width: 124px; }
-.lg i.hrt, .lg.no i.hrt { width: 15px; height: 14px; margin: 0 1px 0 0; border: 0; border-radius: 0; box-shadow: none; background: center/contain no-repeat url(../common/ui/heart.webp?v=202610272153); }
+.lg i.hrt, .lg.no i.hrt { width: 15px; height: 14px; margin: 0 1px 0 0; border: 0; border-radius: 0; box-shadow: none; background: center/contain no-repeat url(../common/ui/heart.webp?v=202610272224); }
 .lg i.hrt::after { content: none; }
 .lg span { white-space: nowrap; }
 /* 가로 화면: 하트가 생겨 오른쪽 위 줄(하트·점수·콤보·코인)이 넓어짐 */

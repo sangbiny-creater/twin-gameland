@@ -126,7 +126,7 @@ const THEMES = {
 };
 // 월드 그림 (메인 화면 지도와 같은 그림)
 const WORLD_IMG = {};
-for (const th of Object.values(THEMES)) if (th.img && !WORLD_IMG[th.img]) { const im = new Image(); im.src = `../common/worlds/w${th.img}.webp?v=202610272153`; WORLD_IMG[th.img] = im; }
+for (const th of Object.values(THEMES)) if (th.img && !WORLD_IMG[th.img]) { const im = new Image(); im.src = `../common/worlds/w${th.img}.webp?v=202610272224`; WORLD_IMG[th.img] = im; }
 
 // ---------- save ----------
 const Save = {
@@ -691,10 +691,10 @@ function drawKid(g, who, pose, t, opt = {}) {
 // ---------- character sprites (은유 / 은결 sheet, assets/sprites/kids.webp) ----------
 // Frames were cut from the character sprite sheet; the vector drawKid() above is only a fallback.
 const Sprites = { img: new Image(), frames: null, scale: 3, ready: false };
-fetch('assets/sprites/kids.json?v=202610272153').then((r) => r.json()).then((j) => {
+fetch('assets/sprites/kids.json?v=202610272224').then((r) => r.json()).then((j) => {
   Sprites.frames = j.frames; Sprites.scale = j.scale;
   Sprites.img.onload = () => { Sprites.ready = true; };
-  Sprites.img.src = 'assets/sprites/kids.webp?v=202610272153';
+  Sprites.img.src = 'assets/sprites/kids.webp?v=202610272224';
 }).catch(() => { /* opened from file:// — keep vector fallback */ });
 const SPRITE_SIZE = 1.55; // sheet pixel -> game pixel
 function drawKidSprite(g, who, pose, t) {
@@ -766,7 +766,7 @@ function startStage(si) {
   if (!THEMES[skinTheme() || STAGES[si].theme].img) getBG(skinTheme() || STAGES[si].theme);
   setState('play');
   renderHearts();
-  $('hudProgFace').style.backgroundImage = `url(${(window.Costume && Costume.src) || `../common/faces/${Save.data.char}_base.webp?v=202610272153`})`;
+  $('hudProgFace').style.backgroundImage = `url(${(window.Costume && Costume.src) || `../common/faces/${Save.data.char}_base.webp?v=202610272224`})`;
   Audio.startBgm();
 }
 
@@ -1515,7 +1515,7 @@ function goHome() {
 function showReady(si) {
   G.si = si;
   $('readyTitle').textContent = `${STAGES[si].label} ${STAGES[si].name}`;
-  $('readyFace').src = (window.Costume && Costume.src) || `../common/faces/${Save.data.char}_base.webp?v=202610272153`;
+  $('readyFace').src = (window.Costume && Costume.src) || `../common/faces/${Save.data.char}_base.webp?v=202610272224`;
   $('readyFace').classList.toggle('cos', !!(window.Costume && Costume.src));
   setState('ready');
 }

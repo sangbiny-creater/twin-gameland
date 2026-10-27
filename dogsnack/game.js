@@ -14,7 +14,7 @@
 let W = 540, H = 960;
 const L = window.SnackLevels, D = window.DogArt;
 const { PTS, JUDGE, LANES } = L;
-const ASSET_V = '202610272153';
+const ASSET_V = '202610272224';
 const MAX_HEARTS = 5;
 const HEART_GAP = 25; // 하트 아이템 사이 최소 시간(초)
 const LANE_COL = ['#FF8FB1', '#FFD34D', '#8FD0FF']; // 아리(분홍)·콩이(노랑)·포미(하늘)
@@ -39,9 +39,10 @@ const $ = (id) => document.getElementById(id);
 const rnd = (a, b) => a + Math.random() * (b - a);
 const fmt = (n) => Math.round(n).toLocaleString();
 
-// ---------- 그림: 배경은 두더지 게임 초원(울타리·풍차)을 같이 씀, 강아지·간식은 art.js ----------
+// ---------- 그림: 배경(세로·가로 초원)은 assets/bg, 강아지·간식은 art.js ----------
 const BGS = { port: new Image(), land: new Image() };
-BGS.port.src = `../mole/assets/bg/port.webp?v=${ASSET_V}`; BGS.land.src = `../mole/assets/bg/land.webp?v=${ASSET_V}`;
+BGS.port.src = `assets/bg/port.webp?v=${ASSET_V}`; BGS.land.src = `assets/bg/land.webp?v=${ASSET_V}`;
+D.load(ASSET_V);
 const HEART = new Image(); HEART.src = `../common/ui/heart.webp?v=${ASSET_V}`;
 const HEART_EMPTY = new Image(); HEART_EMPTY.src = `../common/ui/heart_empty.webp?v=${ASSET_V}`;
 const imgOk = (im) => im.complete && im.naturalWidth > 0;
@@ -191,7 +192,7 @@ function icon(id) {
   else if (id === 'plate') D.choco(g, 74, 50, 0.9);
   else if (id === 'long') { g.translate(74, 50); g.rotate(-Math.PI / 2); g.translate(-74, -50); D.sausage(g, 74, -10, 110, 0.9); }
   else if (id === 'heartlong') { g.save(); g.translate(74, 50); g.rotate(-Math.PI / 2); g.translate(-74, -50); D.sausage(g, 74, -10, 110, 0.9); g.restore(); if (imgOk(HEART)) g.drawImage(HEART, 54, 18, 40, 40 * HEART.naturalHeight / HEART.naturalWidth); }
-  const url = c.toDataURL(); if (imgOk(HEART)) ICONS[id] = url; // 그림을 받기 전 코드 그림은 기억하지 않음
+  const url = c.toDataURL(); if (imgOk(HEART) && D.ready()) ICONS[id] = url; // 그림을 받기 전 코드 그림은 기억하지 않음
   return url;
 }
 let runId = 0;

@@ -9,7 +9,7 @@
 
 let W = 540, H = 960;
 const D = window.DartArt;
-const ASSET_V = '202610272153';
+const ASSET_V = '202610272224';
 const ROUNDS = 8, PER = 3;
 const AMP = 1.2; // 줄이 움직이는 범위 (더블 링 바깥 = 1, 조금 밖까지 나감)
 const period = () => 0.9; // 줄이 한 번 갔다 오는 시간(초): 모든 라운드 같은 빠르기 (사용자 요청: 1라운드 1초 기준일 때의 3라운드 빠르기)
