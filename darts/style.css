@@ -146,3 +146,12 @@ button:active { transform: translateY(3px); }
 #root:not(.wide) .bx { width: 128px; height: 78px; border-radius: 18px; border-width: 5px; }
 #root:not(.wide) .bx b { font-size: 38px; } #root:not(.wide) .bx small { font-size: 16px; }
 #root:not(.wide) .bx b:empty + small { font-size: 19px; }
+/* 2026-10-28: 다트판을 화면 가로 가득 — 총점은 맨 위 줄 가운데, BEST·코인은 오른쪽 위에 위아래로 작게 */
+.hud-sub { flex-direction: column; align-items: flex-end; gap: 4px; }
+.hud-sub .best { font-size: 15px; padding: 2px 8px; }
+#root:not(.wide) .total > b { font-size: 70px; }
+#root:not(.wide) .total > small { font-size: 26px; }
+#root:not(.wide) .boxes { gap: 12px; margin-top: 2px; }
+#root:not(.wide) .bx { width: 112px; height: 62px; border-radius: 16px; border-width: 4px; }
+#root:not(.wide) .bx b { font-size: 32px; } #root:not(.wide) .bx small { font-size: 14px; }
+#root:not(.wide) .bx b:empty + small { font-size: 17px; }

@@ -10,7 +10,7 @@
 
 let W = 540, H = 960;
 const D = window.DartArt;
-const ASSET_V = '202610280012';
+const ASSET_V = '202610280021';
 const ROUNDS = 8, PER = 3;
 const AMP = 1.2; // 줄이 움직이는 범위 (더블 링 바깥 = 1, 조금 밖까지 나감)
 // 한 번 갔다 오는 시간(초), 모든 라운드 같음 (사용자 요청으로 맞춘 값)
@@ -104,19 +104,18 @@ function layout() {
   const sv = (k) => parseFloat(getComputedStyle(root).getPropertyValue('--safe-' + k)) || 0;
   const st = sv('t'), sb = sv('b');
   const head = $('head');
-  // 세로 화면만: 위에서부터 총점·점수 칸(HEAD_H) → 다트판(화면 가로 가득) → 게이지 → 바로 아래 캐릭터 버튼
-  // 키가 작은 폰은 캐릭터를 줄이고, 그래도 모자라면 다트판을 조금 줄임. 남는 높이는 위쪽 틈에 나눠 줌
-  const HEAD_H = 168, FIXED = 56 + HEAD_H + 24 + 30 + 27 + 26, avail = H - st - sb;
-  const sFull = (W / 2 - 2) / D.R.rim;
-  LAY.s = clamp((avail - FIXED - 1.05 * 140) / (2 * D.R.rim), 115, sFull);
-  const h = clamp((avail - FIXED - 2 * rim()) / 1.05, 140, 210);
+  // 세로 화면만: 맨 위 줄 가운데 총점·라운드, 그 밑 점수 칸 3개 → 다트판(늘 화면 가로 가득) → 게이지 → 작은 캐릭터 버튼
+  // 높이가 모자라면 캐릭터 버튼만 작아짐. 남는 높이는 위쪽 틈에 나눠 줌
+  const HEAD_H = 150, FIXED = HEAD_H + 22 + 27 + 24, avail = H - st - sb;
+  LAY.s = (W / 2 - 2) / D.R.rim;
+  const h = clamp((avail - FIXED - 2 * rim()) / 1.05, 80, 160);
   const extra = Math.max(0, avail - (FIXED + 2 * rim() + 1.05 * h));
-  const headTop = st + 56 + extra * 0.3;
-  LAY.cx = W / 2; LAY.cy = headTop + HEAD_H + 24 + extra * 0.4 + rim();
-  LAY.gy = LAY.cy + rim() + 30; LAY.gx = W / 2; LAY.gw = 220;
+  const headTop = st + 4 + extra * 0.25;
+  LAY.cx = W / 2; LAY.cy = headTop + HEAD_H + extra * 0.45 + rim();
+  LAY.gy = LAY.cy + rim() + 22; LAY.gx = W / 2; LAY.gw = 220;
   const feet = LAY.gy + 27 + 1.06 * h;
-  LAY.ch = [[W / 2, feet, h], [W - 62, feet + 10, Math.min(130, h * 0.62)]];
-  Object.assign(head.style, { left: '30px', top: headTop + 'px', width: (W - 60) + 'px' });
+  LAY.ch = [[W / 2, feet, h], [W - 58, feet + 8, Math.min(120, h * 0.75)]];
+  Object.assign(head.style, { left: '70px', top: headTop + 'px', width: (W - 140) + 'px' });
   LAY.hand = [W / 2 + h * 0.3, feet - h * 0.95];
 }
 // 판 좌표 ↔ 화면 좌표
