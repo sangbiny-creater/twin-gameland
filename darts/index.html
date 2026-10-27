@@ -10,17 +10,17 @@
 <meta name="theme-color" content="#7BC043">
 <meta name="application-name" content="은유와 은결">
 <title>은유와 은결</title>
-<link rel="manifest" href="../hub/manifest.json?v=202610272345">
-<link rel="apple-touch-icon" href="../hub/icons/icon-180.png?v=202610272345">
-<link rel="icon" type="image/png" sizes="32x32" href="../hub/icons/favicon-32.png?v=202610272345">
-<link rel="icon" type="image/png" sizes="16x16" href="../hub/icons/favicon-16.png?v=202610272345">
-<link rel="icon" type="image/png" sizes="192x192" href="../hub/icons/favicon-192.png?v=202610272345">
-<link rel="shortcut icon" href="../favicon.ico?v=202610272345">
+<link rel="manifest" href="../hub/manifest.json?v=202610280001">
+<link rel="apple-touch-icon" href="../hub/icons/icon-180.png?v=202610280001">
+<link rel="icon" type="image/png" sizes="32x32" href="../hub/icons/favicon-32.png?v=202610280001">
+<link rel="icon" type="image/png" sizes="16x16" href="../hub/icons/favicon-16.png?v=202610280001">
+<link rel="icon" type="image/png" sizes="192x192" href="../hub/icons/favicon-192.png?v=202610280001">
+<link rel="shortcut icon" href="../favicon.ico?v=202610280001">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=202610272345">
-<link rel="stylesheet" href="../common/pause.css?v=202610272345">
+<link rel="stylesheet" href="style.css?v=202610280001">
+<link rel="stylesheet" href="../common/pause.css?v=202610280001">
 </head>
 <body>
 <div id="safe"></div>
@@ -31,22 +31,27 @@
   <div id="hud" class="hidden">
     <div class="hud-top">
       <button id="btnPause" class="sq" aria-label="일시정지">⏸</button>
-      <div class="pill round">라운드 <b id="hudRound">1</b><small>/ 8</small></div>
-      <div class="pill score"><b id="hudScore">0</b><small>점</small></div>
     </div>
     <div class="hud-sub">
       <div class="best">BEST <b id="hudBest">0</b></div>
-      <div class="pill coins"><img src="../common/ui/coin.webp?v=202610272345" alt=""><b id="hudCoin">0</b></div>
+      <div class="pill coins"><img src="../common/ui/coin.webp?v=202610280001" alt=""><b id="hudCoin">0</b></div>
     </div>
-    <div id="sheet" class="sheet"></div>
-    <button id="btnThrow" class="throw"><b id="throwT">가로 멈추기</b><small id="throwS">탭!</small></button>
+    <!-- 총점(크게) · 라운드(작게) · 이번 라운드 다트 3개 점수 -->
+    <div id="head" class="head">
+      <div class="total"><b id="hudScore">0</b><small>점</small><span class="rnd">라운드 <b id="hudRound">1</b>/8</span></div>
+      <div class="boxes">
+        <div class="bx" id="bx0"><b></b><small></small></div>
+        <div class="bx" id="bx1"><b></b><small></small></div>
+        <div class="bx" id="bx2"><b></b><small></small></div>
+      </div>
+    </div>
   </div>
 
   <!-- READY -->
   <div id="ready" class="screen hidden">
     <div class="panel">
       <div class="logo-txt"><small>은유와 은결의</small>다트 게임</div>
-      <div class="p-text">① 막대 안 <b>분홍 점</b>이 원하는 곳에 오면 <b>꾹</b> 누르기<br>② 누르는 동안 <b>다트</b>가 위·아래로 움직여요<br>원하는 높이에 오면 <b>손을 떼면</b> 슝!</div>
+      <div class="p-text">① 막대 안 <b>점</b>이 원하는 곳에 오면 <b>꾹</b> 누르기<br>② 누르는 동안 <b>과녁 표시</b>가 위·아래로 움직여요<br>원하는 높이에서 <b>손을 떼면</b> 다트가 슝!</div>
       <div class="legend">
         <div class="lg"><i class="sw t"></i><span>트리플</span><b>점수 ×3</b></div>
         <div class="lg"><i class="sw d"></i><span>더블</span><b>점수 ×2</b></div>
@@ -98,10 +103,10 @@
 
   <div id="toast" class="toast hidden"></div>
 </div>
-<script src="../common/chars/looks.js?v=202610272345"></script>
-<script src="../common/profile.js?v=202610272345"></script>
-<script src="../common/charv2.js?v=202610272345"></script>
-<script src="art.js?v=202610272345"></script>
-<script src="game.js?v=202610272345"></script>
+<script src="../common/chars/looks.js?v=202610280001"></script>
+<script src="../common/profile.js?v=202610280001"></script>
+<script src="../common/charv2.js?v=202610280001"></script>
+<script src="art.js?v=202610280001"></script>
+<script src="game.js?v=202610280001"></script>
 </body>
 </html>
