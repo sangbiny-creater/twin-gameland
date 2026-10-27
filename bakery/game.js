@@ -1,7 +1,7 @@
 'use strict';
 // 은유와 은결의 달콤 베이커리 — 컨베이어로 지나가는 빵 위에 생크림을 짜는 원버튼 타이밍 게임
 //  · 끝없이 이어짐 (다운힐 러너·헬리콥터처럼): 하트가 다 없어질 때까지, 점수가 기록(BEST)
-//  · 하트: 3개로 시작, 최대 5개. Bad(놓침·함정·너무 빨리·너무 일찍 뗌) 나오면 -1
+//  · 하트: 2개로 시작, 최대 3개 (2026-10-27 난이도 올림). Bad(놓침·함정·너무 빨리·너무 일찍 뗌) 나오면 -1
 //  · 하트 아이템: 가끔(앞 하트 아이템에서 25초 넘게 지난 뒤 나오는 긴 빵 하나) 빵 앞쪽 위에 올라감 → 시작·끝 모두 Perfect 면 하트 +1
 //    하트가 늘어나는 곳은 이것 하나뿐 (컵케이크 Perfect·다른 판정으로는 절대 안 늘어남)
 //  · 하트 그림은 모든 게임 공통 common/ui/heart.webp·heart_empty.webp (계단 오르기·헬리콥터와 같은 그림)
@@ -16,8 +16,9 @@
 let W = 540, H = 960;
 const L = window.BakeryLevels, A = window.BakeryArt;
 const { PTS, JUDGE } = L;
-const ASSET_V = '202610270427';
-const MAX_HEARTS = 5;
+const ASSET_V = '202610271958';
+const MAX_HEARTS = 3;
+const START_HEARTS = 2;
 const HEART_GAP = 25; // 하트 아이템 사이 최소 시간(초)
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -167,13 +168,13 @@ function startRun(lv = 1) {
   clearTimers();
   const c0 = (lv - 1) * L.LEVEL;
   G.gen = L.Gen(Date.now(), c0); G.notes = []; G.shelf = []; G.k = 0; G.heartT = c0 - 10;
-  G.hearts = 3; G.score = 0; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.made = 0; G.perfect = 0; G.level = lv; G.startLv = lv; G.newBest = false;
+  G.hearts = START_HEARTS; G.score = 0; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.made = 0; G.perfect = 0; G.level = lv; G.startLv = lv; G.newBest = false;
   G.fx = []; G.t = 0; G.clock = c0; G.slowT = 0; G.x2T = 0; G.shield = 0; G.holdNote = null; G.down = false; G.pointers.clear();
   G.pose = 'idle'; G.poseT = 0;
   Audio.step = 0; Audio.at = c0;
   // 아이템샵 부스트 (사용중으로 켜 둔 것만 1개씩)
   const boosts = HUB ? HUB.takeBoosts('bakery') : [];
-  if (boosts.includes('life')) G.hearts = 4;
+  if (boosts.includes('life')) G.hearts = MAX_HEARTS; // 추가 하트 부스트: 3개(최대)로 시작
   if (boosts.includes('shield')) G.shield = 1;
   if (boosts.includes('slow')) G.slowT = 20;
   if (boosts.includes('x2')) G.x2T = 30;
@@ -460,7 +461,7 @@ function render() {
       const top = A.longBread(ctx, x - 8 * s, x1 + 8 * s, by, s, n.kind, cream, n.st === 'done');
       if (n.st === 'hold') creamY = top + 2 * s;
       if (n.st === 'wait') drawLongMarks(n, x, x1, top);
-      // 하트 아이템 (하트가 5개보다 적을 때만 보임)
+      // 하트 아이템 (하트가 최대(3개)보다 적을 때만 보임)
       if (n.heart && !n.heartGot && !n.heartLost && n.st !== 'miss' && G.hearts < MAX_HEARTS) {
         const hx = x + 34 * s; // 빵 앞쪽, 꾹 누르기 시작하는 곳 위에 올려 둠
         drawHeart(HEART, hx, top + 4 * s - 18 * s + Math.sin(G.t * 6 + i) * 2 * s, 40 * s);
