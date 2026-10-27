@@ -9,11 +9,12 @@
 let W = 540, H = 960;
 const BASE_TILES = ['strawberry', 'banana', 'grape', 'cherry', 'orange', 'peach', 'watermelon', 'carrot', 'corn', 'mushroom',
   'clover', 'flower', 'star', 'heart', 'leaf', 'snowflake', 'sun', 'cloud', 'moon', 'cat', 'dog', 'paw'].map((n) => 't_' + n);
-// 다른 게임(메모리·두더지·베이커리·헬리콥터·다운힐·계단)에서 가져온 아이콘 타일 34종 → assets/sprites/extra.webp
+// 다른 게임(메모리·두더지·베이커리·헬리콥터·다운힐·계단·멍멍이 간식)에서 가져온 아이콘 타일 42종 → assets/sprites/extra.webp
 //  (tools/shisen_extra_tiles.py 로 만듦). 기본 그림과 섞여서 판마다 무작위로 뽑힘
 const EXTRA_TILES = ['mem_raincoat', 'mem_hug', 'mem_book', 'mem_explorer', 'mem_pinkhat', 'mem_bluehat', 'mem_pom', 'mem_dogs', 'mem_heli', 'mem_cake',
   'mole', 'mole_fast', 'mole_tough', 'hammer', 'cupcake', 'muffin', 'burnt', 'eclair', 'roll', 'piping',
-  'windmill', 'airship', 'seagull', 'bolt', 'magnet', 'flag', 'penguin', 'snowman', 'pines', 'log', 'fence', 'gift', 'mystery', 'alarm'].map((n) => 'x_' + n);
+  'windmill', 'airship', 'seagull', 'bolt', 'magnet', 'flag', 'penguin', 'snowman', 'pines', 'log', 'fence', 'gift', 'mystery', 'alarm',
+  'bone', 'bone_gold', 'choco', 'onion', 'sausage', 'shihtzu', 'poodle', 'pomdog'].map((n) => 'x_' + n);
 // 10개 월드 × 10판 = 100판. 월드 5~10은 그 월드 전용 그림 타일(14종)을 먼저 쓰고, 은유·은결 얼굴 타일은 항상 들어감
 const WORLDS = ['하늘도시', '숲속 나무마을', '겨울왕국', '석양의 항구', '벚꽃마을', '구름왕국', '바닷속도시', '마법숲', '별빛우주', '황금성'];
 const { PER_WORLD, STAGES } = window.ShisenLevels; // 스테이지 i: { c, r(판 크기), tiles, t(그림 종류), s(제한 초) }
@@ -49,7 +50,7 @@ function shuffleArr(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math
 const ASSET_V = '202610272234';
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => { SP.f = j; SP.img.onload = () => { SP.ready = true; }; SP.img.src = `assets/sprites/sprites.webp?v=${ASSET_V}`; });
-const EXTRA_V = '20261026d';
+const EXTRA_V = '20261027a';
 SP.ex = { img: new Image(), f: null, ready: false };
 fetch(`assets/sprites/extra.json?v=${EXTRA_V}`).then((r) => r.json()).then((j) => { SP.ex.f = j; SP.ex.img.onload = () => { SP.ex.ready = true; }; SP.ex.img.src = `assets/sprites/extra.webp?v=${EXTRA_V}`; });
 // 그림 이름 → [묶음 그림, x, y, w, h] (기본 묶음 또는 추가 묶음), 아직 안 불러왔으면 null

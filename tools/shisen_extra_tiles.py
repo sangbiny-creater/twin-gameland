@@ -1,6 +1,6 @@
 """사천성 추가 타일 그림 만들기 → shisen/assets/sprites/extra.webp + extra.json
   python3 tools/shisen_extra_tiles.py
-  · 다른 게임에서 쓰는 아이콘 같은 그림을 사천성 타일(크림색 판 + 갈색 테두리 + 아래 두께)에 얹어 만듦
+  · 다른 게임(메모리·두더지·베이커리·헬리콥터·다운힐·계단·멍멍이 간식)에서 쓰는 아이콘 같은 그림을 사천성 타일(크림색 판 + 갈색 테두리 + 아래 두께)에 얹어 만듦
   · 메모리 게임 카드(f**)는 바탕이 있는 정사각형 그림이라 둥근 네모로 잘라 넣음.
     은유·은결 그림은 기본 얼굴 타일과 확실히 다른 것만 (모자·책·끌어안기 등), 추억 카드(s**, 전체 장면 그림)는 쓰지 않음
   · 기존 사천성 타일(sprites.webp)은 그대로 두고, 게임이 두 묶음을 함께 씀 (이름 x_…)
@@ -51,6 +51,15 @@ SRC = [
     ('x_pines', 'atlas', ('downhill/assets/sprites/sprites.json', 'trees')),
     ('x_log', 'atlas', ('downhill/assets/sprites/sprites.json', 'log')),
     ('x_fence', 'atlas', ('downhill/assets/sprites/sprites.json', 'fence')),
+    # 멍멍이 간식 타임 (강아지는 기본 얼굴만 — 입 벌림·슬픔 표정은 비슷해서 뺌)
+    ('x_bone', 'file', 'dogsnack/assets/sprites/bone.webp'),
+    ('x_bone_gold', 'file', 'dogsnack/assets/sprites/bone_gold.webp'),
+    ('x_choco', 'file', 'dogsnack/assets/sprites/choco.webp'),
+    ('x_onion', 'file', 'dogsnack/assets/sprites/onion.webp'),
+    ('x_sausage', 'file', 'dogsnack/assets/sprites/sausage_mid.webp'),
+    ('x_shihtzu', 'file', 'dogsnack/assets/sprites/dog0_idle.webp'),
+    ('x_poodle', 'file', 'dogsnack/assets/sprites/dog1_idle.webp'),
+    ('x_pomdog', 'file', 'dogsnack/assets/sprites/dog2_idle.webp'),
     # 계단 오르기
     ('x_gift', 'atlas', ('stairs/assets/sprites/sprites.json', 'gift')),
     ('x_mystery', 'atlas', ('stairs/assets/sprites/sprites.json', 'mystery')),
