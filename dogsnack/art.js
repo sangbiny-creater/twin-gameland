@@ -1,7 +1,7 @@
 'use strict';
 // 멍멍이 간식 타임 그림 — 지금은 코드로 그린 임시 그림 (GPT 그림이 오면 이 함수들만 그림 파일로 바꾸면 됨)
 //  · 강아지 3마리 (캐릭터 레퍼런스 그림 기준): 0 아리(은유의 시츄) · 1 콩이(새 친구, 갈색 아기 푸들) · 2 포미(은결의 크림 포메라니안)
-//  · 간식: 뼈다귀 과자(톡) · 금빛 뼈다귀 · 긴 소시지(꾹) / 함정: 양파 · 초콜릿 (강아지가 먹으면 안 됨)
+//  · 간식: 뼈다귀 과자(톡) · 금빛 뼈다귀 · 줄줄이 소시지(꾹) / 함정: 양파 · 초콜릿 (강아지가 먹으면 안 됨)
 //  · 모든 그림은 (x, y) = 가운데, s = 크기 (1 = 뼈다귀 폭 약 84점)
 (function (root) {
   const OUT = '#5B3A22';
@@ -31,18 +31,28 @@
     for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, q = i % 2 ? r * 0.3 : r; g.lineTo(Math.cos(a) * q, Math.sin(a) * q); }
     g.closePath(); g.fillStyle = '#FFFBE0'; g.fill(); g.strokeStyle = '#E8A800'; g.lineWidth = 1.5; g.stroke(); g.restore();
   }
-  // 긴 소시지 (세로): yTop ~ yBot. 강아지가 먹은 부분은 그리지 않음 (cut: 이 높이 아래는 먹음)
+  // 줄줄이 소시지 (세로): yTop ~ yBot 을 소시지 마디 여러 개로 나눠 끈으로 묶은 모양.
+  //  마디 수는 길이에 맞춰 정하고 마디 길이를 살짝 늘려 맞춤 → 양 끝은 늘 둥글게 마무리된 온전한 소시지 (중간에 툭 잘리지 않음)
+  //  cut: 이 높이 아래는 강아지가 먹은 부분 (먹는 중인 마디는 한 입 베어 문 모양)
   function sausage(g, x, yTop, yBot, s, cut) {
-    const w = 34 * s, bot = cut != null ? Math.min(yBot, cut) : yBot;
+    const w = 34 * s, len = yBot - yTop; if (len < 4) return;
+    const n = Math.max(1, Math.round(len / (50 * s))), L = len / n, bot = cut != null ? Math.min(yBot, cut) : yBot;
     if (bot - yTop < 4) return;
     g.save();
     if (cut != null) { g.beginPath(); g.rect(x - w, yTop - w, w * 2, bot - yTop + w); g.clip(); }
-    rr(g, x - w / 2, yTop, w, yBot - yTop, w / 2);
-    const gr = g.createLinearGradient(x - w / 2, 0, x + w / 2, 0); gr.addColorStop(0, '#B4532A'); gr.addColorStop(0.45, '#E07A45'); gr.addColorStop(1, '#A3461F');
-    g.fillStyle = gr; g.fill(); line(g, 3 * s);
-    g.strokeStyle = 'rgba(90,30,10,.55)'; g.lineWidth = 3 * s;
-    for (let y = yTop + 22 * s; y < yBot - 14 * s; y += 26 * s) { g.beginPath(); g.moveTo(x - w * 0.3, y); g.lineTo(x + w * 0.3, y - 8 * s); g.stroke(); }
-    g.fillStyle = 'rgba(255,255,255,.45)'; rr(g, x - w * 0.32, yTop + 8 * s, 5 * s, Math.max(0, yBot - yTop - 16 * s), 2.5 * s); g.fill();
+    for (let i = 0; i < n; i++) {
+      const y0 = yTop + i * L + 2 * s, y1 = yTop + (i + 1) * L - 2 * s;
+      rr(g, x - w / 2, y0, w, y1 - y0, Math.min(w / 2, (y1 - y0) / 2));
+      const gr = g.createLinearGradient(x - w / 2, 0, x + w / 2, 0); gr.addColorStop(0, '#B4532A'); gr.addColorStop(0.45, '#E07A45'); gr.addColorStop(1, '#A3461F');
+      g.fillStyle = gr; g.fill(); line(g, 3 * s);
+      g.strokeStyle = 'rgba(90,30,10,.5)'; g.lineWidth = 3 * s; // 구운 자국
+      g.beginPath(); g.moveTo(x - w * 0.25, (y0 + y1) / 2 + 4 * s); g.lineTo(x + w * 0.25, (y0 + y1) / 2 - 4 * s); g.stroke();
+      g.fillStyle = 'rgba(255,255,255,.45)'; rr(g, x - w * 0.3, y0 + 8 * s, 5 * s, Math.max(0, y1 - y0 - 16 * s), 2.5 * s); g.fill();
+      if (i < n - 1) { // 마디 사이 꼬인 매듭
+        const yk = y1 + 2 * s;
+        g.beginPath(); g.ellipse(x, yk, 7 * s, 4 * s, 0, 0, Math.PI * 2); g.fillStyle = '#9A3E1A'; g.fill(); line(g, 2 * s);
+      }
+    }
     g.restore();
     if (cut != null && cut < yBot) { // 먹은 자리: 한 입 베어 문 모양
       g.save(); g.fillStyle = '#F6B08A'; g.beginPath(); g.ellipse(x, bot, w / 2 - 2 * s, 6 * s, 0, 0, Math.PI * 2); g.fill(); line(g, 2 * s); g.restore();
