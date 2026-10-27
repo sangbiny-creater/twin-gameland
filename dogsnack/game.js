@@ -14,7 +14,7 @@
 let W = 540, H = 960;
 const L = window.SnackLevels, D = window.DogArt;
 const { PTS, JUDGE, LANES } = L;
-const ASSET_V = '202610272132';
+const ASSET_V = '202610272140';
 const MAX_HEARTS = 5;
 const HEART_GAP = 25; // 하트 아이템 사이 최소 시간(초)
 const LANE_COL = ['#FF8FB1', '#FFD34D', '#8FD0FF']; // 아리(분홍)·콩이(노랑)·포미(하늘)
