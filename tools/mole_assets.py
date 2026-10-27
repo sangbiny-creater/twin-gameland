@@ -1,4 +1,4 @@
-"""두더지 게임 그림 만들기 → mole/assets/, hub/cards·intro, shop/assets/games, common/items 에 webp로 저장.
+"""두더지 게임 그림 만들기 → mole/assets/, hub/intro, shop/assets/games, common/items 에 webp로 저장 (게임 카드는 tools/game_cards.py).
   python3 tools/mole_assets.py
   · GPT 그림: molegame/GPT/G01~G06.PNG(카드·인트로·로고·배경), M01~M10.PNG(두더지·구멍·망치·흙먼지, 초록 바탕),
     C01~C04.PNG(구멍에서 나온 은유·은결 기본·맞음)
@@ -135,11 +135,7 @@ def rounded(im, r):
 
 def hub_images():
     g1 = Image.open(f'{GPT}/G01.PNG').convert('RGB')
-    # 게임 카드: 사천성 카드 틀(테두리·BEST 줄·게임 시작 버튼)에 그림 칸(x10~470, y10~446)만 바꿔 끼움. 로고가 그림 칸 아래쪽에
-    pic = g1.crop((0, 215, 1024, 215 + round(1024 * 436 / 460))).resize((460, 436), Image.LANCZOS)
-    card = Image.open(f'{ROOT}/hub/cards/shisen.webp').convert('RGBA')
-    card.alpha_composite(rounded(pic, 30), (10, 10))
-    card.save(f'{ROOT}/hub/cards/mole.webp', 'WEBP', quality=88, method=6)
+    # 게임 선택 카드(hub/cards/mole.webp)는 tools/game_cards.py 가 모든 게임을 같은 규칙으로 만듦 — 여기서는 안 건드림
     # 인트로: 세로 G02 → 9:16 로 잘라 941x1672, 가로 G03 → 1536x1024 그대로. 원본은 intro/ 에 보관
     g2 = Image.open(f'{GPT}/G02.PNG').convert('RGB'); g3 = Image.open(f'{GPT}/G03.PNG').convert('RGB')
     g2.save(f'{ROOT}/intro/세로원본_7_두더지게임.png'); g3.save(f'{ROOT}/intro/가로_7_두더지게임.png')

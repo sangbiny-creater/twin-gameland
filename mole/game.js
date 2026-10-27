@@ -21,7 +21,7 @@ const HEART_STAY = 0.6;    // 하트 두더지가 다 올라와 머무는 시간
 const HEART_FULL_PTS = 300; // 하트가 꽉 찼을 때 하트 두더지를 잡으면 받는 점수
 const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202610272050';
+const ASSET_V = '202610272103';
 const asset = (p) => `assets/${p}.webp?v=${ASSET_V}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -47,7 +47,7 @@ const fmt = (n) => Math.round(n).toLocaleString();
 const img = (src) => { const im = new Image(); im.src = src; return im; };
 const ok = (im) => im && im.complete && im.naturalWidth > 0;
 // 하트 두더지 그림(GPT M11·M12 → sprites/heart, heart_hit)이 생기면 true. 그전엔 일반 두더지 머리 위에 하트를 얹어 그림
-const HAS_HEART_ART = false;
+const HAS_HEART_ART = true;
 const SPR = {
   normal: img(asset('sprites/normal')), normal_hit: img(asset('sprites/normal_hit')),
   fast: img(asset('sprites/fast')), fast_hit: img(asset('sprites/fast_hit')),
