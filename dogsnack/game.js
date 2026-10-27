@@ -14,7 +14,7 @@
 let W = 540, H = 960;
 const L = window.SnackLevels, D = window.DogArt;
 const { PTS, JUDGE, LANES } = L;
-const ASSET_V = '202610272318';
+const ASSET_V = '202610272337';
 const MAX_HEARTS = 5;
 const HEART_GAP = 25; // 하트 아이템 사이 최소 시간(초)
 const LANE_COL = ['#FF8FB1', '#FFD34D', '#8FD0FF']; // 아리(분홍)·콩이(노랑)·포미(하늘)
@@ -148,7 +148,7 @@ function startRun(lv = 1) {
   G.gen = L.Gen(Date.now(), c0); G.notes = []; G.k = 0; G.heartT = c0 - 10;
   G.hearts = 3; G.score = 0; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.made = 0; G.perfect = 0; G.level = lv; G.startLv = lv; G.newBest = false;
   G.fx = []; G.t = 0; G.clock = c0; G.slowT = 0; G.x2T = 0; G.shield = 0; G.hold = [null, null, null]; G.ptr.clear(); G.laneDown = [0, 0, 0];
-  G.pose = 'idle'; G.poseT = 0;
+  G.pose = 'idle'; G.poseT = 0; G.poseLog = [];
   const boosts = HUB ? HUB.takeBoosts('dogsnack') : [];
   if (boosts.includes('life')) G.hearts = 4;
   if (boosts.includes('shield')) G.shield = 1;
@@ -312,7 +312,13 @@ function loseHeart(msg, lane) {
   G.fx.push({ kind: 'heartLoss', t: 0, life: 0.6 });
   if (G.hearts <= 0) gameOver();
 }
-function setPose(p, t) { G.pose = p; G.poseT = t; }
+function setPose(p, t) { G.pose = p; G.poseT = t; (G.poseLog = G.poseLog || []).push({ p, dur: t, at: G.t }); if (G.poseLog.length > 30) G.poseLog.shift(); }
+// lag 초 전의 기뻐함·아쉬움 상태 (은결은 은유보다 0.3초 늦게 바뀜 — 둘이 똑같이 바뀌면 어색해서)
+function poseAt(lag) {
+  const now = G.t - lag, log = G.poseLog || [];
+  for (let i = log.length - 1; i >= 0; i--) { const e = log[i]; if (e.at <= now) return now < e.at + e.dur ? e.p : 'idle'; }
+  return 'idle';
+}
 // 판정 글자: 줄마다 하나씩 (두 줄 같이 누르면 둘 다 보임)
 function popText(text, j, x, y, sub) {
   G.fx = G.fx.filter((f) => !(f.kind === 'judge' && Math.abs(f.x - x) < 5));
@@ -534,11 +540,12 @@ function drawTwins() {
   const CV = window.CharV2;
   const wide = wideLayout(), x0 = LAY.cx - LAY.lw * 1.5, x1 = LAY.cx + LAY.lw * 1.5;
   // 가로: 줄 양옆 빈자리 폭(x0)에 맞춰 크기를 줄임 (태블릿처럼 옆자리가 좁아도 보이게) / 세로: 위 양옆 구석
-  const side = Math.min(100, x0 / 2), wh = Math.min(190, x0 * 1.25);
-  const spots = wide ? [[x0 - side, LAY.by + 40, wh], [x1 + side, LAY.by + 40, wh]] : [[66, LAY.top + 112, 140], [W - 66, LAY.top + 112, 140]];
+  // 크게(얼굴이 잘 보이게): 화면 가장자리 밖으로 몸 바깥쪽이 조금 잘려도 됨 (사용자 요청 2026-10-27)
+  const wh = Math.min(380, x0 * 2), ww = wh * 0.75, side = Math.max(ww * 0.3, x0 - ww / 2 - 8);
+  const spots = wide ? [[side, LAY.by + 40, wh], [W - side, LAY.by + 40, wh]] : [[70, LAY.top + 300, 280], [W - 70, LAY.top + 300, 280]];
   [myLook, twinLook].forEach((lk, k) => {
     const [x, y, h] = spots[k]; if (h < 90) return;
-    const thr = G.thr[k] > 0, pose0 = G.pose; // 쌍둥이도 같이 기뻐하고 같이 아쉬워함
+    const lag = lk.startsWith('eungyeol') ? 0.3 : 0, thr = G.thr[k] > 0, pose0 = poseAt(lag); // 쌍둥이도 같이 기뻐하고 아쉬워함 — 은유 먼저, 은결 0.3초 뒤
     const nm = lk.startsWith('eungyeol') ? 'eungyeol' : 'eunyu';
     const pose = thr ? 'throw' : pose0 === 'cheer' || pose0 === 'happy' ? 'happy' : pose0 === 'hit' || pose0 === 'dizzy' ? 'sad' : 'idle';
     const im = TWIN_IMG[`${nm}_${pose}`];
@@ -566,7 +573,7 @@ function drawHint() {
   else if (G.clock < 80 && G.notes.some((n) => isTrap(n) && n.st === 'wait' && yAt(n.t) > LAY.top)) txt = '양파·초콜릿은 주면 안 돼요!';
   if (!txt) return;
   ctx.save(); ctx.font = '24px Jua, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  const hy = LAY.top + (wideLayout() ? 24 : 170); // 세로 화면은 위 양옆 은유·은결 아래로
+  const hy = LAY.top + (wideLayout() ? 24 : 360); // 세로 화면은 위 양옆 은유·은결 아래로
   ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(60,40,0,.9)'; ctx.strokeText(txt, LAY.cx, hy);
   ctx.fillStyle = '#FFF6D0'; ctx.fillText(txt, LAY.cx, hy);
   ctx.restore();
