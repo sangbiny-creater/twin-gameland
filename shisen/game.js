@@ -2,8 +2,8 @@
 // 은유와 은결의 사천성 — 같은 그림 타일 2개를 선으로 이어 없애는 퍼즐 (HTML5 Canvas)
 //  · 선은 최대 2번까지 꺾을 수 있고, 다른 타일을 지나갈 수 없다 (보드 바깥 테두리는 지나갈 수 있음)
 //  · 제한 시간 안에 모든 타일을 없애면 클리어 → 남은 시간으로 별 1~3개
-//  · 징검다리: 10개 월드 × 10판 = 100판 (1-1 ~ 10-10). 판 크기·2층·시간 표와 잇기 규칙은 levels.js
-//  · 3월드부터 1층 판 가운데에 작은 2층 판이 얹힘: 2층끼리는 2층에서, 1층끼리는 1층에서 잇고, 2층↔1층은 바로 옆이거나 둘 다 판 밖으로 곧장 나갈 수 있으면 이음
+//  · 징검다리: 쉬움 100판(1-1 ~ 10-10) + 어려움 100판(번호 100~199). 판 크기·층·시간 표와 잇기 규칙은 levels.js
+//  · 3월드부터 2층, 6월드부터 3층(어려움은 1-1 부터 둘 다): 같은 층끼리는 그 층에서, 다른 층끼리는 바로 옆이거나 판 밖을 거쳐 2번까지 꺾여 이어지면 이음
 // 폰: 세로 화면 (가로로 들면 화면을 돌려서 세로 유지) / PC: 창 전체를 쓰는 가로 화면 (보드도 가로로 눕힘)
 
 let W = 540, H = 960;
@@ -17,16 +17,18 @@ const EXTRA_TILES = ['mem_raincoat', 'mem_hug', 'mem_book', 'mem_explorer', 'mem
   'bone', 'bone_gold', 'choco', 'onion', 'sausage', 'shihtzu', 'poodle', 'pomdog'].map((n) => 'x_' + n);
 // 10개 월드 × 10판 = 100판. 월드 5~10은 그 월드 전용 그림 타일(14종)을 먼저 쓰고, 은유·은결 얼굴 타일은 항상 들어감
 const WORLDS = ['하늘도시', '숲속 나무마을', '겨울왕국', '석양의 항구', '벚꽃마을', '구름왕국', '바닷속도시', '마법숲', '별빛우주', '황금성'];
-const { PER_WORLD, STAGES } = window.ShisenLevels; // 스테이지 i: { c, r(판 크기), tiles, t(그림 종류), s(제한 초) }
+const { PER_WORLD, STAGES, HARD } = window.ShisenLevels; // 스테이지 i: { mode, c, r(1층 크기), n2·n3(2·3층 타일 수), tiles, t(그림 종류), s(제한 초) }
+const isHard = (i) => i >= HARD;
+const worldOf = (i) => Math.floor((i % HARD) / PER_WORLD); // 어려움도 같은 월드 그림·배경
 function tilePool(si) {
-  const w = Math.floor(si / PER_WORLD);
+  const w = worldOf(si);
   const themed = w >= 4 ? Array.from({ length: 14 }, (_, k) => `w${w + 1}_${k}`).filter((n) => !(w === 4 && (n === 'w5_2' || n === 'w5_3'))) : [];
   return ['t_eunyu', 't_eungyeol', ...shuffleArr(themed), ...shuffleArr(BASE_TILES.concat(EXTRA_TILES))];
 }
 const SKIN_BG = { forest: 1, sunset: 1, winter: 2, night: 3, space: 4 }; // 공통 배경 스킨 → assets/bg/bg_*.webp (나머지는 skins.js로 그림)
 const COMBO_WINDOW = 4;  // 초: 이 안에 다음 짝을 없애면 콤보
-const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
-const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
+const label = (i) => `${isHard(i) ? '어려움 ' : ''}${worldOf(i) + 1}-${(i % PER_WORLD) + 1}`;
+const stageName = (i) => `${WORLDS[worldOf(i)]} ${(i % PER_WORLD) + 1}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
 const Save = {
@@ -37,8 +39,14 @@ const Save = {
 Save.load();
 const HUB = window.Hub && window.Hub.active() ? window.Hub : null;
 if (HUB) Save.data.sound = HUB.settings.sound;
-const unlocked = (i) => (HUB ? HUB.stageUnlocked('shisen', i) : i === 0 || !!Save.data.cleared[i - 1]);
-const nextStage = () => { if (HUB) return HUB.stageNext('shisen'); for (let i = 0; i < STAGES.length; i++) if (!Save.data.cleared[i]) return i; return STAGES.length - 1; };
+// 어려움 판: 쉬움 같은 월드 마지막 판(N-10)과 어려움 앞 판을 깨면 열림 (profile.js 와 같은 규칙)
+const unlocked = (i) => {
+  if (HUB) return HUB.stageUnlocked('shisen', i);
+  const C = Save.data.cleared;
+  if (isHard(i)) { const h = i - HARD; return !!C[Math.floor(h / PER_WORLD) * PER_WORLD + PER_WORLD - 1] && (h === 0 || !!C[i - 1]); }
+  return i === 0 || !!C[i - 1];
+};
+const nextStage = () => { if (HUB) return HUB.stageNext('shisen'); for (let i = 0; i < HARD; i++) if (!Save.data.cleared[i]) return i; return HARD - 1; };
 
 // ---------- utils ----------
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -47,7 +55,7 @@ const mmss = (t) => { t = Math.max(0, Math.ceil(t)); return `${String(Math.floor
 function shuffleArr(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 // ---------- sprites ----------
-const ASSET_V = '202610282046';
+const ASSET_V = '202610282048';
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => { SP.f = j; SP.img.onload = () => { SP.ready = true; }; SP.img.src = `assets/sprites/sprites.webp?v=${ASSET_V}`; });
 const EXTRA_V = '20261027a';
@@ -73,12 +81,17 @@ function spr(name, x, y, w, h, alpha = 1) {
 const MY_LOOK = HUB ? HUB.active().look : null;
 // 새 캐릭터(v2)는 같은 계열 기본 캐릭터 타일 자리에 v2 얼굴을 넣음
 const MY_TILE = MY_LOOK ? 't_' + (window.CharV2 ? CharV2.base(MY_LOOK) : MY_LOOK) : null;
-// 2층 타일: 그림은 그대로 두고 타일 바탕(크림색)만 하늘색으로 바꾼 그림을 한 번 만들어 둠
+// 위층 타일: 그림은 그대로 두고 타일 바탕(크림색)만 층 색으로 바꾼 그림을 한 번 만들어 둠 (2층 하늘색, 3층 연보라)
 //  · 타일 가장자리 안쪽의 크림색 점에서 시작해 이어진 크림색 부분만 칠함 (그림 안의 크림색은 테두리 선에 막혀 그대로)
-const UPPER_BG = '#D6E9FF', UP_SPR = {};
+const LAYER_RGB = { 2: [214, 233, 255], 3: [236, 220, 255] };
+const LAYER_BG = { 1: '#FFF6E8', 2: '#D6E9FF', 3: '#ECDCFF' };
+const LAYER_LINE = { 2: 'rgba(40,120,240,.95)', 3: 'rgba(150,80,230,.95)' };
+const UP_SPR = {};
 const isCream = (d, i) => d[i + 3] > 200 && d[i] > 196 && d[i + 1] > 172 && d[i + 2] > 140 && d[i] >= d[i + 2] && d[i] - d[i + 2] < 80;
-function upperSprite(name) {
-  if (name in UP_SPR) return UP_SPR[name];
+function upperSprite(name, z) {
+  const key = name + '@' + z;
+  if (key in UP_SPR) return UP_SPR[key];
+  const [lr, lg, lb] = LAYER_RGB[z];
   const fr = frameOf(name); if (!fr) return null;
   const [img, sx, sy, sw, sh] = fr;
   const cv = document.createElement('canvas'); cv.width = sw; cv.height = sh;
@@ -93,30 +106,31 @@ function upperSprite(name) {
     while (st.length) {
       const p = st.pop(); if (seen[p]) continue; seen[p] = 1;
       const i = p * 4; if (!isCream(d, i)) continue;
-      const l = (d[i] + d[i + 1] + d[i + 2]) / 3 / 245; // 밝기는 살리고 색만 하늘색으로
-      d[i] = Math.min(255, 214 * l); d[i + 1] = Math.min(255, 233 * l); d[i + 2] = Math.min(255, 255 * l);
+      const l = (d[i] + d[i + 1] + d[i + 2]) / 3 / 245; // 밝기는 살리고 색만 층 색으로
+      d[i] = Math.min(255, lr * l); d[i + 1] = Math.min(255, lg * l); d[i + 2] = Math.min(255, lb * l);
       const x = p % sw, y = (p - x) / sw;
       if (x > 0) st.push(p - 1); if (x < sw - 1) st.push(p + 1); if (y > 0) st.push(p - sw); if (y < sh - 1) st.push(p + sw);
     }
     c.putImageData(im, 0, 0);
   } catch (e) { /* 그림을 읽을 수 없으면 그대로 */ }
-  return (UP_SPR[name] = cv);
+  return (UP_SPR[key] = cv);
 }
-function drawTile(name, x, y, w, h, alpha = 1, upper = false) {
-  const up = upper && upperSprite(name);
+// z: 그 타일의 층 (2·3층이면 바탕을 층 색으로)
+function drawTile(name, x, y, w, h, alpha = 1, z = 1) {
+  const up = z > 1 && upperSprite(name, z);
   if (up) { ctx.globalAlpha = alpha; ctx.drawImage(up, x - w / 2, y - h / 2, w, h); ctx.globalAlpha = 1; } else spr(name, x, y, w, h, alpha);
   if (name === MY_TILE && window.CharV2 && CharV2.is(MY_LOOK) && CharV2.ready(MY_LOOK)) {
     ctx.save(); ctx.globalAlpha = alpha;
     // 기본 타일 얼굴과 같은 크기로 (타일 안쪽 판을 거의 다 채움)
     ctx.beginPath(); ctx.roundRect(x - w * 0.42, y - h * 0.41, w * 0.84, h * 0.8, w * 0.12); ctx.clip();
-    ctx.fillStyle = upper ? UPPER_BG : '#FFF6E8'; ctx.fillRect(x - w / 2, y - h / 2, w, h);
+    ctx.fillStyle = LAYER_BG[z] || LAYER_BG[1]; ctx.fillRect(x - w / 2, y - h / 2, w, h);
     CharV2.drawCenter(ctx, MY_LOOK, 'tile_face', x, y - h * 0.02, w * 1.02);
     ctx.restore(); return;
   }
   if (name !== MY_TILE || !window.Costume || !Costume.ready()) return;
   ctx.save(); ctx.globalAlpha = alpha;
   ctx.beginPath(); ctx.roundRect(x - w * 0.36, y - h * 0.38, w * 0.72, h * 0.72, w * 0.1); ctx.clip();
-  ctx.fillStyle = upper ? UPPER_BG : '#FFF6E8'; ctx.fillRect(x - w / 2, y - h / 2, w, h);
+  ctx.fillStyle = LAYER_BG[z] || LAYER_BG[1]; ctx.fillRect(x - w / 2, y - h / 2, w, h);
   const im = Costume.img, frac = 0.6, bh = h * 0.70, bw = bh * im.naturalWidth / (im.naturalHeight * frac);
   ctx.drawImage(im, 0, 0, im.naturalWidth, im.naturalHeight * frac, x - bw / 2, y - h / 2 + h * 0.13, bw, bh);
   ctx.restore();
@@ -190,7 +204,7 @@ const G = {
   lines: [], fx: [], texts: [], removing: [], t: 0, skin: 'default', shake: 0, tickT: 0,
 };
 
-// 판 G.b = { C, R, f1, f2 }: f1[y][x] 1층 그림, f2[y][x] 2층 그림 (없으면 -1). Coordinates are in the board's own orientation.
+// 판 G.b = { C, R, f: [f1, f2, f3] }: f[z-1][y][x] = z층 그림 (없으면 -1). Coordinates are in the board's own orientation.
 // cellAt = 그 칸 맨 위 타일 그림 (빈 칸이면 -1), topZ = 맨 위 타일 층 (0: 빈 칸)
 function cellAt(x, y) { return ShisenLevels.topType(G.b, x, y); }
 const topZ = (x, y) => ShisenLevels.topZ(G.b, x, y);
@@ -210,31 +224,31 @@ function anyPair() {
 const transpose = (g) => g[0].map((_, x) => g.map((row) => row[x]));
 function buildBoard(si) {
   const st = STAGES[si];
-  let { occ1, occ2 } = ShisenLevels.occupancy(si); // 폰 세로 기준 [r][c]
-  if (wideLayout()) { occ1 = transpose(occ1); occ2 = transpose(occ2); } // PC 가로 화면: 판을 눕힘
-  G.rows = occ1.length; G.cols = occ1[0].length;
+  let occ = ShisenLevels.occupancy(si); // 층마다 [r][c] (폰 세로 기준)
+  if (wideLayout()) occ = occ.map(transpose); // PC 가로 화면: 판을 눕힘
+  G.rows = occ[0].length; G.cols = occ[0][0].length;
   G.pool = tilePool(si).slice(0, st.t);
   const pairs = st.tiles / 2, pairTypes = [];
   for (let p = 0; p < pairs; p++) pairTypes.push(p % G.pool.length);
-  G.b = { C: G.cols, R: G.rows, ...ShisenLevels.deal(occ1, occ2, pairTypes) };
+  G.b = { C: G.cols, R: G.rows, f: ShisenLevels.deal(occ, pairTypes, st.tough) };
   G.left = pairs;
 }
 // 섞기: 남은 타일 자리(층까지)는 그대로 두고 그림만 다시 놓음 — 이번에도 끝까지 풀리는 순서가 있게
 function reshuffle() {
-  const occ1 = G.b.f1.map((row) => row.map((t) => t >= 0)), occ2 = G.b.f2.map((row) => row.map((t) => t >= 0)), cnt = {};
-  [G.b.f1, G.b.f2].forEach((g) => g.forEach((row) => row.forEach((t) => { if (t >= 0) cnt[t] = (cnt[t] || 0) + 1; })));
+  const occ = G.b.f.map((g) => g.map((row) => row.map((t) => t >= 0))), cnt = {};
+  G.b.f.forEach((g) => g.forEach((row) => row.forEach((t) => { if (t >= 0) cnt[t] = (cnt[t] || 0) + 1; })));
   const pairTypes = [];
   for (const [t, n] of Object.entries(cnt)) for (let k = 0; k < n / 2; k++) pairTypes.push(+t);
-  let d = ShisenLevels.deal(occ1, occ2, pairTypes);
-  if (!d) {
-    // 지금 자리로는 풀 수 없음 (예: 마지막 두 타일이 한 칸에 위아래로 겹침) → 2층 타일을 빈 1층 칸으로 내려서 다시 놓음
+  let f = ShisenLevels.deal(occ, pairTypes, 0);
+  if (!f) {
+    // 지금 자리로는 풀 수 없음 (예: 마지막 두 타일이 한 칸에 위아래로 겹침) → 위층 타일을 빈 1층 칸으로 내려서 다시 놓음
     const empty = [];
-    occ1.forEach((row, y) => row.forEach((o, x) => { if (!o) empty.push([x, y]); }));
+    occ[0].forEach((row, y) => row.forEach((o, x) => { if (!o) empty.push([x, y]); }));
     shuffleArr(empty);
-    occ2.forEach((row, y) => row.forEach((o, x) => { if (o) { const [ex, ey] = empty.pop(); occ1[ey][ex] = true; row[x] = false; } }));
-    d = ShisenLevels.deal(occ1, occ2, pairTypes);
+    for (let z = 1; z < occ.length; z++) occ[z].forEach((row, y) => row.forEach((o, x) => { if (o && empty.length) { const [ex, ey] = empty.pop(); occ[0][ey][ex] = true; row[x] = false; } }));
+    f = ShisenLevels.deal(occ, pairTypes, 0);
   }
-  if (d) { G.b.f1 = d.f1; G.b.f2 = d.f2; }
+  if (f) G.b.f = f;
   G.sel = null; G.hint = null;
 }
 
@@ -253,7 +267,8 @@ function startStage(si) {
   if (boosts.includes('find')) G.findT = 20;
   if (boosts.includes('combo')) G.comboX2 = true;
   if (boosts.length) toast('부스트: ' + boosts.map((b) => HUB.boostName('shisen', b)).join(' · '));
-  $('hudStage').textContent = `스테이지 ${label(si)}`;
+  $('hudStage').textContent = isHard(si) ? label(si) : `스테이지 ${label(si)}`;
+  root.classList.toggle('hard', isHard(si));
   renderItems(); renderBuffs();
   setState('play');
   Audio.startBgm();
@@ -262,7 +277,7 @@ function showReady(si) {
   G.si = si;
   $('readyTitle').textContent = `${label(si)} ${stageName(si)}`;
   const st = STAGES[si];
-  const up = st.n2 ? ` (2층 ${st.w2}×${st.h2})` : '';
+  const up = st.n3 ? ` (2층 ${st.n2}개 · 3층 ${st.n3}개)` : st.n2 ? ` (2층 ${st.n2}개)` : '';
   $('readyInfo').textContent = `${st.c}×${st.r} 판${up} · 타일 ${st.tiles}개 · 그림 ${st.t}종 · 제한 시간 ${mmss(st.s)}`;
   G.cols = 0; setState('ready');
 }
@@ -279,7 +294,7 @@ function select(x, y) {
 }
 function removePair(a, b, path, byBomb = false) {
   const t = cellAt(a.x, a.y), za = topZ(a.x, a.y), zb = topZ(b.x, b.y);
-  (za === 2 ? G.b.f2 : G.b.f1)[a.y][a.x] = -1; (zb === 2 ? G.b.f2 : G.b.f1)[b.y][b.x] = -1; G.left--; G.sel = null;
+  G.b.f[za - 1][a.y][a.x] = -1; G.b.f[zb - 1][b.y][b.x] = -1; G.left--; G.sel = null;
   if (G.hint && (same(G.hint[0], a) || same(G.hint[0], b) || same(G.hint[1], a) || same(G.hint[1], b))) G.hint = null;
   else if (G.hint) { G.hint[2] = findPath(G.hint[0], G.hint[1]); if (!G.hint[2]) G.hint = null; } // 다른 짝을 없애면 힌트 선을 다시 그림
   G.lines.push({ pts: pathPts(path, za, zb), t: 0, life: 0.38 });
@@ -377,7 +392,8 @@ function showResult(ok, st, earn, reward = []) {
     $('resEarn').innerHTML = `+${earn.earned} 코인 획득!` + (earn.bonus ? ` <small>(클리어 보너스 +${earn.bonus}${earn.firstClear ? ', 첫 클리어!' : ''})</small>` : '') + `<small>내 코인 ${earn.coins}</small>`
       + (items ? `<div class="reward">🎁 보상 아이템: ${items}</div>` : '');
   }
-  const hasNext = ok && G.si < STAGES.length - 1;
+  // 다음 판: 같은 모드 안에서, 열려 있을 때만 (어려움은 쉬움 같은 월드를 다 깨야 열림)
+  const hasNext = ok && G.si % HARD < HARD - 1 && unlocked(G.si + 1);
   $('btnNext').classList.toggle('hidden', !hasNext);
   // 다음 스테이지가 없으면 다시하기가 그 자리(한 줄 전체·크게)로
   const rb = $('btnRetry');
@@ -423,28 +439,31 @@ const tileW = () => BL.tw;
 function cellCenter(p) { return { x: BL.ox + (p.x + 0.5) * BL.tw, y: BL.oy + (p.y + 0.5) * BL.th }; }
 function cellFromPoint(px, py) {
   const x = Math.floor((px - BL.ox) / BL.tw), y = Math.floor((py - BL.oy) / BL.th);
-  // 2층 타일은 위로 조금 떠 있어서, 그 그림을 누르면 그 2층 타일로
-  const y2 = Math.floor((py - BL.oy + upLift()) / BL.th);
-  if (x >= 0 && y2 >= 0 && x < G.cols && y2 < G.rows && G.b.f2[y2][x] >= 0) return { x, y: y2 };
+  // 위층 타일은 위로 조금씩 떠 있어서, 그 그림을 누르면 그 위층 타일로 (3층 → 2층 순서로 봄)
+  for (let z = G.b.f.length; z >= 2; z--) {
+    const yz = Math.floor((py - BL.oy + upLift() * (z - 1)) / BL.th);
+    if (x >= 0 && yz >= 0 && x < G.cols && yz < G.rows && topZ(x, yz) === z) return { x, y: yz };
+  }
   return (x >= 0 && y >= 0 && x < G.cols && y < G.rows) ? { x, y } : null;
 }
-// 2층은 위로 떠 보이게 (그만큼 밑의 1층 타일 옆면이 보임)
+// 위층은 한 층마다 위로 떠 보이게 (그만큼 밑의 타일 옆면이 보임)
 const upLift = () => BL.th * 0.17;
-function zCenter(p, z) { const c = cellCenter(p); return z === 2 ? { x: c.x, y: c.y - upLift() } : c; }
+function zCenter(p, z) { const c = cellCenter(p); return { x: c.x, y: c.y - upLift() * Math.max(0, z - 1) }; }
 const topCenter = (p) => zCenter(p, topZ(p.x, p.y));
-// 선의 점들을 화면 좌표로: 2층 타일 쪽 끝과, 2층에서 나가는 첫 구간은 2층 높이로
+// 선의 점들을 화면 좌표로: 판 밖으로 나가기 전까지는 앞 타일 층 높이, 나간 뒤로는 뒤 타일 층 높이 (같은 층이면 모두 그 층)
 function pathPts(path, za, zb) {
-  const n = path.length;
+  const outside = (p) => p.x < 0 || p.y < 0 || p.x >= G.cols || p.y >= G.rows;
+  let ph = false;
   return path.map((p, i) => {
-    const z = (za === 2 && zb === 2) ? 2 : (i === 0 || (i === 1 && n > 2)) ? za : (i === n - 1 || (i === n - 2 && n > 2)) ? zb : 1;
-    return zCenter(p, z);
+    if (outside(p)) ph = true;
+    return zCenter(p, i === path.length - 1 || ph ? zb : za);
   });
 }
 
 // ---------- render ----------
 function drawBg() {
   const drawn = SKIN_BG[G.skin] == null && G.skin && G.skin !== 'default' && window.Skins && window.Skins.has(G.skin);
-  const img = SKIN_BG[G.skin] != null ? SP.bg[SKIN_BG[G.skin]] : SP.world[Math.floor(G.si / PER_WORLD)];
+  const img = SKIN_BG[G.skin] != null ? SP.bg[SKIN_BG[G.skin]] : SP.world[worldOf(G.si)];
   if (drawn) window.Skins.draw(ctx, G.skin, W, H, 0, 0, G.t);
   else if (img && img.complete && img.naturalWidth) {
     const s = Math.max(W / img.naturalWidth, H / img.naturalHeight);
@@ -480,7 +499,7 @@ function drawBigHint(pulse) {
   for (const s of spots) {
     ctx.save(); ctx.shadowColor = '#FFE45C'; ctx.shadowBlur = 22 + pulse * 18;
     ctx.fillStyle = '#FFF3A8'; ctx.beginPath(); ctx.roundRect(s.x - w / 2 - 5, s.y - h / 2 - 5, w + 10, h + 10, 14); ctx.fill(); ctx.restore();
-    drawTile(G.pool[cellAt(s.p.x, s.p.y)], s.x, s.y, w * 0.96, h * 0.96, 1, topZ(s.p.x, s.p.y) === 2);
+    drawTile(G.pool[cellAt(s.p.x, s.p.y)], s.x, s.y, w * 0.96, h * 0.96, 1, topZ(s.p.x, s.p.y));
     ctx.strokeStyle = pulse > 0.5 ? '#FFFFFF' : '#FFC21A'; ctx.lineWidth = 6;
     ctx.beginPath(); ctx.roundRect(s.x - w / 2 - 4, s.y - h / 2 - 4, w + 8, h + 8, 13); ctx.stroke();
   }
@@ -498,8 +517,8 @@ function render() {
   ctx.fillStyle = 'rgba(255,248,238,.18)'; ctx.strokeStyle = 'rgba(255,255,255,.45)'; ctx.lineWidth = 3;
   ctx.beginPath(); ctx.roundRect(BL.ox - pad, BL.oy - pad, BL.tw * G.cols + pad * 2, BL.th * G.rows + pad * 2, 18); ctx.fill(); ctx.stroke();
   // tiles (bottom rows drawn last so their shadow overlaps the row above)
-  // 1층을 먼저 다 그리고(2층 밑에 가려진 1층 타일은 그림 없이 옆면만), 그 위에 2층 판과 2층 타일을 떠 있게 그림
-  const pulse = 0.5 + 0.5 * Math.sin(G.t * 8), UL = upLift();
+  // 1층부터 위층 차례로: 위에 타일이 있어 가려진 타일은 그림 없이 옆면만, 맨 위 타일은 층 높이만큼 떠서 층 색 바탕·테두리로
+  const pulse = 0.5 + 0.5 * Math.sin(G.t * 8), UL = upLift(), NZ = G.b.f.length;
   const drawOne = (t, x, y, cx, cy, z) => {
     const sel = G.sel && G.sel.x === x && G.sel.y === y;
     const hint = G.hint && !G.hintBig && (same(G.hint[0], { x, y }) || same(G.hint[1], { x, y }));
@@ -509,35 +528,29 @@ function render() {
       ctx.fillStyle = sel ? 'rgba(255,211,77,.9)' : `rgba(111,211,255,${0.5 + pulse * 0.4})`;
       ctx.beginPath(); ctx.roundRect(cx - BL.tw * 0.5, cy - BL.th * 0.47 + lift, BL.tw, BL.th * 0.96, 10); ctx.fill(); ctx.restore();
     }
-    drawTile(G.pool[t], cx, cy + lift, BL.tw * 0.94, BL.th * 0.94, 1, z === 2);
+    drawTile(G.pool[t], cx, cy + lift, BL.tw * 0.94, BL.th * 0.94, 1, z);
   };
-  for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
-    const t = G.b.f1[y][x]; if (t < 0) continue;
-    const c = cellCenter({ x, y });
-    ctx.fillStyle = 'rgba(40,20,10,.25)';
-    ctx.beginPath(); ctx.roundRect(c.x - BL.tw * 0.46, c.y - BL.th * 0.42 + 4, BL.tw * 0.92, BL.th * 0.9, 8); ctx.fill();
-    if (G.b.f2[y][x] >= 0) { // 2층 밑에 가려진 1층 타일: 옆면만
-      ctx.fillStyle = '#C9A574'; ctx.strokeStyle = 'rgba(90,55,20,.55)'; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.roundRect(c.x - BL.tw * 0.46, c.y - BL.th * 0.44, BL.tw * 0.92, BL.th * 0.9, 9); ctx.fill(); ctx.stroke();
+  for (let z = 1; z <= NZ; z++) for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
+    const t = G.b.f[z - 1][y][x]; if (t < 0) continue;
+    const c = cellCenter({ x, y }), cy = c.y - UL * (z - 1);
+    ctx.fillStyle = z === 1 ? 'rgba(40,20,10,.25)' : 'rgba(20,10,40,.45)'; // 그림자 (위층은 더 짙게)
+    ctx.beginPath(); ctx.roundRect(c.x - BL.tw * 0.46 + (z > 1 ? 3 : 0), cy - BL.th * 0.42 + (z > 1 ? 8 : 4), BL.tw * 0.92, BL.th * 0.9, 9); ctx.fill();
+    if (topZ(x, y) > z) { // 위에 타일이 있어 가려진 타일: 옆면만
+      ctx.fillStyle = z === 1 ? '#C9A574' : '#8FA9D6'; ctx.strokeStyle = 'rgba(60,40,30,.55)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.roundRect(c.x - BL.tw * 0.46, cy - BL.th * 0.44, BL.tw * 0.92, BL.th * 0.9, 9); ctx.fill(); ctx.stroke();
       continue;
     }
-    drawOne(t, x, y, c.x, c.y, 1);
-  }
-  // 2층 타일: 짙은 그림자 + 위로 떠 있음 + 하늘색 바탕 + 파란 테두리
-  for (let y = 0; y < G.rows; y++) for (let x = 0; x < G.cols; x++) {
-    const t = G.b.f2[y][x]; if (t < 0) continue;
-    const c = cellCenter({ x, y }), cy = c.y - UL;
-    ctx.fillStyle = 'rgba(20,10,40,.45)';
-    ctx.beginPath(); ctx.roundRect(c.x - BL.tw * 0.46 + 3, cy - BL.th * 0.42 + 8, BL.tw * 0.92, BL.th * 0.9, 9); ctx.fill();
-    drawOne(t, x, y, c.x, cy, 2);
-    ctx.strokeStyle = 'rgba(40,120,240,.95)'; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.roundRect(c.x - BL.tw * 0.45, cy - BL.th * 0.43, BL.tw * 0.9, BL.th * 0.88, 9); ctx.stroke();
+    drawOne(t, x, y, c.x, cy, z);
+    if (z > 1) {
+      ctx.strokeStyle = LAYER_LINE[z]; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.roundRect(c.x - BL.tw * 0.45, cy - BL.th * 0.43, BL.tw * 0.9, BL.th * 0.88, 9); ctx.stroke();
+    }
   }
   // tiles being removed: pop + fade
   for (const r of G.removing) {
     const c = zCenter(r, r.z), k = r.t / 0.35;
     const w = BL.tw * 0.94 * (1 + k * 0.25), h = BL.th * 0.94 * (1 + k * 0.25);
-    drawTile(G.pool[r.type], c.x, c.y - k * 10, w, h, 1 - k, r.z === 2);
+    drawTile(G.pool[r.type], c.x, c.y - k * 10, w, h, 1 - k, r.z);
   }
   // connect lines
   for (const l of G.lines) {
@@ -609,7 +622,12 @@ function setState(s) {
 }
 function pauseGame() { if (G.state === 'play') { setState('pause'); Audio.stopBgm(); } }
 function resumeGame() { if (G.state === 'pause') { setState('play'); Audio.startBgm(); last = performance.now(); } }
-function goMap() { Audio.stopBgm(); location.href = HUB ? '../index.html#map-shisen' : '../index.html'; }
+function goMap() {
+  Audio.stopBgm();
+  // 지도도 지금 하던 모드(쉬움·어려움)로 열리게 (hub.js 의 MODE_KEY 와 같은 키)
+  try { const m = JSON.parse(localStorage.getItem('twin_gameland_mapmode') || '{}'); m.shisen = isHard(G.si) ? 'hard' : 'easy'; localStorage.setItem('twin_gameland_mapmode', JSON.stringify(m)); } catch (e) { /* ignore */ }
+  location.href = HUB ? '../index.html#map-shisen' : '../index.html';
+}
 
 // ---------- input ----------
 function toGame(e) { // client point → game coordinates (also when the page is rotated)
@@ -640,7 +658,7 @@ click('btnGo', () => startStage(G.si));
 click('btnReadyMap', goMap); click('btnMapP', goMap); click('btnMapR', goMap);
 click('btnPause', pauseGame); click('btnResume', resumeGame);
 click('btnRetryP', () => startStage(G.si)); click('btnRetry', () => startStage(G.si));
-click('btnNext', () => showReady(Math.min(STAGES.length - 1, G.si + 1)));
+click('btnNext', () => showReady(G.si + 1));
 $('btnHint').addEventListener('click', () => { Audio.unlock(); useHint(); });
 $('btnShuffle').addEventListener('click', () => { Audio.unlock(); useShuffle(); });
 $('btnTime').addEventListener('click', () => { Audio.unlock(); useTime(); });
@@ -676,7 +694,7 @@ function resize() {
   if (G.cols && wasWide !== wideLayout() && (G.state === 'play' || G.state === 'pause')) transposeBoard();
 }
 function transposeBoard() {
-  G.b.f1 = transpose(G.b.f1); G.b.f2 = transpose(G.b.f2);
+  G.b.f = G.b.f.map(transpose);
   [G.cols, G.rows] = [G.rows, G.cols]; G.b.C = G.cols; G.b.R = G.rows; G.sel = null; G.hint = null;
 }
 window.addEventListener('resize', resize);

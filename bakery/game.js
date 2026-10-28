@@ -16,7 +16,7 @@
 let W = 540, H = 960;
 const L = window.BakeryLevels, A = window.BakeryArt;
 const { PTS, JUDGE } = L;
-const ASSET_V = '202610282046';
+const ASSET_V = '202610282048';
 const MAX_HEARTS = 3;
 const START_HEARTS = 2;
 const HEART_GAP = 50; // 하트 아이템 사이 최소 시간(초) — 2026-10-27 반으로 줄임(25→50초)

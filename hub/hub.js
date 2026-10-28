@@ -3,7 +3,7 @@
 const $ = (id) => document.getElementById(id);
 const root = $('root');
 // 얼굴: 옷을 입었으면 옷 그림(윗부분을 동그랗게 보여 줌)
-const face = (c) => Hub.costumeImg(c) || `common/faces/${c.look}_base.webp?v=202610282046`;
+const face = (c) => Hub.costumeImg(c) || `common/faces/${c.look}_base.webp?v=202610282048`;
 
 // 버튼 효과음·알림 (common/ui.js)
 const { blip, toast } = window.UI;
@@ -93,7 +93,7 @@ function setLook(l) { createLook = l; document.querySelectorAll('.look').forEach
     if (l.hidden) continue; // 숨긴 옛 모습은 고를 수 없음
     const b = document.createElement('button');
     b.className = `look base-${l.base}` + (l.atlas ? ' v2' : ''); b.dataset.look = l.look;
-    b.innerHTML = `<img src="common/faces/${l.look}_base.webp?v=202610282046" alt=""><span></span>`;
+    b.innerHTML = `<img src="common/faces/${l.look}_base.webp?v=202610282048" alt=""><span></span>`;
     b.querySelector('span').textContent = l.name;
     if (l.isNew) b.querySelector('span').insertAdjacentHTML('beforeend', ' <i class="new">NEW</i>');
     b.addEventListener('click', () => { blip(); setLook(l.look); });
@@ -147,7 +147,7 @@ const GAME_CARDS = [
     rec: (c, r) => `BEST <b>${r.best}m</b> · ${r.plays}번 도전<br>모은 코인 <b>${r.coins}</b>` },
   { id: 'shisen', key: 'hub/intro/shisen.webp', name: '사천성', thumb: 'hub/cards/shisen.webp', open: () => go('map-shisen'), portrait: true,
     sub: (c) => stageSub('shisen', c),
-    rec: (c, r) => `징검다리 <b>${Hub.stageCleared('shisen', c)} / ${Hub.GAMES.shisen.stages}</b> · ${r.plays}번 도전<br>모은 코인 <b>${r.coins}</b>` },
+    rec: (c, r) => `징검다리 <b>${Hub.stageCleared('shisen', c)} / ${Hub.GAMES.shisen.stages}</b> · 어려움 <b>${Hub.stageCleared('shisen', c, true)} / ${Hub.GAMES.shisen.stages}</b> · ${r.plays}번 도전<br>모은 코인 <b>${r.coins}</b>` },
   { id: 'downhill', key: 'hub/intro/downhill.webp', name: '다운힐 러너', thumb: 'hub/cards/downhill.webp', open: () => { location.href = Hub.GAMES.downhill.path; }, portrait: true,
     sub: (c, r) => (r.plays ? `BEST ${r.best.toLocaleString()}m · ${r.plays}번 도전` : '장애물을 피해 끝없이 내려가요!'),
     rec: (c, r) => `BEST <b>${r.best.toLocaleString()}m</b> · ${r.plays}번 도전<br>모은 코인 <b>${r.coins}</b>` },
@@ -171,7 +171,7 @@ const mmss = (t) => `${Math.floor(t / 60)}분 ${String(t % 60).padStart(2, '0')}
 // 레벨: 지금까지 모은 코인 500개마다 1레벨
 const LV_STEP = 500;
 // 보유 아이템 그림 (아이템샵과 같은 그림)
-const itemIcon = (id) => `common/items/${id}.webp?v=202610282046`;
+const itemIcon = (id) => `common/items/${id}.webp?v=202610282048`;
 // 카드 그림에서 BEST 줄이 있는 위치 (카드 높이 %: 위, 아래)
 const BEST_POS = { skyhook: [73.23, 81.36], helicopter: [74.02, 82.15], stairs: [73.23, 81.36], shisen: [74.07, 81.73], downhill: [74.07, 81.73], memory: [74.07, 81.73], mole: [74.07, 81.73], bakery: [74.07, 81.73], dogsnack: [74.07, 81.73], darts: [74.07, 81.73] };
 // 게임 카드 아래 한 줄: 징검다리 게임은 깬 판 수, 나머지는 최고 기록
@@ -197,9 +197,9 @@ function renderLobby() {
     card.className = 'lb-card' + (fav ? ' fav' : ''); card.setAttribute('role', 'button'); card.tabIndex = 0;
     // 카드 그림 한 장(제목·게임 시작 버튼 포함) 위에 최고 기록만 실제 값으로 덮어 씀
     const bp = BEST_POS[g.id] || [73.5, 81.5];
-    card.innerHTML = `<img class="lb-cardimg" src="${g.thumb}?v=202610282046" alt="">
+    card.innerHTML = `<img class="lb-cardimg" src="${g.thumb}?v=202610282048" alt="">
       <button class="lb-fav" aria-label="즐겨찾기">★</button>
-      <div class="lb-best" style="top:${bp[0]}%;height:${bp[1] - bp[0]}%"><img src="hub/ui/crown.webp?v=202610282046" alt=""><span class="lb-bt"></span></div>`;
+      <div class="lb-best" style="top:${bp[0]}%;height:${bp[1] - bp[0]}%"><img src="hub/ui/crown.webp?v=202610282048" alt=""><span class="lb-bt"></span></div>`;
     card.querySelector('.lb-cardimg').alt = g.name;
     card.querySelector('.lb-bt').textContent = cardLine(g, c, Hub.rec(g.id, c));
     card.addEventListener('click', () => { blip(880); showTitle(g); });
@@ -213,14 +213,14 @@ function renderLobby() {
     grid.appendChild(card);
   }
   const soon = document.createElement('div'); soon.className = 'lb-card lb-soon'; // .soon 은 작은 딱지 스타일이라 다른 이름
-  soon.innerHTML = '<img class="lb-cardimg" src="hub/cards/soon.webp?v=202610282046" alt="다음 게임 — 곧 새로운 모험이 찾아와요! COMING SOON">';
+  soon.innerHTML = '<img class="lb-cardimg" src="hub/cards/soon.webp?v=202610282048" alt="다음 게임 — 곧 새로운 모험이 찾아와요! COMING SOON">';
   grid.appendChild(soon);
 }
 // 게임 타이틀 화면: 메인 그림을 화면 가득 → START를 누르면 게임(또는 징검다리 지도)으로
 let titleGame = null;
 // 인트로 그림: 화면이 가로면 가로 그림(<id>_land.webp), 세로면 세로 그림 — 폰·태블릿을 돌리면 바로 바뀜
 const landMQ = window.matchMedia('(orientation: landscape)');
-const introSrc = (g) => `${landMQ.matches ? g.key.replace('.webp', '_land.webp') : g.key}?v=202610282046`;
+const introSrc = (g) => `${landMQ.matches ? g.key.replace('.webp', '_land.webp') : g.key}?v=202610282048`;
 function setTitleArt(g) {
   const src = introSrc(g);
   $('tsArt').src = src; $('tsArt').alt = g.name;
@@ -291,7 +291,7 @@ $('setRename').addEventListener('click', () => { closeModals(); renameMe(); });
 // 월드마다 배경 그림 카드 1장, 그 안에서 돌다리 5개(사천성은 10개)가 아래 → 위로 올라감
 // 가로 화면: 카드가 옆으로 나란히 (좌우로 밀기) / 폰 세로 화면: 카드가 위아래로 (위아래로 밀기)
 let portraitNow = false, mapPortrait = null; // mapPortrait: 지도를 그릴 때의 화면 방향
-const WORLD_BG = (w) => `common/worlds/w${w + 1}.webp?v=202610282046`;
+const WORLD_BG = (w) => `common/worlds/w${w + 1}.webp?v=202610282048`;
 // 판 위치 (카드 안에서 %): 아래(1판) → 위(마지막 판) 지그재그, 월드마다 조금씩 다르게
 //  · 월드당 5판(스카이훅) / 10판(사천성: 두 줄로 번갈아 올라감)
 function stoneSpot(w, k, K = 5) {
@@ -301,26 +301,44 @@ function stoneSpot(w, k, K = 5) {
   const xs = [56, 34, 62, 36, 54];
   return { x: 50 + (xs[k] - 50) * flip, y: ys[k] };
 }
+// 쉬움·어려움 모드가 있는 게임(사천성): 지도 위 단추로 바꿈. 마지막으로 본 모드를 이 기기에 기억 (게임에서 돌아와도 그대로)
+const MODE_KEY = 'twin_gameland_mapmode';
+const mapHard = (g) => { try { return !!Hub.GAMES[g].hard && JSON.parse(localStorage.getItem(MODE_KEY) || '{}')[g] === 'hard'; } catch (e) { return false; } };
+function setMapHard(g, on) {
+  try { const m = JSON.parse(localStorage.getItem(MODE_KEY) || '{}'); m[g] = on ? 'hard' : 'easy'; localStorage.setItem(MODE_KEY, JSON.stringify(m)); } catch (e) { /* ignore */ }
+}
+document.querySelectorAll('#mapMode button').forEach((b) => b.addEventListener('click', () => {
+  const on = b.dataset.mode === 'hard';
+  if (on === mapHard(mapGame)) return;
+  if (on && !Hub.stageUnlocked(mapGame, Hub.GAMES[mapGame].stages)) { blip(300); toast('쉬움 1-10 까지 깨면 어려움이 열려요!'); return; }
+  blip(); setMapHard(mapGame, on); renderMap();
+}));
 function renderMap() {
   const GM = Hub.GAMES[mapGame], c = Hub.active(), N = GM.stages, K = GM.perWorld;
-  $('mapName').textContent = GM.name;
+  const hard = mapHard(mapGame), O = hard ? N : 0; // 어려움 판 번호는 N 부터
+  $('mapName').textContent = GM.name + (hard ? ' · 어려움' : '');
   $('mapFace').src = face(c); $('mapCoins').textContent = c.coins;
+  $('mapMode').classList.toggle('hidden', !GM.hard);
+  document.querySelectorAll('#mapMode button').forEach((b) => b.classList.toggle('on', (b.dataset.mode === 'hard') === hard));
+  $('mapMode').classList.toggle('locked', !Hub.stageUnlocked(mapGame, N, c));
+  $('scrMap').classList.toggle('hard', hard);
   const myStars = Object.values(Hub.rec(mapGame, c).stages).reduce((a, x) => a + (x.stars || 0), 0);
-  $('mapProg').textContent = `${Hub.stageCleared(mapGame, c)} / ${N} 클리어 · ⭐ ${myStars}`;
+  $('mapProg').textContent = `${Hub.stageCleared(mapGame, c, hard)} / ${N} 클리어 · ⭐ ${myStars}`;
+  $('mapHint').textContent = hard ? '쉬움에서 한 월드(N-1 ~ N-10)를 다 깨면 어려움의 같은 월드가 열려요.' : '앞 스테이지를 깨면 다음 돌다리가 열려요. 깬 스테이지는 다시 할 수 있어요!';
   const scroller = $('mapScroll'), track = $('mapTrack'); track.innerHTML = '';
   mapPortrait = portraitNow;
   track.className = 'map-track ' + (portraitNow ? 'vert' : 'horiz');
   track.style.width = ''; track.style.height = '';
-  const next = Hub.stageNext(mapGame, c), allClear = Hub.stageCleared(mapGame, c) === N;
-  const meAt = allClear ? N - 1 : next;
+  const next = Hub.stageNext(mapGame, c, hard), allClear = Hub.stageCleared(mapGame, c, hard) === N;
+  const meAt = allClear ? O + N - 1 : next;
   let currentPanel = null;
   GM.worlds.forEach((name, w) => {
     const panel = document.createElement('div');
-    const worldOpen = Hub.stageUnlocked(mapGame, w * K, c);
+    const worldOpen = Hub.stageUnlocked(mapGame, O + w * K, c);
     panel.className = 'wpanel' + (worldOpen ? '' : ' locked');
     panel.style.backgroundImage = `url(${WORLD_BG(w)})`;
     if (K > 5) { if (portraitNow) panel.style.height = '900px'; else panel.style.width = '300px'; } // 10판 월드는 카드를 더 크게
-    panel.innerHTML = `<div class="wtitle w${w % 5}">${w + 1}. ${name}</div>`;
+    panel.innerHTML = `<div class="wtitle w${w % 5}">${w + 1}. ${name}${hard ? ' <i class="hardtag">어려움</i>' : ''}</div>`;
     // dotted path through the 5 stones
     const pts = []; for (let k = 0; k < K; k++) { const p = stoneSpot(w, k, K); pts.push(`${p.x},${p.y}`); }
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -328,14 +346,20 @@ function renderMap() {
     svg.innerHTML = `<polyline points="${pts.join(' ')}" fill="none" stroke="#fff" stroke-width="2.4" stroke-dasharray="0.1 5" stroke-linecap="round" vector-effect="non-scaling-stroke" opacity=".95"/>`;
     panel.appendChild(svg);
     for (let k = 0; k < K; k++) {
-      const i = w * K + k, p = stoneSpot(w, k, K), st = Hub.stage(mapGame, i, c), open = Hub.stageUnlocked(mapGame, i, c);
+      const i = O + w * K + k, p = stoneSpot(w, k, K), st = Hub.stage(mapGame, i, c), open = Hub.stageUnlocked(mapGame, i, c);
+      const lbl = Hub.stageLabel(i - O, mapGame); // 돌다리에는 "1-1" 만 (어려움은 지도 이름에)
       const b = document.createElement('button');
       b.className = 'stone ' + (st.cleared ? 'cleared' : open ? 'current' : 'locked') + (i === next && !allClear ? ' next' : ''); // next: 지금 해야 할 판
       b.style.left = p.x + '%'; b.style.top = p.y + '%';
       const stars = st.cleared ? '⭐'.repeat(st.stars) + '☆'.repeat(3 - st.stars) : '';
-      b.innerHTML = open ? `<span class="sl">${Hub.stageLabel(i, mapGame)}</span><span class="ss">${stars}</span>` : `<span class="lock">🔒</span><span class="ss">${Hub.stageLabel(i, mapGame)}</span>`;
+      b.innerHTML = open ? `<span class="sl">${lbl}</span><span class="ss">${stars}</span>` : `<span class="lock">🔒</span><span class="ss">${lbl}</span>`;
       b.addEventListener('click', () => {
-        if (!open) { blip(300); toast('앞 스테이지를 먼저 깨요!'); return; }
+        if (!open) {
+          blip(300);
+          const easyLast = w * K + K - 1; // 어려움: 쉬움 같은 월드 마지막 판을 아직 못 깼으면 그걸 알려 줌
+          toast(hard && !Hub.stage(mapGame, easyLast, c).cleared ? `쉬움 ${Hub.stageLabel(easyLast, mapGame)} 까지 깨면 열려요!` : '앞 스테이지를 먼저 깨요!');
+          return;
+        }
         blip(); openStage(i);
       });
       panel.appendChild(b);
@@ -379,7 +403,7 @@ function renderRecords() {
   const c = Hub.active();
   $('recTitle').textContent = `${c.name}의 기록`;
   $('recSummary').innerHTML = `<div class="rec-card total"><div class="v">지금 코인 <b>${c.coins}</b> · 지금까지 모은 코인 <b>${c.earned}</b> · 별 <b>${Hub.starsTotal(c)}</b></div></div>`
-    + GAME_CARDS.map((g) => `<div class="rec-card"><div class="thumb" style="background-image:url(${g.thumb}?v=202610282046)"></div>
+    + GAME_CARDS.map((g) => `<div class="rec-card"><div class="thumb" style="background-image:url(${g.thumb}?v=202610282048)"></div>
       <div><div class="t">${g.name}${Hub.isFav(g.id, c) ? ' <span class="star-on">★</span>' : ''}</div><div class="v">${g.rec(c, Hub.rec(g.id, c))}</div></div></div>`).join('');
   const list = $('recList'); list.innerHTML = '';
   if (!c.history.length) list.innerHTML = '<li><span>아직 기록이 없어요. 게임을 해봐요!</span></li>';
