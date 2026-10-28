@@ -1,12 +1,12 @@
 'use strict';
 // 다트 게임 그림 + 점수 계산
 //  · GPT 그림(darts/assets, tools/darts_assets.py 로 만듦): 다트판 board · 다트 dart_0~2 · 배경 bg/port. 그림을 받기 전에는 코드로 그림
-//  · 다트판: 진짜 다트판 순서 (위 20부터 시계 방향), 바깥부터 더블(2배) · 싱글 · 트리플(3배) · 싱글 · 바깥 불(25) · 불(50)
+//  · 다트판: 진짜 다트판 순서 (위 20부터 시계 방향), 바깥부터 더블(2배) · 싱글 · 트리플(3배) · 싱글 · S-BULL(바깥 불 50) · D-BULL(가운데 불 50)
 //  · 좌표: 판 가운데 (0,0), 더블 링 바깥 = 반지름 1 (아래가 +y)
 //  · 링 반지름 R 은 GPT 다트판 그림(A01)에서 잰 값 (tools/darts_assets.py 가 출력) — 그림과 점수가 꼭 같아야 함
 (function () {
   const BASE = (document.currentScript && document.currentScript.src.replace(/art\.js.*$/, '')) || '';
-  const V = '?v=202610281932';
+  const V = '?v=202610282024';
   const img = (n) => { const im = new Image(); im.src = `${BASE}assets/${n}.webp${V}`; return im; };
   const ok = (im) => im && im.complete && im.naturalWidth > 0;
   const IMG = { board: img('board'), bg: img('bg/port'), dart: [img('dart_0'), img('dart_1'), img('dart_2')] };
@@ -15,12 +15,12 @@
   // 반지름 (더블 바깥 = 1)
   const R = { bull: 0.06, outer: 0.127, tIn: 0.552, tOut: 0.617, dIn: 0.929, dOut: 1, num: 1.14, rim: 1.318 };
 
-  // 점수: { pts, mult(0 바깥·1 싱글·2 더블·3 트리플), num(1~20, 25 바깥 불, 50 불), ring, label }
+  // 점수: { pts, mult(0 바깥·1 싱글·2 더블·3 트리플), num(1~20, 25 = 바깥 불 S-BULL, 50 = 가운데 불 D-BULL — 둘 다 50점), ring, label }
   function score(x, y) {
     const r = Math.hypot(x, y);
-    if (r <= R.bull) return { pts: 50, mult: 1, num: 50, ring: 'bull', label: 'BULL' };
-    if (r <= R.outer) return { pts: 25, mult: 1, num: 25, ring: 'outer', label: '25' };
-    if (r > R.dOut) return { pts: 0, mult: 0, num: 0, ring: 'miss', label: '아웃' };
+    if (r <= R.bull) return { pts: 50, mult: 1, num: 50, ring: 'bull', label: 'D-BULL' };
+    if (r <= R.outer) return { pts: 50, mult: 1, num: 25, ring: 'outer', label: 'S-BULL' };
+    if (r > R.dOut) return { pts: 0, mult: 0, num: 0, ring: 'miss', label: 'OUT' };
     // 각도: 위(12시)가 0, 시계 방향으로 커짐. 칸 하나 18도, 20 칸은 -9~+9도
     let a = Math.atan2(x, -y) * 180 / Math.PI; if (a < 0) a += 360;
     const num = ORDER[Math.floor(((a + 9) % 360) / 18)];

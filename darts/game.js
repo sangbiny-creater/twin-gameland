@@ -2,7 +2,8 @@
 // 은유와 은결의 다트 게임 — 카운트업: 한 라운드에 다트 3개, 8라운드(24개) 점수를 모두 더함
 //  · 던지기: ① 게이지 막대 안에서 왔다 갔다 하는 점이 원하는 곳에 오면 꾹 누름 → 가로 위치
 //           ② 누르고 있는 동안 그 가로 위치에서 과녁 표시(조준경)가 다트판 위를 위·아래로 → 손을 떼면 캐릭터 손에서 그곳으로 다트가 슝
-//  · 점수: 진짜 다트판처럼 1~20 칸, 트리플(3배)·더블(2배) 링, 불 50점·바깥 불 25점, 판 밖 0점 (art.js score)
+//  · 점수: 진짜 다트판처럼 1~20 칸, 트리플(3배)·더블(2배) 링, 가운데 불 D-BULL·바깥 불 S-BULL 모두 50점, 판 밖 0점 (art.js score)
+//  · 게임 중 점수 표시는 영어만: 50 D-BULL · 50 S-BULL · 60 TRIPLE · 40 DOUBLE · 0 OUT
 //  · 줄 속도: 모든 라운드 같음 (0.9초에 한 번 왕복)
 //  · 은유·은결: 아래 가운데 내 캐릭터 뒷모습이 던지기 버튼, 쌍둥이는 옆에서 응원 (잘 맞히면 기뻐하고, 밖으로 나가면 아쉬워함)
 //  · 위: 총점(크게) · 라운드(작게) · 이번 라운드 다트 3개 점수 칸 (다트 3개는 분홍·노랑·파랑). 다트 한 발씩 전체 점수는 결과 창에서
@@ -10,7 +11,7 @@
 
 let W = 540, H = 960;
 const D = window.DartArt;
-const ASSET_V = '202610281932';
+const ASSET_V = '202610282024';
 const ROUNDS = 8, PER = 3;
 const AMP = 1.2; // 줄이 움직이는 범위 (더블 링 바깥 = 1, 조금 밖까지 나감)
 // 한 번 갔다 오는 시간(초), 모든 라운드 같음 (사용자 요청으로 맞춘 값)
@@ -135,6 +136,8 @@ const toX = (u) => LAY.cx + u * LAY.s, toY = (v) => LAY.cy + v * LAY.s;
 // 위치: 같은 빠르기로 왔다 갔다 (가장자리에서 느려지지 않음)
 function sweep(t, T) { const u = (t / T) % 1, v = u < 0.5 ? u * 2 : 2 - u * 2; return -AMP + 2 * AMP * v; }
 
+// 점수 옆에 붙는 글자 (게임 중 점수 표시는 한글 없이)
+const RING_TXT = { bull: 'D-BULL', outer: 'S-BULL', triple: 'TRIPLE', double: 'DOUBLE', single: 'SINGLE', miss: 'OUT' };
 // ---------- 위 점수: 총점(크게) · 라운드(작게) · 이번 라운드 다트 3개 점수 칸 ----------
 function renderHead() {
   $('hudScore').textContent = fmt(G.score); $('hudRound').textContent = G.round;
@@ -145,7 +148,7 @@ function renderHead() {
     el.classList.toggle('now', !r && i === G.dart && G.state === 'play');
     el.classList.toggle('out', !!r && r.ring === 'miss');
     el.querySelector('b').textContent = r ? r.pts : '';
-    el.querySelector('small').textContent = r ? (r.ring === 'single' ? `${r.num}` : r.ring === 'miss' ? '아웃' : r.ring === 'outer' ? '바깥 불' : r.ring === 'bull' ? '불!' : r.label) : `${i + 1}번째`;
+    el.querySelector('small').textContent = r ? RING_TXT[r.ring] : ['1st', '2nd', '3rd'][i];
   }
 }
 // 결과 창: 8라운드 다트 한 발씩 점수 (게임이 다 끝난 뒤에만 보여 줌)
@@ -198,9 +201,9 @@ function land() {
   G.darts.push({ x: G.ax, y: G.ay, t: G.t, r, ci: Math.min(G.dart, PER - 1) });
   G.rounds[G.round - 1].push(r);
   G.score += r.pts; G.dart++;
-  if (r.ring === 'bull') G.bulls++;
+  if (r.ring === 'bull' || r.ring === 'outer') G.bulls++;
   if (r.ring === 'triple' || r.ring === 'double') G.td++;
-  // 코인: 판에 맞으면 +2, 트리플·더블 +3 더, 바깥 불 +5, 불 +8
+  // 코인: 판에 맞으면 +2, 트리플·더블 +3 더, 바깥 불 S-BULL +5, 가운데 불 D-BULL +8
   if (!GOD()) G.coins += r.ring === 'miss' ? 0 : 2 + (r.mult >= 2 ? 3 : 0) + (r.ring === 'outer' ? 5 : 0) + (r.ring === 'bull' ? 8 : 0);
   G.hi = r.ring === 'miss' ? null : r; G.hiT = 0.9;
   const px = toX(G.ax), py = toY(G.ay);
@@ -218,12 +221,12 @@ function land() {
     if (r.ring === 'bull') say(1, pick(['불이다! 최고야!', '한가운데! 대단해!']), 1.4);
     else if (r.ring === 'triple') say(1, pick(['트리플! 세 배야!', '와! 세 배!']), 1.3);
     else if (r.ring === 'double') say(1, pick(['더블! 두 배!', '두 배 점수야!']), 1.3);
-    else if (r.ring === 'outer') say(1, '바깥 불! 25점!', 1.3);
+    else if (r.ring === 'outer') say(1, pick(['불이야! 50점!', '바깥 불도 50점!']), 1.3);
     else if (r.pts >= 15) say(1, pick(['좋아!', '잘했어!']), 1);
     burst(px, py, big ? 12 : mid ? 8 : 4, r.ring === 'bull' ? '#FF5A7A' : '#FFD34D');
   }
-  const name = r.ring === 'bull' ? 'BULL! 50' : r.ring === 'outer' ? '바깥 불 25' : r.ring === 'triple' ? `트리플 ${r.num} = ${r.pts}` : r.ring === 'double' ? `더블 ${r.num} = ${r.pts}` : r.ring === 'miss' ? '아웃! 0점' : `${r.pts}점`;
-  G.fx.push({ kind: 'text', text: name, x: clamp(px, LAY.cx - rim() + 90, LAY.cx + rim() - 90), y: py - 40, t: 0, life: 1.1, big: r.ring === 'bull' || r.mult >= 2, bad: r.ring === 'miss' });
+  const name = r.ring === 'single' ? `${r.pts}` : `${r.pts} ${RING_TXT[r.ring]}`;
+  G.fx.push({ kind: 'text', text: name, x: clamp(px, LAY.cx - rim() + 90, LAY.cx + rim() - 90), y: py - 40, t: 0, life: 1.1, big: r.ring === 'bull' || r.ring === 'outer' || r.mult >= 2, bad: r.ring === 'miss' });
   renderHead();
   if (G.dart >= PER) later(endRound, 900);
   else later(newDart, 750);
