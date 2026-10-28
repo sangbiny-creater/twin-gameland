@@ -15,6 +15,7 @@ const CFG = {
   laneSpeed: 13,             // 좌우 이동 속도(칸/초)
   hearts: 3, heartsMax: 4,
   invuln: 1.0,
+  jumpDur: 0.75, jumpH: 120, // 점프하기: 공중에 있는 시간(초)·높이(px)
 };
 const STAGES = [
   { name: '눈 덮인 산', at: 0, sky: ['#7FC3F2', '#BFE3FA', '#EAF6FF'], far: '#B9D3EE', mid: '#93B4D8', snow: ['#E3F0FB', '#FFFFFF'], deco: ['tree', 'tree', 'rock'] },
@@ -61,7 +62,7 @@ const $ = (id) => document.getElementById(id);
 const rng = (seed) => { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let x = s; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; };
 
 // ---------- sprites ----------
-const ASSET_V = '202610290606';
+const ASSET_V = '202610290616';
 const SP = { img: new Image(), f: null, ready: false };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -81,6 +82,10 @@ function spr(g, name, x, y, w, { rot = 0, alpha = 1, flip = false, anchor = 'c',
   g.restore();
   return h;
 }
+// 점프하기 아이템 그림 (초록 동그라미 + 위 화살표 + 스프링)
+const JUMP_SVG = "data:image/svg+xml," + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#7BE08F'/><stop offset='1' stop-color='#1F9E52'/></linearGradient></defs><circle cx='32' cy='32' r='29' fill='url(#g)' stroke='#fff' stroke-width='4'/><path d='M32 8 L49 26 H39 V36 H25 V26 H15 Z' fill='#fff' stroke='#167A3E' stroke-width='1.5' stroke-linejoin='round'/><path d='M21 42 L43 46 L21 50 L43 54' fill='none' stroke='#fff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/></svg>`);
+const JUMP_IMG = new Image(); JUMP_IMG.src = JUMP_SVG;
+$('btnJump').style.backgroundImage = `url("${JUMP_SVG}")`;
 const iconCache = {};
 function iconURL(name) {
   if (iconCache[name]) return iconCache[name];
@@ -142,6 +147,7 @@ const Audio = {
       case 'smash': this.noise(0.18, 0.35, 0, 900); break;
       case 'shield': this.tone(600, 0.25, 'sine', 0.3, 600); this.noise(0.1, 0.2, 0, 2000); break;
       case 'gameover': [523, 440, 349, 262].forEach((f, i) => this.tone(f, 0.3, 'triangle', 0.3, 0, i * 0.17)); break;
+      case 'jump': this.tone(330, 0.22, 'triangle', 0.3, 500); this.noise(0.08, 0.15, 0, 2500); break;
       case 'boost': this.tone(300, 0.4, 'sawtooth', 0.12, 900); break;
       case 'stage': [523, 659, 784, 1046].forEach((f, i) => this.tone(f, 0.15, 'square', 0.13, 0, i * 0.08)); break;
       case 'best': [784, 988, 1175, 1568].forEach((f, i) => this.tone(f, 0.18, 'triangle', 0.3, 0, i * 0.07)); break;
@@ -183,7 +189,7 @@ const G = {
   t: 0, d: 0, v: CFG.v0, lane: 0, px: 0, hearts: CFG.hearts, maxHearts: CFG.hearts, coins: 0,
   obs: [], items: [], deco: [], fx: [], texts: [], flakes: [], rows: [],
   nextRow: 30, nextDeco: 0, safe: 0,
-  invT: 0, hitT: 0, shield: false, magnetT: 0, x2T: 0, boostT: 0, wingT: 0,
+  invT: 0, hitT: 0, shield: false, magnetT: 0, x2T: 0, boostT: 0, wingT: 0, jumps: 0, jumpT: 0,
   combo: 0, maxCombo: 0, stageIdx: 0, prevStage: 0, stageFade: 1, newBest: false, shake: 0, lean: 0, overT: 0, nextBonus: 100,
 };
 const stageAt = (d) => { let k = 0; for (let i = 0; i < STAGES.length; i++) if (d >= STAGES[i].at) k = i; return k; };
@@ -234,6 +240,7 @@ function spawnRow(Z) {
   // 코인·아이템: 안전 칸에 (다른 게임과 맞춰 잘하는 1분 ≈ 코인 100~150개)
   const itemZ = Z + gap * 0.5;
   if (Math.random() < 0.075) G.items.push({ kind: rollItem(), x: safe - 2, Z: itemZ });
+  else if (Math.random() < 0.045) G.items.push({ kind: 'jump', x: safe - 2, Z: itemZ }); // 점프하기 아이템
   else if (Math.random() < clamp(0.8 - m / 2500, 0.35, 0.8)) {
     const n = gap > 10 ? 4 : 3;
     for (let i = 0; i < n; i++) G.items.push({ kind: 'coin', x: safe - 2, Z: Z + 2.5 + i * 2.2 });
@@ -263,6 +270,7 @@ function resetRun() {
   G.obs = []; G.items = []; G.deco = []; G.fx = []; G.texts = []; G.rows = [];
   G.nextRow = 28; G.nextDeco = 0; G.safe = 2;
   G.invT = 0; G.hitT = 0; G.shield = false; G.magnetT = 0; G.x2T = 0; G.boostT = 0; G.wingT = 0;
+  G.jumps = 0; G.jumpT = 0; G.jumpLen = CFG.jumpDur; // 점프하기 아이템은 판마다 0개부터 (죽으면 사라짐)
   G.hearts = CFG.hearts; G.maxHearts = CFG.hearts; G.coins = 0; G.combo = 0; G.maxCombo = 0;
   G.stageIdx = 0; G.prevStage = 0; G.stageFade = 1; G.newBest = false; G.shake = 0; G.overT = 0; G.nextBonus = 100;
   while (G.nextDeco < CFG.spawnAhead) { spawnDeco(G.nextDeco); G.nextDeco += 3.2; }
@@ -275,7 +283,7 @@ function resetRun() {
   if (boosts.includes('x2')) G.x2T = 30;
   G.startDash = boosts.includes('dash');
   if (boosts.length) banner('부스트: ' + boosts.map((b) => HUB.boostName('downhill', b)).join(' · '));
-  renderHearts(); renderBuffs();
+  renderHearts(); renderBuffs(); renderJump();
   $('hudBest').textContent = Save.data.best;
 }
 function startRun() { resetRun(); setState('ready'); Audio.startBgm(); }
@@ -293,6 +301,19 @@ function move(dir) {
   if (nl === G.lane) return;
   G.lane = nl; Audio.sfx('move');
 }
+// 점프하기: 아이템 1개를 쓰고 앞의 장애물을 뛰어넘음
+function useJump() {
+  Audio.unlock();
+  if (G.state === 'ready') go();
+  if (G.state !== 'play' || G.jumps <= 0 || G.jumpT > 0) return;
+  // 앞의 장애물(내 칸 근처, 1.2초 안에 닿는 것)을 넘은 뒤에 내려오도록 점프 시간을 맞춤
+  let z = 0;
+  for (const o of G.obs) { const d = o.Z - G.d; if (!o.gone && !o.hit && d > 0.6 && d < G.v * 1.2 && Math.abs(G.px - o.x) - o.w / 2 < 0.5) z = z ? Math.min(z, d) : d; }
+  G.jumpLen = z ? clamp((z + 1.5) / G.v, 0.55, 1.3) : CFG.jumpDur;
+  G.jumps--; G.jumpT = G.jumpLen; renderJump();
+  Audio.sfx('jump'); popText('점프!', W / 2, H * 0.55, '#22A55A');
+}
+const jumpAir = () => (G.jumpT > 0 ? Math.sin(Math.PI * (1 - G.jumpT / G.jumpLen)) * CFG.jumpH : 0);
 
 // ---------- update ----------
 function step(dt) {
@@ -310,6 +331,7 @@ function step(dt) {
   G.px += mv;
   G.lean = lerp(G.lean, Math.abs(dx) > 0.05 ? Math.sign(dx) : 0, Math.min(1, dt * 14));
   // 타이머
+  if (G.jumpT > 0) G.jumpT = Math.max(0, G.jumpT - dt);
   for (const k of ['invT', 'hitT', 'magnetT', 'x2T', 'boostT', 'wingT']) if (G[k] > 0) { G[k] -= dt; if (G[k] <= 0 && k !== 'invT' && k !== 'hitT') renderBuffs(); }
   // 길 만들기
   while (G.nextRow < G.d + CFG.spawnAhead) G.nextRow += spawnRow(G.nextRow);
@@ -329,10 +351,10 @@ function step(dt) {
     const gap = Math.abs(G.px - o.x) - o.w / 2;
     if (z < 0.6 && z > -0.6) {
       o.minGap = Math.min(o.minGap == null ? 9 : o.minGap, gap);
-      if (gap < 0.3 && !o.hit) collide(o);
+      if (gap < 0.3 && !o.hit) { if (G.jumpT > 0) o.jumped = true; else collide(o); } // 점프 중이면 넘어감
     } else if (z <= -0.6 && !o.passed) {
       o.passed = true;
-      if (!o.hit && o.minGap != null && o.minGap < 0.75 && !o.row.hit) nearMiss(o);
+      if (!o.hit && !o.jumped && o.minGap != null && o.minGap < 0.75 && !o.row.hit) nearMiss(o);
     }
   }
   // 줄을 무사히 지나면 콤보
@@ -419,6 +441,7 @@ function collect(it) {
     case 'magnet': G.magnetT = 8; Audio.sfx('item'); popText('자석!', x, y - 20, '#E84A5F'); renderBuffs(); break;
     case 'shield': G.shield = true; Audio.sfx('item'); popText('보호막!', x, y - 20, '#3D8BFF'); renderBuffs(); break;
     case 'bolt': startBoost(3.5); break;
+    case 'jump': G.jumps++; renderJump(true); Audio.sfx('item'); popText('점프하기 +1', x, y - 20, '#22A55A'); break;
     case 'wing': G.wingT = 6; Audio.sfx('item'); popText('무적!', x, y - 20, '#3D8BFF'); renderBuffs(); break;
   }
 }
@@ -686,6 +709,7 @@ function drawItem(it, p, fade) {
   const y = p.y - 44 * p.k + Math.sin(G.t * 5 + it.Z) * 4 * p.k;
   ctx.fillStyle = 'rgba(70,100,140,.15)';
   ctx.beginPath(); ctx.ellipse(p.x, p.y, w * 0.4, w * 0.12, 0, 0, 7); ctx.fill();
+  if (it.kind === 'jump') { if (JUMP_IMG.complete) { ctx.save(); ctx.globalAlpha = fade; ctx.drawImage(JUMP_IMG, p.x - w * 0.6, y - w * 0.6, w * 1.2, w * 1.2); ctx.restore(); } return; }
   if (it.kind !== 'coin') { ctx.save(); ctx.globalAlpha = 0.35 * fade; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p.x, y, w * 0.7, 0, 7); ctx.fill(); ctx.restore(); }
   spr(ctx, it.kind, p.x, y, w, { alpha: fade, sx: it.kind === 'coin' ? Math.max(0.25, Math.abs(Math.cos(G.t * 4 + it.Z))) : 1 });
 }
@@ -717,8 +741,9 @@ function drawPlayer() {
   const blink = G.invT > 0 && G.hitT <= 0 && Math.floor(G.t * 16) % 2 === 0;
   if (blink && G.state === 'play') return;
   // 그림자
+  const air = jumpAir(), sh = 1 - air / CFG.jumpH * 0.45;
   ctx.fillStyle = 'rgba(70,100,140,.25)';
-  ctx.beginPath(); ctx.ellipse(p.x, p.y, 40, 11, 0, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(p.x, p.y, 40 * sh, 11 * sh, 0, 0, 7); ctx.fill();
   let pose = 'idle';
   if (G.state === 'over' || G.state === 'result') pose = 'dead';
   else if (G.hitT > 0) pose = 'hit';
@@ -731,7 +756,7 @@ function drawPlayer() {
   const h = 132;
   const cos = HUB ? HUB.costume() : null;
   const back = cos && BACK_COSTUME[who] && BACK_COSTUME[who].includes(cos) ? `${who}_c_${cos}` : null;
-  ctx.save(); ctx.translate(p.x, p.y + 4 + bob);
+  ctx.save(); ctx.translate(p.x, p.y + 4 + (air ? -air : bob));
   if (G.wingT > 0) { spr(ctx, 'wing', -38, -h * 0.7, 56, { flip: true, alpha: 0.9, rot: Math.sin(G.t * 10) * 0.2 }); spr(ctx, 'wing', 38, -h * 0.7, 56, { alpha: 0.9, rot: -Math.sin(G.t * 10) * 0.2 }); }
   if (window.CharV2 && CharV2.is(who) && CharV2.ready(who)) { // 새 캐릭터(v2) 뒷모습
     const name = { idle: running ? `back_run_${Math.floor(G.t * 8) % 2}` : 'back_run_0', left: 'back_left', right: 'back_right', hit: 'back_hit', dead: 'back_dead', boost: 'back_boost', happy: 'back_happy' }[pose] || 'back_run_0';
@@ -744,7 +769,7 @@ function drawPlayer() {
     Costume.draw(ctx, { idle: 'run', left: 'run', right: 'run', boost: 'run', hit: 'hit', dead: 'dead' }[pose], G.t, { h: 120 });
   } else drawFit(`${who}_${pose}`, h, pose === 'idle' ? sway : 0);
   ctx.restore();
-  if (G.shield && G.state === 'play') { ctx.save(); ctx.globalAlpha = 0.35 + Math.sin(G.t * 8) * 0.1; ctx.fillStyle = 'rgba(140,210,255,.25)'; ctx.strokeStyle = '#8FD3FF'; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(p.x, p.y - 62, 74, 0, 7); ctx.fill(); ctx.stroke(); ctx.restore(); }
+  if (G.shield && G.state === 'play') { ctx.save(); ctx.globalAlpha = 0.35 + Math.sin(G.t * 8) * 0.1; ctx.fillStyle = 'rgba(140,210,255,.25)'; ctx.strokeStyle = '#8FD3FF'; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(p.x, p.y - 62 - air, 74, 0, 7); ctx.fill(); ctx.stroke(); ctx.restore(); }
 }
 // 높이를 맞춰서 그림 (프레임마다 그림 크기가 달라서)
 function drawFit(name, h, rot) {
@@ -792,6 +817,14 @@ function renderBuffs() {
   if (G.magnetT > 0) add('magnet', '자석');
   if (G.x2T > 0) add('coin', '2배');
   if (G.boostT > 0) add('bolt', '슝~');
+}
+
+// 점프하기 버튼: 1개 이상 있을 때만 화살표 버튼 가운데에, 몇 개 있는지 숫자로
+function renderJump(pop) {
+  const b = $('btnJump');
+  b.classList.toggle('hidden', G.jumps <= 0);
+  $('jumpN').textContent = G.jumps;
+  if (pop) { b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }
 }
 
 // ---------- screens ----------
@@ -843,6 +876,7 @@ function bindPad(id, dir) {
 }
 bindPad('padL', -1);
 bindPad('padR', 1);
+$('btnJump').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); useJump(); });
 root.addEventListener('pointerdown', () => Audio.unlock());
 document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
 document.addEventListener('gesturestart', (e) => e.preventDefault());
@@ -850,6 +884,7 @@ document.addEventListener('dblclick', (e) => e.preventDefault());
 window.addEventListener('keydown', (e) => {
   Audio.unlock();
   const k = e.code;
+  if ((k === 'ArrowUp' || k === 'KeyW') && (G.state === 'play' || G.state === 'ready')) { e.preventDefault(); useJump(); return; }
   if (k === 'ArrowLeft' || k === 'ArrowRight' || k === 'KeyA' || k === 'KeyD' || k === 'Space') {
     e.preventDefault();
     if (G.state === 'play' || G.state === 'ready') {
@@ -929,4 +964,4 @@ if (HUB) { startRun(); if (new URLSearchParams(location.search).get('go') === '1
 requestAnimationFrame(frame);
 
 // debug/test hook
-window.__downhill = { G, CFG, move, step, DT, startRun, setState, go };
+window.__downhill = { G, CFG, move, step, DT, startRun, setState, go, useJump, renderJump };
