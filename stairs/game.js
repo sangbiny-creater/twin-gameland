@@ -47,7 +47,7 @@ const rand = (a, b) => a + (b - a) * Math.random();
 const $ = (id) => document.getElementById(id);
 
 // ---------- sprites ----------
-const ASSET_V = '202610282227'; // 캐시 버전 (tools/bump_version.py가 올림)
+const ASSET_V = '202610282239'; // 캐시 버전 (tools/bump_version.py가 올림)
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -199,7 +199,7 @@ const ITEM_TABLE = [
 ];
 function rollItem() {
   let r = Math.random();
-  for (const [name, p] of ITEM_TABLE) { if (r < p) return name; r -= p; }
+  for (const [name, p] of ITEM_TABLE) { if (r < p) return name === 'wing' && G.wing > 0 ? 'coin_big' : name; r -= p; }
   return null;
 }
 function ensureSteps(upto) { while (G.steps.length <= upto) G.steps.push(genStep(G.steps.length)); }
@@ -223,7 +223,7 @@ function resetRun() {
   if (boosts.includes('life')) G.hearts = 1;
   if (boosts.includes('time')) G.time += 10;
   if (boosts.includes('shield')) G.shield = true;
-  if (boosts.includes('wing')) G.wing = 15;
+  if (boosts.includes('wing')) { G.wing = 15; noWingAhead(); }
   if (boosts.includes('magnet')) G.magnetT = 20;
   if (boosts.includes('x2')) G.x2T = 20;
   if (boosts.length) banner('부스트: ' + boosts.map((b) => HUB.boostName('stairs', b)).join(' · '));
@@ -284,6 +284,12 @@ function arrive(s) {
   if (s.type === 'special' && !s.used) { s.used = true; collect(randomItem(), s); }
   if (s.type === 'break' && s.crumble == null) { s.crumble = 0.85; Audio.sfx('crack'); }
   if (G.magnetT > 0) for (let k = 1; k <= 4; k++) { const n = G.steps[G.idx + k]; if (n && n.item && n.item.startsWith('coin')) { collect(n.item, n); n.item = null; } }
+  noWingAhead();
+}
+// 날개는 겹치지 않음: 날개가 남아 있는 동안 앞 계단의 날개 아이템은 큰 코인으로 바꿔 둠
+function noWingAhead() {
+  if (G.wing <= 0) return;
+  for (let k = G.idx + 1; k < G.steps.length; k++) if (G.steps[k].item === 'wing') G.steps[k].item = 'coin_big';
 }
 function startBoost(n) { G.boost = n; G.boostT = 0; Audio.sfx('boost'); popText('슝~!', G.pos.x, G.pos.y - 120, '#FF9F2E'); renderBuffs(); }
 const GOD = () => !!(window.Hub && window.Hub.god); // 무적 쿠폰 (테스트용)
@@ -333,7 +339,7 @@ function respawn() {
   setState('play');
 }
 
-function randomItem() { const l = ['coin_big', 'coin_big', 'time5', 'time10', 'heart', 'shield', 'bolt', 'magnet', 'x2', 'wing', 'gem']; return l[Math.floor(Math.random() * l.length)]; }
+function randomItem() { const l = ['coin_big', 'coin_big', 'time5', 'time10', 'heart', 'shield', 'bolt', 'magnet', 'x2', 'gem']; if (G.wing <= 0) l.push('wing'); return l[Math.floor(Math.random() * l.length)]; }
 function collect(item, s) {
   const p = worldOf(G.steps.indexOf(s), s.col);
   const x = p.x, y = p.y - 70;
@@ -355,7 +361,7 @@ function collect(item, s) {
     case 'shield': G.shield = true; Audio.sfx('item'); popText('보호막!', x, y - 20, '#3D8BFF'); fxAt('fx_item', x, y, 70, 0.4); renderBuffs(); break;
     case 'magnet': G.magnetT = 8; Audio.sfx('item'); popText('자석!', x, y - 20, '#E84A5F'); renderBuffs(); break;
     case 'x2': G.x2T = 10; Audio.sfx('item'); popText('코인 2배!', x, y - 20, '#FF9F2E'); renderBuffs(); break;
-    case 'wing': G.wing = 15; Audio.sfx('item'); popText('날개! 15칸 무적', x, y - 20, '#3D8BFF'); renderBuffs(); break;
+    case 'wing': G.wing = 15; Audio.sfx('item'); popText('날개! 15칸 무적', x, y - 20, '#3D8BFF'); renderBuffs(); noWingAhead(); break;
     case 'gift': collect(randomItem(), s); break;
   }
 }
