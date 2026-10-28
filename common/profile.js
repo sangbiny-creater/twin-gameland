@@ -22,7 +22,8 @@
     skyhook: { name: 'Sky Hook Runner', path: 'skyhook/index.html', stages: 50, worlds: WORLDS, perWorld: 5 },
     helicopter: { name: 'Twin Helicopter', path: 'helicopter/index.html' },
     stairs: { name: '계단 오르기', path: 'stairs/index.html' },
-    shisen: { name: '사천성', path: 'shisen/index.html', stages: 100, worlds: WORLDS, perWorld: 10 }, // 10개 월드 × 10판 (1-1 ~ 10-10)
+    // 10개 월드 × 10판 (1-1 ~ 10-10) + 어려움 100판 (판 번호 100~199, 어려움 N월드는 쉬움 N월드를 다 깨면 열림)
+    shisen: { name: '사천성', path: 'shisen/index.html', stages: 100, worlds: WORLDS, perWorld: 10, hard: true },
     downhill: { name: '다운힐 러너', path: 'downhill/index.html' },
     memory: { name: '메모리 게임', path: 'memory/index.html', stages: 100, worlds: WORLDS, perWorld: 10 }, // 사천성처럼 10개 월드 × 10판
     mole: { name: '두더지 게임', path: 'mole/index.html', stages: 100, worlds: WORLDS, perWorld: 10 }, // 10개 월드 × 10판, 기록(best) = 최고 점수
@@ -259,7 +260,7 @@
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610282042` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610282046` : null; },
     buyCostume(id, c = this.active()) {
       const it = COSTUMES.find((x) => x.id === id);
       if (!c || !it || this.ownsCostume(id, c)) return { ok: false };
@@ -376,8 +377,9 @@
       save();
     },
 
-    stageLabel(i, game = 'skyhook') { const k = GAMES[game].perWorld; return `${Math.floor(i / k) + 1}-${(i % k) + 1}`; },
-    stageName(i, game = 'skyhook') { const k = GAMES[game].perWorld; return `${GAMES[game].worlds[Math.floor(i / k)]} ${(i % k) + 1}`; },
+    // 어려움 판(번호가 판 수 이상)은 앞에 "어려움"
+    stageLabel(i, game = 'skyhook') { const G = GAMES[game], k = G.perWorld, h = i >= G.stages; if (h) i -= G.stages; return `${h ? '어려움 ' : ''}${Math.floor(i / k) + 1}-${(i % k) + 1}`; },
+    stageName(i, game = 'skyhook') { const G = GAMES[game], k = G.perWorld; i %= G.stages; return `${G.worlds[Math.floor(i / k)]} ${(i % k) + 1}`; },
 
     // 즐겨찾기 (캐릭터마다 따로). favs 순서 = 별을 누른 순서 → 로비는 최근 누른 게임부터
     isFav(game, c = this.active()) { return !!(c && c.favs && c.favs.includes(game)); },
@@ -398,12 +400,27 @@
 
     // 징검다리(스테이지) 게임: 앞 스테이지를 깨야 다음이 열린다
     stage(game, i, c = this.active()) { const r = this.rec(game, c); return (r && r.stages[i]) || { cleared: false, stars: 0, best: 0, plays: 0 }; },
-    stageUnlocked(game, i, c = this.active()) { return i === 0 || !!data.settings.openAll || this.stage(game, i - 1, c).cleared; },
-    stageNext(game, c = this.active()) {
-      for (let i = 0; i < GAMES[game].stages; i++) if (!this.stage(game, i, c).cleared) return i;
-      return GAMES[game].stages - 1;
+    //  · 어려움 판(hard 게임, 번호 = 판 수 + h): 쉬움에서 같은 월드 마지막 판(N-10)을 깼고, 어려움 앞 판도 깼으면 열림
+    stageUnlocked(game, i, c = this.active()) {
+      const G = GAMES[game];
+      if (data.settings.openAll) return true;
+      if (G.hard && i >= G.stages) {
+        const h = i - G.stages, k = G.perWorld;
+        return this.stage(game, Math.floor(h / k) * k + k - 1, c).cleared && (h === 0 || this.stage(game, i - 1, c).cleared);
+      }
+      return i === 0 || this.stage(game, i - 1, c).cleared;
     },
-    stageCleared(game, c = this.active()) { let n = 0; for (let i = 0; i < GAMES[game].stages; i++) if (this.stage(game, i, c).cleared) n++; return n; },
+    // hard: true 면 어려움 판들 중에서
+    stageNext(game, c = this.active(), hard = false) {
+      const o = hard ? GAMES[game].stages : 0;
+      for (let i = o; i < o + GAMES[game].stages; i++) if (!this.stage(game, i, c).cleared) return i;
+      return o + GAMES[game].stages - 1;
+    },
+    stageCleared(game, c = this.active(), hard = false) {
+      const o = hard ? GAMES[game].stages : 0; let n = 0;
+      for (let i = o; i < o + GAMES[game].stages; i++) if (this.stage(game, i, c).cleared) n++;
+      return n;
+    },
     // 예전 이름 (스카이훅 코드에서 사용)
     skyhookStage(i, c) { return this.stage('skyhook', i, c); },
     skyhookUnlocked(i, c) { return this.stageUnlocked('skyhook', i, c); },
