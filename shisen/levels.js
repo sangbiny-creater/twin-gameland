@@ -14,7 +14,8 @@
 //    ② 다른 층 타일끼리: 위에서 봤을 때 바로 옆에 붙어 있으면 이을 수 있음
 //    ③ 다른 층 타일끼리: 판 밖을 거쳐서 같은 층에 있는 것과 똑같이(선 2번까지 꺾임) 이어지면 이을 수 있음
 //       — 판 안에서는 앞 타일 쪽 길은 그 타일 층에서, 판 밖으로 나간 뒤에는 상대 타일 층에서 막힘을 봄
-//  · 쉬움 10-10 은 Onet 계열(Onet Puzzle: Tile Connect, 60판) 마지막 수준(타일당 약 2초), 어려움 10-10 은 그보다 훨씬 어렵게(타일당 1.75초)
+//  · 쉬움·어려움 200판의 난이도는 한 줄 사다리(아래 LADDER)로 정함: 쉬움1 < 쉬움2 < 어려움1 < 쉬움3 < 어려움2 < … < 쉬움10 < 어려움9 < 어려움10
+//    맨 끝(어려움 10-10)은 Onet 계열(Onet Puzzle: Tile Connect, 60판) 마지막보다 어렵게 (타일당 1.75초)
 (function (root) {
   const WORLDS = 10, PER_WORLD = 10, HARD = 100, LAYERS = 3;
   const even = (v) => 2 * Math.round(v / 2);
@@ -22,33 +23,37 @@
   const SHAPES = ['center', 'twinV', 'quad', 'cross', 'ring', 'twinH', 'diamond', 'cols'];
   const SHAPE_NAME = { center: '가운데', twinV: '위아래 쌍둥이', quad: '네 귀퉁이', cross: '십자', ring: '고리', twinH: '좌우 쌍둥이', diamond: '마름모', cols: '세 기둥' };
 
-  // 판마다 값: c×r 1층 크기, n2·n3 2·3층 타일 수, t 그림 종류, per 타일당 초 (8-1 부터는 시간을 따로 계산)
-  function easy(i) {
-    const [c, r] = i < 2 ? [4, 6] : i < 4 ? [4, 8] : i < 6 ? [6, 6] : i < 9 ? [6, 8] : i < 12 ? [8, 8] : i < 16 ? [8, 10] : [8, 12];
-    const n2 = i < 20 ? 0 : even(4 + 48 * (i - 20) / 79);   // 3-1 에서 4개 → 10-10 에서 52개
-    const n3 = i < 50 ? 0 : even(2 + 14 * (i - 50) / 49);   // 6-1 에서 2개 → 10-10 에서 16개
-    return { c, r, n2, n3, copies: 6 - 2 * i / 99, tough: 0.8 + 2.2 * i / 99, per: 4.6 - 1.9 * Math.min(i, 69) / 69, endPer: 2.0 };
-  }
-  function hard(h) {
-    const [c, r] = h < 3 ? [8, 10] : [8, 12];
-    const n2 = even(8 + 48 * h / 99);                         // 8개 → 56개
-    const n3 = even(2 + 22 * h / 99);                         // 2개 → 24개
-    return { c, r, n2, n3, copies: 4 - 1.2 * h / 99, tough: 3 + 3 * h / 99, per: 3.4 - 1.2 * Math.min(h, 69) / 69, endPer: 1.75 };
+  // ---------- 난이도 사다리 ----------
+  // 쉬움·어려움 200판을 한 줄로 세운 난이도 순서 (월드 단위, 쉬운 것 → 어려운 것):
+  //   쉬움1 · 쉬움2 · 어려움1 · 쉬움3 · 어려움2 · 쉬움4 · 어려움3 · 쉬움5 · 어려움4 · 쉬움6 · 어려움5 ·
+  //   쉬움7 · 어려움6 · 쉬움8 · 어려움7 · 쉬움9 · 어려움8 · 쉬움10 · 어려움9 · 어려움10   (사용자가 정한 순서)
+  //  → 사다리 칸 번호 0~19, 칸 안에서 10판. 난이도 g = 칸 번호 × 10 + 판 (0 ~ 199)
+  const LADDER = ['e1', 'e2', 'h1', 'e3', 'h2', 'e4', 'h3', 'e5', 'h4', 'e6', 'h5', 'e7', 'h6', 'e8', 'h7', 'e9', 'h8', 'e10', 'h9', 'h10'];
+  const rung = (mode, w) => LADDER.indexOf((mode === 'easy' ? 'e' : 'h') + (w + 1));
+  // 난이도 g 하나로 판의 모든 값을 정함 (g 가 클수록 어려움, 어떤 값도 거꾸로 가지 않음)
+  //  c×r 1층 크기, n2·n3 2·3층 타일 수, copies 그림 한 종류가 판에 몇 장(적을수록 짝 찾기 어려움),
+  //  tough 처음 판에서 바로 이어지는 짝을 얼마나 피할지, per 타일당 초
+  const G_MAX = LADDER.length * PER_WORLD - 1;
+  function params(g) {
+    const [c, r] = g < 2 ? [4, 6] : g < 4 ? [4, 8] : g < 6 ? [6, 6] : g < 9 ? [6, 8] : g < 12 ? [8, 8] : g < 16 ? [8, 10] : [8, 12];
+    const n2 = g < 20 ? 0 : even(4 + 52 * (g - 20) / (G_MAX - 20));  // 4개 → 56개
+    const n3 = g < 40 ? 0 : even(2 + 22 * (g - 40) / (G_MAX - 40));  // 2개 → 24개 (2층이 있어야 3층)
+    const f = g / G_MAX;
+    return { c, r, n2, n3, copies: 6 - 3.2 * f, tough: 0.8 + 5.2 * f, per: 4.6 - 2.85 * f };
   }
   const STAGES = [];
   for (const mode of ['easy', 'hard']) {
     const list = [];
     for (let k = 0; k < WORLDS * PER_WORLD; k++) {
-      const p = mode === 'easy' ? easy(k) : hard(k);
+      const g = rung(mode, Math.floor(k / PER_WORLD)) * PER_WORLD + k % PER_WORLD;
+      const p = params(g);
       const tiles = p.c * p.r + p.n2 + p.n3;
-      // 그림 종류: 그림 한 종류가 판에 몇 장 있는지(copies)로 정함 — 적을수록 같은 그림 짝을 찾기 어려움
-      //  쉬움 6장 → 4장(마작처럼), 어려움 4장 → 2.8장. 쉬움 1-1 은 8종부터
+      // 그림 종류: 그림 한 종류가 판에 몇 장 있는지(copies)로 정함 (6장 → 2.8장). 1-1 은 8종부터
       const t = Math.max(8, Math.ceil(tiles / p.copies));
-      list.push({ mode, ...p, tiles, t, shape: SHAPES[k % SHAPES.length], layers: p.n3 ? 3 : p.n2 ? 2 : 1 });
+      list.push({ mode, g, ...p, tiles, t, shape: SHAPES[k % SHAPES.length], layers: p.n3 ? 3 : p.n2 ? 2 : 1, s: Math.round(tiles * p.per) });
     }
-    // 제한 시간: 7-10 까지 타일 수 × 타일당 시간, 8-1 부터는 판마다 같은 만큼 줄어 10-10 에서 타일 수 × 마지막 타일당 시간
-    const t70 = Math.round(list[69].tiles * list[69].per), tEnd = Math.round(list[99].tiles * list[99].endPer);
-    list.forEach((st, k) => { st.s = k < 70 ? Math.round(st.tiles * st.per) : Math.round(t70 - (t70 - tEnd) * (k - 69) / 30); });
+    // 8-1 부터는 제한 시간 자체도 판마다 꼭 짧아지게 (앞 판보다 1초 이상)
+    for (let k = 70; k < list.length; k++) list[k].s = Math.min(list[k].s, list[k - 1].s - 1);
     STAGES.push(...list);
   }
 
