@@ -11,7 +11,7 @@
 
 let W = 540, H = 960;
 const D = window.DartArt;
-const ASSET_V = '202610282048';
+const ASSET_V = '202610282106';
 const ROUNDS = 8, PER = 3;
 const AMP = 1.2; // 줄이 움직이는 범위 (더블 링 바깥 = 1, 조금 밖까지 나감)
 // 한 번 갔다 오는 시간(초), 모든 라운드 같음 (사용자 요청으로 맞춘 값)
@@ -225,7 +225,7 @@ function land() {
     else if (r.pts >= 15) say(1, pick(['좋아!', '잘했어!']), 1);
     burst(px, py, big ? 12 : mid ? 8 : 4, r.ring === 'bull' ? '#FF5A7A' : '#FFD34D');
   }
-  const name = `${r.pts}`, tag = r.ring === 'single' ? '' : RING_TXT[r.ring]; // 글자(D-BULL·TRIPLE…)는 숫자의 절반 크기로 옆에
+  const name = `${r.pts}`, tag = r.ring === 'single' ? '' : RING_TXT[r.ring]; // 글자(D-BULL·TRIPLE…)는 숫자의 0.6배 크기로 옆에
   G.fx.push({ kind: 'text', text: name, tag, x: clamp(px, LAY.cx - rim() + 90, LAY.cx + rim() - 90), y: py - 40, t: 0, life: 1.1, big: r.ring === 'bull' || r.ring === 'outer' || r.mult >= 2, bad: r.ring === 'miss' });
   renderHead();
   if (G.dart >= PER) later(endRound, 900);
@@ -484,11 +484,11 @@ function drawFx() {
       ctx.textBaseline = 'middle'; ctx.strokeStyle = f.bad ? '#5A5F6C' : '#7A3E00'; ctx.fillStyle = fill;
       ctx.font = `${fs}px Jua, sans-serif`;
       const wn = ctx.measureText(f.text).width;
-      ctx.font = `${fs / 2}px Jua, sans-serif`;
+      ctx.font = `${fs * 0.6}px Jua, sans-serif`;
       const wt = f.tag ? ctx.measureText(f.tag).width + 6 : 0, x0 = f.x - (wn + wt) / 2;
       ctx.textAlign = 'left';
       ctx.font = `${fs}px Jua, sans-serif`; ctx.lineWidth = 8; ctx.strokeText(f.text, x0, y); ctx.fillText(f.text, x0, y);
-      if (f.tag) { ctx.font = `${fs / 2}px Jua, sans-serif`; ctx.lineWidth = 5; ctx.strokeText(f.tag, x0 + wn + 6, y + fs * 0.12); ctx.fillText(f.tag, x0 + wn + 6, y + fs * 0.12); }
+      if (f.tag) { ctx.font = `${fs * 0.6}px Jua, sans-serif`; ctx.lineWidth = 5; ctx.strokeText(f.tag, x0 + wn + 6, y + fs * 0.12); ctx.fillText(f.tag, x0 + wn + 6, y + fs * 0.12); }
       ctx.restore();
     }
   }
