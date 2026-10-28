@@ -1,12 +1,19 @@
 'use strict';
-// 다트 게임 그림 (GPT 그림이 오기 전까지 코드로 그림) + 점수 계산
+// 다트 게임 그림 + 점수 계산
+//  · GPT 그림(darts/assets, tools/darts_assets.py 로 만듦): 다트판 board · 다트 dart_0~2 · 배경 bg/port. 그림을 받기 전에는 코드로 그림
 //  · 다트판: 진짜 다트판 순서 (위 20부터 시계 방향), 바깥부터 더블(2배) · 싱글 · 트리플(3배) · 싱글 · 바깥 불(25) · 불(50)
 //  · 좌표: 판 가운데 (0,0), 더블 링 바깥 = 반지름 1 (아래가 +y)
-//  · 링 굵기는 진짜 다트판 비율보다 조금 굵게 (어린이가 노리기 쉽게)
+//  · 링 반지름 R 은 GPT 다트판 그림(A01)에서 잰 값 (tools/darts_assets.py 가 출력) — 그림과 점수가 꼭 같아야 함
 (function () {
+  const BASE = (document.currentScript && document.currentScript.src.replace(/art\.js.*$/, '')) || '';
+  const V = '?v=202610281931';
+  const img = (n) => { const im = new Image(); im.src = `${BASE}assets/${n}.webp${V}`; return im; };
+  const ok = (im) => im && im.complete && im.naturalWidth > 0;
+  const IMG = { board: img('board'), bg: img('bg/port'), dart: [img('dart_0'), img('dart_1'), img('dart_2')] };
+  const BOARD_DOUT = 368.4; // board.webp(1000px) 안 더블 링 바깥 반지름(px), 불 가운데 = 그림 가운데
   const ORDER = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
   // 반지름 (더블 바깥 = 1)
-  const R = { bull: 0.07, outer: 0.15, tIn: 0.54, tOut: 0.63, dIn: 0.9, dOut: 1, num: 1.14, rim: 1.27 };
+  const R = { bull: 0.06, outer: 0.127, tIn: 0.552, tOut: 0.617, dIn: 0.929, dOut: 1, num: 1.14, rim: 1.318 };
 
   // 점수: { pts, mult(0 바깥·1 싱글·2 더블·3 트리플), num(1~20, 25 바깥 불, 50 불), ring, label }
   function score(x, y) {
@@ -28,6 +35,21 @@
   }
   // cx, cy: 가운데, s: 더블 링 바깥 반지름(px). hi: 반짝 칸 { num, ring } (맞힌 칸을 잠깐 빛나게)
   function board(g, cx, cy, s, o = {}) {
+    if (ok(IMG.board)) { // GPT 그림 + 맞힌 칸 반짝
+      const k = s / BOARD_DOUT, w = IMG.board.naturalWidth * k;
+      g.drawImage(IMG.board, cx - w / 2, cy - w / 2, w, w);
+      if (o.hi) {
+        g.save(); g.translate(cx, cy); g.globalAlpha = o.hiA == null ? 0.6 : o.hiA;
+        if (o.hi.num === 50 || o.hi.num === 25) { g.beginPath(); g.arc(0, 0, s * (o.hi.num === 50 ? R.bull : R.outer), 0, Math.PI * 2); g.fillStyle = '#FFF27A'; g.fill(); }
+        else {
+          const i = ORDER.indexOf(o.hi.num), a0 = (-90 - 9 + i * 18) * Math.PI / 180, a1 = a0 + Math.PI / 10;
+          const r0 = o.hi.ring === 'double' ? R.dIn : o.hi.ring === 'triple' ? R.tIn : R.outer, r1 = o.hi.ring === 'triple' ? R.tOut : R.dOut;
+          sector(g, s * r0, s * r1, a0, a1, '#FFF27A');
+        }
+        g.restore();
+      }
+      return;
+    }
     g.save(); g.translate(cx, cy);
     // 바깥 나무 테두리 + 숫자 링
     g.beginPath(); g.arc(0, 4 * s / 200, s * R.rim, 0, Math.PI * 2); g.fillStyle = 'rgba(0,0,0,.25)'; g.fill();
@@ -66,8 +88,14 @@
     }
     g.restore();
   }
-  // 다트: (x, y)가 꽂힌 끝. k: 크기, col: 깃털 색, tilt: 기울기
+  // 다트: (x, y)가 꽂힌 끝(바늘 끝). k: 크기(1 = 길이 약 74), col: 깃털 색 또는 0·1·2(분홍·노랑·파랑 그림), tilt: 기울기
+  const DCOL = ['#FF5A8C', '#FFB21E', '#2F9AE8'];
   function dart(g, x, y, k, col = '#FF6B95', tilt = -0.5) {
+    if (typeof col === 'number') {
+      const im = IMG.dart[col];
+      if (ok(im)) { const h = 80 * k, w = h * im.naturalWidth / im.naturalHeight; g.save(); g.translate(x, y); g.rotate(tilt); g.drawImage(im, -w / 2, -h, w, h); g.restore(); return; }
+      col = DCOL[col];
+    }
     g.save(); g.translate(x, y); g.rotate(tilt); g.scale(k, k);
     g.fillStyle = 'rgba(0,0,0,.25)'; g.beginPath(); g.ellipse(4, 3, 4, 2.5, 0, 0, Math.PI * 2); g.fill();
     // 바늘 · 몸통 · 깃털 (위쪽으로)
@@ -83,6 +111,7 @@
   }
   // 놀이공원 다트 부스 느낌 배경 (가로·세로 모두)
   function bg(g, W, H, t = 0) {
+    if (ok(IMG.bg)) { const im = IMG.bg, sc = Math.max(W / im.naturalWidth, H / im.naturalHeight), w = im.naturalWidth * sc, h = im.naturalHeight * sc; g.drawImage(im, (W - w) / 2, (H - h) / 2, w, h); return; }
     const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#FFE3B0'); gr.addColorStop(1, '#FFC98A'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
     // 세로 줄무늬 천막
     const sw = 60;

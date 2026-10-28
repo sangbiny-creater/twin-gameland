@@ -4,7 +4,7 @@
   · 가로: 막대 안 점이 왼쪽·오른쪽으로 → 원하는 곳에서 버튼을 꾹 누름
   · 세로: 누르고 있는 동안 과녁 표시(조준경)가 다트판 위를 위·아래로 → 손을 떼면 캐릭터 손에서 그곳으로 다트가 슝
   · 한 라운드 다트 3개는 분홍·노랑·파랑. 막대 안의 색 칸은 다트판 모양에 맞춰 게임이 직접 그려요.
-지금은 Claude가 코드로 그린 임시 그림이에요 (다트판·다트·배경·버튼·과녁, 캐릭터는 v3 뒷모습). 게임 카드·인트로도 임시 그림 (tools/darts_placeholder.py).
+2026-10-28 GPT 그림 적용 완료 (그림이 없으면 코드 그림으로 대신 그림).
 
 [사용법 — 이 줄부터 "=== GPT에 붙여 넣기 1 ===" 줄까지는 GPT에 보내지 않아요]
 GPT 대화를 세 번 열어요. (게임 1개라도 그림 종류가 달라서 나눠요. 대화마다 새로 열기)
@@ -26,7 +26,7 @@ GPT 대화를 세 번 열어요. (게임 1개라도 그림 종류가 달라서 �
 2. "=== GPT에 붙여 넣기 3 ===" 아래 전부를 붙여 넣고, "계속"만 보내요.
 3. 같은 폴더에 A01.PNG … A07.PNG 로 저장하고, Claude에게 "dartsgame/GPT 폴더에 넣었어"라고 알려 주세요.
 
-[Claude 적용 메모]
+[Claude 적용 메모 — 2026-10-28 G01~G05·B01~B10·A01~A07 적용 완료: python3 tools/darts_assets.py && python3 tools/game_cards.py]
 - 지금 임시 그림: darts/art.js (다트판 board · 다트 dart · 배경 bg · 점수 score · colorAt) + game.js (reticle 과녁 · drawThrower 버튼 · drawAim 게이지)
 - G01 → hub/cards/darts.webp (tools/game_cards.py), G02 → hub/intro/darts.webp (941x1672), G03 → hub/intro/darts_land.webp (1536x1024)
   G04 → darts/assets/ui/logo.webp (초록 지우기, 준비 창 .logo-txt 대신), G05 → darts/assets/bg/port.webp (세로만 씀, G06은 인트로 가로용 참고)

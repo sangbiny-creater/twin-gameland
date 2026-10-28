@@ -10,7 +10,7 @@
 
 let W = 540, H = 960;
 const D = window.DartArt;
-const ASSET_V = '202610280021';
+const ASSET_V = '202610281931';
 const ROUNDS = 8, PER = 3;
 const AMP = 1.2; // 줄이 움직이는 범위 (더블 링 바깥 = 1, 조금 밖까지 나감)
 // 한 번 갔다 오는 시간(초), 모든 라운드 같음 (사용자 요청으로 맞춘 값)
@@ -81,6 +81,17 @@ const Audio = {
   },
 };
 
+// GPT 그림 (tools/darts_assets.py): 캐릭터 뒷모습 버튼 · 게이지 막대 틀 · 점 · 과녁 표시
+const IMG = (() => {
+  const im = (n) => { const x = new Image(); x.src = `assets/${n}.webp?v=${ASSET_V}`; return x; };
+  const who = myLook.startsWith('eungyeol') ? 'eungyeol' : 'eunyu';
+  return {
+    btn: Object.fromEntries(['idle', 'aim', 'throw', 'happy', 'sad'].map((k) => [k, im(`btn/${who}_${k}`)])),
+    bar: im('bar'), dot: [0, 1, 2].map((i) => im(`dot_${i}`)), reticle: [0, 1, 2].map((i) => im(`reticle_${i}`)),
+  };
+})();
+const ok = (x) => x && x.complete && x.naturalWidth > 0;
+const BAR_IN = { x0: 0.05, x1: 0.95, y0: 0.297, y1: 0.738 }; // bar.webp 안쪽 흰 칸 (그림 폭·높이 비율)
 const buzz = (ms) => { try { if (ms && navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* ignore */ } };
 
 // ---------- state ----------
@@ -98,25 +109,26 @@ const DART_COLS = ['#FF5A8C', '#FFB21E', '#2F9AE8'];
 // 화면 (세로): 위 총점·라운드·이번 라운드 점수 칸 3개 → 다트판 → 좌우 게이지 막대 → 내 캐릭터 뒷모습(= 던지기 버튼)
 //      (가로): 가운데 세로로 다트판 → 게이지 → 캐릭터 버튼, 왼쪽에 총점·점수 칸, 오른쪽에 응원하는 쌍둥이
 // LAY: 판 가운데 cx·cy, 더블 링 반지름 s, 게이지 막대 가운데 gx·gy·반폭 gw, 캐릭터 자리 ch[[x, 발 y, 키]] (0 = 나(뒷모습 버튼), 1 = 쌍둥이), 던지는 손 hand
-const LAY = { cx: 270, cy: 300, s: 170, gx: 270, gy: 640, gw: 200, ch: [[270, 900, 200], [470, 900, 120]], hand: [300, 700] };
+const BAR_H = 64; // 게이지 막대 틀 높이 (안쪽 색 칸 높이 = 44%)
+const LAY = { cx: 270, cy: 300, s: 170, gx: 270, gy: 640, gw: 200, btn: [270, 860, 150], ch: [[270, 900, 200], [470, 900, 120]], hand: [300, 700] };
 const rim = () => LAY.s * D.R.rim;
 function layout() {
   const sv = (k) => parseFloat(getComputedStyle(root).getPropertyValue('--safe-' + k)) || 0;
   const st = sv('t'), sb = sv('b');
   const head = $('head');
-  // 세로 화면만: 맨 위 줄 가운데 총점·라운드, 그 밑 점수 칸 3개 → 다트판(늘 화면 가로 가득) → 게이지 → 작은 캐릭터 버튼
-  // 높이가 모자라면 캐릭터 버튼만 작아짐. 남는 높이는 위쪽 틈에 나눠 줌
-  const HEAD_H = 150, FIXED = HEAD_H + 22 + 27 + 24, avail = H - st - sb;
+  // 세로 화면만: 맨 위 줄 가운데 총점·라운드, 그 밑 점수 칸 3개 → 다트판(늘 화면 가로 가득) → 게이지 → 캐릭터 뒷모습 버튼
+  // 높이가 모자라면 버튼만 작아짐. 남는 높이는 위쪽 틈에 나눠 줌
+  const HEAD_H = 150, FIXED = HEAD_H + 8 + BAR_H + 10 + 26, avail = H - st - sb;
   LAY.s = (W / 2 - 2) / D.R.rim;
-  const h = clamp((avail - FIXED - 2 * rim()) / 1.05, 80, 160);
-  const extra = Math.max(0, avail - (FIXED + 2 * rim() + 1.05 * h));
+  const bd = clamp(avail - FIXED - 2 * rim(), 96, 170); // 버튼 지름
+  const extra = Math.max(0, avail - (FIXED + 2 * rim() + bd));
   const headTop = st + 4 + extra * 0.25;
   LAY.cx = W / 2; LAY.cy = headTop + HEAD_H + extra * 0.45 + rim();
-  LAY.gy = LAY.cy + rim() + 22; LAY.gx = W / 2; LAY.gw = 220;
-  const feet = LAY.gy + 27 + 1.06 * h;
-  LAY.ch = [[W / 2, feet, h], [W - 58, feet + 8, Math.min(120, h * 0.75)]];
+  LAY.gy = LAY.cy + rim() + 8 + BAR_H / 2; LAY.gx = W / 2; LAY.gw = 220;
+  LAY.btn = [W / 2, LAY.gy + BAR_H / 2 + 10 + bd / 2 + extra * 0.1, bd];
+  LAY.ch = [[W / 2, LAY.btn[1] + bd / 2, bd], [W - 66, LAY.btn[1] + bd / 2 + 6, Math.min(120, bd * 0.8)]];
   Object.assign(head.style, { left: '70px', top: headTop + 'px', width: (W - 140) + 'px' });
-  LAY.hand = [W / 2 + h * 0.3, feet - h * 0.95];
+  LAY.hand = [LAY.btn[0] + bd * 0.22, LAY.btn[1] - bd * 0.2]; // 버튼 그림 속 던지는 손
 }
 // 판 좌표 ↔ 화면 좌표
 const toX = (u) => LAY.cx + u * LAY.s, toY = (v) => LAY.cy + v * LAY.s;
@@ -183,7 +195,7 @@ const FLY = 0.38;
 function land() {
   const r = D.score(G.ax, G.ay), col = DART_COLS[Math.min(G.dart, PER - 1)];
   G.phase = 'land'; G.pt = 0;
-  G.darts.push({ x: G.ax, y: G.ay, t: G.t, r, col });
+  G.darts.push({ x: G.ax, y: G.ay, t: G.t, r, ci: Math.min(G.dart, PER - 1) });
   G.rounds[G.round - 1].push(r);
   G.score += r.pts; G.dart++;
   if (r.ring === 'bull') G.bulls++;
@@ -313,7 +325,7 @@ function render() {
   const sh = G.shake > 0 ? Math.sin(G.t * 90) * G.shake * 30 : 0; // 꽂힐 때 판 흔들림
   ctx.save(); ctx.translate(sh, 0);
   D.board(ctx, LAY.cx, LAY.cy, s, { hi: G.hiT > 0 ? G.hi : null, hiA: clamp(G.hiT / 0.9, 0, 1) * (0.4 + 0.3 * Math.abs(Math.sin(G.t * 12))) });
-  for (const d of G.darts) { const k = Math.min(1, (G.t - d.t) / 0.12); D.dart(ctx, toX(d.x), toY(d.y), (s / 170) * (1.35 - 0.35 * k), d.col); }
+  for (const d of G.darts) { const k = Math.min(1, (G.t - d.t) / 0.12); D.dart(ctx, toX(d.x), toY(d.y), (s / 170) * (1.35 - 0.35 * k), d.ci, -0.35); }
   ctx.restore();
   if (play) drawAim();
   drawThrower();
@@ -332,24 +344,35 @@ function drawAim() {
   const { gx, gy, gw } = LAY, xLive = ph === 'x', yLive = ph === 'y', col = DART_COLS[Math.min(G.dart, PER - 1)];
   const xv = xLive ? sweep(G.pt, period(G.round)) : G.ax;
   ctx.save();
-  const bh = 22;
-  ctx.fillStyle = '#2A2348'; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(gx - gw - 6, gy - bh / 2 - 4, gw * 2 + 12, bh + 8, 9); else ctx.rect(gx - gw - 6, gy - bh / 2 - 4, gw * 2 + 12, bh + 8); ctx.fill();
+  // 막대: 금색 틀(그림) 안쪽 칸에 다트판 가운데 줄 색. 틀은 양끝은 그대로, 가운데만 늘려서 그림
+  const fw = gw * 2 / (BAR_IN.x1 - BAR_IN.x0), fx = gx - fw / 2, fy = gy - BAR_H * (BAR_IN.y0 + BAR_IN.y1) / 2;
+  const iy = fy + BAR_H * BAR_IN.y0, ih = BAR_H * (BAR_IN.y1 - BAR_IN.y0);
+  if (ok(IMG.bar)) {
+    const im = IMG.bar, iw = im.naturalWidth, ihh = im.naturalHeight, cap = 0.13 * iw, dc = cap * BAR_H / ihh;
+    ctx.drawImage(im, 0, 0, cap, ihh, fx, fy, dc, BAR_H);
+    ctx.drawImage(im, cap, 0, iw - 2 * cap, ihh, fx + dc, fy, fw - 2 * dc, BAR_H);
+    ctx.drawImage(im, iw - cap, 0, cap, ihh, fx + fw - dc, fy, dc, BAR_H);
+  } else { ctx.fillStyle = '#2A2348'; ctx.fillRect(gx - gw - 6, iy - 4, gw * 2 + 12, ih + 8); }
   for (let i = 0; i < GSTEP; i++) {
     const u0 = -AMP + 2 * AMP * i / GSTEP;
-    ctx.fillStyle = D.colorAt(u0 + AMP / GSTEP, 0); ctx.fillRect(barX(u0), gy - bh / 2, gw * 2 / GSTEP + 0.6, bh);
+    ctx.fillStyle = D.colorAt(u0 + AMP / GSTEP, 0); ctx.fillRect(barX(u0), iy + 1, gw * 2 / GSTEP + 0.6, ih - 2);
   }
   if (ph === 'x' || ph === 'y') {
-    const r = xLive ? 15 * (1 + 0.12 * Math.sin(G.t * 12)) : 12, x = barX(xv);
-    ctx.beginPath(); ctx.arc(x, gy, r, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill();
-    ctx.lineWidth = 5; ctx.strokeStyle = col; ctx.stroke();
-    ctx.beginPath(); ctx.arc(x, gy, r * 0.38, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill();
+    const di = Math.min(G.dart, PER - 1), r = xLive ? 19 * (1 + 0.1 * Math.sin(G.t * 12)) : 15, x = barX(xv);
+    if (ok(IMG.dot[di])) ctx.drawImage(IMG.dot[di], x - r, gy - r, r * 2, r * 2);
+    else {
+      ctx.beginPath(); ctx.arc(x, gy, r, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill();
+      ctx.lineWidth = 5; ctx.strokeStyle = col; ctx.stroke();
+    }
   }
   ctx.restore();
-  if (yLive) reticle(toX(G.ax), toY(sweep(G.pt, periodY())), col);
+  if (yLive) reticle(toX(G.ax), toY(sweep(G.pt, periodY())), col, Math.min(G.dart, PER - 1));
 }
 // 과녁 표시 (총 쏠 때 조준경 모양): 동그라미 + 십자 + 가운데 점
-function reticle(x, y, col) {
+function reticle(x, y, col, ci) {
   const r = 26 * (1 + 0.06 * Math.sin(G.t * 14));
+  const im = IMG.reticle[ci];
+  if (ok(im)) { const w = 96 * (1 + 0.05 * Math.sin(G.t * 14)); ctx.drawImage(im, x - w / 2, y - w / 2, w, w); return; } // 그림 가운데 점 = 다트가 꽂힐 곳
   ctx.save(); ctx.translate(x, y); ctx.lineCap = 'round';
   for (const [w, c] of [[9, 'rgba(255,255,255,.95)'], [4, '#E2384D']]) {
     ctx.lineWidth = w; ctx.strokeStyle = c;
@@ -368,7 +391,7 @@ function flyPos(k) {
   return [G.sx0 + (tx - G.sx0) * e, G.sy0 + (ty - G.sy0) * e - Math.sin(k * Math.PI) * 70, (LAY.s / 170) * (3 - 1.75 * e)];
 }
 function drawFlying() {
-  const k = clamp(G.pt / FLY, 0, 1), col = DART_COLS[Math.min(G.dart, PER - 1)];
+  const ci = Math.min(G.dart, PER - 1), k = clamp(G.pt / FLY, 0, 1), col = DART_COLS[ci];
   const [x, y, sc] = flyPos(k), [px, py] = flyPos(Math.max(0, k - 0.05));
   const ang = Math.atan2(y - py, x - px) - Math.PI / 2;
   // 꼬리 (잔상 + 빛줄기)
@@ -380,44 +403,33 @@ function drawFlying() {
   ctx.restore();
   for (let j = 3; j >= 1; j--) {
     const [gx, gy, gs] = flyPos(Math.max(0, k - j * 0.07));
-    ctx.save(); ctx.globalAlpha = 0.18 * (4 - j); D.dart(ctx, gx, gy, gs, col, ang); ctx.restore();
+    ctx.save(); ctx.globalAlpha = 0.18 * (4 - j); D.dart(ctx, gx, gy, gs, ci, ang); ctx.restore();
   }
-  D.dart(ctx, x, y, sc, col, ang);
+  D.dart(ctx, x, y, sc, ci, ang);
 }
-// 내 캐릭터 뒷모습 = 던지기 버튼. 둥근 버튼 위에 서 있고, 누르는 동안 버튼이 쑥 들어감
-const BACK = { idle: 'back_run_0', aim: 'back_right', throw: 'back_boost', cheer: 'back_happy', happy: 'back_happy', hit: 'back_hit' };
+// 내 캐릭터 뒷모습 = 던지기 버튼 (GPT 그림: 기본·꾹 누름·던짐·기쁨·아쉬움). 누르는 동안 버튼이 살짝 작아짐
+const BTN = { idle: 'idle', aim: 'aim', throw: 'throw', cheer: 'happy', happy: 'happy', hit: 'sad' };
 function drawThrower() {
-  const CV = window.CharV2, [x, y, h] = LAY.ch[0], play = G.state === 'play' || G.state === 'pause';
-  const down = G.phase === 'y' && play, ready = G.phase === 'x' && play, col = DART_COLS[Math.min(G.dart, PER - 1)];
-  // 둥근 버튼
-  const br = h * 0.58, by = y - h * 0.48 + (down ? 4 : 0);
+  const [x, y, d] = LAY.btn, play = G.state === 'play' || G.state === 'pause';
+  const down = G.phase === 'y' && play, ready = G.phase === 'x' && play, ci = Math.min(G.dart, PER - 1), col = DART_COLS[ci];
+  const im = IMG.btn[BTN[G.pose[0]] || 'idle'];
+  const bob = G.pose[0] === 'cheer' ? -Math.abs(Math.sin(G.t * 10)) * 6 : 0, sc = down ? 0.95 : 1;
   ctx.save();
-  if (ready) { ctx.globalAlpha = 0.35 + 0.25 * Math.sin(G.t * 6); ctx.beginPath(); ctx.arc(x, by, br + 12, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill(); ctx.globalAlpha = 1; }
-  ctx.beginPath(); ctx.arc(x, by + (down ? 2 : 8), br, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fill();
-  const gr = ctx.createRadialGradient(x, by - br * 0.4, br * 0.2, x, by, br);
-  gr.addColorStop(0, down ? '#FFE3A0' : '#FFF6D8'); gr.addColorStop(1, down ? '#F2A33A' : '#FFC86B');
-  ctx.beginPath(); ctx.arc(x, by, br, 0, Math.PI * 2); ctx.fillStyle = gr; ctx.fill();
-  ctx.lineWidth = 6; ctx.strokeStyle = '#fff'; ctx.stroke();
+  if (ready) { ctx.globalAlpha = 0.3 + 0.25 * Math.sin(G.t * 6); ctx.beginPath(); ctx.arc(x, y, d * 0.5 + 8, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill(); ctx.globalAlpha = 1; }
+  if (ok(im)) { const w = d * 1.06 * sc; ctx.drawImage(im, x - w / 2, y - w / 2 + bob, w, w); }
+  else { ctx.beginPath(); ctx.arc(x, y, d / 2 * sc, 0, Math.PI * 2); ctx.fillStyle = '#FFC86B'; ctx.fill(); ctx.lineWidth = 6; ctx.strokeStyle = '#fff'; ctx.stroke(); }
   ctx.restore();
-  if (CV && CV.ready(myLook)) {
-    const want = BACK[G.pose[0]] || BACK.idle, use = CV.has(myLook, want) ? want : CV.has(myLook, 'back_run_0') ? 'back_run_0' : 'idle';
-    const bob = use === 'back_happy' ? -Math.abs(Math.sin(G.t * 10)) * 8 : down ? 3 : Math.sin(G.t * 3) * 1.5;
-    ctx.save(); ctx.translate(x, y + bob); CV.draw(ctx, myLook, use, { h }); ctx.restore();
-  }
-  // 손에 든 다트 (이번 다트 색) + 남은 다트
-  if (play && (G.phase === 'x' || G.phase === 'y')) {
-    const [hx, hy] = LAY.hand; D.dart(ctx, hx, hy + (down ? 10 : 0), (LAY.s / 170) * 1.6, col, Math.PI + 0.25);
-  }
+  // 남은 다트 (버튼 왼쪽)
   if (play) {
-    const left = PER - G.dart - (G.phase === 'fly' ? 1 : 0);
-    for (let i = PER - left + (G.phase === 'x' || G.phase === 'y' ? 1 : 0); i < PER; i++) D.dart(ctx, x - br - 6 - (PER - 1 - i) * 16, y - 6, 0.7, DART_COLS[i], 0.1);
+    const holding = G.phase === 'x' || G.phase === 'y';
+    for (let i = G.dart + (holding ? 1 : 0); i < PER; i++) D.dart(ctx, x - d * 0.5 - 18 - (PER - 1 - i) * 22, y + d * 0.4, 0.75, i, 0.08);
   }
   // 버튼 글자
   if (play && (G.phase === 'x' || G.phase === 'y')) {
     const txt = down ? '손 떼면 발사!' : '꾹 누르기';
-    ctx.save(); ctx.font = '22px Jua, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    const w = ctx.measureText(txt).width + 30, py = y + 6;
-    ctx.fillStyle = down ? '#2F9AE8' : '#FF5A8C'; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x - w / 2, py - 18, w, 36, 18); else ctx.rect(x - w / 2, py - 18, w, 36); ctx.fill();
+    ctx.save(); ctx.font = '21px Jua, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const w = ctx.measureText(txt).width + 28, py = y + d * 0.5 + 4;
+    ctx.fillStyle = down ? '#2F9AE8' : '#FF5A8C'; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x - w / 2, py - 17, w, 34, 17); else ctx.rect(x - w / 2, py - 17, w, 34); ctx.fill();
     ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.stroke();
     ctx.fillStyle = '#fff'; ctx.fillText(txt, x, py + 1); ctx.restore();
   }

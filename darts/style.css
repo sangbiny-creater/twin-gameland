@@ -155,3 +155,4 @@ button:active { transform: translateY(3px); }
 #root:not(.wide) .bx { width: 112px; height: 62px; border-radius: 16px; border-width: 4px; }
 #root:not(.wide) .bx b { font-size: 32px; } #root:not(.wide) .bx small { font-size: 14px; }
 #root:not(.wide) .bx b:empty + small { font-size: 17px; }
+.logo { width: 320px; margin-top: -6px; filter: drop-shadow(0 3px 4px rgba(0,0,0,.2)); }
