@@ -48,12 +48,12 @@ const $ = (id) => document.getElementById(id);
 
 // ---------- sprites (asset.PNG cut into assets/sprites/sprites.webp + sprites.json) ----------
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
-fetch('assets/sprites/sprites.json?v=202610282216').then((r) => r.json()).then((j) => {
+fetch('assets/sprites/sprites.json?v=202610282227').then((r) => r.json()).then((j) => {
   SP.f = j;
   SP.img.onload = () => { SP.ready = true; };
-  SP.img.src = 'assets/sprites/sprites.webp?v=202610282216';
+  SP.img.src = 'assets/sprites/sprites.webp?v=202610282227';
 });
-for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=202610282216`; SP.bg.push(im); }
+for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=202610282227`; SP.bg.push(im); }
 // draw sprite centered at (x,y) with its width scaled to w (height keeps aspect)
 function spr(g, name, x, y, w, rot = 0, alpha = 1) {
   if (!SP.ready || !SP.f[name]) return;
@@ -292,7 +292,7 @@ function step(dt) {
   if (G.state === 'ready') {
     h.y = H * 0.45 + Math.sin(G.t * 3) * 10;
     h.rot = Math.sin(G.t * 2) * 0.04;
-    if (input.down || input.pressed) { G.state = 'play'; Audio.sfx('start'); }
+    if (input.pressed) { input.pressed = false; G.state = 'play'; Audio.sfx('start'); } // 화면을 한 번 터치해야 출발
     updateFx(dt);
     return;
   }
@@ -597,7 +597,7 @@ function render() {
   if (G.state === 'ready') {
     const a = 0.75 + Math.sin(G.t * 5) * 0.25;
     ctx.globalAlpha = a;
-    drawLabel(isTouch ? '화면을 꾹 누르면 출발!' : '스페이스 / 클릭을 꾹 누르면 출발!', W / 2, H * 0.72, 30);
+    drawLabel(isTouch ? '화면을 터치하면 출발!' : '스페이스 / 클릭하면 출발!', W / 2, H * 0.72, 30);
     ctx.globalAlpha = 1;
   }
   if (bannerT > 0) {
@@ -776,10 +776,9 @@ function frame(now) {
 }
 resize();
 if (HUB) {
-  // 메인 화면에서 바로 들어오면 홈 없이 '꾹 누르면 출발' 대기 상태로
+  // 메인 화면·인트로 START로 들어오면 게임 화면을 먼저 보여 주고, 화면을 한 번 터치해야 출발
   $('btnHomeR').textContent = '메인으로'; $('btnHomeP').textContent = '메인으로';
   startRun();
-  if (new URLSearchParams(location.search).get('go') === '1') G.state = 'play'; // 인트로 START로 들어오면 대기 화면 없이 바로 출발
 } else setState('home');
 requestAnimationFrame(frame);
 
