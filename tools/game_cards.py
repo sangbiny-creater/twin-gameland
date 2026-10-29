@@ -17,6 +17,7 @@ CARDS = {
     'bakery': ('bakerygame/GPT/G01.PNG', 20, 426, 430),
     'dogsnack': ('dogsnackgame/GPT/G01.PNG', 30, 410, 432),
     'darts': ('dartsgame/GPT/G01.PNG', 470, 400, 432),
+    'downhill': ('making_GPT/다운힐버튼/D03.png', 380, None, 0),
 }
 # 마지막 숫자: 얹는 로고의 아래 끝 (그림 칸 안 y, 436 = BEST 줄 바로 위) — G01 원래 로고가 비치지 않게 그 위를 덮음
 

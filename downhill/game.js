@@ -51,7 +51,10 @@ if (HUB) {
   Save.data.char = HUB.active().look; Save.data.sound = HUB.settings.sound;
   Save.data.best = HUB.rec('downhill').best;
 }
-const GOD = () => !!(window.Hub && window.Hub.god); // 무적 쿠폰 (테스트용)
+const GOD = () => !!(window.Hub && window.Hub.god);
+// 그릴 캐릭터: 옛 모습(eunyu·eungyeol)은 지금 모습(v3) 그림으로 (단독 실행일 때)
+const lookOf = (c) => (window.CharV2 && !CharV2.is(c) && CharV2.is(c + '3') ? c + '3' : c);
+if (window.CharV2) CharV2.load(lookOf(Save.data.char)); // 무적 쿠폰 (테스트용)
 
 // ---------- utils ----------
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -62,7 +65,7 @@ const $ = (id) => document.getElementById(id);
 const rng = (seed) => { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let x = s; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; };
 
 // ---------- sprites ----------
-const ASSET_V = '202610290616';
+const ASSET_V = '202610291423';
 const SP = { img: new Image(), f: null, ready: false };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -82,10 +85,13 @@ function spr(g, name, x, y, w, { rot = 0, alpha = 1, flip = false, anchor = 'c',
   g.restore();
   return h;
 }
-// 점프하기 아이템 그림 (초록 동그라미 + 위 화살표 + 스프링)
-const JUMP_SVG = "data:image/svg+xml," + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#7BE08F'/><stop offset='1' stop-color='#1F9E52'/></linearGradient></defs><circle cx='32' cy='32' r='29' fill='url(#g)' stroke='#fff' stroke-width='4'/><path d='M32 8 L49 26 H39 V36 H25 V26 H15 Z' fill='#fff' stroke='#167A3E' stroke-width='1.5' stroke-linejoin='round'/><path d='M21 42 L43 46 L21 50 L43 54' fill='none' stroke='#fff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/></svg>`);
-const JUMP_IMG = new Image(); JUMP_IMG.src = JUMP_SVG;
-$('btnJump').style.backgroundImage = `url("${JUMP_SVG}")`;
+// GPT 그림 (tools/downhill_assets.py): 점프하기 아이템·눈 마을 집·스테이지 하늘, 하트는 모든 게임 공통 그림
+const uiImg = (src) => { const im = new Image(); im.src = `${src}?v=${ASSET_V}`; return im; };
+const JUMP_IMG = uiImg('assets/ui/item_jump.webp');
+const HOUSE_IMG = uiImg('assets/ui/house.webp');
+const HEART_IMG = uiImg('../common/ui/heart.webp');
+const SKY_IMG = [1, 2, 3, 4, 5].map((n) => uiImg(`assets/bg/sky_${n}.webp`));
+const SKY_HZ = [928, 884, 887, 928, 858]; // 하늘 그림에서 지평선 높이(px, 위에서부터)
 const iconCache = {};
 function iconURL(name) {
   if (iconCache[name]) return iconCache[name];
@@ -546,6 +552,22 @@ function skyLayer(key, st) {
   }
   return (skyCache[ck] = c);
 }
+// 스테이지 하늘: GPT 그림이 있으면 그 그림 (지평선을 HY에 맞추고, 화면이 그림보다 넓으면 좌우 뒤집어 이어 붙임), 없으면 직접 그림
+function stageSky(i) {
+  const im = SKY_IMG[i];
+  if (!im.complete || !im.naturalWidth) return skyLayer('st' + i, STAGES[i]);
+  const ck = 'img' + i + W + 'x' + H;
+  if (skyCache[ck]) return skyCache[ck];
+  const hy = Math.round(HY()) + 2;
+  const c = document.createElement('canvas'); c.width = W; c.height = hy;
+  const g = c.getContext('2d');
+  const s = hy / SKY_HZ[i] * 1.04, iw = im.naturalWidth * s, ih = im.naturalHeight * s, y = hy - SKY_HZ[i] * s;
+  if (iw >= W) g.drawImage(im, (W - iw) / 2, y, iw, ih);
+  else for (let k = 0, x = (W / 2) % (2 * iw) - 2 * iw; x < W; k++, x += iw) {
+    g.save(); if (k % 2) { g.translate(x + iw, 0); g.scale(-1, 1); g.drawImage(im, 0, y, iw, ih); } else g.drawImage(im, x, y, iw, ih); g.restore();
+  }
+  return (skyCache[ck] = c);
+}
 function drawSky() {
   const sk = G.skin && G.skin !== 'default' ? G.skin : null;
   if (sk && window.Skins && window.Skins.has(sk)) {
@@ -554,8 +576,8 @@ function drawSky() {
     ctx.restore(); return;
   }
   if (sk && SKIN_SKY[sk]) { ctx.drawImage(skyLayer('skin_' + sk, SKIN_SKY[sk]), 0, 0); return; }
-  if (G.stageFade < 1) { ctx.drawImage(skyLayer('st' + G.prevStage, STAGES[G.prevStage]), 0, 0); ctx.globalAlpha = G.stageFade; }
-  ctx.drawImage(skyLayer('st' + G.stageIdx, STAGES[G.stageIdx]), 0, 0);
+  if (G.stageFade < 1) { ctx.drawImage(stageSky(G.prevStage), 0, 0); ctx.globalAlpha = G.stageFade; }
+  ctx.drawImage(stageSky(G.stageIdx), 0, 0);
   ctx.globalAlpha = 1;
 }
 function mix(a, b, t) {
@@ -680,6 +702,10 @@ function drawDeco(o, p, fade) {
   spr(ctx, o.kind, p.x, p.y + 4 * p.k, s, { anchor: 'b', alpha: fade, flip: o.flip });
 }
 function drawHouse(p, fade) {
+  if (HOUSE_IMG.complete && HOUSE_IMG.naturalWidth) {
+    const w = 150 * p.k, h = w * HOUSE_IMG.naturalHeight / HOUSE_IMG.naturalWidth;
+    ctx.save(); ctx.globalAlpha = fade; ctx.drawImage(HOUSE_IMG, p.x - w / 2, p.y - h + 4 * p.k, w, h); ctx.restore(); return;
+  }
   const w = 130 * p.k, h = 80 * p.k;
   ctx.save(); ctx.globalAlpha = fade;
   ctx.fillStyle = '#C98B5A'; ctx.fillRect(p.x - w / 2, p.y - h, w, h);
@@ -709,8 +735,12 @@ function drawItem(it, p, fade) {
   const y = p.y - 44 * p.k + Math.sin(G.t * 5 + it.Z) * 4 * p.k;
   ctx.fillStyle = 'rgba(70,100,140,.15)';
   ctx.beginPath(); ctx.ellipse(p.x, p.y, w * 0.4, w * 0.12, 0, 0, 7); ctx.fill();
-  if (it.kind === 'jump') { if (JUMP_IMG.complete) { ctx.save(); ctx.globalAlpha = fade; ctx.drawImage(JUMP_IMG, p.x - w * 0.6, y - w * 0.6, w * 1.2, w * 1.2); ctx.restore(); } return; }
   if (it.kind !== 'coin') { ctx.save(); ctx.globalAlpha = 0.35 * fade; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p.x, y, w * 0.7, 0, 7); ctx.fill(); ctx.restore(); }
+  const pic = it.kind === 'jump' ? JUMP_IMG : it.kind === 'heart' ? HEART_IMG : null; // 그림 파일로 그리는 아이템
+  if (pic) {
+    if (pic.complete && pic.naturalWidth) { const pw = w * 1.25, ph = pw * pic.naturalHeight / pic.naturalWidth; ctx.save(); ctx.globalAlpha = fade; ctx.drawImage(pic, p.x - pw / 2, y - ph / 2, pw, ph); ctx.restore(); }
+    return;
+  }
   spr(ctx, it.kind, p.x, y, w, { alpha: fade, sx: it.kind === 'coin' ? Math.max(0.25, Math.abs(Math.cos(G.t * 4 + it.Z))) : 1 });
 }
 function drawFx() {
@@ -737,7 +767,8 @@ function drawSnow() {
 const BACK_COSTUME = { eunyu: ['hanbok', 'raincoat', 'pajamas', 'roman', 'dino'], eungyeol: ['wizard', 'santa', 'baseball', 'suit', 'detective'] };
 function drawPlayer() {
   const p = proj(0, G.px);
-  const who = Save.data.char;
+  const who = lookOf(Save.data.char);
+  if (window.CharV2 && CharV2.is(who)) CharV2.load(who);
   const blink = G.invT > 0 && G.hitT <= 0 && Math.floor(G.t * 16) % 2 === 0;
   if (blink && G.state === 'play') return;
   // 그림자
@@ -797,11 +828,11 @@ function updateHud() {
 }
 function renderHearts(pop) {
   const el = $('hudHearts'); el.innerHTML = '';
-  const url = iconURL('heart');
+  const url = `../common/ui/heart.webp?v=${ASSET_V}`, off = `../common/ui/heart_empty.webp?v=${ASSET_V}`;
   for (let i = 0; i < G.maxHearts; i++) {
     const d = document.createElement('div');
     d.className = 'heart' + (i >= G.hearts ? ' empty' : '') + (pop && i === G.hearts - 1 ? ' pop' : '');
-    if (url) d.style.backgroundImage = `url(${url})`;
+    d.style.backgroundImage = `url(${i >= G.hearts ? off : url})`;
     el.appendChild(d);
   }
 }
@@ -855,7 +886,7 @@ function showResult() {
     const h = HUB.record('downhill', { dist: m, coins: G.coins });
     $('resEarn').innerHTML = h.god ? '무적 모드라서 기록·코인이 없어요' : `+${h.earned} 코인 획득!` + (h.bonus ? ` <small>(거리 보너스 +${h.bonus})</small>` : '') + `<small>내 코인 ${h.coins}</small>`;
   }
-  $('resFace').src = window.CharV2 && CharV2.is(Save.data.char) ? CharV2.url(Save.data.char, isBest ? 'back_happy' : 'back_dead') : iconURL(`${Save.data.char}_${isBest ? 'happy' : 'dead'}`);
+  $('resFace').src = window.CharV2 && CharV2.is(lookOf(Save.data.char)) ? CharV2.url(lookOf(Save.data.char), isBest ? 'back_happy' : 'back_dead') : iconURL(`${Save.data.char}_${isBest ? 'happy' : 'dead'}`);
   $('resDist').textContent = m.toLocaleString(); $('resCoin').textContent = G.coins; $('resCombo').textContent = G.maxCombo;
   $('resBestVal').textContent = (Save.data.best || 0).toLocaleString();
   $('resBest').classList.toggle('hidden', !isBest);
