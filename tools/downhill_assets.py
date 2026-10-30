@@ -3,7 +3,7 @@
   D01 인트로 세로 · D02 인트로 가로 · D03 게임 카드 · D04·D05 은유 뒷모습 8컷
   D06 화살표 · D07 점프 버튼 · D08 점프하기 아이템 · D09 눈 마을 집
   D10 눈 덮인 산 · D11 겨울 숲 · D12 얼음 계곡 · D13 오로라 설원 (하늘) · D14 로고
-  (눈 마을 하늘은 아직 없어서 D10을 같이 씀 — 받으면 SKY 에 넣기)
+  D15 눈 마을 하늘 (요청 글: GPT_요청_다운힐_눈마을하늘.txt — 아직 없으면 D10을 같이 씀)
   python3 tools/downhill_assets.py          # 전부
   python3 tools/downhill_assets.py back     # 은유 뒷모습만 (common/chars/eunyu3 의 back_* 8장 바꿈)
 게임 카드(hub/cards/downhill.webp)는 tools/game_cards.py 로.
@@ -20,7 +20,7 @@ from mole_assets import cover  # noqa: E402
 SRC = f'{ROOT}/making_GPT/다운힐버튼'
 UI = 'downhill/assets/ui'
 # 하늘: 스테이지 순서(눈 덮인 산·겨울 숲·얼음 계곡·눈 마을·오로라 설원) → 원본
-SKY = ['D10', 'D11', 'D12', 'D10', 'D13']
+SKY = ['D10', 'D11', 'D12', 'D15' if os.path.exists(f'{SRC}/D15.png') else 'D10', 'D13']
 
 
 def src(n):
