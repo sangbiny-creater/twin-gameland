@@ -91,7 +91,7 @@ const EDIT_TEST = `(async () => {
   out.editingOff = document.getElementById('pkEditBar').classList.contains('hidden');
   return out;
 })()`;
-add('hub-edittest-pp', 'index.html#lobby', { vp: 'pp', js: EDIT_TEST, wait2: 300 });
+add('hub-edittest-pp', 'index.html#lobby', { vp: 'pp', js: EDIT_TEST, wait: 4000, wait2: 300 });
 add('hub-edittest-pl', 'index.html#lobby', { vp: 'pl', js: EDIT_TEST, wait2: 300 });
 
 // ---- CDP ----
