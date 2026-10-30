@@ -65,7 +65,7 @@ const $ = (id) => document.getElementById(id);
 const rng = (seed) => { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let x = s; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; };
 
 // ---------- sprites ----------
-const ASSET_V = '202610310840';
+const ASSET_V = '202610310843';
 const SP = { img: new Image(), f: null, ready: false };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -91,7 +91,7 @@ const JUMP_IMG = uiImg('assets/ui/item_jump.webp');
 const HOUSE_IMG = uiImg('assets/ui/house.webp');
 const HEART_IMG = uiImg('../common/ui/heart.webp');
 const SKY_IMG = [1, 2, 3, 4, 5].map((n) => uiImg(`assets/bg/sky_${n}.webp`));
-const SKY_HZ = [928, 884, 887, 928, 858]; // 하늘 그림에서 지평선 높이(px, 위에서부터)
+const SKY_HZ = [928, 884, 887, 858, 858]; // 하늘 그림에서 지평선 높이(px, 위에서부터)
 const iconCache = {};
 function iconURL(name) {
   if (iconCache[name]) return iconCache[name];
