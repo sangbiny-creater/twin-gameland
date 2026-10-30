@@ -260,7 +260,7 @@
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610291423` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610310840` : null; },
     buyCostume(id, c = this.active()) {
       const it = COSTUMES.find((x) => x.id === id);
       if (!c || !it || this.ownsCostume(id, c)) return { ok: false };
@@ -381,6 +381,11 @@
     stageLabel(i, game = 'skyhook') { const G = GAMES[game], k = G.perWorld, h = i >= G.stages; if (h) i -= G.stages; return `${h ? '어려움 ' : ''}${Math.floor(i / k) + 1}-${(i % k) + 1}`; },
     stageName(i, game = 'skyhook') { const G = GAMES[game], k = G.perWorld; i %= G.stages; return `${G.worlds[Math.floor(i / k)]} ${(i % k) + 1}`; },
 
+    // 첫 화면 놀이공원 배치 (캐릭터마다 따로): 게임 id 순서. 없으면 기본 배치 (v0.2 첫 화면)
+    park(c = this.active()) { return (c && Array.isArray(c.park)) ? c.park.slice() : null; },
+    setPark(order, c = this.active()) { if (!c) return; if (order) c.park = order.slice(); else delete c.park; save(); },
+    // 다이아 (나중에 상용화 때 쓸 자리 — 지금은 항상 0)
+    gems(c = this.active()) { return (c && c.gems) || 0; },
     // 즐겨찾기 (캐릭터마다 따로). favs 순서 = 별을 누른 순서 → 로비는 최근 누른 게임부터
     isFav(game, c = this.active()) { return !!(c && c.favs && c.favs.includes(game)); },
     toggleFav(game, c = this.active()) {

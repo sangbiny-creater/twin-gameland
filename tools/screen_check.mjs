@@ -1,0 +1,159 @@
+// 화면 확인 도구: 헤드리스 Chrome으로 화면을 찍고 콘솔 오류·없는 파일(404)을 모음
+//   node tools/screen_check.mjs <출력폴더> [이름 필터(정규식)]
+//   BASE=http://localhost:8080/ (기본) — 먼저 python3 -m http.server 8080 으로 저장소를 열어 둠
+// 진행도가 있는 캐릭터 저장 데이터를 넣고 엶. 결과: <출력폴더>/<이름>.png, report.json(이름 → 오류 목록)
+import { spawn } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const OUT = path.resolve(process.argv[2] || 'shots');
+const FILTER = process.argv[3] ? new RegExp(process.argv[3]) : null;
+const BASE = process.env.BASE || 'http://localhost:8080/';
+fs.mkdirSync(OUT, { recursive: true });
+const PORT = 9400 + Math.floor(Math.random() * 400);
+const prof = fs.mkdtempSync(path.join(os.tmpdir(), 'twin-chrome-'));
+const chrome = spawn('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', [
+  '--headless=new', `--remote-debugging-port=${PORT}`, `--user-data-dir=${prof}`, '--no-first-run', '--no-default-browser-check',
+  '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--autoplay-policy=no-user-gesture-required', '--hide-scrollbars', '--mute-audio', 'about:blank',
+], { stdio: 'ignore' });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// ---- 저장 데이터 (진행한 캐릭터 4명) ----
+const stages = (n) => Object.fromEntries([...Array(Math.round(n))].map((_, i) => [i, { cleared: true, stars: (i % 3) + 1, best: 300 + i * 10, plays: 2, bestTime: 60 + i }]));
+const shop = (extra = {}) => ({ skins: {}, equipped: {}, boosts: { shisen: { hint: 3, shuffle: 2, time: 1 }, memory: { hint: 2, find: 1 }, skyhook: { life: 1 } }, using: {}, skinAll: ['forest'], skinOn: 'default', starter: { shisen: true, memory: true }, ...extra });
+const games = (k) => ({
+  skyhook: { plays: 20, best: 640, coins: 900, last: 1, stages: stages(12 * k) }, shisen: { plays: 30, best: 0, coins: 1200, last: 1, stages: stages(25 * k) },
+  memory: { plays: 9, best: 0, coins: 300, last: 1, stages: stages(8 * k) }, mole: { plays: 3, best: 0, coins: 50, last: 1, stages: stages(5 * k) },
+  helicopter: { plays: 5, best: 812, coins: 200, last: 1, stages: {} }, stairs: { plays: 4, best: 230, coins: 150, last: 1, stages: {} },
+  downhill: { plays: 3, best: 1520, coins: 120, last: 1, stages: {} }, bakery: { plays: 2, best: 3400, coins: 80, last: 1, stages: {} },
+});
+const hist = [{ game: 'shisen', at: 1761300000000, stage: 24, cleared: true, dist: 0, earned: 80, stars: 3 }];
+const seed = (active) => ({
+  v: 1, slots: 4, nextId: 5, activeId: active, settings: { sound: true },
+  chars: [
+    { id: 'c1', name: '은유', look: 'eunyu3', coins: 1234, earned: 4321, created: 1, games: games(1), history: hist, favs: ['shisen'], shop: shop() },
+    { id: 'c2', name: '은결', look: 'eungyeol3', coins: 300, earned: 900, created: 2, games: games(0.3), history: hist, shop: shop() },
+    { id: 'c3', name: '옛은유', look: 'eunyu', coins: 700, earned: 2600, created: 3, games: games(2), history: hist, costume: 'hanbok', costumes: ['hanbok'], shop: shop() },
+    { id: 'c4', name: '친구', look: 'eungyeol2', coins: 50, earned: 50, created: 4, games: {}, history: [] },
+  ],
+});
+
+// ---- 화면 목록: { name, url, vp, ch, js, wait, wait2, empty } ----
+const VP = { pp: [390, 844], pl: [844, 390], tb: [1024, 768], tp: [768, 1024] };
+const S = [];
+const add = (name, url, o = {}) => S.push({ name, url, ...o });
+for (const vp of ['pp', 'pl', 'tb']) {
+  add(`hub-select-${vp}`, 'index.html#select', { vp });
+  add(`hub-lobby-${vp}`, 'index.html#lobby', { vp });
+  add(`hub-lobby-mid-${vp}`, 'index.html#lobby', { vp, js: `(document.querySelector('.pk-scroll')||document.querySelector('.lb-scroll')).scrollTop = 900`, wait2: 600 });
+  add(`hub-lobby-top-${vp}`, 'index.html#lobby', { vp, js: `(document.querySelector('.pk-scroll')||document.querySelector('.lb-scroll')).scrollTop = 0`, wait2: 600 });
+  add(`hub-lobby-eungyeol-${vp}`, 'index.html#lobby', { vp, ch: 'c2' });
+  add(`hub-edit-${vp}`, 'index.html#lobby', { vp, js: `document.getElementById('pkEdit') && document.getElementById('pkEdit').click()`, wait2: 700 });
+  add(`hub-intro-${vp}`, 'index.html#lobby', { vp, js: `document.querySelector('.pk-ride[data-id=skyhook], .lb-card').click()`, wait2: 1500 });
+  add(`hub-map-${vp}`, 'index.html#map-shisen', { vp });
+  add(`hub-records-${vp}`, 'index.html#records', { vp });
+  add(`v01-lobby-${vp}`, 'v0.1/#lobby', { vp });
+  add(`v01-map-${vp}`, 'v0.1/#map-shisen', { vp });
+  add(`shop-${vp}`, 'shop/index.html', { vp });
+}
+add('hub-lobby-oldlook-pp', 'index.html#lobby', { vp: 'pp', ch: 'c3' });
+add('hub-lobby-tp', 'index.html#lobby', { vp: 'tp' });
+add('hub-empty-pp', 'index.html', { vp: 'pp', empty: true, wait: 1500 });
+add('v01-return-pp', 'memory/index.html?stage=1', { vp: 'pp', js: "sessionStorage.setItem('twin_ver','0.1'); goMap()", wait2: 2500 });
+add('v02-return-pp', 'memory/index.html?stage=1', { vp: 'pp', js: 'goMap()', wait2: 2500 });
+add('v01-stagego-pp', 'v0.1/#map-skyhook', { vp: 'pp', js: "document.querySelector('.stone.next').click(); setTimeout(() => document.getElementById('btnPlayStage').click(), 300)", wait2: 2500 });
+for (const g of ['skyhook?stage=3', 'helicopter', 'stairs', 'shisen?stage=5', 'downhill', 'memory?stage=1', 'mole?stage=1', 'bakery', 'dogsnack', 'darts']) {
+  const id = g.split('?')[0];
+  add(`game-${id}-pp`, `${id}/index.html${g.includes('?') ? g.slice(g.indexOf('?')) : ''}`, { vp: 'pp', wait: 2500 });
+}
+
+// 놀이공원 편집 시험: 길게 누르기 → 편집, 누르기로 자리 바꾸기, 끌어서 옮기기, 저장 확인
+const EDIT_TEST = `(async () => {
+  const w = document.getElementById('pkWorld'), sl = (ms) => new Promise((r) => setTimeout(r, ms));
+  const ride = (i) => w.querySelector('.pk-ride[data-i="' + i + '"]');
+  const at = (el) => { const r = el.getBoundingClientRect(); return { clientX: r.left + r.width / 2, clientY: r.top + r.height * 0.6 }; };
+  const pe = (el, type, p) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerId: 7, pointerType: 'touch', isPrimary: true, ...p }));
+  const ids = () => [...w.querySelectorAll('.pk-ride[data-id]')].map((e) => e.dataset.id);
+  const out = { start: ids().join(',') };
+  ride(0).scrollIntoView({ block: 'center' }); await sl(200);
+  let p = at(ride(0)); pe(ride(0).querySelector('.art'), 'pointerdown', p); await sl(800); pe(window, 'pointerup', p);
+  out.longpress = !document.getElementById('pkEditBar').classList.contains('hidden') && !!w.querySelector('.pk-ride.sel');
+  p = at(ride(1)); pe(ride(1).querySelector('.art'), 'pointerdown', p); pe(window, 'pointerup', p); ride(1).click(); await sl(100);
+  out.afterTapSwap = ids().join(',');
+  p = at(ride(2)); const q = at(ride(5));
+  pe(ride(2).querySelector('.art'), 'pointerdown', p);
+  for (let k = 1; k <= 10; k++) { pe(window, 'pointermove', { clientX: p.clientX + (q.clientX - p.clientX) * k / 10, clientY: p.clientY + (q.clientY - p.clientY) * k / 10 }); await sl(20); }
+  pe(window, 'pointerup', q); await sl(150);
+  out.afterDrag = ids().join(',');
+  document.getElementById('pkDone').click(); await sl(100);
+  out.saved = (Hub.park() || []).join(',');
+  out.editingOff = document.getElementById('pkEditBar').classList.contains('hidden');
+  return out;
+})()`;
+add('hub-edittest-pp', 'index.html#lobby', { vp: 'pp', js: EDIT_TEST, wait2: 300 });
+add('hub-edittest-pl', 'index.html#lobby', { vp: 'pl', js: EDIT_TEST, wait2: 300 });
+
+// ---- CDP ----
+async function wsUrl() {
+  for (let i = 0; i < 50; i++) { try { const r = await fetch(`http://127.0.0.1:${PORT}/json/version`); if (r.ok) return (await r.json()).webSocketDebuggerUrl; } catch (e) { /* wait */ } await sleep(200); }
+  throw new Error('chrome not up');
+}
+const ws = new WebSocket(await wsUrl());
+await new Promise((r) => ws.addEventListener('open', r));
+let mid = 0; const pend = new Map(); const handlers = [];
+ws.addEventListener('message', (m) => {
+  const d = JSON.parse(m.data);
+  if (d.id && pend.has(d.id)) { const p = pend.get(d.id); pend.delete(d.id); d.error ? p.rej(new Error(JSON.stringify(d.error))) : p.res(d.result); } else for (const h of handlers) h(d);
+});
+const send = (method, params = {}, sessionId) => new Promise((res, rej) => {
+  const id = ++mid; pend.set(id, { res, rej }); ws.send(JSON.stringify({ id, method, params, sessionId }));
+  setTimeout(() => { if (pend.has(id)) { pend.delete(id); rej(new Error('timeout ' + method)); } }, 25000);
+});
+const PRE = (data, empty) => `(() => {
+  let s = 12345; Math.random = () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  try { if (!sessionStorage.getItem('__seeded')) { localStorage.clear(); ${empty ? '' : `localStorage.setItem('twin_gameland_v1', ${JSON.stringify(JSON.stringify(data))});`} sessionStorage.setItem('__seeded', '1'); } } catch (e) {}
+})();`;
+
+const report = {};
+for (const sc of S) {
+  if (FILTER && !FILTER.test(sc.name)) continue;
+  try {
+    const { targetId } = await send('Target.createTarget', { url: 'about:blank' });
+    const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true });
+    const errs = [];
+    const h = (d) => {
+      if (d.sessionId !== sessionId) return;
+      if (d.method === 'Runtime.exceptionThrown') errs.push('EXC ' + (d.params.exceptionDetails.exception?.description || d.params.exceptionDetails.text).split('\n')[0]);
+      if (d.method === 'Runtime.consoleAPICalled' && ['error', 'warning'].includes(d.params.type)) errs.push('CON ' + d.params.args.map((a) => a.value ?? a.description).join(' '));
+      if (d.method === 'Network.responseReceived' && d.params.response.status >= 400) errs.push(`HTTP ${d.params.response.status} ${d.params.response.url.replace(BASE, '')}`);
+    };
+    handlers.push(h);
+    await send('Page.enable', {}, sessionId); await send('Runtime.enable', {}, sessionId); await send('Network.enable', {}, sessionId);
+    await send('Network.setCacheDisabled', { cacheDisabled: true }, sessionId);
+    const [w, ht] = VP[sc.vp];
+    await send('Emulation.setDeviceMetricsOverride', { width: w, height: ht, deviceScaleFactor: 2, mobile: true, screenOrientation: w > ht ? { type: 'landscapePrimary', angle: 90 } : { type: 'portraitPrimary', angle: 0 } }, sessionId);
+    await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 }, sessionId);
+    await send('Page.addScriptToEvaluateOnNewDocument', { source: PRE(seed(sc.ch || 'c1'), sc.empty) }, sessionId);
+    await send('Page.navigate', { url: BASE + sc.url }, sessionId);
+    await sleep(sc.wait || 1800);
+    if (sc.js) {
+      const r = await send('Runtime.evaluate', { expression: sc.js, awaitPromise: true, returnByValue: true }, sessionId);
+      if (r.result && r.result.value !== undefined) sc.result = r.result.value;
+      if (r.exceptionDetails) errs.push('JS ' + (r.exceptionDetails.exception?.description || r.exceptionDetails.text).split('\n')[0]);
+      await sleep(sc.wait2 || 0);
+    }
+    const u = await send('Runtime.evaluate', { expression: 'location.pathname + location.search + location.hash', returnByValue: true }, sessionId);
+    const shot = await send('Page.captureScreenshot', { format: 'png' }, sessionId);
+    fs.writeFileSync(path.join(OUT, sc.name + '.png'), Buffer.from(shot.data, 'base64'));
+    report[sc.name] = { url: u.result.value, errors: errs, ...(sc.result !== undefined ? { result: sc.result } : {}) };
+    handlers.splice(handlers.indexOf(h), 1);
+    await send('Target.closeTarget', { targetId });
+    process.stdout.write(errs.length ? `\n${sc.name}: ${errs.join(' | ')}\n` : '.');
+  } catch (e) { console.log('\nERR', sc.name, e.message); }
+}
+fs.writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(report, null, 1));
+const bad = Object.entries(report).filter(([, r]) => r.errors.length);
+console.log(`\n화면 ${Object.keys(report).length}개, 오류 있는 화면 ${bad.length}개`);
+chrome.kill(); await sleep(300); try { fs.rmSync(prof, { recursive: true, force: true }); } catch (e) { /* ignore */ }
+process.exit(0);

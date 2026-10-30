@@ -2,6 +2,10 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
+<script>
+  // 이 탭에서 v0.1 첫 화면을 쓰고 있었으면(게임에서 돌아올 때 등) v0.1로 보냄. v0.1 주소: v0.1/
+  try { if (sessionStorage.getItem('twin_ver') === '0.1') location.replace('v0.1/' + location.hash); } catch (e) { /* ignore */ }
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -10,16 +14,16 @@
 <meta name="theme-color" content="#5CA9E6">
 <meta name="application-name" content="은유와 은결">
 <title>은유와 은결</title>
-<link rel="manifest" href="hub/manifest.json?v=202610291423">
-<link rel="apple-touch-icon" href="hub/icons/icon-180.png?v=202610291423">
-<link rel="icon" type="image/png" sizes="32x32" href="hub/icons/favicon-32.png?v=202610291423">
-<link rel="icon" type="image/png" sizes="16x16" href="hub/icons/favicon-16.png?v=202610291423">
-<link rel="icon" type="image/png" sizes="192x192" href="hub/icons/favicon-192.png?v=202610291423">
-<link rel="shortcut icon" href="favicon.ico?v=202610291423">
+<link rel="manifest" href="hub/manifest.json?v=202610310840">
+<link rel="apple-touch-icon" href="hub/icons/icon-180.png?v=202610310840">
+<link rel="icon" type="image/png" sizes="32x32" href="hub/icons/favicon-32.png?v=202610310840">
+<link rel="icon" type="image/png" sizes="16x16" href="hub/icons/favicon-16.png?v=202610310840">
+<link rel="icon" type="image/png" sizes="192x192" href="hub/icons/favicon-192.png?v=202610310840">
+<link rel="shortcut icon" href="favicon.ico?v=202610310840">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="hub/hub.css?v=202610291423">
+<link rel="stylesheet" href="hub/hub.css?v=202610310840">
 </head>
 <body>
 <div id="safe"></div>
@@ -39,39 +43,28 @@
 
   <!-- 2. 로비 (게임 고르기) — 처음 들어오면 보이는 화면 -->
   <section id="scrLobby" class="screen hidden">
-    <div class="lb-scroll">
-      <header class="lb-top">
-        <div class="lb-me">
-          <img id="meFace" class="lb-face" alt="">
-          <div class="lb-meinfo">
-            <div class="lb-namerow"><b id="meName"></b><button id="btnMeRename" class="lb-pen" aria-label="이름 바꾸기">✏️</button></div>
-            <div class="lb-lv"><span id="meLv" class="lb-lvtag">Lv.1</span><span class="lb-bar"><i id="meLvBar"></i></span></div>
-            <div id="meLvTxt" class="lb-lvtxt">0 / 500</div>
-          </div>
-        </div>
-        <div class="lb-pills">
-          <button class="lb-pill" data-open="shop" aria-label="코인 · 아이템샵"><i class="coin"></i><b id="meCoins">0</b><span class="lb-plus">+</span></button>
-          <div class="lb-pill"><i class="star"></i><b id="meStars">0</b></div>
-        </div>
-        <nav class="lb-btns">
-          <button class="lb-btn" data-go="select"><img src="hub/ui/ic_char.webp?v=202610291423" alt=""><span>캐릭터</span></button>
-          <button class="lb-btn" data-go="records"><img src="hub/ui/ic_book.webp?v=202610291423" alt=""><span>기록</span></button>
-          <button class="lb-btn" id="btnSettings"><img src="hub/ui/ic_set.webp?v=202610291423" alt=""><span>설정</span></button>
-        </nav>
-      </header>
-      <div class="lb-body">
-        <div class="lb-side">
-          <div class="lb-hero"><img src="hub/ui/title.webp?v=202610291423" alt="은유와 은결의 미니게임랜드"></div>
-          <div class="lb-shoprow">
-            <button class="lb-shop" data-open="shop"><img src="hub/ui/shop.webp?v=202610291423" alt="아이템샵 — 게임을 더 재미있게!"></button>
-            <div class="lb-items">
-              <div class="lb-items-h">보유 아이템</div>
-              <div id="meItems" class="lb-itemlist"></div>
-            </div>
-          </div>
-        </div>
-        <div id="gameGrid" class="lb-grid"></div>
+    <!-- 놀이공원 (v0.2): 위아래로 스크롤. 게임 = 놀이기구, 맨 위 1자리는 항상 Open soon. 그림은 hub/park/ -->
+    <div class="pk-side"></div>
+    <div id="pkScroll" class="pk-scroll"><div id="pkWorld" class="pk-world"></div></div>
+    <header class="pk-top">
+      <div class="pk-logo"><img src="hub/park/ui/logo.webp?v=202610310840" alt="Twin Gameland"><span class="pk-ribbon">놀고, 꾸미고, 나만의 게임랜드!</span></div>
+      <div class="pk-pills">
+        <button class="pk-pill" data-open="shop" aria-label="코인 · 아이템샵"><i class="coin"></i><b id="meCoins">0</b><span class="pk-plus">+</span></button>
+        <div class="pk-pill"><img src="hub/park/ui/star.webp?v=202610310840" alt=""><b id="meStars">0</b></div>
+        <button id="btnGems" class="pk-pill" aria-label="다이아"><img src="hub/park/ui/gem.webp?v=202610310840" alt=""><b id="meGems">0</b><span class="pk-plus">+</span></button>
+        <button id="btnSettings" class="pk-icon" aria-label="설정"><img src="hub/park/ui/settings.webp?v=202610310840" alt=""></button>
       </div>
+    </header>
+    <img id="pkCoaster" class="pk-coaster" alt="">
+    <button id="pkMe" class="pk-me" aria-label="캐릭터 바꾸기">
+      <img id="meFace" class="pk-face" alt="">
+      <span class="pk-meinfo"><b id="meName"></b><span class="pk-lv"><span id="meLv">Lv.1</span><span class="pk-bar"><i id="meLvBar"></i></span></span></span>
+    </button>
+    <button id="pkEdit" class="pk-edit" aria-label="놀이기구 자리 바꾸기"><img src="hub/park/ui/edit.webp?v=202610310840" alt=""><span>편집</span></button>
+    <div id="pkEditBar" class="pk-editbar hidden">
+      <span>놀이기구를 눌러 고르고, 바꿀 자리를 눌러요<small>끌어서 옮겨도 돼요</small></span>
+      <button id="pkReset" class="pk-reset">처음대로</button>
+      <button id="pkDone" class="pk-done">완료</button>
     </div>
   </section>
 
@@ -140,11 +133,13 @@
 
   <div id="popSettings" class="modal hidden">
     <div class="panel">
-      <div class="p-title">설정</div>
+      <div class="p-title">설정 <small class="ver">v0.2</small></div>
       <div class="set-list">
         <button id="setSound" class="set-row"><span>🔊 소리</span><b id="setSoundVal">켜짐</b></button>
         <button id="setRename" class="set-row"><span>✏️ 이름 바꾸기</span><b>›</b></button>
         <button class="set-row" data-go="select"><span>👦 캐릭터 바꾸기</span><b>›</b></button>
+        <button class="set-row" data-go="records"><span>📖 기록</span><b>›</b></button>
+        <button id="setOld" class="set-row"><span>🕰️ 예전 첫 화면 보기 (v0.1)</span><b>›</b></button>
       </div>
       <div class="row"><button class="btn-main" data-close>닫기</button></div>
     </div>
@@ -172,14 +167,14 @@
   <div id="scrTitle" class="title-scr hidden">
     <div id="tsBg" class="ts-bg"></div>
     <img id="tsArt" class="ts-art" alt="">
-    <button id="tsBack" class="ts-back" aria-label="뒤로"><img src="hub/ui/back.webp?v=202610291423" alt=""></button>
-    <button id="tsStart" class="ts-start" aria-label="START"><img src="hub/ui/btn_start.webp?v=202610291423" alt="START"></button>
+    <button id="tsBack" class="ts-back" aria-label="뒤로"><img src="hub/ui/back.webp?v=202610310840" alt=""></button>
+    <button id="tsStart" class="ts-start" aria-label="START"><img src="hub/ui/btn_start.webp?v=202610310840" alt="START"></button>
   </div>
 
-<script src="common/chars/looks.js?v=202610291423"></script>
-<script src="common/profile.js?v=202610291423"></script>
-<script src="common/charv2.js?v=202610291423"></script>
-<script src="common/ui.js?v=202610291423"></script>
-<script src="hub/hub.js?v=202610291423"></script>
+<script src="common/chars/looks.js?v=202610310840"></script>
+<script src="common/profile.js?v=202610310840"></script>
+<script src="common/charv2.js?v=202610310840"></script>
+<script src="common/ui.js?v=202610310840"></script>
+<script src="hub/hub.js?v=202610310840"></script>
 </body>
 </html>

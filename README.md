@@ -8,6 +8,20 @@
 
 고친 뒤 `git push` 하면 1~2분 안에 위 주소에 반영돼요.
 
+## 버전 (첫 화면)
+
+| 버전 | 주소 | 내용 |
+| --- | --- | --- |
+| **v0.2** (지금) | https://sangbiny-creater.github.io/twin-gameland/ | 놀이공원 첫 화면: 게임 = 놀이기구, 위아래 스크롤, 편집(자리 바꾸기), 롤러코스터 프로필, 다이아 자리 |
+| v0.1 (보관) | https://sangbiny-creater.github.io/twin-gameland/v0.1/ | 예전 첫 화면(게임 카드 목록). 설정 → '예전 첫 화면 보기'로도 들어감 |
+
+- 게임·아이템샵·저장 데이터는 두 버전이 같이 써요. 첫 화면만 달라요.
+- v0.1은 `v0.1/` 폴더(index.html·hub.js·hub.css)에 얼려 둔 것 — 고치지 않아요. v0.1이 쓰는 그림(`hub/cards`, `hub/ui` 등)은 지우지 않기.
+- v0.1에서 게임을 하고 돌아오면 같은 탭에서는 v0.1 첫 화면으로 돌아와요(`sessionStorage` 의 `twin_ver`). 오른쪽 아래 'v0.1 · 새 버전으로'를 누르면 v0.2로.
+- 놀이공원 그림: `hub/park/`(배경 `bg/`, 놀이기구 `rides/<게임>.webp` — 받침 크기·자리가 모두 같음, 롤러코스터 `coaster/`, `ui/`), 만드는 도구 `tools/park_assets.py`.
+  새 게임을 추가하면 놀이기구 그림 `hub/park/rides/<게임>.webp`과 `hub/hub.js` 의 `EN_NAME`에 영어 이름을 넣어요. 자리·배경은 저절로 늘어나요.
+- 화면 확인 도구: `node tools/screen_check.mjs <폴더> [이름 필터]` (헤드리스 Chrome으로 폰·태블릿 화면 캡처 + 오류·404 + 놀이공원 편집 시험).
+
 ## 로컬 실행
 
 ```bash

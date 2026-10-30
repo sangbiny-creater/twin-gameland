@@ -4,7 +4,7 @@
 //  · 게임 카드(스크롤해도 고정)로 게임을 고르면 그 게임의 게임 부스트 / 보유 아이템이 보임
 //  · 게임 부스트: 1개씩 사서 모음. 수량은 구매·게임 보상·게임에서 사용 모두 같은 숫자(common/profile.js)
 const $ = (id) => document.getElementById(id);
-const V = '?v=202610291423'; // bump when images change so phones don't show old cached ones
+const V = '?v=202610310840'; // bump when images change so phones don't show old cached ones
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 
 const GAMES = [
@@ -249,3 +249,5 @@ window.addEventListener('pageshow', () => { Hub.reload(); Hub.starterKit('shisen
 renderHeader(); renderAll();
 // 고른 게임 카드가 보이게
 requestAnimationFrame(() => { const on = document.querySelector('.game.on'); if (on) on.scrollIntoView({ inline: 'center', block: 'nearest' }); window.scrollTo(0, 0); });
+// 첫 화면 놀이공원의 '꾸미기 가게'로 들어오면 (?dress=1) 캐릭터 꾸미기를 바로 엶
+if (q.get('dress')) openDress();
