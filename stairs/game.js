@@ -47,7 +47,7 @@ const rand = (a, b) => a + (b - a) * Math.random();
 const $ = (id) => document.getElementById(id);
 
 // ---------- sprites ----------
-const ASSET_V = '202611010110'; // 캐시 버전 (tools/bump_version.py가 올림)
+const ASSET_V = '202611010123'; // 캐시 버전 (tools/bump_version.py가 올림)
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -167,6 +167,8 @@ const G = {
   themeIdx: 0, prevTheme: 0, themeFade: 1, newBest: false, shake: 0, tickT: 0, pos: { x: 0, y: 0 }, vy: 0, rot: 0,
 };
 
+// 'N판부터 시작': 판 = 배경 구간 100칸 (CFG.themeEvery)
+const zoneOf = (i) => Math.floor(i / CFG.themeEvery) + 1;
 function themeAt(i) { return Math.floor(i / CFG.themeEvery) % THEMES.length; }
 
 // ---------- stairs generation ----------
@@ -209,7 +211,7 @@ function worldOf(i, col) { return { x: col * CFG.stepDX, y: -i * CFG.stepDY }; }
 function resetRun() {
   G.t = 0; G.steps = []; genDir = Math.random() < 0.5 ? 1 : -1; genRun = 0;
   ensureSteps(40);
-  G.idx = 0; G.dir = G.steps[1].col - G.steps[0].col;
+  G.idx = 0; G.i0 = 0; G.dir = G.steps[1].col - G.steps[0].col;
   G.hearts = 2; G.heartsMax = CFG.heartsMax; G.slowT = 0; G.coins = 0; G.time = CFG.time0; // 하트: 3칸에 2개 (하트 아이템 = 4칸에 3개) G.coinBase = 0; G.contUsed = false;
   G.anim = null; G.queue = []; G.boost = 0; G.wing = 0; G.shield = false; G.magnetT = 0; G.x2T = 0;
   G.fx = []; G.texts = []; G.fallT = 0; G.pose = 'ready'; G.poseT = 0; G.rot = 0;
@@ -231,11 +233,21 @@ function resetRun() {
   renderHearts(); renderBuffs(); updateTurnBtn();
   $('hudBest').textContent = Save.data.best;
 }
-function startRun() { resetRun(); setState('ready'); Audio.startBgm(); }
+function startRun(zone = 1) {
+  resetRun();
+  // N판부터: 그 판의 첫 계단에서 (배경·시간 줄어드는 빠르기도 그 높이에 맞게). 기록은 여기서부터 오른 칸만
+  if (zone > 1) {
+    const i = (zone - 1) * CFG.themeEvery; ensureSteps(i + 40);
+    G.idx = G.i0 = i; const p = worldOf(i, G.steps[i].col); G.pos = { x: p.x, y: p.y }; G.cam.x = p.x; G.cam.y = p.y;
+    G.dir = G.steps[i + 1].col - G.steps[i].col; G.themeIdx = G.prevTheme = themeAt(i); updateTurnBtn();
+  }
+  setState('ready'); Audio.startBgm();
+}
+const climbed = () => G.idx - (G.i0 || 0); // 이번 판에 오른 칸
 // 시작 팝업 (common/gamepop.js): 아이템 고르기 → 시작. 결과 창 '다시하기'도 이 팝업으로
 function askStart() {
   if (!window.GamePop || !HUB) { startRun(); return; }
-  GamePop.start({ game: 'stairs', onStart: () => startRun(), onClose: goHome });
+  GamePop.start({ game: 'stairs', from: Math.max(HUB.rec('stairs').maxLevel || 1, zoneOf(HUB.rec('stairs').best || 0)) - 1, /* 예전 기록(처음부터 간 거리)으로도 판을 셈 */ onStart: (n) => startRun(n), onClose: goHome });
 }
 // 광고 보고 이어하기 (common/monet.js): 그 계단에서 다시, 화면을 한 번 터치하면 출발. 한 판에 한 번
 window.GameContinue = {
@@ -289,7 +301,7 @@ function arrive(s) {
     G.prevTheme = G.themeIdx; G.themeIdx = ti; G.themeFade = 0;
     banner(`${String(ti + 1).padStart(2, '0')} ${THEMES[ti].name}`); Audio.sfx('theme');
   }
-  if (!G.newBest && Save.data.best >= 20 && G.idx > Save.data.best) { G.newBest = true; banner('NEW BEST!'); Audio.sfx('best'); }
+  if (!G.newBest && Save.data.best >= 20 && climbed() > Save.data.best) { G.newBest = true; banner('NEW BEST!'); Audio.sfx('best'); }
   if (s.item) { collect(s.item, s); s.item = null; }
   if (s.type === 'speed' && !s.used) { s.used = true; startBoost(8); }
   if (s.type === 'special' && !s.used) { s.used = true; collect(randomItem(), s); }
@@ -609,7 +621,7 @@ function updateHud() {
   const key = G.idx + '|' + G.coins + '|' + t;
   if (key === lastHud) return;
   lastHud = key;
-  $('hudHeight').textContent = G.idx; $('hudCoin').textContent = G.coins; $('hudTime').textContent = t;
+  $('hudHeight').textContent = climbed(); $('hudCoin').textContent = G.coins; $('hudTime').textContent = t;
   $('timerPill').classList.toggle('warn', G.time < 5 && G.state === 'play');
 }
 function renderHearts(pop) {
@@ -657,14 +669,14 @@ function refreshHome() {
 }
 function gameOver() { Audio.sfx('gameover'); Audio.stopBgm(); showResult(); }
 function showResult() {
-  const m = G.idx;
+  const m = climbed();
   const isBest = m > (Save.data.best || 0);
   if (isBest) Save.data.best = m;
   Save.data.totalCoin = (Save.data.totalCoin || 0) + G.coins;
   if (!HUB) Save.store();
   $('resEarn').classList.toggle('hidden', !HUB);
   if (HUB) {
-    const h = HUB.record('stairs', { dist: m, coins: G.coins - G.coinBase }); // 이어하기 전에 받은 코인은 빼고
+    const h = HUB.record('stairs', { dist: m, coins: G.coins - G.coinBase, level: zoneOf(G.idx) }); // level = 도착한 판 // 이어하기 전에 받은 코인은 빼고
     $('resEarn').innerHTML = `+${h.earned} 코인 획득!` + (h.bonus ? ` <small>(높이 보너스 +${h.bonus})</small>` : '') + `<small>내 코인 ${h.coins}</small>`;
   }
   $('resFace').src = (window.Costume && Costume.src) || `assets/chars/${Save.data.char}_${isBest && m > 0 ? 'happy' : 'dead'}.webp`;

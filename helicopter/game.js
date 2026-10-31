@@ -48,12 +48,12 @@ const $ = (id) => document.getElementById(id);
 
 // ---------- sprites (asset.PNG cut into assets/sprites/sprites.webp + sprites.json) ----------
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
-fetch('assets/sprites/sprites.json?v=202611010110').then((r) => r.json()).then((j) => {
+fetch('assets/sprites/sprites.json?v=202611010123').then((r) => r.json()).then((j) => {
   SP.f = j;
   SP.img.onload = () => { SP.ready = true; };
-  SP.img.src = 'assets/sprites/sprites.webp?v=202611010110';
+  SP.img.src = 'assets/sprites/sprites.webp?v=202611010123';
 });
-for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=202611010110`; SP.bg.push(im); }
+for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=202611010123`; SP.bg.push(im); }
 // draw sprite centered at (x,y) with its width scaled to w (height keeps aspect)
 function spr(g, name, x, y, w, rot = 0, alpha = 1) {
   if (!SP.ready || !SP.f[name]) return;
@@ -188,6 +188,8 @@ const input = { down: false, pressed: false }; // pressed: a tap shorter than on
 
 // 아이템샵 스킨 → 이 게임에 있는 배경 그림 번호 (없는 스킨은 common/skins.js가 그림)
 const SKIN_THEME = { forest: 1, park: 2, winter: 3, sunset: 4 };
+// 'N판부터 시작': 판 = 배경 구간 500m (CFG.themeEvery)
+const zoneOf = (m) => Math.floor(m / CFG.themeEvery) + 1;
 function themeAt(m) { return Math.floor(m / CFG.themeEvery) % THEMES.length; }
 
 // 새 캐릭터(v2)도 색은 같은 계열 기본 캐릭터를 따름
@@ -197,7 +199,7 @@ function newHeli() {
 }
 
 function resetRun() {
-  G.t = 0; G.dist = 0; G.speed = CFG.speed0; G.coins = 0; G.hp = CFG.hpStart; G.coinBase = 0; G.contUsed = false;
+  G.t = 0; G.dist = 0; G.d0 = 0; G.speed = CFG.speed0; G.coins = 0; G.hp = CFG.hpStart; G.coinBase = 0; G.contUsed = false;
   G.heli = newHeli();
   G.pipes = []; G.items = []; G.obs = []; G.fx = []; G.texts = []; G.deco = [];
   G.nextPipeX = W * 0.95; G.gapY = H * 0.47;
@@ -222,15 +224,23 @@ function resetRun() {
   $('hudProgFace').style.backgroundImage = `url(${(window.Costume && Costume.src) || `assets/chars/face_${Save.data.char}.webp`})`;
 }
 
-function startRun() {
+function startRun(zone = 1) {
   resetRun();
+  // N판부터: 그 판의 시작 지점에서 (배경·기둥도 그 지점에 맞게). 기록은 여기서부터 간 거리만
+  if (zone > 1) {
+    G.dist = G.d0 = (zone - 1) * CFG.themeEvery * CFG.pxPerM; G.nextPipeX = G.dist + W * 0.95;
+    G.themeIdx = G.prevTheme = themeAt(G.dist / CFG.pxPerM);
+    // 속도는 처음부터 날아와 이 지점에 왔을 때만큼 (속도가 시간에 따라 빨라짐: 거리 = v0·t + a·t²/2 를 풀어서)
+    const a = CFG.speedGain, v0 = CFG.speed0, t = (-v0 + Math.sqrt(v0 * v0 + 2 * a * G.dist)) / a;
+    G.speed = Math.min(CFG.speedMax, v0 + a * t);
+  }
   setState('ready');
   Audio.startBgm();
 }
 // 시작 팝업 (common/gamepop.js): 아이템 고르기 → 시작. 결과 창 '다시하기'도 이 팝업으로
 function askStart() {
   if (!window.GamePop || !HUB) { startRun(); return; }
-  GamePop.start({ game: 'helicopter', onStart: () => startRun(), onClose: goHome });
+  GamePop.start({ game: 'helicopter', from: Math.max(HUB.rec('helicopter').maxLevel || 1, zoneOf(HUB.rec('helicopter').best || 0)) - 1, /* 예전 기록(처음부터 간 거리)으로도 판을 셈 */ onStart: (n) => startRun(n), onClose: goHome });
 }
 // 광고 보고 이어하기 (common/monet.js): 그 자리에서 하트 1개로, 앞의 장애물은 치우고, 화면을 한 번 터치하면 출발. 한 판에 한 번
 window.GameContinue = {
@@ -354,8 +364,8 @@ function step(dt) {
   }
 
   // theme by distance
-  const m = G.dist / CFG.pxPerM;
-  const ti = themeAt(m);
+  const m = (G.dist - G.d0) / CFG.pxPerM; // 이번 판에 간 거리 (배경은 아래 themeAt 에서 실제 자리로)
+  const ti = themeAt(G.dist / CFG.pxPerM);
   if (ti !== G.themeIdx) {
     G.prevTheme = G.themeIdx; G.themeIdx = ti; G.themeFade = 0;
     banner(`${String(ti + 1).padStart(2, '0')} ${THEMES[ti].name}`);
@@ -641,7 +651,7 @@ function drawLabel(text, x, y, size) {
 // ---------- HUD ----------
 let lastHud = '';
 function updateHud() {
-  const m = Math.floor(G.dist / CFG.pxPerM);
+  const m = Math.floor((G.dist - G.d0) / CFG.pxPerM);
   const key = m + '|' + G.coins;
   if (key !== lastHud) { lastHud = key; $('hudDist').textContent = m; $('hudCoin').textContent = G.coins; }
   const goal = Math.max(Save.data.best, 100);
@@ -689,14 +699,14 @@ function refreshHome() {
 }
 function showResult() {
   if (G.state === 'result') return;
-  const m = Math.floor(G.dist / CFG.pxPerM);
+  const m = Math.floor((G.dist - G.d0) / CFG.pxPerM);
   const isBest = m > (Save.data.best || 0);
   if (isBest) Save.data.best = m;
   Save.data.totalCoin = (Save.data.totalCoin || 0) + G.coins;
   if (!HUB) Save.store();
   $('resEarn').classList.toggle('hidden', !HUB);
   if (HUB) {
-    const h = HUB.record('helicopter', { dist: m, coins: G.coins - G.coinBase }); // 이어하기 전에 받은 코인은 빼고
+    const h = HUB.record('helicopter', { dist: m, coins: G.coins - G.coinBase, level: zoneOf(G.dist / CFG.pxPerM) }); // level = 도착한 판 // 이어하기 전에 받은 코인은 빼고
     $('resEarn').innerHTML = `+${h.earned} 코인 획득!` + (h.bonus ? ` <small>(거리 보너스 +${h.bonus})</small>` : '') + `<small>내 코인 ${h.coins}</small>`;
   }
   $('resFace').src = (window.Costume && Costume.src) || (window.CharV2 && CharV2.is(Save.data.char) ? `assets/chars/${Save.data.char}_crash.webp` : `assets/chars/${Save.data.char === 'eunyu' ? 'eunyu_crash' : 'eungyeol_6'}.webp`);

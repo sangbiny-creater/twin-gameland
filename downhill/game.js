@@ -65,7 +65,7 @@ const $ = (id) => document.getElementById(id);
 const rng = (seed) => { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let x = s; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; };
 
 // ---------- sprites ----------
-const ASSET_V = '202611010110';
+const ASSET_V = '202611010123';
 const SP = { img: new Image(), f: null, ready: false };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -198,6 +198,8 @@ const G = {
   invT: 0, hitT: 0, shield: false, magnetT: 0, x2T: 0, boostT: 0, wingT: 0, jumps: 0, jumpT: 0,
   combo: 0, maxCombo: 0, stageIdx: 0, prevStage: 0, stageFade: 1, newBest: false, shake: 0, lean: 0, overT: 0, nextBonus: 100,
 };
+// 'N판부터 시작': 판 = 300m 구간 (배경 STAGES 와 같은 간격, 1200m 뒤로도 300m마다 판 번호만 늘어남)
+const ZONE = 300, zoneOf = (d) => Math.floor(d / ZONE) + 1;
 const stageAt = (d) => { let k = 0; for (let i = 0; i < STAGES.length; i++) if (d >= STAGES[i].at) k = i; return k; };
 
 // ---------- 길 만들기 ----------
@@ -278,7 +280,7 @@ function resetRun() {
   G.invT = 0; G.hitT = 0; G.shield = false; G.magnetT = 0; G.x2T = 0; G.boostT = 0; G.wingT = 0;
   G.jumps = 0; G.jumpT = 0; G.jumpLen = CFG.jumpDur; // 점프하기 아이템은 판마다 0개부터 (죽으면 사라짐)
   G.hearts = CFG.hearts; G.maxHearts = CFG.hearts; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.coinBase = 0; G.contUsed = false;
-  G.stageIdx = 0; G.prevStage = 0; G.stageFade = 1; G.newBest = false; G.shake = 0; G.overT = 0; G.nextBonus = 100;
+  G.d0 = 0; G.stageIdx = 0; G.prevStage = 0; G.stageFade = 1; G.newBest = false; G.shake = 0; G.overT = 0; G.nextBonus = 100;
   while (G.nextDeco < CFG.spawnAhead) { spawnDeco(G.nextDeco); G.nextDeco += 3.2; }
   // 아이템샵: 적용한 배경 스킨 + '사용중' 부스트 (메인 화면에서 들어왔을 때만)
   G.skin = HUB ? HUB.equippedSkin('downhill') : 'default';
@@ -294,11 +296,21 @@ function resetRun() {
   renderHearts(); renderBuffs(); renderJump();
   $('hudBest').textContent = Save.data.best;
 }
-function startRun() { resetRun(); setState('ready'); Audio.startBgm(); }
+function startRun(zone = 1) {
+  resetRun();
+  // N판부터: 그 판의 시작 지점에서 (속도·배경·장애물도 그 지점에 맞게). 기록·보너스는 여기서부터 간 거리만
+  if (zone > 1) {
+    G.d = G.d0 = (zone - 1) * ZONE; G.v = Math.min(CFG.vMax, CFG.v0 + G.d / 100);
+    G.nextRow = G.d + 28; G.deco = []; G.nextDeco = G.d; while (G.nextDeco < G.d + CFG.spawnAhead) { spawnDeco(G.nextDeco); G.nextDeco += 3.2; }
+    G.stageIdx = G.prevStage = stageAt(G.d); G.nextBonus = G.d + 100;
+  }
+  setState('ready'); Audio.startBgm();
+}
+const gone = () => Math.floor(G.d - (G.d0 || 0)); // 이번 판에 간 거리
 // 시작 팝업 (common/gamepop.js): 아이템 고르기 → 시작. 결과 창 '다시하기'도 이 팝업으로
 function askStart() {
   if (!window.GamePop || !HUB) { startRun(); return; }
-  GamePop.start({ game: 'downhill', onStart: () => startRun(), onClose: goHome });
+  GamePop.start({ game: 'downhill', from: Math.max(HUB.rec('downhill').maxLevel || 1, zoneOf(HUB.rec('downhill').best || 0)) - 1, /* 예전 기록(처음부터 간 거리)으로도 판을 셈 */ onStart: (n) => startRun(n), onClose: goHome });
 }
 // 광고 보고 이어하기 (common/monet.js): 그 자리에서 하트 1개로, 바로 앞 장애물은 치우고, 화면을 한 번 터치하면 출발. 한 판에 한 번
 window.GameContinue = {
@@ -363,7 +375,7 @@ function step(dt) {
   // 배경 바뀜
   const si = stageAt(G.d);
   if (si !== G.stageIdx) { G.prevStage = G.stageIdx; G.stageIdx = si; G.stageFade = 0; banner(`STAGE ${si + 1} · ${STAGES[si].name}`); Audio.sfx('stage'); }
-  if (!G.newBest && Save.data.best >= 100 && G.d > Save.data.best) { G.newBest = true; banner('🎉 NEW RECORD!'); Audio.sfx('best'); }
+  if (!G.newBest && Save.data.best >= 100 && gone() > Save.data.best) { G.newBest = true; banner('🎉 NEW RECORD!'); Audio.sfx('best'); }
   // 거리 보너스 표시 (100m마다 +5, 결과에서 지급)
   if (G.d >= G.nextBonus) { G.nextBonus += 100; }
   // 장애물
@@ -839,10 +851,10 @@ function drawLabel(text, x, y, size) {
 // ---------- HUD ----------
 let lastHud = '';
 function updateHud() {
-  const key = Math.floor(G.d) + '|' + G.coins;
+  const key = gone() + '|' + G.coins;
   if (key === lastHud) return;
   lastHud = key;
-  $('hudDist').textContent = Math.floor(G.d).toLocaleString(); $('hudCoin').textContent = G.coins;
+  $('hudDist').textContent = gone().toLocaleString(); $('hudCoin').textContent = G.coins;
 }
 function renderHearts(pop) {
   const el = $('hudHearts'); el.innerHTML = '';
@@ -894,14 +906,14 @@ function refreshHome() {
 }
 function gameOver() { G.state = 'over'; G.overT = 0; Audio.sfx('gameover'); Audio.stopBgm(); setState('over'); }
 function showResult() {
-  const m = Math.floor(G.d);
+  const m = gone();
   const isBest = m > (Save.data.best || 0) && m > 0;
   if (isBest) Save.data.best = m;
   Save.data.totalCoin = (Save.data.totalCoin || 0) + G.coins;
   if (!HUB) Save.store();
   $('resEarn').classList.toggle('hidden', !HUB);
   if (HUB) {
-    const h = HUB.record('downhill', { dist: m, coins: G.coins - G.coinBase }); // 이어하기 전에 받은 코인은 빼고
+    const h = HUB.record('downhill', { dist: m, coins: G.coins - G.coinBase, level: zoneOf(G.d) }); // level = 도착한 판 (다음에 'N판부터') // 이어하기 전에 받은 코인은 빼고
     $('resEarn').innerHTML = h.god ? '무적 모드라서 기록·코인이 없어요' : `+${h.earned} 코인 획득!` + (h.bonus ? ` <small>(거리 보너스 +${h.bonus})</small>` : '') + `<small>내 코인 ${h.coins}</small>`;
   }
   $('resFace').src = window.CharV2 && CharV2.is(lookOf(Save.data.char)) ? CharV2.url(lookOf(Save.data.char), isBest ? 'back_happy' : 'back_dead') : iconURL(`${Save.data.char}_${isBest ? 'happy' : 'dead'}`);

@@ -6,7 +6,7 @@
   const MAIN = ['btnNext', 'btnResume', 'btnFromLv'];                   // ② 큰 버튼
   const BACK = /^(btnHome|btnMap|btnReadyMap|btnReadyHome|btnChooseBack|btnFromStart)/; // 파란 버튼 (나가기·뒤로)
   // 버튼 색 약속 (docs/spec/팝업_아이템_정리_v1.md): 민트 = 메인으로·게임 선택 / 보라 = 지도 보기 / 파랑 = 다음 스테이지·XX판부터 / 나머지 분홍
-  const COLOR = { btnHomeR: 'mint', btnHomeP: 'mint', btnReadyHome: 'mint', btnMapR: 'purple', btnMapP: 'purple', btnReadyMap: 'purple', btnNext: 'blue', btnFromLv: 'blue' };
+  const COLOR = { btnHomeR: 'mint', btnHomeP: 'mint', btnReadyHome: 'mint', btnMapR: 'purple', btnMapP: 'purple', btnReadyMap: 'purple', btnNext: 'blue', btnFromLv: 'blue', gpFrom: 'blue' };
   const paint = (b) => { const c = COLOR[b.id] || (isBack(b) ? 'blue' : ''); for (const k of ['blue', 'mint', 'purple']) b.classList.toggle(k, k === c); };
   const ACTION = /(^|\s)(btn|btn-start|btn-sub|btn-main|btn-orange|btn-blue|btn-gray|mbtn|rb)(\s|$)/;
   const PANELS = '.screen.dim > .panel, #ready > .panel, .modal > .panel, .modal > .mpanel';
