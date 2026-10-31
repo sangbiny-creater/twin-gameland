@@ -9,9 +9,10 @@
 let W = 540, H = 960;
 const BASE_TILES = ['strawberry', 'banana', 'grape', 'cherry', 'orange', 'peach', 'watermelon', 'carrot', 'corn', 'mushroom',
   'clover', 'flower', 'star', 'heart', 'leaf', 'snowflake', 'sun', 'cloud', 'moon', 'cat', 'dog', 'paw'].map((n) => 't_' + n);
-// 다른 게임(메모리·두더지·베이커리·헬리콥터·다운힐·계단·멍멍이 간식)에서 가져온 아이콘 타일 42종 → assets/sprites/extra.webp
+// 다른 게임(메모리·두더지·베이커리·하늘타기·다운힐·계단·멍멍이 간식)에서 가져온 아이콘 타일 41종 → assets/sprites/extra.webp
+//  (헬리콥터 타일 x_mem_heli 는 그림 묶음에 남아 있지만 안 씀 — Sky Rider 로 이름이 바뀌어 헬리콥터 그림이 안 나오게, QA 21)
 //  (tools/shisen_extra_tiles.py 로 만듦). 기본 그림과 섞여서 판마다 무작위로 뽑힘
-const EXTRA_TILES = ['mem_raincoat', 'mem_hug', 'mem_book', 'mem_explorer', 'mem_pinkhat', 'mem_bluehat', 'mem_pom', 'mem_dogs', 'mem_heli', 'mem_cake',
+const EXTRA_TILES = ['mem_raincoat', 'mem_hug', 'mem_book', 'mem_explorer', 'mem_pinkhat', 'mem_bluehat', 'mem_pom', 'mem_dogs', 'mem_cake',
   'mole', 'mole_fast', 'mole_tough', 'hammer', 'cupcake', 'muffin', 'burnt', 'eclair', 'roll', 'piping',
   'windmill', 'airship', 'seagull', 'bolt', 'magnet', 'flag', 'penguin', 'snowman', 'pines', 'log', 'fence', 'gift', 'mystery', 'alarm',
   'bone', 'bone_gold', 'choco', 'onion', 'sausage', 'shihtzu', 'poodle', 'pomdog'].map((n) => 'x_' + n);
@@ -55,7 +56,7 @@ const mmss = (t) => { t = Math.max(0, Math.ceil(t)); return `${String(Math.floor
 function shuffleArr(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 // ---------- sprites ----------
-const ASSET_V = '202610311834';
+const ASSET_V = '202610311940';
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => { SP.f = j; SP.img.onload = () => { SP.ready = true; }; SP.img.src = `assets/sprites/sprites.webp?v=${ASSET_V}`; });
 const EXTRA_V = '20261027a';

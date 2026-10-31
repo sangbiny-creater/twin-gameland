@@ -133,6 +133,18 @@ add('hub-unlock-pp', 'index.html#lobby', { vp: 'pp', ch: 'c4', wait: 3000, js: `
   const blocked = !!document.querySelector('.mn-block'); const r = document.querySelector('.pk-ride[data-id=bakery]').getBoundingClientRect();
   const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); await sl(1800); // 열리는 동안 다른 놀이기구 자리를 누르면 막(mn-block)이 받음
   return { blocked, tapGoesTo: hit && hit.className, intro: (document.querySelector('.intro:not(.hidden), #intro:not(.hidden), [class*=title]:not(.hidden) img') || {}).src || location.hash }; })()`, wait2: 300 });
+// 이름표 6가지 (QA 17): 글자가 칸을 넘는지(가로·세로), 글자 끝과 칸 테두리 사이 여백(px)
+for (const [n, id] of [[1, 'wood'], [2, 'ribbon'], [3, 'star'], [4, 'rabbit'], [5, 'rainbow'], [6, 'flower']]) for (const [k, top] of [['bottom', 99999], ['top', 0]]) {
+  add(`plate-${id}-${k}-pp`, 'index.html#lobby', { vp: 'pp', js: `(async () => { Hub.setParkDeco('plate', ${n}); renderPark(); document.getElementById('pkScroll').scrollTop = ${top}; await new Promise((r) => setTimeout(r, 500));
+    return [...document.querySelectorAll('.pk-ride:not(.soon) .name')].map((nm) => { const box = nm.getBoundingClientRect(), cs = getComputedStyle(nm);
+      const inL = box.left + parseFloat(cs.paddingLeft) * 0, rng = document.createRange(); let minM = 99, over = nm.scrollHeight > nm.clientHeight + 0.5;
+      for (const e of nm.querySelectorAll('b, small')) { if (e.scrollWidth > e.clientWidth + 0.5) over = true; rng.selectNodeContents(e); const t = rng.getBoundingClientRect();
+        const P = ${JSON.stringify({})}; minM = Math.min(minM, t.left - box.left, box.right - t.right); }
+      return { t: nm.querySelector('b').textContent, over, edge: Math.round(minM), w: Math.round(box.width) }; }); })()`, wait2: 200 });
+}
+for (const [n, id] of [[2, 'star'], [3, 'rabbit'], [4, 'rainbow'], [5, 'heart'], [6, 'flower']]) add(`logo-${id}-pp`, 'index.html#lobby', { vp: 'pp', js: `(() => { Hub.mutate((c) => { c.gems = 100; }); const r = Hub.buyParkItem('logo', ${n}); Hub.setParkDeco('logo', ${n}); renderLogo(); return r.ok; })()`, wait2: 600 });
+add('hub-intro-helicopter-pp', 'index.html#lobby', { vp: 'pp', js: `document.querySelector('.pk-ride[data-id=helicopter]').click()`, wait2: 1500 });
+add('hub-intro-helicopter-pl', 'index.html#lobby', { vp: 'pl', js: `document.querySelector('.pk-ride[data-id=helicopter]').click()`, wait2: 1500 });
 add('hub-create-pp', 'index.html#select', { vp: 'pp', empty: true, js: `document.querySelector('.sel-char').click()`, wait2: 500 });
 add('hub-deco-logo-pp', 'index.html#lobby', { vp: 'pp', js: `document.querySelector('.pk-logo').click()`, wait2: 500 });
 add('hub-gemshop-pp', 'index.html#lobby', { vp: 'pp', js: `document.getElementById('btnGems').click()`, wait2: 500 });

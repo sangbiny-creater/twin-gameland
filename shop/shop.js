@@ -4,7 +4,7 @@
 //  · 게임 카드(스크롤해도 고정)로 게임을 고르면 그 게임의 게임 부스트 / 보유 아이템이 보임
 //  · 게임 부스트: 1개씩 사서 모음. 수량은 구매·게임 보상·게임에서 사용 모두 같은 숫자(common/profile.js)
 const $ = (id) => document.getElementById(id);
-const V = '?v=202610311834'; // bump when images change so phones don't show old cached ones
+const V = '?v=202610311940'; // bump when images change so phones don't show old cached ones
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 
 const GAMES = [
@@ -243,8 +243,8 @@ function renderPark() {
   for (const [kind, K] of Object.entries(Hub.PARK_ITEMS)) {
     const row = document.createElement('div'); row.className = 'park-row';
     row.innerHTML = `<div class="park-k">${K.name}</div><div class="bgrid"></div>`;
-    K.items.forEach((name, k) => {
-      const n = k + 1, own = Hub.ownsParkItem(kind, n), d = document.createElement('div'), img = '../' + Hub.parkItemImg(kind, n) + V;
+    K.order.forEach((n) => {
+      const k = n - 1, name = K.items[k], own = Hub.ownsParkItem(kind, n), d = document.createElement('div'), img = '../' + Hub.parkItemImg(kind, n) + V;
       d.className = `bcard park-card ${kind}` + (own ? ' owned' : '') + (!own && gems() < K.price ? ' poor' : '');
       d.innerHTML = `<span class="park-theme">${(K.themes && K.themes[k]) || ''}</span><img class="bi" src="${img}" alt=""><div class="bn"></div>`
         + (own ? '<div class="cnt-pill">가지고 있어요</div>' : `<button class="price-pill gem"><img src="${GEM}" alt="">${K.price}</button>`);

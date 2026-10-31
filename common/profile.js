@@ -159,13 +159,22 @@
   // 테마(별·토끼·무지개·하트·꽃·기본)마다 동상·분수·대문·이름표·로고가 하나씩 (그림을 받는 대로 items 에 추가)
   // 그림: 동상·분수·대문 hub/park/items/<종류>_<번호>.webp, 이름표 hub/park/ui/plate_<id>.webp, 로고 hub/park/ui/logo(_<id>).webp
   // 캐릭터마다: parkItems = { statue: [2, 4] … 산 번호 }, parkDeco = { '<구간>-<종류>': 번호, plate: 번호, logo: 번호 }
+  // 기본(성) 테마: 대문 6번(로고 같은 성 대문), 동상 6번 은결·7번 은유(돌 동상), 분수 6번(돌 분수), 이름표 1번(나무), 로고 1번 — 처음부터 가짐 (free)
+  //  예전에 처음부터 주던 1번(토끼 동상·별 분수·토끼 성 대문)도 그대로 가짐. 기본으로 놓이는 것: def (동상은 캐릭터 따라 은유 7번 / 은결 6번)
   const PARK_ITEMS = {
-    statue: { name: '동상', price: 20, items: ['토끼 동상', '별 트로피', '하트 곰', '무지개 유니콘', '왕관 강아지'], themes: ['토끼', '별', '하트', '무지개', '특별'] },
-    fountain: { name: '분수', price: 30, items: ['별 분수', '하트 분수', '고래 분수', '무지개 분수', '꽃 분수'], themes: ['별', '하트', '특별', '무지개', '꽃'] },
-    gate: { name: '대문', price: 40, items: ['토끼 성 대문', '사탕 과자 대문', '꽃 정원 대문', '별빛 우주 대문', '겨울 눈 성 대문'], themes: ['토끼', '특별', '꽃', '별', '특별'] },
-    plate: { name: '이름표', price: 20, items: ['나무 이름표', '리본 이름표'], ids: ['wood', 'ribbon'], themes: ['기본', '하트'] },
-    logo: { name: '로고', price: 30, items: ['기본 로고'], ids: [''], themes: ['기본'] },
+    statue: { name: '동상', price: 20, items: ['토끼 동상', '별 트로피', '하트 곰', '무지개 유니콘', '왕관 강아지', '은결 동상', '은유 동상', '꽃 요정 동상'],
+      themes: ['토끼', '별', '하트', '무지개', '특별', '기본', '기본', '꽃'], free: [1, 6, 7], def: { eunyu: 7, eungyeol: 6 } },
+    fountain: { name: '분수', price: 30, items: ['별 분수', '하트 분수', '고래 분수', '무지개 분수', '꽃 분수', '돌 분수', '토끼 분수'],
+      themes: ['별', '하트', '특별', '무지개', '꽃', '기본', '토끼'], free: [1, 6], def: 6 },
+    gate: { name: '대문', price: 40, items: ['토끼 성 대문', '사탕 과자 대문', '꽃 정원 대문', '별빛 우주 대문', '겨울 눈 성 대문', '성 대문', '하트 대문', '무지개 대문'],
+      themes: ['토끼', '특별', '꽃', '별', '특별', '기본', '하트', '무지개'], free: [1, 6], def: 6 },
+    plate: { name: '이름표', price: 20, items: ['나무 이름표', '리본 이름표', '별 이름표', '토끼 이름표', '무지개 이름표', '꽃 이름표'],
+      ids: ['wood', 'ribbon', 'star', 'rabbit', 'rainbow', 'flower'], themes: ['기본', '하트', '별', '토끼', '무지개', '꽃'], free: [1], def: 1 },
+    logo: { name: '로고', price: 30, items: ['기본 로고', '별 로고', '토끼 로고', '무지개 로고', '하트 로고', '꽃 로고'],
+      ids: ['', 'star', 'rabbit', 'rainbow', 'heart', 'flower'], themes: ['기본', '별', '토끼', '무지개', '하트', '꽃'], free: [1], def: 1 },
   };
+  // 아이템샵·고르기 창에 보이는 순서: 기본 테마 먼저
+  for (const K of Object.values(PARK_ITEMS)) K.order = K.items.map((_, k) => k + 1).sort((a, b) => (K.themes[b - 1] === '기본') - (K.themes[a - 1] === '기본') || a - b);
   const parkItemImg = (kind, n) => {
     const K = PARK_ITEMS[kind]; if (!K) return '';
     if (kind === 'plate') return `hub/park/ui/plate_${K.ids[n - 1] || 'wood'}.webp`;
@@ -291,7 +300,7 @@
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610311834` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610311940` : null; },
     buyCostume(id, c = this.active()) {
       const it = COSTUMES.find((x) => x.id === id);
       if (!c || !it || this.ownsCostume(id, c)) return { ok: false };
@@ -427,16 +436,20 @@
     // 첫 화면 놀이공원 배치 (캐릭터마다 따로): 게임 id 순서. 없으면 기본 배치 (v0.2 첫 화면)
     park(c = this.active()) { return (c && Array.isArray(c.park)) ? c.park.slice() : null; },
     PARK_ITEMS, parkItemImg,
-    ownsParkItem(kind, n, c = this.active()) { return n === 1 || !!(c && c.parkItems && (c.parkItems[kind] || []).includes(n)); },
+    ownsParkItem(kind, n, c = this.active()) { const K = PARK_ITEMS[kind]; return !!K && (K.free.includes(n) || !!(c && c.parkItems && (c.parkItems[kind] || []).includes(n))); },
     buyParkItem(kind, n, c = this.active()) {
       const K = PARK_ITEMS[kind];
-      if (!c || !K || n < 2 || n > K.items.length || this.ownsParkItem(kind, n, c)) return { ok: false };
+      if (!c || !K || n < 1 || n > K.items.length || this.ownsParkItem(kind, n, c)) return { ok: false };
       if ((c.gems || 0) < K.price) return { ok: false, why: 'gems' }; // 다이아로 삼
       c.gems -= K.price; c.parkItems = c.parkItems || {}; c.parkItems[kind] = [...(c.parkItems[kind] || []), n];
       save(); return { ok: true };
     },
-    // 자리(key = '<구간 번호>-<종류>')에 놓인 것 (없으면 1번)
-    parkDeco(key, c = this.active()) { return (c && c.parkDeco && c.parkDeco[key]) || 1; },
+    // 자리(key = '<구간 번호>-<종류>', 이름표·로고는 'plate'·'logo')에 놓인 것 (안 골랐으면 그 종류의 기본 def)
+    parkDeco(key, c = this.active()) {
+      if (c && c.parkDeco && c.parkDeco[key]) return c.parkDeco[key];
+      const kind = key.includes('-') ? key.split('-')[1] : key, d = PARK_ITEMS[kind] && PARK_ITEMS[kind].def;
+      return typeof d === 'object' ? d[c ? lookBase(c.look) : 'eunyu'] || 1 : d || 1; // 동상: 은유 캐릭터는 은유 동상, 은결 캐릭터는 은결 동상
+    },
     setParkDeco(key, n, c = this.active()) { if (!c) return; c.parkDeco = c.parkDeco || {}; c.parkDeco[key] = n; save(); },
     setPark(order, c = this.active()) { if (!c) return; if (order) c.park = order.slice(); else delete c.park; save(); },
     // 다이아 (v0.3 상용화 검수: common/monet.js 가 늘리고 씀. 보관판 v0.1·v0.2에서는 보이기만)

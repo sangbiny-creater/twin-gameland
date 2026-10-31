@@ -142,14 +142,14 @@
   function gemShop(after) {
     const m = modal(`<h3>다이아 상점</h3><span class="mn-tag">검수용 · 진짜 결제 없음</span>${haveLine()}
       <div class="mn-packs">${PACKS.map((p, i) => `<button class="mn-pack" data-i="${i}"><img src="${IMG}pack_${i + 1}.webp" alt=""><span class="mn-btn gold">${I('ico_gem')}${p.gems}</span></button>`).join('')}
-      <button class="mn-pack cont" data-i="cont"><img src="${IMG}ico_continue.webp" alt=""><b>${CONT_PACK.name}</b><small>게임이 끝났을 때 광고를 안 보고 이어해요 · 지금 ${st().conts || 0}장</small><span class="mn-btn pink">구매</span></button></div>
+      <button class="mn-pack cont" data-i="cont"><img src="${IMG}pack_continue.webp" alt=""><b>${CONT_PACK.name}</b><small>게임이 끝났을 때 광고를 안 보고 이어해요 · 지금 ${st().conts || 0}장</small><span class="mn-btn pink">구매</span></button></div>
       <p style="font-size:13px;margin:6px 0 0">앱에서는 여기서 구글 결제 창이 떠요. 가격은 아직 정하지 않았어요.</p>`,
       [{ text: '닫기', cls: 'gray', on: after }],
       '상품 ID: ' + PACKS.map((p) => p.id).concat(CONT_PACK.id).join(' · '));
     m.querySelectorAll('.mn-pack').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); if (window.UI) UI.blip(); m.remove(); fakePay(b.dataset.i === 'cont' ? CONT_PACK : PACKS[+b.dataset.i], after); }));
   }
   function fakePay(p, after) {
-    const cont = p === CONT_PACK, art = cont ? 'ico_continue' : `pack_${PACKS.indexOf(p) + 1}`;
+    const cont = p === CONT_PACK, art = cont ? 'pack_continue' : `pack_${PACKS.indexOf(p) + 1}`;
     modal(`<h3>${cont ? '이어하기권' : `다이아 ${p.gems}개`}</h3><span class="mn-tag">검수용 가짜 결제</span><img class="mn-art" src="${IMG}${art}.webp" alt="" style="max-height:110px"><p>${cont ? `${p.name}<br>` : ''}여기가 앱의 결제 창 자리예요.<br>확인을 누르면 ${cont ? '이어하기권이' : '다이아가'} 들어와요 (돈 안 나감).</p>`,
       [{ text: '확인 (가짜 결제)', cls: 'gold', on: () => {
         if (cont) { Hub.mutate((c) => { const v = c.v3 || (c.v3 = fresh()); v.conts = (v.conts || 0) + p.conts; }); pop(`${I('ico_continue')} 이어하기권 +${p.conts}`); }

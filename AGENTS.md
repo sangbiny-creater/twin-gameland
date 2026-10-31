@@ -7,7 +7,7 @@
 - 쌍둥이 **은유(여자아이)·은결(남자아이)** 이 주인공인 어린이용 HTML5 미니게임 모음.
 - 빌드 도구 없는 순수 HTML·JavaScript·CSS. 서버 없이 정적 파일로 동작.
 - 사이트: https://sangbiny-creater.github.io/twin-gameland/ — **`main` 브랜치에 올라가면 1~2분 안에 GitHub Pages로 바로 배포**돼요.
-- 게임: `skyhook`(스카이훅 50판) · `helicopter`(구름 타기) · `stairs`(계단 오르기) · `shisen`(사천성 100판) · `downhill`(다운힐) · `memory`(메모리 100판) · `mole`(두더지 100판) · `bakery`(달콤 베이커리, 끝없이 이어짐·원버튼) · `dogsnack`(멍멍이 간식 타임, 끝없이 이어짐·3줄 버튼).
+- 게임: `skyhook`(스카이훅 50판) · `helicopter`(Sky Rider 하늘타기, 예전 Twin Helicopter) · `stairs`(계단 오르기) · `shisen`(사천성 100판) · `downhill`(다운힐) · `memory`(메모리 100판) · `mole`(두더지 100판) · `bakery`(달콤 베이커리, 끝없이 이어짐·원버튼) · `dogsnack`(멍멍이 간식 타임, 끝없이 이어짐·3줄 버튼).
 - 사용자(저장소 주인)는 **개발자가 아니에요.** 휴대폰으로 직접 해 보며 피드백해요.
 
 ## 2. 같이 일하는 방식 (사람 → ChatGPT → GitHub ← Claude)

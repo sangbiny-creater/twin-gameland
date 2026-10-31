@@ -246,11 +246,12 @@ img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #
    놀이공원은 폭 540 기둥(가로 화면은 가운데)에 위아래 스크롤. 위 막대·롤러코스터·프로필·편집 버튼은 화면에 고정 */
 #scrLobby { padding: 0; overflow: hidden; }
 body.in-park { background: #7CC46A; }
-.pk-side { position: absolute; inset: -30px; background: #7CC46A url(park/bg/mid_a.webp?v=202610311834) center / cover; filter: blur(14px) brightness(.92) saturate(1.1); }
+.pk-side { position: absolute; inset: -30px; background: #7CC46A url(park/bg/mid_a.webp?v=202610311940) center / cover; filter: blur(14px) brightness(.92) saturate(1.1); }
 .pk-scroll { position: absolute; inset: 0; z-index: 0; overflow-y: auto; overflow-x: hidden; touch-action: pan-y; scrollbar-width: none; overscroll-behavior: contain; }
 .pk-scroll::-webkit-scrollbar { display: none; }
 .pk-world { position: relative; width: 540px; margin: 0 auto; overflow: hidden; box-shadow: 0 0 30px rgba(24,59,91,.35); }
 .pk-bg { position: absolute; left: 0; width: 540px; background: center / 100% 100% no-repeat; pointer-events: none; }
+.pk-bg.seam { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--seam, 30px)), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - var(--seam, 30px)), transparent); } /* 입구 그림 아래 끝 → 대문 앞 광장으로 흐리게 */
 .pk-bg.fade { -webkit-mask-image: linear-gradient(to top, transparent 0, #000 90px); mask-image: linear-gradient(to top, transparent 0, #000 90px); } /* 아래 구간과 90px 겹쳐 흐리게 이음 */
 /* 놀이기구 칸: 모두 같은 크기 (그림 460x470을 220x225로) */
 /* 놀이기구 칸: 모두 같은 크기 (크기·자리는 hub.js 의 PK·PARK_SECTIONS) */
@@ -271,7 +272,7 @@ body.in-park { background: #7CC46A; }
 .pk-ride.soon:active .art { transform: scale(.8); }
 .pk-ride.soon .name b { color: #59606E; }
 /* ▶ 플레이 버튼: 놀이기구 그림의 오른쪽 아래, 이름판 바로 위 (놀이기구 그림 안쪽). 잠긴 게임은 큰 자물쇠만 (작은 자물쇠 버튼 없음) */
-.pk-ride .play { position: absolute; right: 10%; width: 30px; height: 30px; background: url(park/ui/play.webp?v=202610311834) center / contain no-repeat; filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); animation: pkBob 1.6s ease-in-out infinite; animation-delay: var(--d, 0s); pointer-events: none; }
+.pk-ride .play { position: absolute; right: 10%; width: 30px; height: 30px; background: url(park/ui/play.webp?v=202610311940) center / contain no-repeat; filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); animation: pkBob 1.6s ease-in-out infinite; animation-delay: var(--d, 0s); pointer-events: none; }
 .pk-ride.mn-locked .play { display: none; }
 @keyframes pkBob { 50% { transform: translateY(-4px); } }
 /* 편집 중: 흔들흔들, 고른 것 · 놓을 자리 표시 */
@@ -304,6 +305,7 @@ body.in-park { background: #7CC46A; }
 /* 가게도 놀이기구처럼 아래에 이름표 (누르는 곳이라는 표시) */
 /* 이름표는 건물 그림 아래 바깥에 작게 (그림을 가리지 않게) */
 .pk-shop .name { position: absolute; left: 50%; top: 100%; transform: translate(-50%, -6px); padding: 1px 8px 2px; border-radius: 10px; background: rgba(255,255,255,.95); border: 1.5px solid #FFD8E6; box-shadow: 0 2px 5px rgba(24,59,91,.2); white-space: nowrap; font-size: 12px; color: #B8336A; line-height: 1.3; }
+.pk-shop.ticket .name { color: #7A4FC8; border-color: #E2D4FF; transform: translate(-50%, -14px); }
 .pk-shop.dress .name { color: #C5641A; border-color: #FFE2C2; }
 .pk-sign { position: absolute; width: 140px; pointer-events: none; }
 .pk-sign img { display: block; width: 100%; }
@@ -389,26 +391,24 @@ body.in-park { background: #7CC46A; }
 #scrMap.hard .wpanel::before { background: linear-gradient(rgba(120,20,30,.10), rgba(90,10,20,.30)); }
 
 /* ---------- 캐릭터 고르기 (게임의 맨 첫 화면, v0.3) ---------- */
-/* 배경: 놀이공원 입구 그림 (GPT C01·C02 받으면 hub/select/bg(_land).webp 로 바꿈) */
-#scrSelect { align-items: center; background: url(park/bg/entrance4.webp?v=202610311834) center 30% / cover no-repeat; }
-#scrSelect::before { content: ''; position: absolute; inset: 0; background: linear-gradient(rgba(255,255,255,.15), rgba(255,240,248,.35) 45%, rgba(255,255,255,.1)); pointer-events: none; }
+/* 배경: GPT C01(세로)·C02(가로) hub/select/bg(_land).webp — 자리·크기는 hub.js layoutSelect (무대 2개 위에 은유·은결) */
+#scrSelect { align-items: center; background: linear-gradient(#4FAEF5, #4BB1F7 60%, #8FD0FA); }
+.sel-bg { position: absolute; max-width: none; pointer-events: none; }
 .sel-logo { position: relative; width: 230px; margin-top: 6px; filter: drop-shadow(0 4px 6px rgba(24,59,91,.35)); }
 .sel-ask { position: relative; display: flex; flex-direction: column; align-items: center; margin-top: 4px; }
-.sel-ask b { display: flex; align-items: center; justify-content: center; width: 470px; max-width: 96vw; height: 76px; padding: 0 56px 16px; background: url(../common/ui/monet/ribbon.webp?v=202610311834) center / 100% 100% no-repeat;
+.sel-ask b { display: flex; align-items: center; justify-content: center; width: 470px; max-width: 96vw; height: 76px; padding: 0 56px 16px; background: url(../common/ui/monet/ribbon.webp?v=202610311940) center / 100% 100% no-repeat;
   font-weight: normal; font-size: 21px; color: #fff; text-shadow: 0 2px 0 #C2406A, 0 0 3px #C2406A; white-space: nowrap; }
-.sel-ask small { margin-top: -6px; padding: 2px 12px; border-radius: 10px; background: rgba(255,255,255,.82); font-size: 14px; color: #8A5A6E; }
-.sel-chars { position: relative; flex: 1; display: flex; justify-content: center; align-items: center; gap: 18px; width: 100%; }
-.sel-char { position: relative; display: flex; flex-direction: column; align-items: center; width: 220px; padding: 10px 0 12px; }
-.sel-char .sel-stage { position: absolute; left: 10px; right: 10px; bottom: 58px; height: 64px; border-radius: 50%; border: 5px solid #fff;
-  background: radial-gradient(#FFE3EE, #FFB9D2); box-shadow: 0 6px 0 #E28AAE, 0 10px 16px rgba(24,59,91,.25); }
-.sel-char.base-eungyeol .sel-stage { background: radial-gradient(#E3F2FF, #A9D3F7); box-shadow: 0 6px 0 #6FA6D8, 0 10px 16px rgba(24,59,91,.25); }
-.sel-char > img { position: relative; height: 230px; width: auto; margin-bottom: -24px; filter: drop-shadow(0 6px 4px rgba(24,59,91,.25)); animation: selBob 2.4s ease-in-out infinite; }
+.sel-ask small { margin-top: -6px; padding: 2px 12px; border-radius: 10px; background: rgba(255,255,255,.88); font-size: 14px; color: #8A5A6E; }
+.sel-chars { position: absolute; inset: 0; pointer-events: none; }
+/* 캐릭터 한 명 = 무대 폭만큼의 버튼: 위는 전신 그림(발이 무대 윗면에), 아래는 이름·코인 (무대 앞쪽에 겹침) */
+.sel-char { position: absolute; display: flex; flex-direction: column; align-items: center; pointer-events: auto; padding: 0; }
+.sel-char > img { height: var(--ch, 260px); width: auto; filter: drop-shadow(0 6px 4px rgba(24,59,91,.25)); animation: selBob 2.4s ease-in-out infinite; transform-origin: 50% 100%; }
 .sel-char.base-eungyeol > img { animation-delay: -1.2s; }
 @keyframes selBob { 50% { transform: translateY(-6px); } }
-.sel-name { position: relative; margin-top: 8px; min-width: 140px; padding: 4px 18px 6px; border-radius: 18px; background: linear-gradient(#FF9EC0, #F0679A); color: #fff; font-size: 24px;
+.sel-name { position: relative; margin-top: 4px; min-width: 120px; padding: 3px 18px 5px; border-radius: 18px; background: linear-gradient(#FF9EC0, #F0679A); color: #fff; font-size: 22px;
   border: 3px solid #fff; box-shadow: 0 4px 0 #C2406A; text-shadow: 0 2px 0 #C2406A; }
 .sel-char.base-eungyeol .sel-name { background: linear-gradient(#8CC8F7, #4A97D8); box-shadow: 0 4px 0 #2F6FA8; text-shadow: 0 2px 0 #2F6FA8; }
-.sel-stat { position: relative; display: flex; align-items: center; gap: 3px; margin-top: 8px; padding: 3px 12px; border-radius: 12px; background: rgba(255,255,255,.9); font-size: 15px; color: #5A3B22; }
+.sel-stat { position: relative; display: flex; align-items: center; gap: 3px; margin-top: 6px; padding: 3px 12px; border-radius: 12px; background: rgba(255,255,255,.92); font-size: 15px; color: #5A3B22; white-space: nowrap; }
 .sel-stat img { width: 18px; height: 18px; object-fit: contain; margin-left: 6px; }
 .sel-stat i.coin { width: 18px; height: 18px; margin-right: 1px; }
 .sel-char.new .sel-stat { color: #D24C73; }
@@ -417,9 +417,6 @@ body.in-park { background: #7CC46A; }
 .name-row input::placeholder { color: #A9B4C0; }
 #root.portrait .sel-logo { width: 300px; margin-top: 28px; }
 #root.portrait .sel-ask b { width: 500px; font-size: 23px; }
-#root.portrait .sel-chars { gap: 6px; align-items: center; padding-bottom: 40px; }
-#root.portrait .sel-char { width: 250px; }
-#root.portrait .sel-char > img { height: 270px; }
-#root:not(.portrait) .sel-logo { width: 190px; margin-top: 0; }
+#root:not(.portrait) .sel-logo { position: absolute; left: calc(14px + var(--safe-l, 0px)); top: calc(8px + var(--safe-t, 0px)); width: 170px; margin: 0; }
+#root:not(.portrait) .sel-ask { margin-top: 0; }
 #root:not(.portrait) .sel-ask b { height: 66px; font-size: 20px; }
-#root:not(.portrait) .sel-char > img { height: 190px; }
