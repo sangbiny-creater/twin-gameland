@@ -53,7 +53,7 @@ for (const vp of ['pp', 'pl', 'tb']) {
   add(`hub-lobby-top-${vp}`, 'index.html#lobby', { vp, js: `(document.querySelector('.pk-scroll')||document.querySelector('.lb-scroll')).scrollTop = 0`, wait2: 600 });
   add(`hub-lobby-eungyeol-${vp}`, 'index.html#lobby', { vp, ch: 'c2' });
   add(`hub-edit-${vp}`, 'index.html#lobby', { vp, js: `document.getElementById('pkEdit') && document.getElementById('pkEdit').click()`, wait2: 700 });
-  add(`hub-intro-${vp}`, 'index.html#lobby', { vp, js: `document.querySelector('.pk-ride[data-id=skyhook], .lb-card').click()`, wait2: 1500 });
+  add(`hub-intro-${vp}`, 'index.html#lobby', { vp, js: `document.querySelector('.pk-ride[data-id=downhill], .lb-card').click()`, wait2: 1500 });
   add(`hub-map-${vp}`, 'index.html#map-shisen', { vp });
   add(`hub-records-${vp}`, 'index.html#records', { vp });
   add(`v01-lobby-${vp}`, 'v0.1/#lobby', { vp });
@@ -70,7 +70,7 @@ add('hub-decopick-pp', 'index.html#lobby', { vp: 'pp', js: "document.querySelect
 add('hub-decopick-gate-pp', 'index.html#lobby', { vp: 'pp', js: "document.querySelector('.pk-item.gate').click()", wait2: 700 });
 add('shop-park-pp', 'shop/index.html#park', { vp: 'pp', wait: 2500 });
 // 동상 사서 바꾸기 시험: 2번 동상 사기 → 첫 화면 동상 자리에 놓기 → 그림이 바뀌었는지
-add('hub-decobuy-pp', 'index.html#lobby', { vp: 'pp', js: "(async () => { const r = Hub.buyParkItem('statue', 2); const key = document.querySelector('.pk-item.statue').dataset.key; document.querySelector('.pk-item.statue').click(); await new Promise((z) => setTimeout(z, 300)); document.querySelectorAll('.deco-card')[1].click(); await new Promise((z) => setTimeout(z, 300)); return { bought: r.ok, deco: Hub.parkDeco(key), img: document.querySelector('.pk-item.statue img').src.split('/').pop() }; })()", wait2: 400 });
+add('hub-decobuy-pp', 'index.html#lobby', { vp: 'pp', js: "(async () => { Hub.mutate((c) => { c.gems = 100; }); const r = Hub.buyParkItem('statue', 2); const key = document.querySelector('.pk-item.statue').dataset.key; document.querySelector('.pk-item.statue').click(); await new Promise((z) => setTimeout(z, 300)); document.querySelectorAll('.deco-card')[1].click(); await new Promise((z) => setTimeout(z, 300)); return { bought: r.ok, deco: Hub.parkDeco(key), img: document.querySelector('.pk-item.statue img').src.split('/').pop() }; })()", wait2: 400 });
 add('hub-lobby-pc', 'index.html#lobby', { vp: 'pc' });
 add('hub-map-pc', 'index.html#map-shisen', { vp: 'pc' });
 add('hub-empty-pp', 'index.html', { vp: 'pp', empty: true, wait: 1500 });
@@ -118,6 +118,34 @@ for (const vp of ['pp', 'tb']) {
   add(`coupon-dayplus-${vp}`, 'shop/index.html', { vp, js: COUPON('dayplus'), wait2: 3500, after: STATE });
 }
 
+// 새 팝업 꾸밈 (QA 23·26): 일시정지 창 · 결과 창(광고 버튼이 창 안에 들어가는지)
+for (const g of ['helicopter', 'stairs', 'shisen', 'downhill', 'memory', 'mole', 'bakery', 'dogsnack', 'darts']) for (const vp of ['pp', 'pl']) {
+  add(`pop-pause-${g}-${vp}`, `${g}/index.html`, { vp, wait: 2500, js: `(() => { document.querySelectorAll('.screen.dim,#ready').forEach((e) => e.classList.add('hidden')); document.getElementById('pause').classList.remove('hidden'); })()`, wait2: 400 });
+  add(`pop-result-${g}-${vp}`, `${g}/index.html`, { vp, wait: 2500, js: `(() => { document.querySelectorAll('.screen.dim,#ready').forEach((e) => e.classList.add('hidden')); document.getElementById('result').classList.remove('hidden');
+    Hub.record('${g}', { dist: 1200, coins: 40, cleared: false, stage: 0, stars: 0 }); })()`, wait2: 1600,
+    after: `(() => { const p = document.querySelector('#result .panel').getBoundingClientRect(), b = document.querySelector('.mn-reward'), r = b && b.getBoundingClientRect();
+      return { inPanel: !!(b && document.querySelector('#result .panel').contains(b)), fits: !!r && r.left >= p.left && r.right <= p.right && r.top >= p.top && r.bottom <= p.bottom, panelInScreen: p.top >= 0 && p.bottom <= innerHeight }; })()` });
+}
+// 잠긴 게임 (c4: 상용화 기록 없음 → 처음 열린 3게임만): 큰 자물쇠만, ▶ 없음 / 열쇠로 열면 화면이 막힌 채 그 게임 인트로로 (QA 10·28)
+add('hub-lobby-locked-pp', 'index.html#lobby', { vp: 'pp', ch: 'c4', wait: 3000, js: `(() => { document.querySelectorAll('.mn-modal').forEach((m) => m.remove()); return [...document.querySelectorAll('.pk-ride[data-id]')].map((b) => b.dataset.id + ':' + b.classList.contains('mn-locked') + ':' + getComputedStyle(b.querySelector('.play')).display).join(' '); })()` });
+add('hub-unlock-pp', 'index.html#lobby', { vp: 'pp', ch: 'c4', wait: 3000, js: `(async () => { const sl = (t) => new Promise((z) => setTimeout(z, t)); document.querySelectorAll('.mn-modal').forEach((m) => m.remove());
+  document.querySelector('.pk-ride[data-id=stairs]').click(); await sl(300); const k = [...document.querySelectorAll('.mn-modal .mn-btn')].find((b) => b.textContent.includes('열쇠')); k.click(); await sl(200);
+  const blocked = !!document.querySelector('.mn-block'); const r = document.querySelector('.pk-ride[data-id=bakery]').getBoundingClientRect();
+  const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); await sl(1800); // 열리는 동안 다른 놀이기구 자리를 누르면 막(mn-block)이 받음
+  return { blocked, tapGoesTo: hit && hit.className, intro: (document.querySelector('.intro:not(.hidden), #intro:not(.hidden), [class*=title]:not(.hidden) img') || {}).src || location.hash }; })()`, wait2: 300 });
+add('hub-create-pp', 'index.html#select', { vp: 'pp', empty: true, js: `document.querySelector('.sel-char').click()`, wait2: 500 });
+add('hub-deco-logo-pp', 'index.html#lobby', { vp: 'pp', js: `document.querySelector('.pk-logo').click()`, wait2: 500 });
+add('hub-gemshop-pp', 'index.html#lobby', { vp: 'pp', js: `document.getElementById('btnGems').click()`, wait2: 500 });
+add('hub-settings-pp', 'index.html#lobby', { vp: 'pp', js: `document.getElementById('btnSettings').click()`, wait2: 500 });
+
+// 시작할 때 꾸밈 없는 화면이 스치는지 (QA 15): 느린 인터넷으로 열고 0.15~3초 사이 여러 장 찍음 (<이름>_t<ms>.png)
+const FILM = [300, 700, 1100, 1500, 2000, 2600, 3300, 4200];
+for (const g of ['helicopter', 'stairs', 'shisen', 'downhill', 'memory', 'mole', 'bakery', 'dogsnack', 'darts']) {
+  add(`film-${g}-pp`, `${g}/index.html`, { vp: 'pp', slow: true, film: FILM });
+  add(`film-${g}-pl`, `${g}/index.html`, { vp: 'pl', slow: true, film: FILM });
+}
+add('film-hub-pp', 'index.html#lobby', { vp: 'pp', slow: true, film: FILM });
+
 // ---- CDP ----
 async function wsUrl() {
   for (let i = 0; i < 50; i++) { try { const r = await fetch(`http://127.0.0.1:${PORT}/json/version`); if (r.ok) return (await r.json()).webSocketDebuggerUrl; } catch (e) { /* wait */ } await sleep(200); }
@@ -159,7 +187,16 @@ for (const sc of S) {
     await send('Emulation.setDeviceMetricsOverride', { width: w, height: ht, deviceScaleFactor: desk ? 1 : 2, mobile: !desk, screenOrientation: w > ht ? { type: 'landscapePrimary', angle: 90 } : { type: 'portraitPrimary', angle: 0 } }, sessionId);
     if (!desk) await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 }, sessionId);
     await send('Page.addScriptToEvaluateOnNewDocument', { source: PRE(seed(sc.ch || 'c1'), sc.empty) }, sessionId);
+    if (sc.slow) await send('Network.emulateNetworkConditions', { offline: false, latency: 100, downloadThroughput: 1500 * 1024, uploadThroughput: 500 * 1024 }, sessionId);
     await send('Page.navigate', { url: BASE + sc.url }, sessionId);
+    if (sc.film) {
+      const t0 = Date.now();
+      for (const t of sc.film) {
+        await sleep(Math.max(0, t - (Date.now() - t0)));
+        const f = await send('Page.captureScreenshot', { format: 'jpeg', quality: 60 }, sessionId);
+        fs.writeFileSync(path.join(OUT, `${sc.name}_t${t}.jpg`), Buffer.from(f.data, 'base64'));
+      }
+    }
     await sleep(sc.wait || 1800);
     if (sc.js) {
       const r = await send('Runtime.evaluate', { expression: sc.js, awaitPromise: true, returnByValue: true }, sessionId);

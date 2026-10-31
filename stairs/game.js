@@ -47,7 +47,7 @@ const rand = (a, b) => a + (b - a) * Math.random();
 const $ = (id) => document.getElementById(id);
 
 // ---------- sprites ----------
-const ASSET_V = '202610311612'; // 캐시 버전 (tools/bump_version.py가 올림)
+const ASSET_V = '202610311834'; // 캐시 버전 (tools/bump_version.py가 올림)
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -252,9 +252,9 @@ function doMove(turn) {
   ensureSteps(G.idx + 40);
   const cur = G.steps[G.idx], next = G.steps[G.idx + 1];
   let ok = next.col === cur.col + G.dir;
-  if (!ok && G.wing > 0) { // 무적(날개): 틀려도 바로잡아 줌
-    G.wing--; G.dir = -G.dir; updateTurnBtn(); ok = true; renderBuffs();
-    popText('날개 덕분에 휴~', G.pos.x, G.pos.y - 120, '#3D8BFF');
+  if (G.wing > 0) { // 날개: 15칸 오르는 동안 무적 — 틀려도 바로잡아 줌. 한 칸 오를 때마다 1칸씩 줄어듦 (QA 25)
+    if (!ok) { G.dir = -G.dir; updateTurnBtn(); ok = true; popText('날개 덕분에 휴~', G.pos.x, G.pos.y - 120, '#3D8BFF'); }
+    G.wing--; renderBuffs();
   }
   if (ok) hop(CFG.hopDur, turn);
   else misstep();
@@ -361,7 +361,8 @@ function collect(item, s) {
     case 'shield': G.shield = true; Audio.sfx('item'); popText('보호막!', x, y - 20, '#3D8BFF'); fxAt('fx_item', x, y, 70, 0.4); renderBuffs(); break;
     case 'magnet': G.magnetT = 8; Audio.sfx('item'); popText('자석!', x, y - 20, '#E84A5F'); renderBuffs(); break;
     case 'x2': G.x2T = 10; Audio.sfx('item'); popText('코인 2배!', x, y - 20, '#FF9F2E'); renderBuffs(); break;
-    case 'wing': G.wing = 15; Audio.sfx('item'); popText('날개! 15칸 무적', x, y - 20, '#3D8BFF'); renderBuffs(); noWingAhead(); break;
+    case 'wing': if (G.wing > 0) break; // 날개는 겹치지 않음: 날개가 있는 동안 먹은 날개는 아무 효과 없음
+      G.wing = 15; Audio.sfx('item'); popText('날개! 15칸 무적', x, y - 20, '#3D8BFF'); renderBuffs(); noWingAhead(); break;
     case 'gift': collect(randomItem(), s); break;
   }
 }

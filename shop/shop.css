@@ -239,3 +239,9 @@ main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; 
 .park-card .bi { width: 72px; height: 72px; }
 .park-card.owned { border-color: #2FB86A; }
 .park-card .cnt-pill { font-size: 13px; color: #2FB86A; }
+.park-card { position: relative; }
+.park-card .bi { object-fit: contain; }
+.park-card.plate .bi, .park-card.logo .bi { width: 96px; }
+.park-theme { position: absolute; left: 6px; top: 6px; padding: 0 6px; border-radius: 8px; background: #FFE9F0; color: #D24C73; font-size: 11px; line-height: 17px; }
+.park-theme:empty { display: none; }
+.price-pill.gem img { width: 18px; height: 18px; object-fit: contain; }

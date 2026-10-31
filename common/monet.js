@@ -11,15 +11,17 @@
   function main() {
 
   // ---------- 숫자 (🟡 임시값) ----------
-  const OPEN = ['bakery', 'helicopter', 'mole'];      // 처음부터 열린 게임
+  const OPEN = ['downhill', 'bakery', 'mole'];        // 처음부터 열린 게임 (놀이공원 맨 아래 자리 3곳)
   const PRICES = [60, 80, 100, 120, 140, 160, 180];  // 다이아로 N번째 열 때 가격 (열쇠로 연 건 안 셈)
   const TRIAL_STAGES = 2;                             // 잠긴 스테이지 게임: 쉬움 1-1, 1-2까지
   const TRIAL_SEC = 30;                               // 잠긴 끝없는 게임: 한 판에 30초
+  const TRIAL_ROUNDS = { darts: 2 };                  // 라운드로 끝나는 게임은 시간 대신 라운드 (다트: 2라운드까지)
   const GEM_EVERY = 10;                               // 게임 10판마다 다이아 1개
   const AD_SEC = 5;                                   // 가짜 광고 길이
   const ATT_DAILY = 1;                                // 출석 매일 다이아
   const ATT_BONUS = { 10: { tickets: 1, text: '열쇠 1개', img: 'att_key' }, 30: { text: '프로필 프레임 (준비 중)', img: 'att_frame' }, 50: { gems: 20, text: '다이아 20개', img: 'att_gems' }, 100: { text: '특별 코스튬 (준비 중)', img: 'att_gift' } };
   const PACKS = [{ id: 'diamond_60', gems: 60 }, { id: 'diamond_140', gems: 140 }, { id: 'diamond_300', gems: 300 }, { id: 'diamond_650', gems: 650 }];
+  const CONT_PACK = { id: 'continue_10', conts: 10, name: '이어하기권 10장' }; // 다이아 상점 맨 끝: 게임이 끝났을 때 광고 없이 이어하기 (🟡 임시값)
   const NO_CONTINUE = ['darts']; // 실패 없이 끝나는 게임 (이어하기 자리 없음)
 
   const ROOT = SRC.replace(/common\/monet\.js.*$/, '');
@@ -69,7 +71,10 @@
 .mn-tag{display:inline-block;background:#FFE9F0;color:#D24C73;border-radius:8px;padding:1px 8px;font-size:12px;margin:2px 0 4px}
 .mn-packs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:4px 0 2px}
 .mn-pack{display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:rgba(255,255,255,.65);border-radius:14px;padding:6px 4px 0;font:inherit;color:#5A3B22;cursor:pointer}
-.mn-pack img{height:62px;width:auto}.mn-pack .mn-btn{min-height:38px;font-size:15px;padding:3px 10px 6px;border-image-width:0 19px}
+.mn-pack img{height:62px;width:auto}
+.mn-pack.cont{grid-column:1/-1;display:grid;grid-template-columns:52px 1fr auto;grid-template-rows:auto auto;column-gap:8px;align-items:center;text-align:left;padding:6px 8px}
+.mn-pack.cont img{grid-row:1/3;height:46px}.mn-pack.cont b{font-weight:400;font-size:15px}.mn-pack.cont small{grid-column:2;font-size:11px;color:#8A6E58}
+.mn-pack.cont .mn-btn{grid-column:3;grid-row:1/3;width:auto;margin:0;padding:3px 16px 6px}.mn-pack .mn-btn{min-height:38px;font-size:15px;padding:3px 10px 6px;border-image-width:0 19px}
 .mn-stamps{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:4px 6px 6px}
 .mn-stamps span{position:relative;aspect-ratio:1;display:flex;align-items:center;justify-content:center}
 .mn-stamps img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
@@ -80,11 +85,12 @@
 .mn-bonus{display:flex;align-items:center;justify-content:center;gap:6px}.mn-bonus img{height:44px}
 .mn-ad{position:fixed;inset:0;z-index:9500;background:#111;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Jua,system-ui,sans-serif;text-align:center;gap:12px}
 .mn-ad img{width:84px}.mn-ad b{font-size:64px}.mn-ad span{font-size:16px;opacity:.85;padding:0 24px}
-.mn-reward{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top));transform:translateX(-50%);z-index:8000;display:flex;flex-direction:column;gap:4px;font-family:Jua,system-ui,sans-serif;width:min(280px,70vw)}
-.mn-reward button{position:relative;min-height:48px;border:0 solid transparent;border-image:url(${IMG}btn_ad_double.webp) 0 50 0 100 fill / 0 24px 0 48px stretch;background:none;padding:6px 14px 8px 56px;font:inherit;font-size:16px;line-height:1.15;color:#fff;text-align:left;text-shadow:0 2px 0 rgba(70,30,140,.6);filter:drop-shadow(0 6px 10px rgba(0,0,0,.25));cursor:pointer}
+.mn-reward{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:4px;font-family:Jua,system-ui,sans-serif;width:min(290px,100%);margin:4px auto;align-self:center;flex:none}
+.mn-reward button{position:relative;min-height:48px;border:0 solid transparent;border-image:url(${IMG}btn_ad_double.webp) 0 50 0 100 fill / 0 24px 0 48px stretch;background:none;padding:6px 14px 8px 56px;font:inherit;font-size:16px;line-height:1.15;color:#fff;text-align:left;text-shadow:0 2px 0 rgba(70,30,140,.6);filter:drop-shadow(0 3px 4px rgba(0,0,0,.2));cursor:pointer;width:100%}
 .mn-reward button>img{position:absolute;left:10px;top:50%;width:30px;height:30px;object-fit:contain;transform:translateY(-55%)}
 .mn-reward button.cont{border-image-source:url(${IMG}btn_ad_continue.webp);text-shadow:0 2px 0 rgba(10,110,90,.6)}
-.mn-reward button:disabled{opacity:.7}.mn-reward .x{position:absolute;right:-8px;top:-10px;width:28px;min-height:0;height:28px;padding:0;border:0;border-image:none;border-radius:50%;background:#2B3A67;text-align:center;font-size:14px;filter:none}
+.mn-reward button:disabled{opacity:.7}
+.mn-block{position:fixed;inset:0;z-index:9500;background:transparent}
 .mn-trial{position:fixed;left:50%;top:calc(8px + env(safe-area-inset-top));transform:translateX(-50%);z-index:8000;display:flex;align-items:center;gap:4px;background:rgba(43,58,103,.85);color:#fff;font-family:Jua,system-ui,sans-serif;font-size:15px;border-radius:12px;padding:3px 12px 3px 6px;pointer-events:none}
 .mn-pop{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:9600;display:flex;align-items:center;gap:6px;white-space:nowrap;background:rgba(43,58,103,.92);color:#fff;font-family:Jua,system-ui,sans-serif;font-size:20px;border-radius:16px;padding:10px 18px;pointer-events:none;animation:mnPop 1.6s ease forwards}
 @keyframes mnPop{0%{opacity:0;transform:translate(-50%,-30%)}15%{opacity:1;transform:translate(-50%,-50%)}80%{opacity:1}100%{opacity:0}}
@@ -105,11 +111,17 @@
     const box = m.querySelector('.mn-btns');
     for (const b of buttons) {
       const el = document.createElement('button'); el.className = 'mn-btn ' + (b.cls || ''); el.innerHTML = b.text; el.disabled = !!b.off;
-      el.addEventListener('click', (e) => { e.stopPropagation(); if (window.UI) UI.blip(); m.remove(); if (b.on) b.on(); });
+      el.addEventListener('click', (e) => { e.stopPropagation(); if (window.UI) UI.blip(); m.remove(); const k = block(); setTimeout(k, 400); if (b.on) b.on(); });
       box.appendChild(el);
     }
     for (const ev of ['pointerdown', 'pointerup', 'touchstart', 'keydown']) m.addEventListener(ev, (e) => e.stopPropagation());
     document.body.appendChild(m); return m;
+  }
+  // 화면 전체를 잠깐 막는 투명 막 (창을 닫을 때 손을 뗀 터치가 뒤의 놀이기구·버튼을 누르지 않게). 돌려주는 함수를 부르면 걷힘
+  function block() {
+    const d = document.createElement('div'); d.className = 'mn-block';
+    for (const ev of ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'click', 'mousedown']) d.addEventListener(ev, (e) => { e.stopPropagation(); e.preventDefault(); }, true);
+    document.body.appendChild(d); return () => d.remove();
   }
   function pop(html) { const p = document.createElement('div'); p.className = 'mn-pop'; p.innerHTML = html; document.body.appendChild(p); setTimeout(() => p.remove(), 1700); }
   // 게임 열림 축하 (U10): 가운데 팡!
@@ -129,15 +141,21 @@
   // 다이아 상점 (가짜 결제)
   function gemShop(after) {
     const m = modal(`<h3>다이아 상점</h3><span class="mn-tag">검수용 · 진짜 결제 없음</span>${haveLine()}
-      <div class="mn-packs">${PACKS.map((p, i) => `<button class="mn-pack" data-i="${i}"><img src="${IMG}pack_${i + 1}.webp" alt=""><span class="mn-btn gold">${I('ico_gem')}${p.gems}</span></button>`).join('')}</div>
+      <div class="mn-packs">${PACKS.map((p, i) => `<button class="mn-pack" data-i="${i}"><img src="${IMG}pack_${i + 1}.webp" alt=""><span class="mn-btn gold">${I('ico_gem')}${p.gems}</span></button>`).join('')}
+      <button class="mn-pack cont" data-i="cont"><img src="${IMG}ico_continue.webp" alt=""><b>${CONT_PACK.name}</b><small>게임이 끝났을 때 광고를 안 보고 이어해요 · 지금 ${st().conts || 0}장</small><span class="mn-btn pink">구매</span></button></div>
       <p style="font-size:13px;margin:6px 0 0">앱에서는 여기서 구글 결제 창이 떠요. 가격은 아직 정하지 않았어요.</p>`,
       [{ text: '닫기', cls: 'gray', on: after }],
-      '상품 ID: ' + PACKS.map((p) => p.id).join(' · '));
-    m.querySelectorAll('.mn-pack').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); if (window.UI) UI.blip(); m.remove(); fakePay(PACKS[+b.dataset.i], after); }));
+      '상품 ID: ' + PACKS.map((p) => p.id).concat(CONT_PACK.id).join(' · '));
+    m.querySelectorAll('.mn-pack').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); if (window.UI) UI.blip(); m.remove(); fakePay(b.dataset.i === 'cont' ? CONT_PACK : PACKS[+b.dataset.i], after); }));
   }
   function fakePay(p, after) {
-    modal(`<h3>다이아 ${p.gems}개</h3><span class="mn-tag">검수용 가짜 결제</span><img class="mn-art" src="${IMG}pack_${PACKS.indexOf(p) + 1}.webp" alt="" style="max-height:110px"><p>여기가 앱의 결제 창 자리예요.<br>확인을 누르면 다이아가 들어와요 (돈 안 나감).</p>`,
-      [{ text: '확인 (가짜 결제)', cls: 'gold', on: () => { addGems(p.gems); pop(`${I('ico_gem')} +${p.gems}`); refreshHub(); if (after) after(); } }, { text: '취소', cls: 'gray', on: after }]);
+    const cont = p === CONT_PACK, art = cont ? 'ico_continue' : `pack_${PACKS.indexOf(p) + 1}`;
+    modal(`<h3>${cont ? '이어하기권' : `다이아 ${p.gems}개`}</h3><span class="mn-tag">검수용 가짜 결제</span><img class="mn-art" src="${IMG}${art}.webp" alt="" style="max-height:110px"><p>${cont ? `${p.name}<br>` : ''}여기가 앱의 결제 창 자리예요.<br>확인을 누르면 ${cont ? '이어하기권이' : '다이아가'} 들어와요 (돈 안 나감).</p>`,
+      [{ text: '확인 (가짜 결제)', cls: 'gold', on: () => {
+        if (cont) { Hub.mutate((c) => { const v = c.v3 || (c.v3 = fresh()); v.conts = (v.conts || 0) + p.conts; }); pop(`${I('ico_continue')} 이어하기권 +${p.conts}`); }
+        else { addGems(p.gems); pop(`${I('ico_gem')} +${p.gems}`); }
+        refreshHub(); if (after) after();
+      } }, { text: '취소', cls: 'gray', on: after }]);
   }
 
   // 게임 열기 창. opts: { trial(): 체험하기, trialText, onOpen(), onClose() }
@@ -154,8 +172,8 @@
       if (window.UI) UI.blip(1046);
       fx(); setTimeout(() => pop(`${esc(name(g))} 열림!`), 500); refreshHub(); if (opts.onOpen) opts.onOpen();
     }
-    modal(`<h3>${esc(name(g))}</h3><img class="mn-art" src="${IMG}locked.webp" alt="">${opts.msg ? `<p>${opts.msg}</p>` : '<p>잠긴 게임이에요. 열쇠나 다이아로 영원히 열 수 있어요.</p>'}${haveLine()}`, btns,
-      `다이아로 연 횟수에 따라 값이 올라요: ${PRICES.join(' → ')}`);
+    modal(`<h3>${esc(name(g))}</h3><img class="mn-art" src="${IMG}locked.webp" alt="">${opts.msg ? `<p>${opts.msg}</p>` : '<p>잠긴 게임이에요. 열쇠나 다이아로 열 수 있어요.</p>'}${haveLine()}`, btns,
+      `한 번 열면 한 판만이 아니라 이 게임을 언제든지 계속 할 수 있어요!<br>다이아로 연 횟수에 따라 값이 올라요: ${PRICES.join(' → ')}`);
   }
 
   // ---------- 게임 결과: 광고 보고 2배 받기 · 이어하기 (+ 10판마다 다이아) ----------
@@ -176,22 +194,29 @@
     }
     return res;
   };
+  // 결과 창 안(다시하기·게임 선택 버튼 바로 위)에 광고 버튼: 코인 2배 · 이어하기 (이어하기권이 있으면 광고 없이)
   function rewardBar(earned, failed) {
     document.querySelectorAll('.mn-reward').forEach((x) => x.remove());
     if (!(earned > 0) && !failed) return;
+    const panel = document.querySelector('#result:not(.hidden) .panel');
+    if (!panel) return;
     const bar = document.createElement('div'); bar.className = 'mn-reward';
     for (const ev of ['pointerdown', 'pointerup', 'touchstart']) bar.addEventListener(ev, (e) => e.stopPropagation());
     // 버튼 왼쪽 흰 동그라미에 아이콘, 오른쪽에 글자
     const add = (text, cls, ico, fn) => { const b = document.createElement('button'); b.className = cls; b.innerHTML = (ico ? I(ico, '') : '') + `<span>${text}</span>`; b.addEventListener('click', (e) => { e.stopPropagation(); fn(b); }); bar.appendChild(b); return b; };
     const say = (b, t) => { b.querySelector('span').textContent = t; };
     if (earned > 0) add(`광고 보고 코인 2배 (+${earned})`, '', 'ico_x2', (b) => fakeAd(() => { Hub.addCoins(earned); b.disabled = true; say(b, `코인 +${earned} 더 받았어요!`); pop(`${I('ico_x2')} +${earned}`); }));
-    if (failed) add('광고 보고 이어하기', 'cont', 'ico_continue', (b) => fakeAd(() => { b.disabled = true; say(b, '앱에서는 여기서 이어서 해요 (연결 예정)'); }));
-    add('✕', 'x', '', () => bar.remove());
-    document.body.appendChild(bar);
-    // 다음 판을 시작하면(화면을 누르면) 사라짐
-    setTimeout(() => { const off = () => { bar.remove(); window.removeEventListener('pointerdown', off, true); }; window.addEventListener('pointerdown', (e) => { if (!bar.contains(e.target)) off(); }, true); }, 300);
+    if (failed) {
+      const cont = () => st().conts || 0;
+      if (cont() > 0) add(`광고 없이 이어하기 (이어하기권 ${cont()}장)`, 'cont', 'ico_continue', (b) => { Hub.mutate((c) => { c.v3.conts--; }); b.disabled = true; say(b, '앱에서는 여기서 이어서 해요 (연결 예정)'); });
+      else add('광고 보고 이어하기', 'cont', 'ico_continue', (b) => fakeAd(() => { b.disabled = true; say(b, '앱에서는 여기서 이어서 해요 (연결 예정)'); }));
+    }
+    // 창의 버튼 줄(다시하기·게임 선택) 바로 위에. 창이 화면보다 커지면 창을 조금 줄임
+    const rows = [...panel.children].filter((el) => el.tagName === 'BUTTON' || el.querySelector('button'));
+    panel.insertBefore(bar, rows[0] || null); // 첫 버튼 줄(다음 스테이지·다시하기 …) 바로 위
+    const r = panel.getBoundingClientRect(), vh = window.innerHeight;
+    if (r.height > vh * 0.96) panel.style.zoom = Math.max(0.6, (vh * 0.94) / r.height);
   }
-
   // ---------- 게임 화면: 잠긴 게임의 체험 ----------
   if (gameId && !isOpen(gameId)) {
     const toMap = () => { location.href = ROOT + 'index.html#' + (G[gameId].stages ? 'map-' + gameId : 'lobby'); };
@@ -205,6 +230,12 @@
       }
       const q = parseInt(new URLSearchParams(location.search).get('stage'), 10);
       if (blocked(q)) ask();
+    } else if (TRIAL_ROUNDS[gameId]) {
+      // 라운드 게임(다트): 정한 라운드까지만. 위에 '체험 2라운드까지', 끝나면 게임 열기 창
+      const n = TRIAL_ROUNDS[gameId];
+      const tag = document.createElement('div'); tag.className = 'mn-trial'; tag.innerHTML = `${I('ico_lock')} 체험 ${n}라운드까지`; document.body.appendChild(tag);
+      window.DART_TRIAL = { rounds: n, on: () => !isOpen(gameId),
+        end: () => unlockBox(gameId, { msg: `체험 ${n}라운드가 끝났어요!<br>열면 8라운드 끝까지 할 수 있어요.`, closeText: '나가기', onClose: toMap, onOpen: () => location.reload() }) };
     } else {
       // 끝없는 게임: 한 판에 30초. 위에 남은 시간, 끝나면 게임 열기 창
       let left = TRIAL_SEC, timer = 0, tag = null;
@@ -254,7 +285,9 @@
       if (allow === b.dataset.id) { allow = null; return; }
       e.stopPropagation(); e.preventDefault();
       const g = b.dataset.id;
-      unlockBox(g, { trial: () => { allow = g; b.click(); }, trialText: G[g].stages ? '▶ 체험해 보기 (1-1, 1-2)' : `▶ 체험해 보기 (${TRIAL_SEC}초)` });
+      const trialText = G[g].stages ? '▶ 체험해 보기 (1-1, 1-2)' : TRIAL_ROUNDS[g] ? `▶ 체험해 보기 (${TRIAL_ROUNDS[g]}라운드)` : `▶ 체험해 보기 (${TRIAL_SEC}초)`;
+      // 열고 나면 게임 첫 화면(인트로)이 뜰 때까지 화면을 막아 둠 (그사이 다른 놀이기구가 눌려 다른 게임이 열리지 않게)
+      unlockBox(g, { trial: () => { allow = g; b.click(); }, trialText, onOpen: () => { const k = block(); setTimeout(() => { allow = g; b.click(); k(); }, 1500); } });
     }, true);
     // 다이아 칸: 다이아 상점
     const old = document.getElementById('btnGems');

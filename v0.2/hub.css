@@ -246,7 +246,7 @@ img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #
    놀이공원은 폭 540 기둥(가로 화면은 가운데)에 위아래 스크롤. 위 막대·롤러코스터·프로필·편집 버튼은 화면에 고정 */
 #scrLobby { padding: 0; overflow: hidden; }
 body.in-park { background: #7CC46A; }
-.pk-side { position: absolute; inset: -30px; background: #7CC46A url(../hub/park/bg/mid_a.webp?v=202610311612) center / cover; filter: blur(14px) brightness(.92) saturate(1.1); }
+.pk-side { position: absolute; inset: -30px; background: #7CC46A url(../hub/park/bg/mid_a.webp?v=202610311834) center / cover; filter: blur(14px) brightness(.92) saturate(1.1); }
 .pk-scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; touch-action: pan-y; scrollbar-width: none; overscroll-behavior: contain; }
 .pk-scroll::-webkit-scrollbar { display: none; }
 .pk-world { position: relative; width: 540px; margin: 0 auto; overflow: hidden; box-shadow: 0 0 30px rgba(24,59,91,.35); }

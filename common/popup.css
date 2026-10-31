@@ -1,0 +1,29 @@
+/* 모든 팝업 공통 꾸밈 (v0.3 QA 20·23·26): 상용화 그림(common/ui/monet, GPT U01~U11)의 창 틀 · 분홍 리본 제목 · 반짝 버튼
+   쓰는 곳: 모든 게임의 출발 준비(#ready)·일시정지(#pause)·결과(#result)·고르기(#choose) 창, 첫 화면(index.html)·아이템샵의 .modal 창
+   각 게임 style.css 다음에 불러와서 창 바탕·제목·버튼 모양만 덮어씀 (창 안 배치·크기는 게임 것 그대로) */
+.screen.dim > .panel, #ready > .panel, .modal > .panel, .modal > .mpanel {
+  background: none !important; border-radius: 0 !important; box-shadow: none !important;
+  border: 0 solid transparent !important; border-image: url(ui/monet/panel.webp) 150 70 90 fill / 85px 40px 51px stretch !important;
+  padding-top: 26px !important; padding-left: max(30px, var(--pp-x, 0px)) !important; padding-right: max(30px, var(--pp-x, 0px)) !important; padding-bottom: 32px !important;
+  filter: drop-shadow(0 10px 22px rgba(0, 0, 0, .35)); color: #5A3B22;
+}
+/* 제목: 분홍 리본 위 흰 글자 */
+.screen.dim > .panel > .p-title:first-child, .screen.dim > .panel > .title:first-child, .screen.dim > .panel > .r-title:first-child,
+.modal > .panel > .p-title:first-child, .modal > .mpanel > .m-title:first-child {
+  display: flex; align-items: center; justify-content: center; box-sizing: border-box; align-self: center;
+  width: min(300px, 100%); min-height: 70px; margin: -12px auto 6px !important; padding: 0 44px 15px !important;
+  background: url(ui/monet/ribbon.webp) center / 100% 100% no-repeat !important;
+  color: #fff !important; font-size: 24px !important; line-height: 1.1; text-shadow: 0 2px 0 #C2406A, 0 0 3px #C2406A !important; white-space: nowrap;
+}
+/* 버튼: 큰 버튼은 분홍, 작은 버튼은 파랑 반짝 버튼 (그림을 양옆으로 늘려 씀) */
+.screen.dim > .panel .btn-start, .screen.dim > .panel .btn.gold, .screen.dim > .panel .btn-orange, #result #btnRetry, .screen.dim > .panel .btn-main, #ready > .panel .btn-start, #ready > .panel .btn.gold, .modal .btn-main, .modal .mbtn.gold {
+  background: none !important; box-shadow: none !important; border: 0 solid transparent !important; border-radius: 0 !important;
+  border-image: url(ui/monet/btn_pink.webp) 0 50 fill / 0 26px stretch !important; color: #fff !important; text-shadow: 0 2px 0 rgba(170, 40, 80, .55) !important;
+}
+.screen.dim > .panel .btn-sub, .screen.dim > .panel .btn.white, .screen.dim > .panel .btn-gray, .screen.dim > .panel .btn-blue:not(#btnRetry), #ready > .panel .btn-sub, #ready > .panel .btn.white, .modal .btn-sub, .modal .mbtn.gray {
+  background: none !important; box-shadow: none !important; border: 0 solid transparent !important; border-radius: 0 !important;
+  border-image: url(ui/monet/btn_blue.webp) 0 50 fill / 0 24px stretch !important; color: #fff !important; text-shadow: 0 2px 0 rgba(30, 70, 140, .55) !important;
+}
+.screen.dim > .panel button:active, #ready > .panel button:active, .modal button:active { transform: translateY(2px); }
+/* 창 틀·리본·버튼 그림을 처음부터 받아 둠 (일시정지·결과 창을 처음 열 때 꾸밈이 늦게 붙지 않게) */
+body::after { content: url(ui/monet/panel.webp) url(ui/monet/ribbon.webp) url(ui/monet/btn_pink.webp) url(ui/monet/btn_blue.webp); position: absolute; width: 0; height: 0; overflow: hidden; opacity: 0; pointer-events: none; }

@@ -1,5 +1,5 @@
 'use strict';
-// Twin Helicopter — 은유와 은결의 하늘 모험! (HTML5 Canvas, no dependencies)
+// Sky Rider (하늘타기, 예전 이름 Twin Helicopter) — 은유와 은결의 하늘 모험! 폴더·저장 이름은 helicopter 그대로 (HTML5 Canvas, no dependencies)
 // 클래식 헬리콥터 게임 방식: 누르고 있으면 상승, 떼면 하강. 파이프 사이를 지나 최대한 멀리.
 // Logical height is fixed at 540; width follows the screen aspect.
 
@@ -48,12 +48,12 @@ const $ = (id) => document.getElementById(id);
 
 // ---------- sprites (asset.PNG cut into assets/sprites/sprites.webp + sprites.json) ----------
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
-fetch('assets/sprites/sprites.json?v=202610311612').then((r) => r.json()).then((j) => {
+fetch('assets/sprites/sprites.json?v=202610311834').then((r) => r.json()).then((j) => {
   SP.f = j;
   SP.img.onload = () => { SP.ready = true; };
-  SP.img.src = 'assets/sprites/sprites.webp?v=202610311612';
+  SP.img.src = 'assets/sprites/sprites.webp?v=202610311834';
 });
-for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=202610311612`; SP.bg.push(im); }
+for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=202610311834`; SP.bg.push(im); }
 // draw sprite centered at (x,y) with its width scaled to w (height keeps aspect)
 function spr(g, name, x, y, w, rot = 0, alpha = 1) {
   if (!SP.ready || !SP.f[name]) return;
@@ -203,7 +203,8 @@ function resetRun() {
   G.nextPipeX = W * 0.95; G.gapY = H * 0.47;
   G.themeIdx = 0; G.prevTheme = 0; G.themeFade = 1;
   G.magnetT = 0; G.shield = false; G.boostT = 0; G.newBest = false; G.shake = 0; G.crashT = 0;
-  for (let i = 0; i < 4; i++) G.deco.push(makeDeco(i === 0 ? rand(0, W * 0.3) : lastDecoX() + DECO_GAP + rand(0, W * 0.3)));
+  // 첫 장식은 캐릭터(왼쪽, 별 구름을 탄 자리) 오른쪽 멀리서 시작 — 시작 화면에서 캐릭터 구름과 장식 구름이 겹쳐 보이지 않게 (QA02)
+  for (let i = 0; i < 4; i++) G.deco.push(makeDeco(i === 0 ? W * 0.5 + rand(0, W * 0.2) : lastDecoX() + DECO_GAP + rand(0, W * 0.3)));
   // 아이템샵: 적용한 배경 스킨 + '사용중' 부스트 (메인 화면에서 들어왔을 때만)
   G.skin = HUB ? HUB.equippedSkin('helicopter') : 'default';
   G.x2T = 0;
@@ -575,6 +576,8 @@ function render() {
       const n = G.state === 'crash' ? 'heli_crash' : h.hurtT > 0 ? 'heli_hurt' : 'heli_1';
       const bob = G.state === 'play' && h.hurtT <= 0 ? Math.sin(h.anim * 5) * 1.5 : 0;
       CharV2.drawCenter(ctx, who, n, hx, h.y + bob, 205, { rot: h.rot });
+    } else if (window.CharV2 && CharV2.is(who) && !CharV2.ready(who)) {
+      // 캐릭터 그림을 받는 중: 아무것도 안 그림 (예전 헬리콥터 그림이 잠깐 스쳐 보이지 않게, QA 15·21)
     } else if (dressed) drawDressedHeli(frame, hx, h.y, 112, h.rot);
     else spr(ctx, frame, hx, h.y, 112, h.rot);
     if (G.shield) spr(ctx, 'fx_ring', hx, h.y, 130, 0, 0.6 + Math.sin(G.t * 8) * 0.2);

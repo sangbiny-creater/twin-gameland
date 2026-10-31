@@ -11,7 +11,7 @@
 
 let W = 540, H = 960;
 const D = window.DartArt;
-const ASSET_V = '202610311612';
+const ASSET_V = '202610311834';
 const ROUNDS = 8, PER = 3;
 const AMP = 1.2; // 줄이 움직이는 범위 (더블 링 바깥 = 1, 조금 밖까지 나감)
 // 한 번 갔다 오는 시간(초), 모든 라운드 같음 (사용자 요청으로 맞춘 값)
@@ -241,6 +241,9 @@ function endRound() {
   later(() => {
     G.darts = [];
     if (G.round >= ROUNDS) { finish(); return; }
+    // v0.3 잠긴 게임 체험: 정한 라운드까지만 (common/monet.js 가 window.DART_TRIAL 을 넣음)
+    const T = window.DART_TRIAL;
+    if (T && T.on() && G.round >= T.rounds) { setState('trial'); T.end(); return; }
     G.round++; G.dart = 0; G.rounds.push([]);
     if (G.round === ROUNDS) G.fx.push({ kind: 'banner', text: '마지막 라운드!', sub: '끝까지 힘내요!', t: 0, life: 1.1 });
     newDart();
