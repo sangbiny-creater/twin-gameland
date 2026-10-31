@@ -69,6 +69,20 @@
   // 예전(게임별) 스킨 id → 공통 id
   const OLD_SKIN = { autumn: 'forest', moon: 'space' };
   // 게임 부스트: 1개씩 사서 모아 두고, '사용중'으로 켜 둔 것만 게임을 시작할 때 1개씩 쓰임
+  // 아이템 (팝업 v2, docs/spec/팝업_아이템_정리_v1.md): 아이템샵에서 파는 것은 이 7개뿐, 수량은 모든 게임이 같이 씀(sh.boosts._all)
+  //  하트 = 하트 3칸·2개 대신 4칸·3개로 시작 / 보호막 = 처음 한 번 안 다침 / 슬로우 = 처음 20초 천천히 (무제한형·두더지는 시작 팝업에서 체크)
+  //  힌트·시간 추가·폭탄·모두 보기 = 게임 화면 버튼으로 하나씩 꺼내 씀 (manual)
+  //  게임 안에서만 줍는 아이템(자석·코인 2배·날개·섞기 등)은 팔지 않음. 스카이훅·다트는 이번에 안 바꿔서 예전 그대로(게임별 수량)
+  const ITEMS = {
+    life: { name: '하트', price: 300, games: ['downhill', 'bakery', 'stairs', 'helicopter', 'dogsnack', 'mole'], desc: '하트 4칸에 3개로 시작해요' },
+    shield: { name: '보호막', price: 200, games: ['downhill', 'bakery', 'stairs', 'helicopter', 'dogsnack'], desc: '처음 한 번은 다쳐도 괜찮아요' },
+    slow: { name: '슬로우', price: 200, games: ['downhill', 'bakery', 'stairs', 'helicopter', 'dogsnack'], desc: '처음 20초 동안 천천히 움직여요' },
+    hint: { name: '힌트', price: 60, games: ['shisen', 'memory'], desc: '짝 하나를 알려 줘요', manual: true },
+    time: { name: '시간 추가', price: 80, games: ['shisen', 'memory'], desc: '제한 시간 +10초', manual: true },
+    bomb: { name: '폭탄', price: 150, games: ['shisen', 'memory'], desc: '짝 하나를 바로 이어 줘요', manual: true },
+    find: { name: '모두 보기', price: 120, games: ['memory'], desc: '모든 카드를 잠깐 보여 줘요', manual: true },
+  };
+  const ITEM_IDS = Object.keys(ITEMS);
   const BOOSTS = {
     skyhook: [
       { id: 'life', name: '추가 목숨', desc: '하트 4개로 시작', price: 300 },
@@ -76,63 +90,17 @@
       { id: 'magnet', name: '코인 흡수', desc: '처음 20초 자석', price: 300 },
       { id: 'x2', name: '코인 2배', desc: '처음 30초 코인 2배', price: 300 },
     ],
-    helicopter: [
-      { id: 'life', name: '추가 목숨', desc: '하트 4개로 시작', price: 300 },
-      { id: 'shield', name: '1회 보호', desc: '처음 한 번 안 다쳐요', price: 200 },
-      { id: 'dash', name: '스타트 대시', desc: '출발 3초 슝~ 무적', price: 200 },
-      { id: 'magnet', name: '코인 흡수', desc: '처음 20초 자석', price: 300 },
-      { id: 'x2', name: '코인 2배', desc: '처음 30초 코인 2배', price: 300 },
-    ],
-    stairs: [
-      { id: 'life', name: '추가 목숨', desc: '시작할 때 목숨 +1', price: 300 },
-      { id: 'time', name: '시작 시간 증가', desc: '시작 시간 +10초', price: 200 },
-      { id: 'shield', name: '1회 보호', desc: '한 번 떨어져도 OK', price: 300 },
-      { id: 'wing', name: '날개', desc: '처음 15칸 무적', price: 200 },
-      { id: 'magnet', name: '코인 흡수', desc: '처음 20초 자석', price: 300 },
-      { id: 'x2', name: '코인 2배', desc: '처음 20초 코인 2배', price: 300 },
-    ],
-    // manual: 게임 화면의 버튼으로 하나씩 꺼내 쓰는 아이템 (판이 바뀌어도 수량 그대로)
-    shisen: [
-      { id: 'hint', name: '힌트', desc: '짝 하나를 알려줘요', price: 60, manual: true },
-      { id: 'shuffle', name: '섞기', desc: '타일 위치를 섞어요', price: 80, manual: true },
-      { id: 'time', name: '시간 추가', desc: '제한 시간 +10초', price: 80, manual: true },
-      { id: 'bomb', name: '폭탄', desc: '짝 하나를 바로 없애요', price: 150, manual: true },
-      { id: 'find', name: '자동 찾기', desc: '처음 20초 짝을 표시', price: 300 },
-      { id: 'combo', name: '콤보 보너스', desc: '콤보 코인 2배', price: 300 },
-    ],
-    downhill: [
-      { id: 'life', name: '추가 하트', desc: '하트 4개로 시작', price: 300 },
-      { id: 'shield', name: '보호막', desc: '처음 한 번 안 다쳐요', price: 200 },
-      { id: 'dash', name: '스타트 부스터', desc: '출발 5초 슝~ 무적', price: 200 },
-      { id: 'magnet', name: '자석', desc: '처음 20초 코인 흡수', price: 300 },
-      { id: 'x2', name: '코인 2배', desc: '처음 30초 코인 2배', price: 300 },
-    ],
-    memory: [
-      { id: 'hint', name: '힌트', desc: '짝 하나를 잠깐 보여줘요', price: 60, manual: true },
-      { id: 'find', name: '모두 보기', desc: '모든 카드를 2초 보여줘요', price: 120, manual: true },
-      { id: 'time', name: '시간 추가', desc: '제한 시간 +10초', price: 80, manual: true },
-      { id: 'bomb', name: '짝 맞추기', desc: '짝 하나를 바로 찾아요', price: 150, manual: true },
-      { id: 'combo', name: '콤보 보너스', desc: '콤보 코인 2배', price: 300 },
-    ],
-    mole: [
-      { id: 'time', name: '시간 추가', desc: '제한 시간 +10초', price: 80, manual: true },
-      { id: 'double', name: '점수 2배', desc: '10초 동안 점수 2배', price: 100, manual: true },
-      { id: 'rainbow', name: '무지개 망치', desc: '나온 두더지를 한꺼번에', price: 150, manual: true },
-      { id: 'combo', name: '콤보 보너스', desc: '콤보 코인 2배', price: 300 },
-    ],
-    bakery: [
-      { id: 'life', name: '추가 하트', desc: '하트 3개(최대)로 시작', price: 300 },
-      { id: 'shield', name: '1회 보호', desc: '처음 한 번 실수해도 OK', price: 200 },
-      { id: 'slow', name: '천천히 시작', desc: '처음 20초 천천히', price: 200 },
-      { id: 'x2', name: '코인 2배', desc: '처음 30초 코인 2배', price: 300 },
-    ],
-    dogsnack: [
-      { id: 'life', name: '추가 하트', desc: '하트 3개(최대)로 시작', price: 300 },
-      { id: 'shield', name: '1회 보호', desc: '처음 한 번 실수해도 OK', price: 200 },
-      { id: 'slow', name: '천천히 시작', desc: '처음 20초 천천히', price: 200 },
-      { id: 'x2', name: '코인 2배', desc: '처음 30초 코인 2배', price: 300 },
-    ],
+    helicopter: ['life', 'shield', 'slow'],
+    stairs: ['life', 'shield', 'slow'],
+    shisen: ['hint', 'time', 'bomb'],
+    downhill: ['life', 'shield', 'slow'],
+    memory: ['hint', 'time', 'bomb', 'find'],
+    mole: ['life'],
+    bakery: ['life', 'shield', 'slow'],
+    dogsnack: ['life', 'shield', 'slow'],
   };
+  for (const g of Object.keys(BOOSTS)) if (typeof BOOSTS[g][0] === 'string') BOOSTS[g] = BOOSTS[g].map((id) => ({ id, ...ITEMS[id], shared: true }));
+
 
   // ---------- 캐릭터 꾸미기 (코스튬) ----------
   // 캐릭터(프로필)마다 산 옷을 따로 저장. 입은 옷은 모든 게임 플레이·메뉴 화면에 보임
@@ -250,7 +218,25 @@
     }
     return changed;
   }
-  const upgrade = (d) => upgradeGames(d) | upgradeLooks(d);
+  // 팝업 v2 (2026-11-01): 게임마다 따로 세던 7개 아이템(하트·보호막·슬로우·힌트·시간 추가·폭탄·모두 보기) 수량을 모든 게임 같이 쓰는 칸(_all)으로 모음
+  //  예전 이름: 추가 하트·추가 목숨(life) · 1회 보호(shield) · 천천히 시작(slow) · 짝 맞추기(bomb). 한 번만 (sh.items2)
+  function upgradeItems(d) {
+    let changed = false;
+    for (const c of d.chars) {
+      const sh = c.shop; if (!sh || sh.items2) continue;
+      sh.boosts = sh.boosts || {}; const all = sh.boosts._all = sh.boosts._all || {};
+      for (const g of Object.keys(sh.boosts)) {
+        if (g === '_all' || g === 'skyhook' || g === 'darts') continue;
+        for (const id of Object.keys(sh.boosts[g])) {
+          if (!(BOOSTS[g] || []).some((b) => b.id === id && b.shared)) continue;
+          all[id] = (all[id] || 0) + (sh.boosts[g][id] || 0); delete sh.boosts[g][id];
+        }
+      }
+      sh.items2 = true; changed = true;
+    }
+    return changed;
+  }
+  const upgrade = (d) => upgradeGames(d) | upgradeLooks(d) | upgradeItems(d);
   let data = load();
   if (upgrade(data)) try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) { /* ignore */ }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) { /* ignore */ } }
@@ -262,6 +248,8 @@
     return c.games[g];
   }
 
+  // 수량을 넣어 두는 칸: 7개 아이템은 모든 게임 같이(_all), 그 밖(스카이훅·다트, 게임 안 버튼 아이템 섞기 등)은 게임마다
+  const bk = (game, id) => ((BOOSTS[game] || []).some((b) => b.id === id && b.shared) ? '_all' : game);
   function shopOf(c) {
     if (!c.shop) c.shop = { skins: {}, equipped: {}, boosts: {}, using: {} };
     const sh = c.shop;
@@ -301,7 +289,7 @@
   };
 
   const Hub = {
-    GAMES, WORLDS, FREE_SLOTS, MAX_CHARS, SKINS, BOOSTS, COSTUMES,
+    GAMES, WORLDS, FREE_SLOTS, MAX_CHARS, SKINS, BOOSTS, ITEMS, COSTUMES,
 
     // ----- 캐릭터 꾸미기 -----
     ownsCostume(id, c = this.active()) { return !!(c && (c.costumes || []).includes(id)); },
@@ -309,7 +297,7 @@
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611010106` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611010110` : null; },
     buyCostume(id, c = this.active()) {
       const it = COSTUMES.find((x) => x.id === id);
       if (!c || !it || this.ownsCostume(id, c)) return { ok: false };
@@ -356,15 +344,15 @@
       save(); return { ok: true };
     },
     equipSkin(id, c = this.active()) { if (c && this.ownsSkin(id, c)) { shopOf(c).skinOn = id; save(); } },
-    boostCount(game, id, c = this.active()) { return (c && shopOf(c).boosts[game] && shopOf(c).boosts[game][id]) || 0; },
+    boostCount(game, id, c = this.active()) { const k = bk(game, id); return (c && shopOf(c).boosts[k] && shopOf(c).boosts[k][id]) || 0; },
     isUsing(game, id, c = this.active()) { return !!(c && shopOf(c).using[game] && shopOf(c).using[game][id]); },
     buyBoost(game, id, c = this.active()) {
       const b = (BOOSTS[game] || []).find((x) => x.id === id);
       if (!c || !b) return { ok: false };
       if (c.coins < b.price) return { ok: false, why: 'coins' };
       c.coins -= b.price;
-      const sh = shopOf(c); sh.boosts[game] = sh.boosts[game] || {}; sh.boosts[game][id] = (sh.boosts[game][id] || 0) + 1;
-      sh.using[game] = sh.using[game] || {}; sh.using[game][id] = true; // 사면 '사용중'으로
+      const sh = shopOf(c), k = bk(game, id); sh.boosts[k] = sh.boosts[k] || {}; sh.boosts[k][id] = (sh.boosts[k][id] || 0) + 1;
+      if (k !== '_all') { sh.using[game] = sh.using[game] || {}; sh.using[game][id] = true; } // 스카이훅: 사면 '사용중'으로 (7개 아이템은 시작 팝업에서 고름)
       save(); return { ok: true };
     },
     setUsing(game, id, on, c = this.active()) {
@@ -374,10 +362,11 @@
     takeBoosts(game) {
       reload();
       const c = this.active(); if (!c) return [];
-      const sh = shopOf(c), have = sh.boosts[game] || {}, use = sh.using[game] || {};
+      const sh = shopOf(c), use = sh.using[game] || {};
       const used = [];
       for (const b of BOOSTS[game] || []) {
         if (b.manual) continue; // 버튼으로 쓰는 아이템은 여기서 꺼내지 않음
+        const have = sh.boosts[bk(game, b.id)] || {};
         if (use[b.id] && have[b.id] > 0) { have[b.id]--; used.push(b.id); if (!have[b.id]) use[b.id] = false; }
       }
       if (used.length) save();
@@ -386,13 +375,13 @@
     // ----- 아이템 수량 (구매·게임 보상·게임에서 사용을 모두 이 숫자 하나로) -----
     addBoost(game, id, n = 1, c = this.active()) {
       if (!c) return 0;
-      const sh = shopOf(c); sh.boosts[game] = sh.boosts[game] || {}; sh.boosts[game][id] = Math.max(0, (sh.boosts[game][id] || 0) + n);
-      save(); return sh.boosts[game][id];
+      const sh = shopOf(c), k = bk(game, id); sh.boosts[k] = sh.boosts[k] || {}; sh.boosts[k][id] = Math.max(0, (sh.boosts[k][id] || 0) + n);
+      save(); return sh.boosts[k][id];
     },
     // 1개 쓰기: 있으면 줄이고 true
     useBoost(game, id, c = this.active()) {
       if (!c || this.boostCount(game, id, c) <= 0) return false;
-      shopOf(c).boosts[game][id]--; save(); return true;
+      shopOf(c).boosts[bk(game, id)][id]--; save(); return true;
     },
     // 캐릭터마다 한 번만 주는 기본 아이템
     starterKit(game, c = this.active()) {
@@ -400,7 +389,7 @@
       if (!c || !KITS[game]) return false;
       const sh = shopOf(c); sh.starter = sh.starter || {};
       if (sh.starter[game]) return false;
-      for (const [id, n] of Object.entries(KITS[game])) { sh.boosts[game] = sh.boosts[game] || {}; sh.boosts[game][id] = (sh.boosts[game][id] || 0) + n; }
+      for (const [id, n] of Object.entries(KITS[game])) { const k = bk(game, id); sh.boosts[k] = sh.boosts[k] || {}; sh.boosts[k][id] = (sh.boosts[k][id] || 0) + n; }
       sh.starter[game] = true; save(); return true;
     },
     boostName(game, id) { const b = (BOOSTS[game] || []).find((x) => x.id === id); return b ? b.name : id; },

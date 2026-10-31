@@ -47,7 +47,7 @@ const rand = (a, b) => a + (b - a) * Math.random();
 const $ = (id) => document.getElementById(id);
 
 // ---------- sprites ----------
-const ASSET_V = '202611010106'; // 캐시 버전 (tools/bump_version.py가 올림)
+const ASSET_V = '202611010110'; // 캐시 버전 (tools/bump_version.py가 올림)
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -210,7 +210,7 @@ function resetRun() {
   G.t = 0; G.steps = []; genDir = Math.random() < 0.5 ? 1 : -1; genRun = 0;
   ensureSteps(40);
   G.idx = 0; G.dir = G.steps[1].col - G.steps[0].col;
-  G.hearts = 0; G.coins = 0; G.time = CFG.time0; G.coinBase = 0; G.contUsed = false;
+  G.hearts = 2; G.heartsMax = CFG.heartsMax; G.slowT = 0; G.coins = 0; G.time = CFG.time0; // 하트: 3칸에 2개 (하트 아이템 = 4칸에 3개) G.coinBase = 0; G.contUsed = false;
   G.anim = null; G.queue = []; G.boost = 0; G.wing = 0; G.shield = false; G.magnetT = 0; G.x2T = 0;
   G.fx = []; G.texts = []; G.fallT = 0; G.pose = 'ready'; G.poseT = 0; G.rot = 0;
   G.themeIdx = 0; G.prevTheme = 0; G.themeFade = 1; G.newBest = false; G.shake = 0;
@@ -220,7 +220,8 @@ function resetRun() {
   // 아이템샵: 적용한 배경 스킨 + '사용중' 부스트 (메인 화면에서 들어왔을 때만)
   G.skin = HUB ? HUB.equippedSkin('stairs') : 'default';
   const boosts = HUB ? HUB.takeBoosts('stairs') : [];
-  if (boosts.includes('life')) G.hearts = 1;
+  if (boosts.includes('life')) { G.hearts = 3; G.heartsMax = 4; }
+  if (boosts.includes('slow')) G.slowT = 20; // 슬로우: 처음 20초 시간이 천천히 줄어듦
   if (boosts.includes('time')) G.time += 10;
   if (boosts.includes('shield')) G.shield = true;
   if (boosts.includes('wing')) { G.wing = 15; noWingAhead(); }
@@ -362,7 +363,7 @@ function collect(item, s) {
     case 'star': coins(5); Audio.sfx('gem'); fxAt('fx_star', x, y, 80, 0.45); popText(`+${5 * mult}`, x, y - 20, '#FF9F2E'); break;
     case 'heart':
       Audio.sfx('item'); fxAt('fx_heart', x, y, 80, 0.45);
-      if (G.hearts < CFG.heartsMax) { G.hearts++; renderHearts(true); popText('목숨 +1', x, y - 20, '#FF5C7A'); }
+      if (G.hearts < G.heartsMax) { G.hearts++; renderHearts(true); popText('목숨 +1', x, y - 20, '#FF5C7A'); }
       else { coins(5); popText('+5', x, y - 20, '#FF9F2E'); }
       break;
     case 'time5': G.time = Math.min(CFG.timeMax + 10, G.time + 5); Audio.sfx('time'); fxAt('fx_time', x, y, 70, 0.45); popText('+5초', x, y - 20, '#3D8BFF'); break;
@@ -393,7 +394,8 @@ function step(dt) {
   if (G.state !== 'play') return;
   // timer
   const drain = 1 + Math.min(2, G.idx / 200); // 높이 올라갈수록 시간이 빨리 줄어듦
-  if (G.idx > 0 || G.t > 0) G.time -= dt * drain;
+  if (G.slowT > 0) G.slowT = Math.max(0, G.slowT - dt);
+  if (G.idx > 0 || G.t > 0) G.time -= dt * drain * (G.slowT > 0 ? 0.6 : 1);
   if (G.time < 5) { G.tickT -= dt; if (G.tickT <= 0) { G.tickT = 0.5; Audio.sfx('tick'); } }
   if (G.time <= 0 && GOD()) G.time = 10; // 무적: 시간이 다 되면 다시 채움
   if (G.time <= 0) { G.time = 0; G.fallReason = 'time'; G.pose = 'dizzy'; G.state = 'fall'; G.fallFrom = { ...G.pos }; G.fallTo = { ...G.pos }; G.fallT = 0.5; G.vy = -200; Audio.sfx('hit'); fxAt('fx_dizzy', G.pos.x, G.pos.y - 120, 70, 0.8); return; }
@@ -612,7 +614,7 @@ function updateHud() {
 }
 function renderHearts(pop) {
   const el = $('hudHearts'); el.innerHTML = '';
-  for (let i = 0; i < CFG.heartsMax; i++) {
+  for (let i = 0; i < (G.heartsMax || CFG.heartsMax); i++) {
     const d = document.createElement('div');
     d.className = 'heart' + (i >= G.hearts ? ' empty' : '') + (pop && i === G.hearts - 1 ? ' pop' : '');
     el.appendChild(d);

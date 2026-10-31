@@ -6,7 +6,7 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body {
   margin: 0; height: 100%; overflow: hidden; position: fixed; inset: 0;
-  background: #6FB8EC url(assets/bg/port.webp?v=202611010106) center / cover no-repeat; touch-action: none; overscroll-behavior: none;
+  background: #6FB8EC url(assets/bg/port.webp?v=202611010110) center / cover no-repeat; touch-action: none; overscroll-behavior: none;
   -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
   font-family: var(--font); color: var(--navy);
 }

@@ -54,6 +54,9 @@
 .gp-slot .buy img{width:14px;height:14px}
 .gp-slot.off{opacity:.45;pointer-events:none}.gp-slot.off .buy{display:none}
 .gp-tip{font-size:14px;color:#8A6E58;text-align:center;flex:none}
+.gp-ask{z-index:60}.gp-ask > .panel{min-height:0!important}
+.gp-buy{display:flex;align-items:center;gap:12px;flex:none;font-size:18px;line-height:1.5;color:#5A3B22}
+.gp-buy-ic{width:72px;height:72px;object-fit:contain}.gp-coin{width:20px;height:20px;vertical-align:-4px;margin-right:2px}
 #result .res-face, #result #resFace, #result #resBest.badge{display:none!important}
 #ready > .panel > .logo{display:none!important}
 #ready .gp-info{flex:none;width:100%;box-sizing:border-box;border-radius:18px;background:#FFF3DE;border:3px solid #F5D9A8;padding:10px 12px;font-size:14px;line-height:1.45;color:#6B4A30;text-align:center}
@@ -131,9 +134,21 @@
     if (!HUB || !def) return;
     const c = HUB.active(), name = ITEMS[id][0];
     if (!c || c.coins < def.price) { blip(300); toast(`코인이 ${def.price - ((c && c.coins) || 0)}개 모자라요`); return; }
-    if (!confirm(`${name}을(를) 코인 ${def.price}개로 살까요?`)) return;
-    const r = HUB.buyBoost(g, id);
-    if (r.ok) { blip(1046); HUB.setUsing(g, id, false); toast(`${name}을(를) 샀어요!`); done(); }
+    ask('아이템 구매', `<img class="gp-buy-ic" src="${itemSrc(id)}" alt=""><div class="gp-buy-t"><b>${name}</b> 1개를 살까요?<br><img src="${BASE}common/ui/coin.webp" alt="" class="gp-coin">${def.price} 코인 (지금 ${c.coins})</div>`, '사기', () => {
+      const r = HUB.buyBoost(g, id);
+      if (r.ok) { blip(1046); HUB.setUsing(g, id, false); toast(`${name}을(를) 샀어요!`); done(); }
+    });
+  }
+  // 게임 팝업 모양의 확인 창: [확인][취소]
+  function ask(title, html, okText, onOk) {
+    const w = document.createElement('div'); w.className = 'screen dim gp-ask';
+    w.innerHTML = `<div class="panel"><div class="p-title">${title}</div><div class="gp-buy">${html}</div><button class="btn gp-ok">${okText}</button><button class="btn gp-no" data-close>취소</button></div>`;
+    ($('root') || document.body).appendChild(w);
+    for (const ev of ['pointerdown', 'pointerup', 'touchstart', 'keydown']) w.addEventListener(ev, (e) => e.stopPropagation());
+    w.querySelector('.gp-ok').addEventListener('click', (e) => { e.stopPropagation(); w.remove(); onOk(); });
+    w.querySelector('.gp-no').addEventListener('click', (e) => { e.stopPropagation(); blip(500); w.remove(); });
+    const panel = w.querySelector('.panel');
+    if (window.PopupUI) { PopupUI.arrange(panel); requestAnimationFrame(() => PopupUI.fit(panel)); }
   }
   function toast(t) {
     if (window.UI && UI.toast) { UI.toast(t); return; }
@@ -181,6 +196,8 @@
     const row = panel.querySelector(':scope > .row') || $('btnGo');
     panel.insertBefore(items, row);
     drawStageItems();
+    // 시작할 때 체크한 하트는 이번 판에만 (게임이 Hub.takeBoosts 로 꺼낸 뒤 체크를 풀어 둠)
+    const go = $('btnGo'); if (go) go.addEventListener('click', () => setTimeout(() => { if (HUB) for (const id of STAGE[game]) if (id === 'life' && HUB.isUsing(game, id)) HUB.setUsing(game, id, false); }, 0));
   }
   function drawStageItems() {
     const box = $('gpStageItems'); if (!box) return;

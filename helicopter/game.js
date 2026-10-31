@@ -13,7 +13,7 @@ const CFG = {
   pipeW: 86,
   gap0: 280, gapMin: 185,
   pipeSpace0: 440, pipeSpaceMin: 340,
-  hpStart: 3, hpMax: 4,
+  hpStart: 2, hpMax: 3, // 하트: 3칸에 2개로 시작 (하트 아이템 = 4칸에 3개)
   invincible: 1.6,
   themeEvery: 500,     // m
 };
@@ -48,12 +48,12 @@ const $ = (id) => document.getElementById(id);
 
 // ---------- sprites (asset.PNG cut into assets/sprites/sprites.webp + sprites.json) ----------
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
-fetch('assets/sprites/sprites.json?v=202611010106').then((r) => r.json()).then((j) => {
+fetch('assets/sprites/sprites.json?v=202611010110').then((r) => r.json()).then((j) => {
   SP.f = j;
   SP.img.onload = () => { SP.ready = true; };
-  SP.img.src = 'assets/sprites/sprites.webp?v=202611010106';
+  SP.img.src = 'assets/sprites/sprites.webp?v=202611010110';
 });
-for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=202611010106`; SP.bg.push(im); }
+for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=202611010110`; SP.bg.push(im); }
 // draw sprite centered at (x,y) with its width scaled to w (height keeps aspect)
 function spr(g, name, x, y, w, rot = 0, alpha = 1) {
   if (!SP.ready || !SP.f[name]) return;
@@ -209,7 +209,9 @@ function resetRun() {
   G.skin = HUB ? HUB.equippedSkin('helicopter') : 'default';
   G.x2T = 0;
   const boosts = HUB ? HUB.takeBoosts('helicopter') : [];
-  if (boosts.includes('life')) G.hp = CFG.hpMax;
+  G.hpMax = CFG.hpMax; G.slowT = 0;
+  if (boosts.includes('life')) { G.hp = 3; G.hpMax = 4; }
+  if (boosts.includes('slow')) G.slowT = 20; // 슬로우: 처음 20초 70% 속도
   if (boosts.includes('shield')) G.shield = true;
   if (boosts.includes('dash')) G.boostT = 3;
   if (boosts.includes('magnet')) G.magnetT = 20;
@@ -326,7 +328,8 @@ function step(dt) {
   // play
   const boost = G.boostT > 0;
   G.speed = Math.min(CFG.speedMax, G.speed + CFG.speedGain * dt);
-  const spd = G.speed * (boost ? 1.6 : 1);
+  if (G.slowT > 0) G.slowT = Math.max(0, G.slowT - dt);
+  const spd = G.speed * (boost ? 1.6 : 1) * (G.slowT > 0 ? 0.7 : 1);
   G.dist += spd * dt;
   const holding = input.down || input.pressed;
   input.pressed = false;
@@ -443,7 +446,7 @@ function collect(it) {
   else if (it.type === 'gem_pink') { G.coins += 10 * mult; Audio.sfx('gem'); popText('+10', sx, it.y - 30, '#FF5C9A'); burst(sx, it.y, 'fx_sparkle', 1, 70); }
   else if (it.type === 'heart') {
     Audio.sfx('item');
-    if (G.hp < CFG.hpMax) { G.hp++; renderHearts(true); popText('♥ +1', sx, it.y - 30, '#FF5C7A'); }
+    if (G.hp < G.hpMax) { G.hp++; renderHearts(true); popText('♥ +1', sx, it.y - 30, '#FF5C7A'); }
     else if (!GOD()) { G.coins += 5 * mult; popText('+5', sx, it.y - 30, '#FF9F2E'); }
   } else if (it.type === 'magnet') { G.magnetT = 7; Audio.sfx('item'); popText('자석!', sx, it.y - 30, '#E84A5F'); renderBuffs(); }
   else if (it.type === 'shield') { G.shield = true; Audio.sfx('item'); popText('쉴드!', sx, it.y - 30, '#3D8BFF'); renderBuffs(); }
@@ -647,7 +650,7 @@ function updateHud() {
 }
 function renderHearts(pop) {
   const el = $('hudHearts'); el.innerHTML = '';
-  for (let i = 0; i < CFG.hpMax; i++) {
+  for (let i = 0; i < (G.hpMax || CFG.hpMax); i++) {
     const d = document.createElement('div');
     d.className = 'heart' + (i >= G.hp ? ' empty' : '') + (pop && i === G.hp - 1 ? ' pop' : '');
     el.appendChild(d);

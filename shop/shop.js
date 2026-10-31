@@ -4,7 +4,7 @@
 //  · 게임 카드(스크롤해도 고정)로 게임을 고르면 그 게임의 게임 부스트 / 보유 아이템이 보임
 //  · 게임 부스트: 1개씩 사서 모음. 수량은 구매·게임 보상·게임에서 사용 모두 같은 숫자(common/profile.js)
 const $ = (id) => document.getElementById(id);
-const V = '?v=202611010106'; // bump when images change so phones don't show old cached ones
+const V = '?v=202611010110'; // bump when images change so phones don't show old cached ones
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 
 const GAMES = [
@@ -25,6 +25,12 @@ const boostIcon = (id) => `../common/items/${id}.webp${V}`;
 const skinThumb = (id) => `assets/skins/${id}.webp${V}`;
 const COIN = `assets/ui/coin.webp${V}`;
 
+// v0.3: 아이템을 게임마다 나누지 않음 → 게임 고르기·보유 아이템 칸 숨김 (아래 renderItems)
+if (Hub.ver === '0.3') {
+  document.querySelector('.games-wrap').classList.add('hidden'); $('sec-owned').classList.add('hidden');
+  document.querySelector('#sec-boosts .sec-head b').textContent = '아이템';
+  document.querySelector('#sec-boosts .sec-desc').textContent = '한 번 사면 모든 게임에서 같이 써요!';
+}
 let game = 'skyhook';
 try { game = sessionStorage.getItem('shop_game') || game; } catch (e) { /* ignore */ }
 const q = new URLSearchParams(location.search);
@@ -98,8 +104,32 @@ function buySkin(s) {
 }
 function equipSkin(s) { Hub.equipSkin(s.id); blip(900); toast(`${s.name} 적용! 모든 게임에 바뀌어요`); renderAll(); }
 
-// ---------- 게임 부스트 (사기) ----------
+// ---------- 아이템 (v0.3, 팝업 v2): 7개를 한 화면에 — 아이콘·이름·가격, 오른쪽 위에 가진 수량 (수량은 모든 게임이 같이 씀)
+//  누르면 구매 창에서 어떤 게임에 쓰는지 알려 줌. 하트 그림은 하트 통일 규칙대로 common/ui/heart.webp
+const V3 = Hub.ver === '0.3';
+const itemIcon = (id) => (id === 'life' ? `../common/ui/heart.webp${V}` : boostIcon(id));
+const gameName = (g) => (Hub.GAMES[g] && Hub.GAMES[g].name) || g;
+function renderItems() {
+  const grid = $('boostGrid'); grid.innerHTML = '';
+  for (const [id, it] of Object.entries(Hub.ITEMS)) {
+    const n = Hub.boostCount(it.games[0], id);
+    const d = document.createElement('button');
+    d.className = 'bcard item' + (Hub.active().coins < it.price ? ' poor' : '');
+    d.innerHTML = `${n ? `<span class="have">x${n}</span>` : ''}<img class="bi" src="${itemIcon(id)}" alt=""><div class="bn">${it.name}</div>`
+      + `<div class="price-pill"><img src="${COIN}" alt="">${it.price}</div>`;
+    d.onclick = () => {
+      if (lack(it.price)) return;
+      const how = it.manual ? '게임 화면의 버튼으로 하나씩 꺼내 써요' : '게임 시작 창에서 골라서 써요';
+      confirmBox('아이템 구매', `<img class="mthumb" src="${itemIcon(id)}" style="width:84px" alt=""><b>${it.name}</b> — ${it.desc}<br><small>쓰는 게임: ${it.games.map(gameName).join(' · ')}<br>${how}</small><br>1개를 살까요? ${coinImg} ${it.price} 코인`, '구매', () => {
+        if (Hub.buyBoost(it.games[0], id).ok) { ching(); toast(`${it.name} +1! 지금 ${Hub.boostCount(it.games[0], id)}개 있어요`); renderHeader(true); renderAll(); }
+      });
+    };
+    grid.appendChild(d);
+  }
+}
+// ---------- 게임 부스트 (사기) — 보관판(v0.1·v0.2): 게임을 골라서 ----------
 function renderBoosts() {
+  if (V3) { renderItems(); return; }
   const grid = $('boostGrid'); grid.innerHTML = '';
   for (const b of Hub.BOOSTS[game] || []) {
     const n = Hub.boostCount(game, b.id);
@@ -122,6 +152,7 @@ function buyBoost(b) {
 
 // ---------- 보유 아이템 ----------
 function renderOwned() {
+  if (V3) return; // v0.3: 가진 수량은 아이템 칸 오른쪽 위에
   const grid = $('ownedGrid'); grid.innerHTML = '';
   const mine = (Hub.BOOSTS[game] || []).filter((b) => Hub.boostCount(game, b.id) > 0);
   if (!mine.length) { grid.innerHTML = '<div class="empty">아직 가진 부스트가 없어요.<br>왼쪽 게임 부스트에서 살 수 있어요!</div>'; return; }

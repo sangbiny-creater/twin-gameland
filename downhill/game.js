@@ -13,7 +13,7 @@ const CFG = {
   spawnAhead: 70,            // 이만큼 앞(m)까지 장애물을 미리 만들어 둠
   v0: 9, vMax: 22,           // 속도(m/s): 100m마다 +1
   laneSpeed: 13,             // 좌우 이동 속도(칸/초)
-  hearts: 3, heartsMax: 4,
+  hearts: 2, heartsMax: 3,  // 하트: 3칸에 2개로 시작 (하트 아이템 = 4칸에 3개), 게임 중 하트를 먹어 칸까지 채움
   invuln: 1.0,
   jumpDur: 0.75, jumpH: 120, // 점프하기: 공중에 있는 시간(초)·높이(px)
 };
@@ -65,7 +65,7 @@ const $ = (id) => document.getElementById(id);
 const rng = (seed) => { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let x = s; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; };
 
 // ---------- sprites ----------
-const ASSET_V = '202611010106';
+const ASSET_V = '202611010110';
 const SP = { img: new Image(), f: null, ready: false };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -283,7 +283,9 @@ function resetRun() {
   // 아이템샵: 적용한 배경 스킨 + '사용중' 부스트 (메인 화면에서 들어왔을 때만)
   G.skin = HUB ? HUB.equippedSkin('downhill') : 'default';
   const boosts = HUB ? HUB.takeBoosts('downhill') : [];
-  if (boosts.includes('life')) { G.hearts = 4; G.maxHearts = 4; }
+  G.maxHearts = CFG.heartsMax; G.slowT = 0;
+  if (boosts.includes('life')) { G.hearts = 3; G.maxHearts = 4; }
+  if (boosts.includes('slow')) G.slowT = 20; // 슬로우: 처음 20초 70% 속도
   if (boosts.includes('shield')) G.shield = true;
   if (boosts.includes('magnet')) G.magnetT = 20;
   if (boosts.includes('x2')) G.x2T = 30;
@@ -344,7 +346,8 @@ function step(dt) {
   if (G.state !== 'play') return;
   // 속도: 100m마다 +1m/s, 부스터 중엔 1.6배
   const base = Math.min(CFG.vMax, CFG.v0 + G.d / 100);
-  G.v = lerp(G.v, base * (G.boostT > 0 ? 1.6 : 1), Math.min(1, dt * 3));
+  if (G.slowT > 0) G.slowT = Math.max(0, G.slowT - dt);
+  G.v = lerp(G.v, base * (G.boostT > 0 ? 1.6 : 1) * (G.slowT > 0 ? 0.7 : 1), Math.min(1, dt * 3));
   G.d += G.v * dt;
   // 좌우 이동 (부드럽게)
   const dx = G.lane - G.px;

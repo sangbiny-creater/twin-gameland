@@ -16,7 +16,7 @@
 let W = 540, H = 960;
 const L = window.BakeryLevels, A = window.BakeryArt;
 const { PTS, JUDGE } = L;
-const ASSET_V = '202611010106';
+const ASSET_V = '202611010110';
 const MAX_HEARTS = 3;
 const START_HEARTS = 2;
 const HEART_GAP = 50; // 하트 아이템 사이 최소 시간(초) — 2026-10-27 반으로 줄임(25→50초)
@@ -186,7 +186,8 @@ function startRun(lv = 1) {
   Audio.step = 0; Audio.at = c0;
   // 아이템샵 부스트 (사용중으로 켜 둔 것만 1개씩)
   const boosts = HUB ? HUB.takeBoosts('bakery') : [];
-  if (boosts.includes('life')) G.hearts = MAX_HEARTS; // 추가 하트 부스트: 3개(최대)로 시작
+  G.maxH = MAX_HEARTS;
+  if (boosts.includes('life')) { G.hearts = 3; G.maxH = 4; } // 하트 아이템: 4칸에 3개로 시작 (기본 3칸에 2개)
   if (boosts.includes('shield')) G.shield = 1;
   if (boosts.includes('slow')) G.slowT = 20;
   if (boosts.includes('x2')) G.x2T = 30;
@@ -295,7 +296,7 @@ function finishLong(n, ej) {
   const v = (JUDGE[n.sj] + JUDGE[ej]) / 2;
   success(n, v, v >= 0.95 ? 'perfect' : v >= 0.65 ? 'good' : 'ok', PTS.long);
   // 하트 아이템: 시작·끝 모두 Perfect 일 때만 먹음 → HUD 로 날아감
-  if (n.heart && G.hearts < MAX_HEARTS) {
+  if (n.heart && G.hearts < (G.maxH || MAX_HEARTS)) {
     const hx = xAt(n.t) + 34 * LAY.s, hy = LAY.beltY - 80 * LAY.s;
     if (n.sj === 'perfect' && ej === 'perfect') {
       n.heartGot = true; G.hearts++; renderHearts(true); Audio.sfx('life');
@@ -474,7 +475,7 @@ function render() {
       if (n.st === 'hold') creamY = top + 2 * s;
       if (n.st === 'wait') drawLongMarks(n, x, x1, top);
       // 하트 아이템 (하트가 최대(3개)보다 적을 때만 보임)
-      if (n.heart && !n.heartGot && !n.heartLost && n.st !== 'miss' && G.hearts < MAX_HEARTS) {
+      if (n.heart && !n.heartGot && !n.heartLost && n.st !== 'miss' && G.hearts < (G.maxH || MAX_HEARTS)) {
         const hx = x + 34 * s; // 빵 앞쪽, 꾹 누르기 시작하는 곳 위에 올려 둠
         drawHeart(HEART, hx, top + 4 * s - 18 * s + Math.sin(G.t * 6 + i) * 2 * s, 40 * s);
       }
@@ -626,7 +627,7 @@ function updateHud() {
 function renderHearts(pop) {
   // 다른 게임(계단 오르기·헬리콥터)과 같은 하트 그림: 가진 하트 = heart, 빈 칸 = heart_empty (늘 5칸)
   const el = $('hudHearts'); el.innerHTML = '';
-  for (let i = 0; i < MAX_HEARTS; i++) {
+  for (let i = 0; i < (G.maxH || MAX_HEARTS); i++) {
     const d = document.createElement('div');
     d.className = 'heart' + (i >= G.hearts ? ' empty' : '') + (pop && i === G.hearts - 1 ? ' pop' : '');
     el.appendChild(d);

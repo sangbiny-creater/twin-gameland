@@ -14,7 +14,7 @@
 let W = 540, H = 960;
 const L = window.SnackLevels, D = window.DogArt;
 const { PTS, JUDGE, LANES } = L;
-const ASSET_V = '202611010106';
+const ASSET_V = '202611010110';
 const MAX_HEARTS = 3;
 const START_HEARTS = 2;
 const HEART_GAP = 50; // 하트 아이템 사이 최소 시간(초) — 2026-10-28 달콤 베이커리와 같게(25→50초)
@@ -163,7 +163,8 @@ function startRun(lv = 1) {
   G.fx = []; G.t = 0; G.clock = c0; G.slowT = 0; G.x2T = 0; G.shield = 0; G.hold = [null, null, null]; G.ptr.clear(); G.laneDown = [0, 0, 0];
   G.pose = 'idle'; G.poseT = 0; G.poseLog = [];
   const boosts = HUB ? HUB.takeBoosts('dogsnack') : [];
-  if (boosts.includes('life')) G.hearts = MAX_HEARTS; // 추가 하트 부스트: 3개(최대)로 시작
+  G.maxH = MAX_HEARTS;
+  if (boosts.includes('life')) { G.hearts = 3; G.maxH = 4; } // 하트 아이템: 4칸에 3개로 시작 (기본 3칸에 2개)
   if (boosts.includes('shield')) G.shield = 1;
   if (boosts.includes('slow')) G.slowT = 20;
   if (boosts.includes('x2')) G.x2T = 30;
@@ -272,7 +273,7 @@ function finishLong(n, ej) {
   const v = (JUDGE[n.sj] + JUDGE[ej]) / 2;
   success(n, v, v >= 0.95 ? 'perfect' : v >= 0.65 ? 'good' : 'ok', PTS.long);
   // 하트 아이템: 시작·끝 모두 Perfect 일 때만 먹음 → 왼쪽 위 하트 칸으로 날아감
-  if (n.heart && G.hearts < MAX_HEARTS) {
+  if (n.heart && G.hearts < (G.maxH || MAX_HEARTS)) {
     const hx = laneX(n.lane), hy = LAY.jy - 40 * LAY.s;
     if (n.sj === 'perfect' && ej === 'perfect') {
       n.heartGot = true; G.hearts++; renderHearts(true); Audio.sfx('life');
@@ -505,7 +506,7 @@ function drawLong(n, x, yF, yB) {
   const s = LAY.s;
   const eating = n.st === 'hold' || n.st === 'done';
   D.sausage(ctx, x, yB, yF, s, eating ? LAY.jy : null);
-  if (n.heart && !n.heartGot && !n.heartLost && n.st !== 'miss' && G.hearts < MAX_HEARTS) drawHeart(HEART, x, Math.min(yF, eating ? LAY.jy : yF) - 22 * s + Math.sin(G.t * 6) * 2 * s, 38 * s);
+  if (n.heart && !n.heartGot && !n.heartLost && n.st !== 'miss' && G.hearts < (G.maxH || MAX_HEARTS)) drawHeart(HEART, x, Math.min(yF, eating ? LAY.jy : yF) - 22 * s + Math.sin(G.t * 6) * 2 * s, 38 * s);
   if (n.st === 'wait' && n.gd > 0) {
     ctx.save(); ctx.globalAlpha = n.gd; ctx.font = `${20 * s}px Jua, sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.lineWidth = 5; ctx.strokeStyle = '#fff';
     ctx.strokeText('꾹', x + 26 * s, yF - 10 * s); ctx.fillStyle = '#E8456A'; ctx.fillText('꾹', x + 26 * s, yF - 10 * s);
@@ -645,7 +646,7 @@ function updateHud() {
 function renderHearts(pop) {
   // 다른 게임(계단 오르기·헬리콥터·베이커리)과 같은 하트 그림: 가진 하트 = heart, 빈 칸 = heart_empty (늘 3칸 = 최대 하트 수)
   const el = $('hudHearts'); el.innerHTML = '';
-  for (let i = 0; i < MAX_HEARTS; i++) {
+  for (let i = 0; i < (G.maxH || MAX_HEARTS); i++) {
     const d = document.createElement('div');
     d.className = 'heart' + (i >= G.hearts ? ' empty' : '') + (pop && i === G.hearts - 1 ? ' pop' : '');
     el.appendChild(d);

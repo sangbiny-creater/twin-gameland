@@ -21,7 +21,7 @@ const HEART_STAY = 0.6;    // 하트 두더지가 다 올라와 머무는 시간
 const HEART_FULL_PTS = 300; // 하트가 꽉 찼을 때 하트 두더지를 잡으면 받는 점수
 const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611010106';
+const ASSET_V = '202611010110';
 const asset = (p) => `assets/${p}.webp?v=${ASSET_V}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -236,12 +236,13 @@ function startStage(si) {
   clearTimers();
   G.limit = st.time; G.time = st.time; G.score = 0; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.caught = 0; G.coinBase = 0; G.contUsed = false;
   G.fx = []; G.t = 0; G.dblT = 0; G.comboX2 = false; G.spawnT = 0.3; G.tickT = 0;
-  G.hearts = START_HEARTS; G.heartT = 0; G.dead = false; renderHearts();
+  G.hearts = START_HEARTS; G.maxH = MAX_HEARTS; G.heartT = 0; G.dead = false; renderHearts();
   for (const h of G.holes) { h.m = null; h.cool = 0; }
   if (HUB) HUB.starterKit('mole');
   G.skin = HUB ? HUB.equippedSkin('mole') : 'default';
   const boosts = HUB ? HUB.takeBoosts('mole') : [];
   if (boosts.includes('combo')) G.comboX2 = true;
+  if (boosts.includes('life')) { G.hearts = 3; G.maxH = 4; renderHearts(); } // 하트 아이템: 4칸에 3개로 시작 (기본 3칸에 2개)
   if (boosts.length) toast('부스트: ' + boosts.map((b) => HUB.boostName('mole', b)).join(' · '));
   $('hudStage').textContent = `스테이지 ${label(si)}`;
   $('hudGoal').textContent = fmt(st.goal);
@@ -316,7 +317,7 @@ function hitMole(h, byItem = false) {
   if (m.type === 'heart') {
     m.ph = 'hit'; m.t = 0;
     stars(h.x, h.y - h.s * 0.45, 6);
-    if (G.hearts < MAX_HEARTS) {
+    if (G.hearts < G.maxH) {
       G.hearts++; renderHearts(true); Audio.sfx('life');
       G.fx.push({ kind: 'heartFly', x: h.x, y: h.y - h.s * 0.6, t: 0, life: 0.7 });
       G.fx.push({ kind: 'text', text: '하트 +1', x: h.x, y: h.y - h.s * 0.95, t: 0, life: 0.9, gold: true });
@@ -630,7 +631,7 @@ function updateHud() {
 // 하트 칸 (모든 게임 같은 그림 common/ui/heart·heart_empty)
 function renderHearts(pop) {
   const el = $('hudHearts'); if (!el) return;
-  el.innerHTML = Array.from({ length: MAX_HEARTS }, (_, k) => `<i class="heart${k < G.hearts ? '' : ' empty'}${pop && k === G.hearts - 1 ? ' pop' : ''}"></i>`).join('');
+  el.innerHTML = Array.from({ length: G.maxH || MAX_HEARTS }, (_, k) => `<i class="heart${k < G.hearts ? '' : ' empty'}${pop && k === G.hearts - 1 ? ' pop' : ''}"></i>`).join('');
 }
 function renderItems() {
   for (const id of ['time', 'double', 'rainbow']) {
