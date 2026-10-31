@@ -154,6 +154,14 @@
   ];
   // ---------- 쿠폰 ----------
   // 띄어쓰기·대소문자 상관없이 입력. once: 캐릭터마다 한 번만
+  // ---------- 놀이공원 꾸미기 (v0.3 첫 화면) ----------
+  // 동상·분수·대문: 1번은 처음부터 가짐, 2~5번은 아이템샵에서 삼. 그림: hub/park/items/<종류>_<번호>.webp
+  // 캐릭터마다: parkItems = { statue: [2, 4] … 산 번호 }, parkDeco = { '<구간>-<종류>': 번호 } (자리마다 고른 것)
+  const PARK_ITEMS = {
+    statue: { name: '동상', price: 300, items: ['토끼 동상', '별 트로피', '하트 곰', '무지개 유니콘', '왕관 강아지'] },
+    fountain: { name: '분수', price: 500, items: ['별 분수', '하트 분수', '고래 분수', '무지개 분수', '꽃 분수'] },
+    gate: { name: '대문', price: 800, items: ['토끼 성 대문', '사탕 과자 대문', '꽃 정원 대문', '별빛 우주 대문', '겨울 눈 성 대문'] },
+  };
   const COUPONS = {
     showmethemoney: { coins: 5000, once: false, msg: '코인 5000개를 받았어요!' },
     // 게임 테스트용 무적 (모든 캐릭터·모든 게임에 적용, 끌 때까지 유지)
@@ -267,7 +275,7 @@
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610311056` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610311152` : null; },
     buyCostume(id, c = this.active()) {
       const it = COSTUMES.find((x) => x.id === id);
       if (!c || !it || this.ownsCostume(id, c)) return { ok: false };
@@ -393,6 +401,18 @@
 
     // 첫 화면 놀이공원 배치 (캐릭터마다 따로): 게임 id 순서. 없으면 기본 배치 (v0.2 첫 화면)
     park(c = this.active()) { return (c && Array.isArray(c.park)) ? c.park.slice() : null; },
+    PARK_ITEMS,
+    ownsParkItem(kind, n, c = this.active()) { return n === 1 || !!(c && c.parkItems && (c.parkItems[kind] || []).includes(n)); },
+    buyParkItem(kind, n, c = this.active()) {
+      const K = PARK_ITEMS[kind];
+      if (!c || !K || n < 2 || n > K.items.length || this.ownsParkItem(kind, n, c)) return { ok: false };
+      if (c.coins < K.price) return { ok: false, why: 'coins' };
+      c.coins -= K.price; c.parkItems = c.parkItems || {}; c.parkItems[kind] = [...(c.parkItems[kind] || []), n];
+      save(); return { ok: true };
+    },
+    // 자리(key = '<구간 번호>-<종류>')에 놓인 것 (없으면 1번)
+    parkDeco(key, c = this.active()) { return (c && c.parkDeco && c.parkDeco[key]) || 1; },
+    setParkDeco(key, n, c = this.active()) { if (!c) return; c.parkDeco = c.parkDeco || {}; c.parkDeco[key] = n; save(); },
     setPark(order, c = this.active()) { if (!c) return; if (order) c.park = order.slice(); else delete c.park; save(); },
     // 다이아 (v0.3 상용화 검수: common/monet.js 가 늘리고 씀. 보관판 v0.1·v0.2에서는 보이기만)
     gems(c = this.active()) { return (c && c.gems) || 0; },

@@ -28,12 +28,15 @@ const games = (k) => ({
   helicopter: { plays: 5, best: 812, coins: 200, last: 1, stages: {} }, stairs: { plays: 4, best: 230, coins: 150, last: 1, stages: {} },
   downhill: { plays: 3, best: 1520, coins: 120, last: 1, stages: {} }, bakery: { plays: 2, best: 3400, coins: 80, last: 1, stages: {} },
 });
+// v0.3 상용화 검수(common/monet.js): 환영 선물·출석 창이 화면을 가리지 않게 이미 받은 상태로, 게임은 모두 열어 둠
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
+const v3 = () => ({ tickets: 0, unlocked: ['skyhook', 'helicopter', 'stairs', 'shisen', 'downhill', 'memory', 'mole', 'bakery', 'dogsnack', 'darts'], dUnlocks: 0, plays: 5, att: { count: 3, last: today() }, welcomed: true });
 const hist = [{ game: 'shisen', at: 1761300000000, stage: 24, cleared: true, dist: 0, earned: 80, stars: 3 }];
 const seed = (active) => ({
   v: 1, slots: 4, nextId: 5, activeId: active, settings: { sound: true },
   chars: [
-    { id: 'c1', name: '은유', look: 'eunyu3', coins: 1234, earned: 4321, created: 1, games: games(1), history: hist, favs: ['shisen'], shop: shop() },
-    { id: 'c2', name: '은결', look: 'eungyeol3', coins: 300, earned: 900, created: 2, games: games(0.3), history: hist, shop: shop() },
+    { id: 'c1', name: '은유', look: 'eunyu3', coins: 1234, earned: 4321, created: 1, games: games(1), history: hist, favs: ['shisen'], shop: shop(), v3: v3() },
+    { id: 'c2', name: '은결', look: 'eungyeol3', coins: 300, earned: 900, created: 2, games: games(0.3), history: hist, shop: shop(), v3: v3() },
     { id: 'c3', name: '옛은유', look: 'eunyu', coins: 700, earned: 2600, created: 3, games: games(2), history: hist, costume: 'hanbok', costumes: ['hanbok'], shop: shop() },
     { id: 'c4', name: '친구', look: 'eungyeol2', coins: 50, earned: 50, created: 4, games: {}, history: [] },
   ],
@@ -55,10 +58,16 @@ for (const vp of ['pp', 'pl', 'tb']) {
   add(`hub-records-${vp}`, 'index.html#records', { vp });
   add(`v01-lobby-${vp}`, 'v0.1/#lobby', { vp });
   add(`v01-map-${vp}`, 'v0.1/#map-shisen', { vp });
+  add(`v02-lobby-${vp}`, 'v0.2/#lobby', { vp });
   add(`shop-${vp}`, 'shop/index.html', { vp });
 }
 add('hub-lobby-oldlook-pp', 'index.html#lobby', { vp: 'pp', ch: 'c3' });
 add('hub-lobby-tp', 'index.html#lobby', { vp: 'tp' });
+add('hub-decopick-pp', 'index.html#lobby', { vp: 'pp', js: "document.querySelector('.pk-item.statue').click()", wait2: 700 });
+add('hub-decopick-gate-pp', 'index.html#lobby', { vp: 'pp', js: "document.querySelector('.pk-item.gate').click()", wait2: 700 });
+add('shop-park-pp', 'shop/index.html#park', { vp: 'pp', wait: 2500 });
+// 동상 사서 바꾸기 시험: 2번 동상 사기 → 첫 화면 동상 자리에 놓기 → 그림이 바뀌었는지
+add('hub-decobuy-pp', 'index.html#lobby', { vp: 'pp', js: "(async () => { const r = Hub.buyParkItem('statue', 2); const key = document.querySelector('.pk-item.statue').dataset.key; document.querySelector('.pk-item.statue').click(); await new Promise((z) => setTimeout(z, 300)); document.querySelectorAll('.deco-card')[1].click(); await new Promise((z) => setTimeout(z, 300)); return { bought: r.ok, deco: Hub.parkDeco(key), img: document.querySelector('.pk-item.statue img').src.split('/').pop() }; })()", wait2: 400 });
 add('hub-lobby-pc', 'index.html#lobby', { vp: 'pc' });
 add('hub-map-pc', 'index.html#map-shisen', { vp: 'pc' });
 add('hub-empty-pp', 'index.html', { vp: 'pp', empty: true, wait: 1500 });
@@ -114,7 +123,7 @@ const send = (method, params = {}, sessionId) => new Promise((res, rej) => {
 });
 const PRE = (data, empty) => `(() => {
   let s = 12345; Math.random = () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-  try { if (!sessionStorage.getItem('__seeded')) { localStorage.clear(); ${empty ? '' : `localStorage.setItem('twin_gameland_v1', ${JSON.stringify(JSON.stringify(data))});`} sessionStorage.setItem('__seeded', '1'); } } catch (e) {}
+  try { if (!sessionStorage.getItem('__seeded')) { localStorage.clear(); ${empty ? '' : `localStorage.setItem('twin_gameland_v1', ${JSON.stringify(JSON.stringify(data))});`} localStorage.setItem('twin_tip_closed', '1'); sessionStorage.setItem('__seeded', '1'); } } catch (e) {}
 })();`;
 
 const report = {};

@@ -4,7 +4,7 @@
 //  · 게임 카드(스크롤해도 고정)로 게임을 고르면 그 게임의 게임 부스트 / 보유 아이템이 보임
 //  · 게임 부스트: 1개씩 사서 모음. 수량은 구매·게임 보상·게임에서 사용 모두 같은 숫자(common/profile.js)
 const $ = (id) => document.getElementById(id);
-const V = '?v=202610311056'; // bump when images change so phones don't show old cached ones
+const V = '?v=202610311152'; // bump when images change so phones don't show old cached ones
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 
 const GAMES = [
@@ -229,7 +229,34 @@ function useCoupon() {
 $('couponOk').onclick = useCoupon;
 $('couponInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') useCoupon(); });
 
-function renderAll() { renderGames(); renderSkins(); renderBoosts(); renderOwned(); renderDressEntry(); }
+// ---------- 놀이공원 꾸미기 (v0.3 첫 화면에서만 쓰므로 v0.3에서만 보임) ----------
+function renderPark() {
+  if (Hub.ver !== '0.3' || !Hub.PARK_ITEMS) return;
+  $('park').classList.remove('hidden');
+  const box = $('parkShop'); box.innerHTML = '';
+  for (const [kind, K] of Object.entries(Hub.PARK_ITEMS)) {
+    const row = document.createElement('div'); row.className = 'park-row';
+    row.innerHTML = `<div class="park-k">${K.name}</div><div class="bgrid"></div>`;
+    K.items.forEach((name, k) => {
+      const n = k + 1, own = Hub.ownsParkItem(kind, n), d = document.createElement('div');
+      d.className = 'bcard park-card' + (own ? ' owned' : '') + (!own && Hub.active().coins < K.price ? ' poor' : '');
+      d.innerHTML = `<img class="bi" src="../hub/park/items/${kind}_${n}.webp${V}" alt=""><div class="bn"></div>`
+        + (own ? '<div class="cnt-pill">가지고 있어요</div>' : `<button class="price-pill"><img src="${COIN}" alt="">${K.price}</button>`);
+      d.querySelector('.bn').textContent = name;
+      const btn = d.querySelector('.price-pill');
+      if (btn) btn.onclick = () => {
+        if (Hub.active().coins < K.price) { lack(K.price); return; }
+        confirmBox('놀이공원 꾸미기', `<img class="mthumb" src="../hub/park/items/${kind}_${n}.webp${V}" alt=""><b>${name}</b>을(를) 살까요?<br>${coinImg} ${K.price} 코인`, '구매', () => {
+          const r = Hub.buyParkItem(kind, n);
+          if (r.ok) { ching(); toast(`${name}을(를) 샀어요! 첫 화면의 ${K.name}을 눌러 바꿔 보세요`); renderHeader(true); renderAll(); }
+        });
+      };
+      row.querySelector('.bgrid').appendChild(d);
+    });
+    box.appendChild(row);
+  }
+}
+function renderAll() { renderGames(); renderSkins(); renderBoosts(); renderOwned(); renderDressEntry(); renderPark(); }
 
 document.querySelectorAll('[data-scroll]').forEach((b) => {
   b.onclick = () => { const el = $(b.dataset.scroll); el.scrollBy({ left: el.clientWidth * 0.8, behavior: 'smooth' }); };
@@ -252,3 +279,5 @@ renderHeader(); renderAll();
 requestAnimationFrame(() => { const on = document.querySelector('.game.on'); if (on) on.scrollIntoView({ inline: 'center', block: 'nearest' }); window.scrollTo(0, 0); });
 // 첫 화면 놀이공원의 '꾸미기 가게'로 들어오면 (?dress=1) 캐릭터 꾸미기를 바로 엶
 if (q.get('dress')) openDress();
+// 첫 화면의 동상·분수·대문 고르기에서 '아이템샵'으로 오면 (#park) 놀이공원 꾸미기 칸으로
+if (location.hash === '#park') setTimeout(() => { const el = $('park'); if (!el.classList.contains('hidden')) el.scrollIntoView({ block: 'start' }); }, 120);

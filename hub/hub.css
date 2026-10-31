@@ -246,8 +246,8 @@ img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #
    놀이공원은 폭 540 기둥(가로 화면은 가운데)에 위아래 스크롤. 위 막대·롤러코스터·프로필·편집 버튼은 화면에 고정 */
 #scrLobby { padding: 0; overflow: hidden; }
 body.in-park { background: #7CC46A; }
-.pk-side { position: absolute; inset: -30px; background: #7CC46A url(park/bg/mid_a.webp?v=202610311056) center / cover; filter: blur(14px) brightness(.92) saturate(1.1); }
-.pk-scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; touch-action: pan-y; scrollbar-width: none; overscroll-behavior: contain; }
+.pk-side { position: absolute; inset: -30px; background: #7CC46A url(park/bg/mid_a.webp?v=202610311152) center / cover; filter: blur(14px) brightness(.92) saturate(1.1); }
+.pk-scroll { position: absolute; inset: 0; z-index: 0; overflow-y: auto; overflow-x: hidden; touch-action: pan-y; scrollbar-width: none; overscroll-behavior: contain; }
 .pk-scroll::-webkit-scrollbar { display: none; }
 .pk-world { position: relative; width: 540px; margin: 0 auto; overflow: hidden; box-shadow: 0 0 30px rgba(24,59,91,.35); }
 .pk-bg { position: absolute; left: 0; width: 540px; background: center / 100% 100% no-repeat; pointer-events: none; }
@@ -273,11 +273,27 @@ body.in-park { background: #7CC46A; }
 /* 편집 중: 흔들흔들, 고른 것 · 놓을 자리 표시 */
 .pk-world.editing .pk-ride:not(.soon) { touch-action: none; animation: pkWiggle .5s ease-in-out infinite alternate; animation-delay: var(--d, 0s); }
 .pk-world.editing .pk-ride .play { display: none; }
-.pk-world.editing .pk-ride.sel { animation: none; z-index: 5; }
+.pk-world.editing .pk-ride.sel { animation: none; z-index: 5000 !important; }
 .pk-world.editing .pk-ride.sel .art { filter: drop-shadow(0 0 0 #fff) drop-shadow(0 0 10px #FF5C98) drop-shadow(0 0 4px #FF5C98); }
 .pk-world.editing .pk-ride.target .art { filter: drop-shadow(0 0 10px #3D8BFF) drop-shadow(0 0 4px #3D8BFF); }
-.pk-world.editing .pk-ride.drag { animation: none; z-index: 10; opacity: .92; }
+.pk-world.editing .pk-ride.drag { animation: none; z-index: 5001 !important; opacity: .92; }
 @keyframes pkWiggle { from { transform: rotate(-1.5deg); } to { transform: rotate(1.5deg); } }
+/* 동상·분수·대문 (아이템, 누르면 바꾸기) */
+.pk-item { position: absolute; padding: 0; background: none; -webkit-touch-callout: none; }
+.pk-item img { display: block; width: 100%; filter: drop-shadow(0 5px 4px rgba(40,70,30,.25)); }
+.pk-item:active img { transform: scale(.96); }
+.pk-world.editing .pk-item { pointer-events: none; }
+/* 고르기 팝업 */
+.deco-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 4px 0 6px; }
+.deco-card { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px 7px; border-radius: 16px; background: #fff; border: 3px solid #fff; box-shadow: 0 3px 0 #CDE6FA; min-width: 0; }
+.deco-card img { width: 100%; height: 86px; object-fit: contain; }
+.deco-card .nm { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.deco-card .st { font-size: 12px; color: #3D8BFF; display: flex; align-items: center; gap: 2px; }
+.deco-card .st i.coin { width: 14px; height: 14px; margin: 0; vertical-align: 0; }
+.deco-card.on { border-color: #2FB86A; background: #EFFBF3; }
+.deco-card.on .st { color: #2FB86A; }
+.deco-card.locked img { filter: grayscale(.5) brightness(1.05); opacity: .75; }
+.deco-card.locked .st { color: #8A5A00; }
 /* 입구 가게 · 표지판 */
 .pk-shop { position: absolute; width: 92px; padding: 0; background: none; }
 .pk-shop img { display: block; width: 100%; filter: drop-shadow(0 5px 4px rgba(40,70,30,.25)); }

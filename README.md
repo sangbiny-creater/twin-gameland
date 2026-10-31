@@ -24,6 +24,9 @@
 - 놀이공원 그림: `hub/park/`(배경 `bg/` 입구·가운데 A·B·맨 위, 놀이기구 `rides/<게임>.webp` — 받침 크기·자리가 모두 같음, 남는 자리 장식 `rides/deco1~3`, 롤러코스터 `coaster/`, `ui/`), 만드는 도구 `tools/park_assets.py`.
   배경은 컨셉 초안처럼 돌바닥 광장·분수대가 그려진 GPT 그림이고, 그림 속 빈 받침 자리를 `hub/hub.js` 의 `PARK_SECTIONS` 에 적어 둠(배경을 다시 받으면 다시 재기). 배치 안내도: `tools/park_layout.py`.
   새 게임을 추가하면 놀이기구 그림 `hub/park/rides/<게임>.webp`과 `hub/hub.js` 의 `EN_NAME`에 영어 이름을 넣어요. 자리가 모자라면 가운데 구간이 위로 저절로 붙어요.
+- 놀이공원 꾸미기(v0.3): 동상·분수·대문은 아이템(`hub/park/items/<statue|fountain|gate>_1~5.webp`). 첫 화면에서 누르면 가진 것 중에서 골라 바꾸고(자리마다 따로),
+  아이템샵 맨 아래 '놀이공원 꾸미기'에서 사요(v0.3에서만 보임). 목록·값: `common/profile.js` 의 `PARK_ITEMS`, 저장: 캐릭터의 `parkItems`(산 것)·`parkDeco`(자리마다 고른 것).
+  v0.3 배경은 `hub/park/bg/entrance3·mid3_a·mid3_b`(v0.2 보관판은 예전 `entrance·mid_a·mid_b`를 그대로 씀).
 - 화면 확인 도구: `node tools/screen_check.mjs <폴더> [이름 필터]` (헤드리스 Chrome으로 폰·태블릿 화면 캡처 + 오류·404 + 놀이공원 편집 시험).
 
 ## 로컬 실행
