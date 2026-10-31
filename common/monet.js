@@ -17,7 +17,7 @@
   const TRIAL_SEC = 30;                               // 잠긴 끝없는 게임: 한 판에 30초
   const TRIAL_ROUNDS = { darts: 2 };                  // 라운드로 끝나는 게임은 시간 대신 라운드 (다트: 2라운드까지)
   const GEM_EVERY = 10;                               // 게임 10판마다 다이아 1개
-  const AD_SEC = 5;                                   // 가짜 광고 길이
+  const AD_SEC = 1;                                   // 가짜 광고 길이 (검수판: 1초만 띄우고 진짜 광고를 본 것과 같은 흐름으로)
   const ATT_DAILY = 1;                                // 출석 매일 다이아
   const ATT_BONUS = { 10: { tickets: 1, text: '열쇠 1개', img: 'att_key' }, 30: { text: '프로필 프레임 (준비 중)', img: 'att_frame' }, 50: { gems: 20, text: '다이아 20개', img: 'att_gems' }, 100: { text: '특별 코스튬 (준비 중)', img: 'att_gift' } };
   const PACKS = [{ id: 'diamond_60', gems: 60 }, { id: 'diamond_140', gems: 140 }, { id: 'diamond_300', gems: 300 }, { id: 'diamond_650', gems: 650 }];
@@ -131,10 +131,10 @@
   // 가짜 광고: AD_SEC초 세고 done()
   function fakeAd(done) {
     const a = document.createElement('div'); a.className = 'mn-ad';
-    a.innerHTML = `<img src="${IMG}ico_ad.webp" alt=""><div>광고 자리</div><b>${AD_SEC}</b><span>앱에서는 여기서 보상형 광고가 나와요<br>(웹 검수판: 진짜 광고 없음)</span>`;
+    a.innerHTML = `<img src="${IMG}ico_ad.webp" alt=""><div>광고 자리</div><span>앱에서는 여기서 보상형 광고가 나와요<br>(웹 검수판: ${AD_SEC}초 뒤 광고를 본 것처럼 이어져요)</span>`;
     for (const ev of ['pointerdown', 'pointerup', 'touchstart', 'click', 'keydown']) a.addEventListener(ev, (e) => e.stopPropagation());
     document.body.appendChild(a);
-    let n = AD_SEC; const t = setInterval(() => { n--; a.querySelector('b').textContent = n; if (n <= 0) { clearInterval(t); a.remove(); done(); } }, 1000);
+    setTimeout(() => { a.remove(); done(); }, AD_SEC * 1000);
   }
 
   // 다이아 상점 (가짜 결제)
@@ -206,14 +206,21 @@
     const add = (top, text, cls, ico, fn) => {
       const b = document.createElement('button'); b.className = 'pp-adb ' + cls; b.innerHTML = I(ico, '') + `<span><small>${top}</small><b>${text}</b></span>`;
       for (const ev of ['pointerdown', 'pointerup', 'touchstart']) b.addEventListener(ev, (e) => e.stopPropagation());
-      b.addEventListener('click', (e) => { e.stopPropagation(); fn(b); }); row.appendChild(b); return b;
+      b.addEventListener('click', (e) => { e.stopPropagation(); if (b.disabled) return; b.disabled = true; fn(b); }); row.appendChild(b); return b; // 누르면 바로 못 누름
     };
     const say = (b, t) => { b.querySelector('small').textContent = ''; b.querySelector('b').textContent = t; };
-    if (earned > 0) add('광고 보고', `코인 2배 +${earned}`, 'dbl', 'ico_x2', (b) => fakeAd(() => { Hub.addCoins(earned); b.disabled = true; say(b, `+${earned} 받았어요!`); pop(`${I('ico_x2')} +${earned}`); }));
+    // 버튼 오른쪽 빨간 배지가 '광고'를 뜻해서 글자는 짧게 (위 작은 글자 = 더 받는 코인)
+    const dbl = add(earned > 0 ? `+${earned} 코인` : '', '2배 받기', 'dbl', 'ico_x2', (b) => fakeAd(() => { Hub.addCoins(earned); say(b, `+${earned} 받았어요!`); pop(`${I('ico_x2')} +${earned}`); }));
+    if (!(earned > 0)) dbl.disabled = true;
     if (failed) {
-      const cont = () => st().conts || 0;
-      if (cont() > 0) add(`이어하기권 ${cont()}장`, '광고 없이 이어하기', 'cont', 'ico_continue', (b) => { Hub.mutate((c) => { c.v3.conts--; }); b.disabled = true; say(b, '연결 예정이에요'); });
-      else add('광고 보고', '이어하기', 'cont', 'ico_continue', (b) => fakeAd(() => { b.disabled = true; say(b, '연결 예정이에요'); }));
+      // 이어하기: 게임이 window.GameContinue = { can(), go() } 를 주면 광고 뒤 그 자리에서 이어서 (화면을 한 번 터치하면 다시 움직임)
+      //  한 판에 한 번만 (can() 이 false 면 회색 버튼으로 자리만)
+      const GC = window.GameContinue, cont = () => st().conts || 0;
+      const go = (b) => { if (GC) GC.go(); else say(b, '연결 예정이에요'); };
+      let cb;
+      if (cont() > 0) cb = add(`이어하기권 ${cont()}장`, '이어하기', 'cont', 'ico_continue', (b) => { Hub.mutate((c) => { c.v3.conts--; }); go(b); });
+      else cb = add('', '이어하기', 'cont', 'ico_continue', (b) => fakeAd(() => go(b)));
+      if (GC && !GC.can()) cb.disabled = true;
     }
     if (window.PopupUI) PopupUI.fit(panel);
   }

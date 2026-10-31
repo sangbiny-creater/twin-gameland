@@ -65,7 +65,7 @@ const $ = (id) => document.getElementById(id);
 const rng = (seed) => { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let x = s; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; };
 
 // ---------- sprites ----------
-const ASSET_V = '202610312241';
+const ASSET_V = '202611010049';
 const SP = { img: new Image(), f: null, ready: false };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -277,7 +277,7 @@ function resetRun() {
   G.nextRow = 28; G.nextDeco = 0; G.safe = 2;
   G.invT = 0; G.hitT = 0; G.shield = false; G.magnetT = 0; G.x2T = 0; G.boostT = 0; G.wingT = 0;
   G.jumps = 0; G.jumpT = 0; G.jumpLen = CFG.jumpDur; // 점프하기 아이템은 판마다 0개부터 (죽으면 사라짐)
-  G.hearts = CFG.hearts; G.maxHearts = CFG.hearts; G.coins = 0; G.combo = 0; G.maxCombo = 0;
+  G.hearts = CFG.hearts; G.maxHearts = CFG.hearts; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.coinBase = 0; G.contUsed = false;
   G.stageIdx = 0; G.prevStage = 0; G.stageFade = 1; G.newBest = false; G.shake = 0; G.overT = 0; G.nextBonus = 100;
   while (G.nextDeco < CFG.spawnAhead) { spawnDeco(G.nextDeco); G.nextDeco += 3.2; }
   // 아이템샵: 적용한 배경 스킨 + '사용중' 부스트 (메인 화면에서 들어왔을 때만)
@@ -293,6 +293,21 @@ function resetRun() {
   $('hudBest').textContent = Save.data.best;
 }
 function startRun() { resetRun(); setState('ready'); Audio.startBgm(); }
+// 시작 팝업 (common/gamepop.js): 아이템 고르기 → 시작. 결과 창 '다시하기'도 이 팝업으로
+function askStart() {
+  if (!window.GamePop || !HUB) { startRun(); return; }
+  GamePop.start({ game: 'downhill', onStart: () => startRun(), onClose: goHome });
+}
+// 광고 보고 이어하기 (common/monet.js): 그 자리에서 하트 1개로, 바로 앞 장애물은 치우고, 화면을 한 번 터치하면 출발. 한 판에 한 번
+window.GameContinue = {
+  can: () => !G.contUsed,
+  go() {
+    G.contUsed = true; G.coinBase = G.coins;
+    G.hearts = 1; G.v = CFG.v0; G.invT = 2; G.hitT = 0; G.overT = 0; renderHearts();
+    G.obs = G.obs.filter((o) => o.Z - G.d > 30);
+    setState('ready'); Audio.startBgm();
+  },
+};
 function go() { // 첫 탭: 출발
   setState('play');
   if (G.startDash) { G.startDash = false; startBoost(5); }
@@ -883,7 +898,7 @@ function showResult() {
   if (!HUB) Save.store();
   $('resEarn').classList.toggle('hidden', !HUB);
   if (HUB) {
-    const h = HUB.record('downhill', { dist: m, coins: G.coins });
+    const h = HUB.record('downhill', { dist: m, coins: G.coins - G.coinBase }); // 이어하기 전에 받은 코인은 빼고
     $('resEarn').innerHTML = h.god ? '무적 모드라서 기록·코인이 없어요' : `+${h.earned} 코인 획득!` + (h.bonus ? ` <small>(거리 보너스 +${h.bonus})</small>` : '') + `<small>내 코인 ${h.coins}</small>`;
   }
   $('resFace').src = window.CharV2 && CharV2.is(lookOf(Save.data.char)) ? CharV2.url(lookOf(Save.data.char), isBest ? 'back_happy' : 'back_dead') : iconURL(`${Save.data.char}_${isBest ? 'happy' : 'dead'}`);
@@ -939,7 +954,7 @@ click('btnPause', pauseGame);
 click('btnResume', resumeGame);
 click('btnRetryP', startRun);
 click('btnHomeP', goHome);
-click('btnRetry', startRun);
+click('btnRetry', askStart);
 click('btnHomeR', goHome);
 click('btnSound', () => { Save.data.sound = !Save.data.sound; Save.store(); if (HUB) HUB.setSound(Save.data.sound); Audio.applyMute(); refreshHome(); });
 document.querySelectorAll('.char').forEach((b) => b.addEventListener('click', () => {
@@ -991,7 +1006,7 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 resize();
-if (HUB) { startRun(); if (new URLSearchParams(location.search).get('go') === '1') go(); } else setState('home'); // 인트로 START: 바로 출발
+if (HUB) { if (new URLSearchParams(location.search).get('go') === '1') askStart(); startRun(); } else setState('home'); // 인트로 START: 시작 팝업(아이템 고르기) — 먼저 띄워 뒤에 깔리는 판이 아이템을 쓰지 않게
 requestAnimationFrame(frame);
 
 // debug/test hook

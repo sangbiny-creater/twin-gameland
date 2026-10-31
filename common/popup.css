@@ -2,9 +2,9 @@
    쓰는 곳: 모든 게임의 출발 준비(#ready)·일시정지(#pause)·결과(#result)·고르기(#choose), 첫 화면(index.html)·아이템샵의 .modal 창
    (상용화 창 .mn-panel 은 common/monet.js 가 같은 숫자로 그림)
 
-   [창] 틀 그림은 panel_plain.webp (panel.webp 양옆 점·반짝이를 민무늬로 고른 것 — 늘어나는 가운데 부분이 어느 창에서나 같게).
-        폭은 언제나 440 (게임 화면 폭 540 기준 = 폰에서 화면 폭의 81%). 틀 그림(panel.webp 600px)을 한 비율(440/600)로만 그려서
-        모서리 하트·별 크기가 모든 창에서 같음. 버튼·글자는 틀 안쪽 크림색 칸에서 좌우 18px 안쪽, 아래 모서리 별 위까지만.
+   [창] 틀 그림은 ui/popup/panel.webp (GPT 팝업 v2 A01, tools/popup_assets.py — 옆면 점 장식은 민무늬로 고름).
+        폭은 언제나 440 (게임 화면 폭 540 기준 = 폰에서 화면 폭의 81%). 틀 그림(600px)을 한 비율(440/600)로만 그려서
+        모서리 하트·별 크기가 모든 창에서 같음. 자르는 칸(그림 px): 위 150(하트·구름) · 아래 115(별) · 양옆 60. 크림색 칸은 옆 48px 안쪽부터.
    [제목] 리본 330x90 고정, 글자가 길면 popup.js 가 글자만 줄임.
    [버튼 줄] 위에서부터 (없는 줄은 빠짐)
         ① 광고 줄  : 광고 버튼 1개 = 한 줄 가득 / 2개 = 반씩 나란히   (높이 52)
@@ -15,9 +15,9 @@
 .screen.dim > .panel, #ready > .panel, .modal > .panel, .modal > .mpanel {
   box-sizing: border-box !important; width: var(--pp-w) !important; min-width: 0 !important; max-width: calc(100% - 16px) !important;
   background: none !important; border-radius: 0 !important; box-shadow: none !important;
-  border: 0 solid transparent !important; border-image: url(ui/monet/panel_plain.webp) 215 72 190 fill / calc(215px * var(--pp-k)) calc(72px * var(--pp-k)) calc(190px * var(--pp-k)) stretch !important;
+  border: 0 solid transparent !important; border-image: url(ui/popup/panel.webp) 150 60 115 fill / calc(150px * var(--pp-k)) calc(60px * var(--pp-k)) calc(115px * var(--pp-k)) stretch !important;
   min-height: 330px !important; /* 틀 위·아래 장식(그림 크기 그대로) + 가운데 민무늬 부분 */
-  padding: 22px calc(44px * var(--pp-k) + 18px) calc(107px * var(--pp-k) + 6px) !important;
+  padding: 22px calc(48px * var(--pp-k) + 16px) calc(70px * var(--pp-k) + 8px) !important;
   filter: drop-shadow(0 10px 22px rgba(0, 0, 0, .35)); color: #5A3B22;
   display: flex !important; flex-direction: column !important; align-items: center !important; gap: 8px !important;
 }
@@ -25,8 +25,8 @@
 .screen.dim > .panel > .p-title:first-child, .screen.dim > .panel > .title:first-child, .screen.dim > .panel > .r-title:first-child,
 .modal > .panel > .p-title:first-child, .modal > .mpanel > .m-title:first-child {
   display: flex; align-items: center; justify-content: center; box-sizing: border-box; flex: none;
-  width: 330px !important; max-width: 100%; height: 90px !important; min-height: 0 !important; margin: -38px auto -4px !important; padding: 0 58px 20px !important;
-  background: url(ui/monet/ribbon.webp) center / 100% 100% no-repeat !important; border: 0 !important;
+  width: 340px !important; max-width: 100%; height: 87px !important; min-height: 0 !important; margin: -40px auto -4px !important; padding: 0 64px 12px !important;
+  background: url(ui/popup/ribbon.webp) center / 100% 100% no-repeat !important; border: 0 !important;
   color: #fff !important; font-size: 26px !important; line-height: 1 !important; text-shadow: 0 2px 0 #C2406A, 0 0 3px #C2406A !important; white-space: nowrap; overflow: hidden;
 }
 /* 버튼 줄 (popup.js 가 만듦) */
@@ -40,28 +40,35 @@
   display: flex !important; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden;
   font-family: Jua, 'Apple SD Gothic Neo', system-ui, sans-serif !important; font-weight: normal !important; letter-spacing: 0 !important;
   background: none !important; box-shadow: none !important; border-radius: 0 !important; transform: none;
-  border: 0 solid transparent !important; border-image: url(ui/monet/btn_pink.webp) 0 50 fill / 0 calc(var(--h) * .495) stretch !important;
+  border: 0 solid transparent !important; border-image: url(ui/popup/btn_pink.webp) 0 45 fill / 0 calc(var(--h) * .5) stretch !important;
   color: #fff !important; text-shadow: 0 2px 0 rgba(170, 40, 80, .55) !important; text-decoration: none !important;
 }
-.pp-acts button.pp-b.blue { border-image-source: url(ui/monet/btn_blue.webp) !important; text-shadow: 0 2px 0 rgba(30, 70, 140, .55) !important; }
+/* 버튼 색 약속 (docs/spec/팝업_아이템_정리_v1.md): 분홍 = 시작·다시하기·계속하기 / 파랑 = XX판부터·다음 스테이지·나가기 / 민트 = 메인으로·게임 선택 / 보라 = 지도 보기 / 회색 = 못 누름 */
+.pp-acts button.pp-b.blue { border-image-source: url(ui/popup/btn_blue.webp) !important; text-shadow: 0 2px 0 rgba(30, 70, 140, .55) !important; }
+.pp-acts button.pp-b.mint { border-image-source: url(ui/popup/btn_mint.webp) !important; text-shadow: 0 2px 0 rgba(10, 110, 90, .55) !important; }
+.pp-acts button.pp-b.purple { border-image-source: url(ui/popup/btn_purple.webp) !important; text-shadow: 0 2px 0 rgba(80, 30, 140, .55) !important; }
+.pp-acts button.pp-b:disabled, .pp-acts button.pp-b.off { border-image-source: url(ui/popup/btn_gray.webp) !important; color: #F4F4F6 !important; text-shadow: 0 2px 0 rgba(90, 90, 100, .45) !important; pointer-events: none; }
+/* 버튼 앞 흰 아이콘 (A09) */
+.pp-acts button.pp-b > i.gp-ico { flex: none; width: calc(var(--h) * .42); height: calc(var(--h) * .42); margin-right: 6px; background: center / contain no-repeat; }
 .pp-acts button.pp-b:active { transform: translateY(2px); }
 .pp-main > button.pp-b { --h: 64px; font-size: 27px !important; }
 .pp-pair > button.pp-b { --h: 58px; font-size: 23px !important; }
 .pp-acts button.pp-b.hidden { display: none !important; }
 /* 창 틀·리본·버튼 그림을 처음부터 받아 둠 (일시정지·결과 창을 처음 열 때 꾸밈이 늦게 붙지 않게) */
-body::after { content: url(ui/monet/panel_plain.webp) url(ui/monet/ribbon.webp) url(ui/monet/btn_pink.webp) url(ui/monet/btn_blue.webp) url(ui/monet/btn_ad_double.webp) url(ui/monet/btn_ad_continue.webp); position: absolute; width: 0; height: 0; overflow: hidden; opacity: 0; pointer-events: none; }
-/* ① 광고 줄: 왼쪽 흰 동그라미에 아이콘(광고 버튼 그림 btn_ad_*), 오른쪽 두 줄 글자 */
-.pp-ad > button.pp-adb { --h: 52px; position: relative; box-sizing: border-box; height: var(--h); margin: 0; flex: 1 1 0; min-width: 0;
-  border: 0 solid transparent; border-image: url(ui/monet/btn_ad_double.webp) 0 50 0 100 fill / 0 calc(var(--h) * .515) 0 calc(var(--h) * 1.03) stretch;
-  background: none; padding: 0 calc(var(--h) * .42) 3px calc(var(--h) * 1.12); display: flex; align-items: center; justify-content: center; text-align: center;
+body::after { content: url(ui/popup/panel.webp) url(ui/popup/ribbon.webp) url(ui/popup/btn_pink.webp) url(ui/popup/btn_blue.webp) url(ui/popup/btn_mint.webp) url(ui/popup/btn_purple.webp) url(ui/popup/btn_gray.webp) url(ui/popup/btn_ad_double.webp) url(ui/popup/btn_ad_continue.webp) url(ui/popup/btn_pause.webp); position: absolute; width: 0; height: 0; overflow: hidden; opacity: 0; pointer-events: none; }
+/* ① 광고 줄: 노랑(2배 받기)·초록(이어하기) 버튼, 오른쪽 끝에 빨간 '광고 재생' 배지(그림 btn_ad_* A05), 왼쪽에 두 줄 글자 */
+.pp-ad > button.pp-adb { --h: 56px; position: relative; box-sizing: border-box; height: var(--h); margin: 0; flex: 1 1 0; min-width: 0;
+  border: 0 solid transparent; border-image: url(ui/popup/btn_ad_double.webp) 0 135 0 50 fill / 0 calc(var(--h) * 1.262) 0 calc(var(--h) * .467) stretch;
+  background: none; padding: 0 calc(var(--h) * 1.2) 4px calc(var(--h) * .36); display: flex; align-items: center; justify-content: center; text-align: center;
   font-family: Jua, 'Apple SD Gothic Neo', system-ui, sans-serif; color: #fff; text-shadow: 0 2px 0 rgba(70, 30, 140, .6); cursor: pointer; overflow: hidden; }
-.pp-ad > button.pp-adb.cont { border-image-source: url(ui/monet/btn_ad_continue.webp); text-shadow: 0 2px 0 rgba(10, 110, 90, .6); }
-.pp-ad > button.pp-adb > img { position: absolute; left: calc(var(--h) * .17); top: 50%; width: calc(var(--h) * .62); height: calc(var(--h) * .62); object-fit: contain; transform: translateY(-54%); }
+.pp-ad > button.pp-adb { text-shadow: 0 2px 0 rgba(170, 90, 10, .6); }
+.pp-ad > button.pp-adb.cont { border-image-source: url(ui/popup/btn_ad_continue.webp); text-shadow: 0 2px 0 rgba(10, 110, 90, .6); }
+.pp-ad > button.pp-adb > img { display: none; } /* 광고 표시는 버튼 그림의 빨간 배지 */
 .pp-ad > button.pp-adb > span { display: flex; flex-direction: column; align-items: center; line-height: 1.05; white-space: nowrap; min-width: 0; }
 .pp-ad > button.pp-adb small { font-size: 13px; opacity: .92; }
 .pp-ad > button.pp-adb small:empty { display: none; }
-.pp-ad > button.pp-adb b { font-weight: normal; font-size: 18px; }
-.pp-ad > button.pp-adb:disabled { opacity: .7; }
+.pp-ad > button.pp-adb b { font-weight: normal; font-size: 21px; }
+.pp-ad > button.pp-adb:disabled { filter: grayscale(1) brightness(1.05); opacity: .75; }
 .pp-ad > button.pp-adb:active { transform: translateY(2px); }
 /* 창 바탕이 밝은 크림색으로 바뀌어서, 예전 어두운 창에 맞춘 밝은 글자(흰색·연노랑)를 진한 색으로 */
 .screen.dim > .panel.result, .screen.dim > .panel { color: #5A3B22 !important; }
@@ -73,3 +80,9 @@ body::after { content: url(ui/monet/panel_plain.webp) url(ui/monet/ribbon.webp) 
 .screen.dim > .panel .r-score small { color: #C77A1A !important; text-shadow: none !important; }
 /* 리본 제목은 기울이지 않음 (예전 제목 글자는 -3도 기울어져 있었음) */
 .screen.dim > .panel > .r-title:first-child, .screen.dim > .panel > .title:first-child, .screen.dim > .panel > .p-title:first-child { transform: none !important; }
+
+/* 게임 화면 왼쪽 위 일시정지 버튼 — 모든 게임 같은 그림·같은 크기 (A06 btn_pause). 자리는 게임마다 그대로 */
+#root #btnPause { width: 52px !important; height: 52px !important; min-width: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 50% !important;
+  background: url(ui/popup/btn_pause.webp) center / contain no-repeat !important; box-shadow: none !important; font-size: 0 !important; color: transparent !important; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .25)); }
+#root #btnPause > * { display: none !important; }
+#root #btnPause:active { transform: scale(.94); }

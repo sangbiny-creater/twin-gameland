@@ -48,12 +48,12 @@ const $ = (id) => document.getElementById(id);
 
 // ---------- sprites (asset.PNG cut into assets/sprites/sprites.webp + sprites.json) ----------
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
-fetch('assets/sprites/sprites.json?v=202610312241').then((r) => r.json()).then((j) => {
+fetch('assets/sprites/sprites.json?v=202611010049').then((r) => r.json()).then((j) => {
   SP.f = j;
   SP.img.onload = () => { SP.ready = true; };
-  SP.img.src = 'assets/sprites/sprites.webp?v=202610312241';
+  SP.img.src = 'assets/sprites/sprites.webp?v=202611010049';
 });
-for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=202610312241`; SP.bg.push(im); }
+for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=202611010049`; SP.bg.push(im); }
 // draw sprite centered at (x,y) with its width scaled to w (height keeps aspect)
 function spr(g, name, x, y, w, rot = 0, alpha = 1) {
   if (!SP.ready || !SP.f[name]) return;
@@ -197,7 +197,7 @@ function newHeli() {
 }
 
 function resetRun() {
-  G.t = 0; G.dist = 0; G.speed = CFG.speed0; G.coins = 0; G.hp = CFG.hpStart;
+  G.t = 0; G.dist = 0; G.speed = CFG.speed0; G.coins = 0; G.hp = CFG.hpStart; G.coinBase = 0; G.contUsed = false;
   G.heli = newHeli();
   G.pipes = []; G.items = []; G.obs = []; G.fx = []; G.texts = []; G.deco = [];
   G.nextPipeX = W * 0.95; G.gapY = H * 0.47;
@@ -225,6 +225,23 @@ function startRun() {
   setState('ready');
   Audio.startBgm();
 }
+// 시작 팝업 (common/gamepop.js): 아이템 고르기 → 시작. 결과 창 '다시하기'도 이 팝업으로
+function askStart() {
+  if (!window.GamePop || !HUB) { startRun(); return; }
+  GamePop.start({ game: 'helicopter', onStart: () => startRun(), onClose: goHome });
+}
+// 광고 보고 이어하기 (common/monet.js): 그 자리에서 하트 1개로, 앞의 장애물은 치우고, 화면을 한 번 터치하면 출발. 한 판에 한 번
+window.GameContinue = {
+  can: () => !G.contUsed,
+  go() {
+    G.contUsed = true; G.coinBase = G.coins;
+    G.heli = newHeli(); G.heli.inv = 2; G.hp = 1; G.crashT = 0; renderHearts();
+    const clear = G.dist + W * 1.2; // 화면 안쪽 장애물은 치움
+    G.pipes = G.pipes.filter((p) => p.x > clear); G.obs = G.obs.filter((o) => o.x > clear);
+    if (G.nextPipeX < clear) G.nextPipeX = clear;
+    setState('ready'); Audio.startBgm();
+  },
+};
 
 // ---------- world generation (endless) ----------
 // x positions are in "world distance px" (G.dist increases as we fly). Screen x = worldX - G.dist + heliScreenX.
@@ -676,7 +693,7 @@ function showResult() {
   if (!HUB) Save.store();
   $('resEarn').classList.toggle('hidden', !HUB);
   if (HUB) {
-    const h = HUB.record('helicopter', { dist: m, coins: G.coins });
+    const h = HUB.record('helicopter', { dist: m, coins: G.coins - G.coinBase }); // 이어하기 전에 받은 코인은 빼고
     $('resEarn').innerHTML = `+${h.earned} 코인 획득!` + (h.bonus ? ` <small>(거리 보너스 +${h.bonus})</small>` : '') + `<small>내 코인 ${h.coins}</small>`;
   }
   $('resFace').src = (window.Costume && Costume.src) || (window.CharV2 && CharV2.is(Save.data.char) ? `assets/chars/${Save.data.char}_crash.webp` : `assets/chars/${Save.data.char === 'eunyu' ? 'eunyu_crash' : 'eungyeol_6'}.webp`);
@@ -730,7 +747,7 @@ click('btnPause', pauseGame);
 click('btnResume', resumeGame);
 click('btnRetryP', startRun);
 click('btnHomeP', goHome);
-click('btnRetry', startRun);
+click('btnRetry', askStart);
 click('btnHomeR', goHome);
 click('btnSound', () => { Save.data.sound = !Save.data.sound; Save.store(); if (HUB) HUB.setSound(Save.data.sound); Audio.applyMute(); refreshHome(); });
 document.querySelectorAll('.char').forEach((b) => b.addEventListener('click', () => {
@@ -781,6 +798,7 @@ resize();
 if (HUB) {
   // 메인 화면·인트로 START로 들어오면 게임 화면을 먼저 보여 주고, 화면을 한 번 터치해야 출발
   $('btnHomeR').textContent = '게임 선택'; $('btnHomeP').textContent = '게임 선택'; // 나가기 버튼 이름: 끝없는 게임은 모두 '게임 선택'
+  if (new URLSearchParams(location.search).get('go') === '1') askStart(); // 인트로 START: 시작 팝업(아이템 고르기) — 먼저 띄워 뒤에 깔리는 판이 아이템을 쓰지 않게
   startRun();
 } else setState('home');
 requestAnimationFrame(frame);

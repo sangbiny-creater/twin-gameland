@@ -47,7 +47,7 @@ const rand = (a, b) => a + (b - a) * Math.random();
 const $ = (id) => document.getElementById(id);
 
 // ---------- sprites ----------
-const ASSET_V = '202610312241'; // 캐시 버전 (tools/bump_version.py가 올림)
+const ASSET_V = '202611010049'; // 캐시 버전 (tools/bump_version.py가 올림)
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -210,7 +210,7 @@ function resetRun() {
   G.t = 0; G.steps = []; genDir = Math.random() < 0.5 ? 1 : -1; genRun = 0;
   ensureSteps(40);
   G.idx = 0; G.dir = G.steps[1].col - G.steps[0].col;
-  G.hearts = 0; G.coins = 0; G.time = CFG.time0;
+  G.hearts = 0; G.coins = 0; G.time = CFG.time0; G.coinBase = 0; G.contUsed = false;
   G.anim = null; G.queue = []; G.boost = 0; G.wing = 0; G.shield = false; G.magnetT = 0; G.x2T = 0;
   G.fx = []; G.texts = []; G.fallT = 0; G.pose = 'ready'; G.poseT = 0; G.rot = 0;
   G.themeIdx = 0; G.prevTheme = 0; G.themeFade = 1; G.newBest = false; G.shake = 0;
@@ -231,6 +231,16 @@ function resetRun() {
   $('hudBest').textContent = Save.data.best;
 }
 function startRun() { resetRun(); setState('ready'); Audio.startBgm(); }
+// 시작 팝업 (common/gamepop.js): 아이템 고르기 → 시작. 결과 창 '다시하기'도 이 팝업으로
+function askStart() {
+  if (!window.GamePop || !HUB) { startRun(); return; }
+  GamePop.start({ game: 'stairs', onStart: () => startRun(), onClose: goHome });
+}
+// 광고 보고 이어하기 (common/monet.js): 그 계단에서 다시, 화면을 한 번 터치하면 출발. 한 판에 한 번
+window.GameContinue = {
+  can: () => !G.contUsed,
+  go() { G.contUsed = true; G.coinBase = G.coins; respawn(); G.time = Math.max(G.time, 10); setState('ready'); Audio.startBgm(); },
+};
 
 function makeDeco(sy) {
   const kinds = ['cloud', 'cloud2', 'cloud', 'balloon', 'bird', 'airship', 'island', 'island2'];
@@ -652,7 +662,7 @@ function showResult() {
   if (!HUB) Save.store();
   $('resEarn').classList.toggle('hidden', !HUB);
   if (HUB) {
-    const h = HUB.record('stairs', { dist: m, coins: G.coins });
+    const h = HUB.record('stairs', { dist: m, coins: G.coins - G.coinBase }); // 이어하기 전에 받은 코인은 빼고
     $('resEarn').innerHTML = `+${h.earned} 코인 획득!` + (h.bonus ? ` <small>(높이 보너스 +${h.bonus})</small>` : '') + `<small>내 코인 ${h.coins}</small>`;
   }
   $('resFace').src = (window.Costume && Costume.src) || `assets/chars/${Save.data.char}_${isBest && m > 0 ? 'happy' : 'dead'}.webp`;
@@ -706,7 +716,7 @@ click('btnPause', pauseGame);
 click('btnResume', resumeGame);
 click('btnRetryP', startRun);
 click('btnHomeP', goHome);
-click('btnRetry', startRun);
+click('btnRetry', askStart);
 click('btnHomeR', goHome);
 click('btnSound', () => { Save.data.sound = !Save.data.sound; Save.store(); if (HUB) HUB.setSound(Save.data.sound); Audio.applyMute(); refreshHome(); });
 document.querySelectorAll('.char').forEach((b) => b.addEventListener('click', () => {
@@ -762,8 +772,8 @@ function frame(now) {
 resize();
 if (HUB) {
   $('btnHomeR').textContent = '게임 선택'; $('btnHomeP').textContent = '게임 선택'; // 나가기 버튼 이름: 끝없는 게임은 모두 '게임 선택'
+  if (new URLSearchParams(location.search).get('go') === '1') askStart(); // 인트로 START: 시작 팝업(아이템 고르기) — 팝업을 먼저 띄워 뒤에 깔리는 판이 아이템을 쓰지 않게
   startRun();
-  if (new URLSearchParams(location.search).get('go') === '1') setState('play'); // 인트로 START로 들어오면 대기 화면 없이 바로 시작
 } else setState('home');
 requestAnimationFrame(frame);
 

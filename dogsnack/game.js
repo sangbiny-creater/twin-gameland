@@ -14,7 +14,7 @@
 let W = 540, H = 960;
 const L = window.SnackLevels, D = window.DogArt;
 const { PTS, JUDGE, LANES } = L;
-const ASSET_V = '202610312241';
+const ASSET_V = '202611010049';
 const MAX_HEARTS = 3;
 const START_HEARTS = 2;
 const HEART_GAP = 50; // 하트 아이템 사이 최소 시간(초) — 2026-10-28 달콤 베이커리와 같게(25→50초)
@@ -136,18 +136,30 @@ const timeScale = () => (G.slowT > 0 ? 0.7 : 1);
 const nowClock = () => G.clock + (G.state === 'play' ? Math.min(0.05, (performance.now() - G.frameAt) / 1000) * timeScale() : 0);
 
 // ---------- run ----------
-// 시작하기: 전에 레벨 2 이상까지 갔으면 '처음부터 하기' / '레벨 N부터 시작하기' 고르는 창
+// 시작하기: 시작 팝업 (common/gamepop.js) — 아이템 고르기 + [시작하기] [N판부터 시작] (N = 가장 높이 간 레벨의 바로 전 레벨, 2 이상일 때)
+//  팝업이 없을 때(혼자 연 게임)는 예전처럼: 레벨 2 이상까지 갔으면 '처음부터'·'레벨 N부터' 고르는 창
 function askStart() {
   const lv = Save.data.maxLevel || 1;
+  if (window.GamePop && HUB) { setState('menu'); GamePop.start({ game: 'dogsnack', from: lv - 1, onStart: (n) => startRun(n), onClose: goHome }); return; }
   if (lv < 2) { startRun(1); return; }
   $('btnFromLv').textContent = `레벨 ${lv}부터 시작하기`;
   setState('choose');
 }
+// 광고 보고 이어하기 (common/monet.js): 하트 1개로 그 자리에서, 곧 올 것은 치우고 3·2·1 뒤에 다시. 한 판에 한 번
+window.GameContinue = {
+  can: () => !G.contUsed,
+  go() {
+    G.contUsed = true; G.coinBase = G.coins;
+    G.hearts = 1; renderHearts(); G.hold = [null, null, null]; G.laneDown = [0, 0, 0];
+    G.notes = G.notes.filter((n) => n.st !== 'wait' || n.t > G.clock + 2.5);
+    setPose('idle', 0); G.countT = 3; setState('count');
+  },
+};
 function startRun(lv = 1) {
   clearTimers();
   const c0 = (lv - 1) * L.LEVEL;
   G.gen = L.Gen(Date.now(), c0); G.notes = []; G.k = 0; G.heartT = c0 - 10;
-  G.hearts = START_HEARTS; G.score = 0; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.made = 0; G.perfect = 0; G.level = lv; G.startLv = lv; G.newBest = false;
+  G.hearts = START_HEARTS; G.score = 0; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.made = 0; G.perfect = 0; G.level = lv; G.startLv = lv; G.newBest = false; G.coinBase = 0; G.contUsed = false;
   G.fx = []; G.t = 0; G.clock = c0; G.slowT = 0; G.x2T = 0; G.shield = 0; G.hold = [null, null, null]; G.ptr.clear(); G.laneDown = [0, 0, 0];
   G.pose = 'idle'; G.poseT = 0; G.poseLog = [];
   const boosts = HUB ? HUB.takeBoosts('dogsnack') : [];
@@ -350,7 +362,7 @@ function showResult() {
   if (!HUB) Save.store();
   $('resEarn').classList.toggle('hidden', !HUB);
   if (HUB) {
-    const h = HUB.record('dogsnack', { dist: score, coins: G.coins, level: G.level });
+    const h = HUB.record('dogsnack', { dist: score, coins: G.coins - (G.coinBase || 0), level: G.level }); // 이어하기 전에 받은 코인은 빼고
     $('resEarn').innerHTML = h.god ? '무적 모드라서 기록·코인이 없어요' : `+${h.earned} 코인 획득!` + (h.bonus ? ` <small>(점수 보너스 +${h.bonus})</small>` : '') + `<small>내 코인 ${h.coins}</small>`;
   }
   $('resScore').textContent = fmt(score);

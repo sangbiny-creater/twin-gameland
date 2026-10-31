@@ -5,6 +5,9 @@
 (function () {
   const MAIN = ['btnNext', 'btnResume', 'btnFromLv'];                   // ② 큰 버튼
   const BACK = /^(btnHome|btnMap|btnReadyMap|btnReadyHome|btnChooseBack|btnFromStart)/; // 파란 버튼 (나가기·뒤로)
+  // 버튼 색 약속 (docs/spec/팝업_아이템_정리_v1.md): 민트 = 메인으로·게임 선택 / 보라 = 지도 보기 / 파랑 = 다음 스테이지·XX판부터 / 나머지 분홍
+  const COLOR = { btnHomeR: 'mint', btnHomeP: 'mint', btnReadyHome: 'mint', btnMapR: 'purple', btnMapP: 'purple', btnReadyMap: 'purple', btnNext: 'blue', btnFromLv: 'blue' };
+  const paint = (b) => { const c = COLOR[b.id] || (isBack(b) ? 'blue' : ''); for (const k of ['blue', 'mint', 'purple']) b.classList.toggle(k, k === c); };
   const ACTION = /(^|\s)(btn|btn-start|btn-sub|btn-main|btn-orange|btn-blue|btn-gray|mbtn|rb)(\s|$)/;
   const PANELS = '.screen.dim > .panel, #ready > .panel, .modal > .panel, .modal > .mpanel';
   // 파란(나가기·뒤로) 버튼: 게임 버튼은 id 로만 정함 (다시하기·출발·계속은 분홍), 그 밖의 창은 닫기·취소
@@ -20,7 +23,7 @@
     let main = btns.find((b) => MAIN.includes(b.id));
     const rest = btns.filter((b) => b !== main);
     if (!main && rest.length === 1) main = rest.pop(); // 버튼이 하나뿐이면 한 줄 가득
-    const put = (b, row) => { b.classList.add('pp-b'); b.classList.toggle('blue', isBack(b)); row.appendChild(b); b._ppRow = row; b._ppAt = row.children.length - 1; };
+    const put = (b, row) => { b.classList.add('pp-b'); paint(b); row.appendChild(b); b._ppRow = row; b._ppAt = row.children.length - 1; };
     if (main) put(main, acts.querySelector('.pp-main'));
     for (let i = 0; i < rest.length; i += 2) {
       const row = document.createElement('div'); row.className = 'pp-row pp-pair'; acts.appendChild(row);
@@ -35,7 +38,7 @@
   function restore(panel) {
     const btns = panel._ppBtns; if (!btns) return;
     // 게임 코드가 버튼 class 를 새로 넣어 우리 모양(pp-b)이 빠진 경우도 다시 붙임 (사천성·메모리·두더지 '다시하기')
-    for (const b of btns) if (!b.classList.contains('pp-b') || b.classList.contains('blue') !== isBack(b)) { b.classList.add('pp-b'); b.classList.toggle('blue', isBack(b)); }
+    for (const b of btns) if (!b.classList.contains('pp-b')) { b.classList.add('pp-b'); paint(b); }
     if (!btns.some((b) => b.parentElement !== b._ppRow)) return;
     for (const b of btns.slice().sort((a, c) => a._ppAt - c._ppAt)) b._ppRow.appendChild(b);
     panel.querySelectorAll(':scope *:not(.pp-acts):not(.pp-row)').forEach((p) => { if (!p.closest('.pp-acts') && p.children.length === 0 && !p.textContent.trim() && p.tagName === 'DIV') p.classList.add('pp-gone'); });
