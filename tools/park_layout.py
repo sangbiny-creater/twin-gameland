@@ -27,6 +27,20 @@ SECTIONS = {
 }
 
 
+# 4차 배치 (2026-11, 사용자 초안): 첫 화면에 놀이기구 6개(아래 가운데 → 양옆 → 동상 → 양옆 → 위 가운데),
+#  그 위에 분수(놀이기구보다 작고 동상보다 큼, 그림 폭의 22%) → 양옆+동상 → 가운데 → 양옆 → 가운데 → 양옆.
+#  이름표 자리까지 생각해 위아래 간격을 둠. 한 줄로 놓인 자리도 높이를 조금씩 어긋나게(완전한 일자 없음)
+SECTIONS4 = {
+    'E': {'slots': [(0.505, 0.583), (0.228, 0.484), (0.806, 0.499), (0.278, 0.300), (0.723, 0.292), (0.516, 0.139)],
+          'statue': (0.50, 0.374), 'gate': (0.576, 0.93), 'shops': [(0.70, 0.725), (0.85, 0.765)]},
+    'A': {'slots': [(0.228, 0.607), (0.761, 0.618), (0.483, 0.493), (0.25, 0.362), (0.752, 0.372), (0.515, 0.235), (0.27, 0.098), (0.735, 0.088)],
+          'statue': (0.50, 0.637), 'fountain': (0.50, 0.83)},
+    'B': {'slots': [(0.495, 0.835), (0.235, 0.612), (0.768, 0.603), (0.508, 0.488), (0.245, 0.358), (0.758, 0.368), (0.49, 0.232), (0.262, 0.094), (0.742, 0.102)],
+          'statue': (0.50, 0.64)},
+}
+FOUNTAIN4 = 0.22   # 분수 지름 = 그림 폭의 22%
+
+
 def plate_img():
     p = f'{ROOT}/hub/park/rides/empty.webp'
     im = Image.open(p).convert('RGBA')
@@ -42,6 +56,13 @@ GARDENS = {
 }
 
 
+GARDENS.update({
+    'A': [(0.50, 0.36, 40), (0.50, 0.10, 40), (0.11, 0.48, 45), (0.89, 0.48, 45), (0.13, 0.76, 45), (0.87, 0.76, 45)],
+    'B': [(0.50, 0.36, 40), (0.50, 0.10, 40), (0.11, 0.48, 45), (0.89, 0.48, 45), (0.15, 0.80, 45), (0.85, 0.80, 45)],
+})
+GARDENS['E'] = [(0.50, 0.22, 34), (0.50, 0.47, 30), (0.11, 0.20, 45), (0.89, 0.18, 45), (0.10, 0.38, 40), (0.90, 0.40, 40)]
+
+
 def guide(name, sec, out):
     """연두 = 숲·꽃밭·나무, 베이지 = 넓은 돌바닥 광장(놀이공원 바닥), 파랑 = 강, 받침 = 놀이기구 자리(비워 두기)"""
     im = Image.new('RGB', (W, H), (150, 200, 120)); d = ImageDraw.Draw(im)
@@ -55,11 +76,11 @@ def guide(name, sec, out):
     if name == 'E':  # 왼쪽 아래(롤러코스터가 덮는 곳)는 강·숲, 강은 초안처럼 왼쪽에서 들어와 가운데 아래로
         d.polygon([(0, 0.62 * H), (0.44 * W, 0.72 * H), (0.42 * W, H), (0, H)], fill=(150, 200, 120))
         d.line([(0, 0.66 * H), (0.22 * W, 0.74 * H), (0.34 * W, 0.84 * H), (0.40 * W, H)], fill=river, width=60)
-    if name == 'M1': d.line([(0.95 * W, 0), (0.93 * W, 0.4 * H), (0.96 * W, 0.75 * H), (0.94 * W, H)], fill=river, width=50)
-    if name == 'M2': d.line([(0.05 * W, 0), (0.07 * W, 0.35 * H), (0.04 * W, 0.6 * H), (0.06 * W, H)], fill=river, width=50)
+    if name in ('M1', 'A'): d.line([(0.95 * W, 0), (0.93 * W, 0.4 * H), (0.96 * W, 0.75 * H), (0.94 * W, H)], fill=river, width=50)
+    if name in ('M2', 'B'): d.line([(0.05 * W, 0), (0.07 * W, 0.35 * H), (0.04 * W, 0.6 * H), (0.06 * W, H)], fill=river, width=50)
     im = im.filter(ImageFilter.GaussianBlur(5)); d = ImageDraw.Draw(im)
     if 'fountain' in sec:  # 분수 자리: 지름 = 그림 폭의 18%, 둥근 돌바닥으로 비워 둠
-        x, y = sec['fountain'][0] * W, sec['fountain'][1] * H; fw = 0.18 * W / 2
+        x, y = sec['fountain'][0] * W, sec['fountain'][1] * H; fw = sec.get('fw', 0.18) * W / 2
         d.ellipse((x - fw, y - fw * 0.6, x + fw, y + fw * 0.6), fill=(150, 205, 245), outline=(255, 255, 255), width=8)
     if 'statue' in sec:  # 동상 자리: 지름 = 그림 폭의 11%, 작은 둥근 돌 받침 (비움)
         x, y = sec['statue'][0] * W, sec['statue'][1] * H; sw = 0.11 * W / 2
@@ -86,7 +107,7 @@ def guide_top(out):
 
 if __name__ == '__main__':
     if sys.argv[1:] == ['guides']:
-        for n, s in SECTIONS.items(): guide(n, s, f'{GPT}/안내도3_{n}.png')
+        for n, s in SECTIONS4.items(): guide(n, {**s, 'fw': FOUNTAIN4}, f'{GPT}/안내도4_{n}.png')
         guide_top(f'{GPT}/안내도_T.png')
     elif sys.argv[1:] == ['js']:
         print(json.dumps({k: {kk: vv for kk, vv in v.items()} for k, v in SECTIONS.items()}))
