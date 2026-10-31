@@ -108,6 +108,7 @@
 .mn-bonus{display:flex;align-items:center;justify-content:center;gap:6px}.mn-bonus img{height:44px}
 .mn-ad{position:fixed;inset:0;z-index:9500;background:#111;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Jua,system-ui,sans-serif;text-align:center;gap:12px}
 .mn-ad img{width:84px}.mn-ad b{font-size:64px}.mn-ad span{font-size:16px;opacity:.85;padding:0 24px}
+.mn-gemline{color:#3D8BFF;font-size:20px;line-height:1.25;text-align:center;font-family:Jua,system-ui,sans-serif}.mn-gemline .mn-ic{width:1.1em;height:1.1em}.mn-gemline small{display:block;font-size:13px;color:#8A6E58}
 .mn-block{position:fixed;inset:0;z-index:9500;background:transparent}
 .mn-trial{position:fixed;left:50%;top:calc(8px + env(safe-area-inset-top));transform:translateX(-50%);z-index:8000;display:flex;align-items:center;gap:4px;background:rgba(43,58,103,.85);color:#fff;font-family:Jua,system-ui,sans-serif;font-size:15px;border-radius:12px;padding:3px 12px 3px 6px;pointer-events:none}
 .mn-pop{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:9600;display:flex;align-items:center;gap:6px;white-space:nowrap;background:rgba(43,58,103,.92);color:#fff;font-family:Jua,system-ui,sans-serif;font-size:20px;border-radius:16px;padding:10px 18px;pointer-events:none;animation:mnPop 1.6s ease forwards}
@@ -241,15 +242,31 @@
     const res = rec0(game, r);
     if (!res || res.god) return res;
     const gem = Hub.mutate((c) => { const s = c.v3 || (c.v3 = fresh()); s.plays = (s.plays || 0) + 1; if (s.plays % GEM_EVERY === 0) { c.gems = (c.gems || 0) + 1; return true; } return false; });
-    if (gem) setTimeout(() => pop(`${I('ico_gem')} +1 (게임 ${GEM_EVERY}판마다)`), 400);
-    const got = isOpen(game) ? playGems(game, r) : [];
-    got.forEach(([n, why], k) => setTimeout(() => pop(`${I('ico_gem')} +${n} ${why}`), 1300 + k * 1500));
+    // 이번 판에 받은 다이아: [[개수, 이유] …] → 결과 창 코인 줄 아래에 표시 (QA: 다이아도 결과 창에)
+    const got = (isOpen(game) ? playGems(game, r) : []);
+    if (gem) got.unshift([1, `게임 ${GEM_EVERY}판마다`]);
+    const gems = got.reduce((a, [n]) => a + n, 0);
+    setTimeout(() => gemLine(gems, got), 900);
     if (isOpen(game)) { // 체험 중에는 광고 없음
       const failed = G[game].stages ? !r.cleared : !NO_CONTINUE.includes(game);
-      setTimeout(() => rewardBar(res.earned || 0, failed), 900);
+      setTimeout(() => rewardBar(res.earned || 0, failed, 0, gems), 900);
     }
     return res;
   };
+  // 결과 창 '+N 코인 획득!' 바로 아래에 '💎 +N 다이아 획득!' (이유는 작은 글자). 못 받았으면 다음 다이아까지 남은 판 수
+  const short = (why) => why.replace('게임 ', '').replace('기록 ', '').replace(' 달성!', '').replace(' 첫 클리어!', ' 클리어').replace('!', ''); // 결과 창 작은 글자는 짧게
+  function gemLine(n, got, tries = 0) {
+    const earn = document.querySelector('#result:not(.hidden) #resEarn');
+    if (!earn) { if (tries < 15) setTimeout(() => gemLine(n, got, tries + 1), 300); return; }
+    let el = document.getElementById('mnGems');
+    if (!el) { el = document.createElement('div'); el.id = 'mnGems'; el.className = 'mn-gemline'; }
+    earn.after(el);
+    const left = GEM_EVERY - ((st().plays || 0) % GEM_EVERY);
+    el.innerHTML = n > 0 ? `${I('ico_gem')} +${n} 다이아 획득!<small>${got.map(([k, why]) => `${esc(short(why))} +${k}`).join(' · ')}</small>`
+      : `<small>${I('ico_gem')} 다음 다이아까지 ${left}판</small>`;
+    el.dataset.n = n;
+    const panel = earn.closest('.panel'); if (panel && window.PopupUI) PopupUI.fit(panel);
+  }
   // 게임 성과 다이아 (BM B안): 처음 한 번만. 돌려줌: [[다이아, 이유] …]
   function playGems(game, r) {
     const GM = G[game], out = [];
@@ -275,11 +292,11 @@
   }
   // 결과 창의 ① 광고 줄(common/popup.js 가 만든 .pp-ad)에 광고 버튼: 코인 2배 · 이어하기 (이어하기권이 있으면 광고 없이)
   //  1개면 한 줄 가득, 2개면 반씩 나란히 (common/popup.css)
-  function rewardBar(earned, failed, tries = 0) {
+  function rewardBar(earned, failed, tries = 0, gems = 0) {
     document.querySelectorAll('.pp-ad').forEach((x) => { x.innerHTML = ''; });
-    if (!(earned > 0) && !failed) return;
+    if (!(earned > 0) && !(gems > 0) && !failed) return;
     const panel = document.querySelector('#result:not(.hidden) .panel');
-    if (!panel) { if (tries < 15) setTimeout(() => rewardBar(earned, failed, tries + 1), 300); return; } // 결과 창이 늦게 뜨는 게임은 뜰 때까지 기다림
+    if (!panel) { if (tries < 15) setTimeout(() => rewardBar(earned, failed, tries + 1, gems), 300); return; } // 결과 창이 늦게 뜨는 게임은 뜰 때까지 기다림
     if (window.PopupUI) PopupUI.arrange(panel);
     const row = panel.querySelector('.pp-ad'); if (!row) return;
     // 버튼 왼쪽 흰 동그라미에 아이콘, 오른쪽에 위 작은 글자(광고 보고) + 큰 글자
@@ -290,8 +307,14 @@
     };
     const say = (b, t) => { b.querySelector('small').textContent = ''; b.querySelector('b').textContent = t; };
     // 버튼 오른쪽 빨간 배지가 '광고'를 뜻해서 글자는 짧게 (위 작은 글자 = 더 받는 코인)
-    const dbl = add(earned > 0 ? `+${earned} 코인` : '', '2배 받기', 'dbl', 'ico_x2', (b) => fakeAd(() => { Hub.addCoins(earned); say(b, `+${earned} 받았어요!`); pop(`${I('ico_x2')} +${earned}`); }));
-    if (!(earned > 0)) dbl.disabled = true;
+    // 2배 받기 = 이번 판에 받은 코인과 다이아를 한 번 더 (위 작은 글자에 둘 다 보여 줌)
+    const what = [earned > 0 ? `+${earned} 코인` : '', gems > 0 ? `💎+${gems}` : ''].filter(Boolean).join(' · ');
+    const dbl = add(what, '2배 받기', 'dbl', 'ico_x2', (b) => fakeAd(() => {
+      Hub.addCoins(earned); if (gems > 0) addGems(gems);
+      say(b, '받았어요!'); pop(`${I('ico_x2')} ${what}`); refreshHub();
+      const gl = document.getElementById('mnGems'); if (gl && gems > 0) gl.insertAdjacentHTML('beforeend', `<small>2배 받기 +${gems}</small>`);
+    }));
+    if (!(earned > 0) && !(gems > 0)) dbl.disabled = true;
     if (failed) {
       // 이어하기: 게임이 window.GameContinue = { can(), go() } 를 주면 광고 뒤 그 자리에서 이어서 (화면을 한 번 터치하면 다시 움직임)
       //  한 판에 한 번만 (can() 이 false 면 회색 버튼으로 자리만)

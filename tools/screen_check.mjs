@@ -133,6 +133,19 @@ add('bm-adgem-pp', 'index.html#lobby', { vp: 'pp', js: BM_T(`document.getElement
 add('bm-unlockall-pp', 'index.html#lobby', { vp: 'pp', ch: 'c4', wait: 3000, js: `(async () => { document.querySelectorAll('.mn-modal').forEach((m) => m.remove()); document.getElementById('btnGems').click(); await new Promise((r) => setTimeout(r, 300));
   document.querySelector('.mn-pack[data-o=unlock_all]').click(); await new Promise((r) => setTimeout(r, 300)); document.querySelector('.mn-modal .mn-btn.gold').click(); await new Promise((r) => setTimeout(r, 800));
   return { locked: document.querySelectorAll('.pk-ride.mn-locked').length, bm: Hub.active().v3.bm }; })()`, wait2: 300 });
+// 결과 창 다이아 줄 · 2배 받기(코인+다이아) — 실제로 끝낸 판에서 기록이 다이아 단계를 넘게
+for (const g of ['downhill', 'bakery', 'darts']) {
+  const dist = { downhill: 1200, bakery: 5200, darts: 320 }[g];
+  add(`gem-result-${g}-pp`, `${g}/index.html`, { vp: 'pp', ch: 'c4', wait: 2600, js: `(async () => { const sl = (t) => new Promise((r) => setTimeout(r, t));
+    Hub.mutate((c) => { c.v3 = { tickets: 0, unlocked: ['darts'], dUnlocks: 0, plays: 9, att: { count: 1, last: 'x' }, welcomed: true }; c.gems = 0; });
+    document.querySelectorAll('.mn-modal').forEach((m) => m.remove());
+    document.querySelectorAll('.screen.dim,#ready').forEach((e) => e.classList.add('hidden')); document.getElementById('result').classList.remove('hidden');
+    document.getElementById('resEarn').classList.remove('hidden'); document.getElementById('resEarn').innerHTML = '+40 코인 획득!<small>내 코인 40</small>';
+    Hub.record('${g}', { dist: ${dist}, coins: 30 }); await sl(1800);
+    const line = (document.getElementById('mnGems') || {}).textContent, g1 = Hub.gems(), btn = document.querySelector('.pp-adb.dbl');
+    const label = btn && btn.textContent; btn.click(); await sl(1800);
+    return { line, label, gemsBefore: g1, gemsAfter: Hub.gems() }; })()`, wait2: 200 });
+}
 // 실제로 게임을 시작해서 게임 코드로 끝냄 → 결과 창 버튼 줄(실제 흐름) 확인
 const ROWS = `(() => { const p = document.querySelector('#result .panel'); if (!p || document.getElementById('result').classList.contains('hidden')) return 'no result';
   const rows = [...p.querySelectorAll('.pp-row')].filter((r) => r.offsetHeight).map((r) => [...r.children].filter((b) => b.offsetHeight).map((b) => b.textContent.trim()).join(' | '));
