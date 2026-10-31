@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<base href="../"><!-- v0.2 보관판 (놀이공원 첫 화면, 상용화 기능 없음): 그림·게임은 위 폴더(지금 사이트)와 같이 씀 -->
+<script>try { sessionStorage.setItem('twin_ver', '0.2'); } catch (e) { /* ignore */ }</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="은유와 은결">
+<meta name="theme-color" content="#5CA9E6">
+<meta name="application-name" content="은유와 은결">
+<title>은유와 은결 (v0.2)</title>
+<link rel="manifest" href="hub/manifest.json?v=202610311056">
+<link rel="apple-touch-icon" href="hub/icons/icon-180.png?v=202610311056">
+<link rel="icon" type="image/png" sizes="32x32" href="hub/icons/favicon-32.png?v=202610311056">
+<link rel="icon" type="image/png" sizes="16x16" href="hub/icons/favicon-16.png?v=202610311056">
+<link rel="icon" type="image/png" sizes="192x192" href="hub/icons/favicon-192.png?v=202610311056">
+<link rel="shortcut icon" href="favicon.ico?v=202610311056">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v0.2/hub.css?v=202610311056">
+</head>
+<body>
+<div id="safe"></div>
+<div id="root">
+
+  <!-- 1. 캐릭터 선택 (첫 페이지) -->
+  <section id="scrSelect" class="screen">
+    <header class="hub-head">
+      <div class="logo">트윈 게임랜드<small>누구로 놀까요?</small></div>
+    </header>
+    <div id="charGrid" class="char-grid"></div>
+    <footer class="hub-foot">
+      <button class="btn-sub shop-btn" data-open="shop">🛒 아이템샵</button>
+      <button id="btnSound" class="round" aria-label="소리"><span class="ico-sound"></span></button>
+    </footer>
+  </section>
+
+  <!-- 2. 로비 (게임 고르기) — 처음 들어오면 보이는 화면 -->
+  <section id="scrLobby" class="screen hidden">
+    <!-- 놀이공원 (v0.2): 위아래로 스크롤. 게임 = 놀이기구, 맨 위 1자리는 항상 Open soon. 그림은 hub/park/ -->
+    <div class="pk-side"></div>
+    <div id="pkScroll" class="pk-scroll"><div id="pkWorld" class="pk-world"></div></div>
+    <header class="pk-top">
+      <div class="pk-logo"><img src="hub/park/ui/logo.webp?v=202610311056" alt="Twin Gameland"><span class="pk-ribbon">놀고, 꾸미고, 나만의 게임랜드!</span></div>
+      <div class="pk-pills">
+        <button class="pk-pill" data-open="shop" aria-label="코인 · 아이템샵"><i class="coin"></i><b id="meCoins">0</b><span class="pk-plus">+</span></button>
+        <div class="pk-pill"><img src="hub/park/ui/star.webp?v=202610311056" alt=""><b id="meStars">0</b></div>
+        <button id="btnGems" class="pk-pill" aria-label="다이아"><img src="hub/park/ui/gem.webp?v=202610311056" alt=""><b id="meGems">0</b><span class="pk-plus">+</span></button>
+        <button id="btnSettings" class="pk-icon" aria-label="설정"><img src="hub/park/ui/settings.webp?v=202610311056" alt=""></button>
+      </div>
+    </header>
+    <img id="pkCoaster" class="pk-coaster" alt="">
+    <button id="pkMe" class="pk-me" aria-label="캐릭터 바꾸기">
+      <img id="meFace" class="pk-face" alt="">
+      <span class="pk-meinfo"><b id="meName"></b><span class="pk-lv"><span id="meLv">Lv.1</span><span class="pk-bar"><i id="meLvBar"></i></span></span></span>
+    </button>
+    <button id="pkEdit" class="pk-edit" aria-label="놀이기구 자리 바꾸기"><img src="hub/park/ui/edit.webp?v=202610311056" alt=""><span>편집</span></button>
+    <div class="pk-rotate"><b>📱</b>첫 화면은 세로로 봐요<small>휴대폰을 세로로 돌려 주세요</small></div>
+    <div id="pkEditBar" class="pk-editbar hidden">
+      <span>놀이기구를 눌러 고르고, 바꿀 자리를 눌러요<small>끌어서 옮겨도 돼요</small></span>
+      <button id="pkReset" class="pk-reset">처음대로</button>
+      <button id="pkDone" class="pk-done">완료</button>
+    </div>
+  </section>
+
+  <!-- 3. 스카이훅 징검다리 -->
+  <section id="scrMap" class="screen hidden">
+    <header class="top-bar">
+      <button class="btn-sub small" data-go="lobby">← 게임 고르기</button>
+      <div class="map-title"><span id="mapName">Sky Hook Runner</span><small id="mapProg">0 / 12 클리어</small>
+        <div id="mapMode" class="map-mode hidden"><button data-mode="easy" class="on">쉬움</button><button data-mode="hard">어려움</button></div></div>
+      <div class="me mini"><img id="mapFace" alt=""><span class="pill"><i class="coin"></i><b id="mapCoins">0</b></span></div>
+    </header>
+    <div id="mapScroll" class="map-scroll"><div id="mapTrack" class="map-track"></div></div>
+    <div class="map-hint" id="mapHint">앞 스테이지를 깨면 다음 돌다리가 열려요. 깬 스테이지는 다시 할 수 있어요!</div>
+  </section>
+
+  <!-- 4. 기록 -->
+  <section id="scrRecords" class="screen hidden">
+    <header class="top-bar">
+      <button class="btn-sub small" data-go="lobby">← 뒤로</button>
+      <div class="map-title" id="recTitle">기록</div>
+      <div class="top-actions">
+        <button class="btn-sub small" id="btnRename">이름 바꾸기</button>
+        <button class="btn-sub small danger" id="btnDelete">캐릭터 삭제</button>
+      </div>
+    </header>
+    <div class="rec-body">
+      <div id="recSummary" class="rec-summary"></div>
+      <div class="rec-history"><div class="rec-h">최근 기록</div><ol id="recList"></ol></div>
+    </div>
+  </section>
+
+  <!-- 팝업들 -->
+  <div id="popCreate" class="modal hidden">
+    <div class="panel">
+      <div class="p-title">새 캐릭터 만들기</div>
+      <div class="looks" id="lookList"></div>
+      <label class="name-row">이름 <input id="inName" maxlength="8" autocomplete="off" placeholder="이름 (8글자까지)"></label>
+      <div class="p-note">아이템샵에서 게임 배경 스킨과 부스트를 살 수 있어요!</div>
+      <div class="row">
+        <button class="btn-sub" data-close>취소</button>
+        <button id="btnCreate" class="btn-main">만들기</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="popBuy" class="modal hidden">
+    <div class="panel">
+      <div class="p-title">캐릭터 자리 늘리기</div>
+      <div class="p-note big">새 캐릭터를 만들려면 <b id="buyPrice">300</b> 코인이 필요해요.<br>누구 코인으로 살까요?</div>
+      <div id="buyList" class="buy-list"></div>
+      <div class="row"><button class="btn-sub" data-close>닫기</button></div>
+    </div>
+  </div>
+
+  <div id="popStage" class="modal hidden">
+    <div class="panel">
+      <div class="p-title" id="stTitle">1-1 하늘도시 1</div>
+      <div class="st-stars" id="stStars"></div>
+      <div class="p-note big" id="stInfo"></div>
+      <div class="row">
+        <button class="btn-sub" data-close>닫기</button>
+        <button id="btnPlayStage" class="btn-main">출발!</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="popSettings" class="modal hidden">
+    <div class="panel">
+      <div class="p-title">설정 <small class="ver">v0.2</small></div>
+      <div class="set-list">
+        <button id="setSound" class="set-row"><span>🔊 소리</span><b id="setSoundVal">켜짐</b></button>
+        <button id="setRename" class="set-row"><span>✏️ 이름 바꾸기</span><b>›</b></button>
+        <button class="set-row" data-go="select"><span>👦 캐릭터 바꾸기</span><b>›</b></button>
+        <button class="set-row" data-go="records"><span>📖 기록</span><b>›</b></button>
+        <button id="setOld" class="set-row"><span>🕰️ 예전 첫 화면 보기 (v0.1)</span><b>›</b></button>
+      </div>
+      <div class="row"><button class="btn-main" data-close>닫기</button></div>
+    </div>
+  </div>
+
+  <div id="popConfirm" class="modal hidden">
+    <div class="panel">
+      <div class="p-title" id="cfTitle">정말요?</div>
+      <div class="p-note big" id="cfText"></div>
+      <div class="row">
+        <button class="btn-sub" data-close>취소</button>
+        <button id="cfOk" class="btn-main danger">삭제</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="installTip" class="install-tip hidden">
+    <span>📲 <b>홈 화면에 추가</b>하면 주소창 없이 화면이 꽉 차요!<small>Safari 공유 버튼 <i class="share-ico"></i> → '홈 화면에 추가'</small></span>
+    <button id="btnTipClose" aria-label="닫기">✕</button>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+</div>
+<!-- 게임 타이틀: 게임 시작을 누르면 메인 그림을 크게 보여 주고 Start로 들어감 -->
+  <div id="scrTitle" class="title-scr hidden">
+    <div id="tsBg" class="ts-bg"></div>
+    <img id="tsArt" class="ts-art" alt="">
+    <button id="tsBack" class="ts-back" aria-label="뒤로"><img src="hub/ui/back.webp?v=202610311056" alt=""></button>
+    <button id="tsStart" class="ts-start" aria-label="START"><img src="hub/ui/btn_start.webp?v=202610311056" alt="START"></button>
+  </div>
+
+<script src="common/chars/looks.js?v=202610311056"></script>
+<script src="common/profile.js?v=202610311056"></script>
+<script src="common/charv2.js?v=202610311056"></script>
+<script src="common/ui.js?v=202610311056"></script>
+<script src="v0.2/hub.js?v=202610311056"></script>
+<a id="verBadge" href="./index.html" onclick="try{sessionStorage.removeItem('twin_ver')}catch(e){}" style="position:fixed;right:calc(8px + env(safe-area-inset-right));bottom:calc(8px + env(safe-area-inset-bottom));z-index:2000;background:rgba(24,40,62,.75);color:#fff;font:13px Jua,system-ui,sans-serif;padding:4px 10px;border-radius:10px;text-decoration:none">v0.2 · 새 버전으로 ›</a>
+</body>
+</html>

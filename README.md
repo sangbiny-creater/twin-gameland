@@ -12,12 +12,15 @@
 
 | 버전 | 주소 | 내용 |
 | --- | --- | --- |
-| **v0.2** (지금) | https://sangbiny-creater.github.io/twin-gameland/ | 놀이공원 첫 화면: 게임 = 놀이기구, 위아래 스크롤, 편집(자리 바꾸기), 롤러코스터 프로필, 다이아 자리 |
+| **v0.3** (지금) | https://sangbiny-creater.github.io/twin-gameland/ | v0.2 놀이공원 + 상용화 검수 자리: 게임 잠금·체험·열쇠·다이아·출석·가짜 광고(2배 받기·이어하기)·가짜 결제. 규칙 `docs/spec/트윈게임랜드_스펙_v1.3.md`, 코드 `common/monet.js` |
+| v0.2 (보관) | https://sangbiny-creater.github.io/twin-gameland/v0.2/ | 놀이공원 첫 화면 (상용화 기능 없음). `v0.2/` 폴더에 얼려 둠 |
 | v0.1 (보관) | https://sangbiny-creater.github.io/twin-gameland/v0.1/ | 예전 첫 화면(게임 카드 목록). 설정 → '예전 첫 화면 보기'로도 들어감 |
 
-- 게임·아이템샵·저장 데이터는 두 버전이 같이 써요. 첫 화면만 달라요.
+- 아이템샵 쿠폰으로 이동: `enterv1` → v0.1, `enterv2` → v0.2, `enterv3` → v0.3. 검수용 쿠폰: `showmethediamond`(다이아 +100), `resetv3`(잠금·열쇠·출석 처음으로).
+- 상용화 기능(`common/monet.js`)은 v0.3에서만 켜져요 (`Hub.ver`: 보관판 주소이거나 그 탭의 `twin_ver` 가 0.1·0.2면 꺼짐).
+- 게임·아이템샵·저장 데이터는 모든 버전이 같이 써요. 첫 화면만 달라요.
 - v0.1은 `v0.1/` 폴더(index.html·hub.js·hub.css)에 얼려 둔 것 — 고치지 않아요. v0.1이 쓰는 그림(`hub/cards`, `hub/ui` 등)은 지우지 않기.
-- v0.1에서 게임을 하고 돌아오면 같은 탭에서는 v0.1 첫 화면으로 돌아와요(`sessionStorage` 의 `twin_ver`). 오른쪽 아래 'v0.1 · 새 버전으로'를 누르면 v0.2로.
+- v0.1에서 게임을 하고 돌아오면 같은 탭에서는 v0.1 첫 화면으로 돌아와요(`sessionStorage` 의 `twin_ver`). 오른쪽 아래 'v0.1 · 새 버전으로'(v0.2 보관판은 'v0.2 · 새 버전으로')를 누르면 v0.3으로.
 - 놀이공원 그림: `hub/park/`(배경 `bg/` 입구·가운데 A·B·맨 위, 놀이기구 `rides/<게임>.webp` — 받침 크기·자리가 모두 같음, 남는 자리 장식 `rides/deco1~3`, 롤러코스터 `coaster/`, `ui/`), 만드는 도구 `tools/park_assets.py`.
   배경은 컨셉 초안처럼 돌바닥 광장·분수대가 그려진 GPT 그림이고, 그림 속 빈 받침 자리를 `hub/hub.js` 의 `PARK_SECTIONS` 에 적어 둠(배경을 다시 받으면 다시 재기). 배치 안내도: `tools/park_layout.py`.
   새 게임을 추가하면 놀이기구 그림 `hub/park/rides/<게임>.webp`과 `hub/hub.js` 의 `EN_NAME`에 영어 이름을 넣어요. 자리가 모자라면 가운데 구간이 위로 저절로 붙어요.

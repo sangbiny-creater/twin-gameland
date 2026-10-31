@@ -4,7 +4,7 @@
 //  · 게임 카드(스크롤해도 고정)로 게임을 고르면 그 게임의 게임 부스트 / 보유 아이템이 보임
 //  · 게임 부스트: 1개씩 사서 모음. 수량은 구매·게임 보상·게임에서 사용 모두 같은 숫자(common/profile.js)
 const $ = (id) => document.getElementById(id);
-const V = '?v=202610311044'; // bump when images change so phones don't show old cached ones
+const V = '?v=202610311056'; // bump when images change so phones don't show old cached ones
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 
 const GAMES = [
@@ -224,6 +224,7 @@ function useCoupon() {
   const r = Hub.redeem($('couponInput').value);
   $('couponMsg').textContent = r.msg; $('couponMsg').className = 'coupon-msg' + (r.ok ? ' ok' : '');
   if (r.ok) { ching(); renderHeader(true); renderAll(); $('couponInput').value = ''; } else blip(300);
+  if (r.ok && r.go) setTimeout(() => { location.href = '../' + r.go; }, 700); // 버전 이동 쿠폰 (enterv1·enterv2·enterv3)
 }
 $('couponOk').onclick = useCoupon;
 $('couponInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') useCoupon(); });
