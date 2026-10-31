@@ -40,7 +40,7 @@ const seed = (active) => ({
 });
 
 // ---- 화면 목록: { name, url, vp, ch, js, wait, wait2, empty } ----
-const VP = { pp: [390, 844], pl: [844, 390], tb: [1024, 768], tp: [768, 1024] };
+const VP = { pp: [390, 844], pl: [844, 390], tb: [1024, 768], tp: [768, 1024], pc: [1280, 800, 'desktop'] };
 const S = [];
 const add = (name, url, o = {}) => S.push({ name, url, ...o });
 for (const vp of ['pp', 'pl', 'tb']) {
@@ -59,6 +59,8 @@ for (const vp of ['pp', 'pl', 'tb']) {
 }
 add('hub-lobby-oldlook-pp', 'index.html#lobby', { vp: 'pp', ch: 'c3' });
 add('hub-lobby-tp', 'index.html#lobby', { vp: 'tp' });
+add('hub-lobby-pc', 'index.html#lobby', { vp: 'pc' });
+add('hub-map-pc', 'index.html#map-shisen', { vp: 'pc' });
 add('hub-empty-pp', 'index.html', { vp: 'pp', empty: true, wait: 1500 });
 add('v01-return-pp', 'memory/index.html?stage=1', { vp: 'pp', js: "sessionStorage.setItem('twin_ver','0.1'); goMap()", wait2: 2500 });
 add('v02-return-pp', 'memory/index.html?stage=1', { vp: 'pp', js: 'goMap()', wait2: 2500 });
@@ -131,9 +133,9 @@ for (const sc of S) {
     handlers.push(h);
     await send('Page.enable', {}, sessionId); await send('Runtime.enable', {}, sessionId); await send('Network.enable', {}, sessionId);
     await send('Network.setCacheDisabled', { cacheDisabled: true }, sessionId);
-    const [w, ht] = VP[sc.vp];
-    await send('Emulation.setDeviceMetricsOverride', { width: w, height: ht, deviceScaleFactor: 2, mobile: true, screenOrientation: w > ht ? { type: 'landscapePrimary', angle: 90 } : { type: 'portraitPrimary', angle: 0 } }, sessionId);
-    await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 }, sessionId);
+    const [w, ht, kind] = VP[sc.vp], desk = kind === 'desktop';
+    await send('Emulation.setDeviceMetricsOverride', { width: w, height: ht, deviceScaleFactor: desk ? 1 : 2, mobile: !desk, screenOrientation: w > ht ? { type: 'landscapePrimary', angle: 90 } : { type: 'portraitPrimary', angle: 0 } }, sessionId);
+    if (!desk) await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 }, sessionId);
     await send('Page.addScriptToEvaluateOnNewDocument', { source: PRE(seed(sc.ch || 'c1'), sc.empty) }, sessionId);
     await send('Page.navigate', { url: BASE + sc.url }, sessionId);
     await sleep(sc.wait || 1800);
