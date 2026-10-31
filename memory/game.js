@@ -17,7 +17,7 @@ const MISS_SHOW = 0.75;  // 틀린 두 장을 보여 주는 시간 (초)
 const MISS_TIME = 0.2;   // 틀리면 줄어드는 시간 (초)
 const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611010049';
+const ASSET_V = '202611010106';
 const cardSrc = (n) => `assets/cards/${n}.webp?v=${ASSET_V}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -42,7 +42,7 @@ function shuffleArr(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math
 // ---------- images ----------
 const BG = { port: new Image(), land: new Image(), skin: [] };
 BG.port.src = `assets/bg/port.webp?v=${ASSET_V}`; BG.land.src = `assets/bg/land.webp?v=${ASSET_V}`;
-for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `../shisen/assets/bg/bg_${i}.webp?v=202611010049`; BG.skin.push(im); }
+for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `../shisen/assets/bg/bg_${i}.webp?v=202611010106`; BG.skin.push(im); }
 const BACK = `assets/cards/back.webp?v=${ASSET_V}`;
 // 그림을 미리 받아 둠 (첫 판부터 뒤집을 때 바로 보이게)
 [BACK, ...FRONTS.map(cardSrc)].forEach((s) => { const im = new Image(); im.src = s; });
@@ -174,7 +174,7 @@ const remaining = () => G.cards.filter((c) => !c.got);
 function startStage(si) {
   G.si = si; const st = STAGES[si];
   clearTimers();
-  G.limit = st.s; G.time = st.s; G.elapsed = 0; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.tries = 0;
+  G.limit = st.s; G.time = st.s; G.elapsed = 0; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.tries = 0; G.coinBase = 0; G.contUsed = false;
   G.open = []; G.busy = 0; G.fx = []; G.t = 0; G.comboX2 = false; G.peekT = 0; G.hintT = 0;
   if (HUB) HUB.starterKit('memory');
   G.skin = HUB ? HUB.equippedSkin('memory') : 'default';
@@ -320,7 +320,7 @@ function clearStage() {
   for (let i = 0; i < 50; i++) G.fx.push({ kind: 'confetti', x: Math.random() * W, y: -20 - Math.random() * 200, vx: (Math.random() - 0.5) * 80, vy: 120 + Math.random() * 160, r: Math.random() * 6, c: ['#FFB5C5', '#FFD34D', '#79C89C', '#5CA9E6', '#C9A8FF'][i % 5], t: 0, life: 3 });
   let earn = null, reward = [];
   if (HUB) {
-    earn = HUB.record('memory', { stage: G.si, cleared: true, dist: 0, coins: G.coins, stars: st, time: Math.round(G.elapsed) });
+    earn = HUB.record('memory', { stage: G.si, cleared: true, dist: 0, coins: G.coins - G.coinBase, stars: st, time: Math.round(G.elapsed) });
     reward = earn.god ? [] : clearReward(st, earn.firstClear);
   } else { Save.data.cleared[G.si] = true; Save.store(); }
   later(() => showResult(true, st, earn, reward), 900);
@@ -339,7 +339,7 @@ function failStage() {
   setState('done'); Audio.sfx('fail'); Audio.stopBgm();
   flipBackOpen(); remaining().forEach((c) => setUp(c, true)); // 남은 카드가 어디 있었는지 보여 줌
   let earn = null;
-  if (HUB) earn = HUB.record('memory', { stage: G.si, cleared: false, dist: 0, coins: G.coins, stars: 0 });
+  if (HUB) earn = HUB.record('memory', { stage: G.si, cleared: false, dist: 0, coins: G.coins - G.coinBase, stars: 0 });
   later(() => showResult(false, 0, earn), 1100);
 }
 const ITEM_NAME = { hint: '💡 힌트', find: '🔍 모두 보기', time: '⏱ 시간 추가', bomb: '💥 짝 맞추기' };
@@ -360,10 +360,6 @@ function showResult(ok, st, earn, reward = []) {
   }
   const hasNext = ok && G.si < STAGES.length - 1;
   $('btnNext').classList.toggle('hidden', !hasNext);
-  // 다음 스테이지가 없으면 다시하기가 그 자리(한 줄 전체·크게)로
-  const rb = $('btnRetry');
-  if (hasNext) $('resRow').prepend(rb); else $('btnNext').after(rb);
-  rb.className = 'btn ' + (hasNext ? 'blue' : 'gold big');
   setState('result');
 }
 
@@ -467,6 +463,12 @@ function setState(s) {
 }
 function pauseGame() { if (G.state === 'play' || G.state === 'memo') { G.pausedFrom = G.state; setState('pause'); Audio.stopBgm(); } }
 function resumeGame() { if (G.state === 'pause') { setState(G.pausedFrom); Audio.startBgm(); last = performance.now(); } }
+// 광고 보고 이어하기 (common/monet.js): 보여 준 카드를 다시 덮고 시간 +20초로 그 판을 이어서, 화면을 한 번 터치하면 다시 시작. 한 판에 한 번
+window.GameContinue = {
+  can: () => !G.contUsed,
+  go() { G.contUsed = true; G.coinBase = G.coins; clearTimers(); G.busy = 0; remaining().forEach((c) => setUp(c, false)); G.open = []; G.time = Math.max(G.time, 0) + 20; G.limit = Math.max(G.limit, G.time); setState('done'); GamePop.tapToGo(() => { setState('play'); Audio.startBgm(); }); },
+};
+function goMain() { if (typeof clearTimers === 'function') clearTimers(); Audio.stopBgm(); location.href = '../index.html#lobby'; } // 메인으로 (첫 화면)
 function goMap() { clearTimers(); Audio.stopBgm(); location.href = HUB ? '../index.html#map-memory' : '../index.html'; }
 
 // ---------- input ----------
@@ -483,7 +485,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) pause
 window.addEventListener('blur', () => pauseGame());
 const click = (id, fn) => $(id).addEventListener('click', () => { Audio.unlock(); Audio.sfx('ui'); fn(); });
 click('btnGo', () => startStage(G.si));
-click('btnReadyMap', goMap); click('btnMapP', goMap); click('btnMapR', goMap);
+click('btnReadyMap', goMap); click('btnReadyHome', goMain); click('btnHomeR', goMain); click('btnMapP', goMap); click('btnMapR', goMap);
 click('btnPause', pauseGame); click('btnResume', resumeGame);
 click('btnRetryP', () => startStage(G.si)); click('btnRetry', () => startStage(G.si));
 click('btnNext', () => showReady(Math.min(STAGES.length - 1, G.si + 1)));

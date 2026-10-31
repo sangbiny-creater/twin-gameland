@@ -10,15 +10,20 @@
   const IMG = BASE + 'common/ui/popup/';
   const HUB = window.Hub;
   const $ = (id) => document.getElementById(id);
+  const game = (location.pathname.match(/\/([a-z]+)\/(index\.html)?$/) || [])[1];
   const ENDLESS = ['downhill', 'bakery', 'stairs', 'helicopter', 'dogsnack'];
   // 무제한형 시작 아이템 3개 (하트·보호막·슬로우). 하트 그림은 하트 통일 규칙대로 common/ui/heart.webp
   const ITEMS = { life: ['하트', BASE + 'common/ui/heart.webp'], shield: ['보호막', BASE + 'common/items/shield.webp'], slow: ['슬로우', BASE + 'common/items/slow.webp'] };
   const START_ITEMS = ['life', 'shield', 'slow'];
+  // 스테이지형 게임의 시작 팝업 아이템 칸 (힌트·시간 추가·폭탄·모두 보기는 게임 화면 버튼으로 꺼내 씀, 하트는 시작할 때 체크)
+  const STAGE = { shisen: ['hint', 'time', 'bomb'], memory: ['hint', 'time', 'bomb', 'find'], mole: ['life'] };
+  const ITEM_NAME = { life: '하트', shield: '보호막', slow: '슬로우', hint: '힌트', time: '시간 추가', bomb: '폭탄', find: '모두 보기' };
+  const itemSrc = (id) => (id === 'life' ? BASE + 'common/ui/heart.webp' : `${BASE}common/items/${id}.webp`);
   // 버튼 앞 흰 아이콘 (A09)
-  const ICO = { btnRetry: 'retry', btnRetryP: 'retry', btnHomeR: 'home', btnHomeP: 'games', btnResume: 'play', btnMapR: 'map', btnMapP: 'map', btnNext: 'next', gpGo: 'play', gpFrom: 'next' };
-  const LABEL = { btnHomeR: '메인으로', btnRetry: '다시하기', btnResume: '계속하기', btnRetryP: '다시하기', btnHomeP: '게임 선택' };
+  const ICO = { btnRetry: 'retry', btnRetryP: 'retry', btnHomeR: 'home', btnHomeP: 'games', btnResume: 'play', btnMapR: 'map', btnMapP: 'map', btnNext: 'next', gpGo: 'play', gpFrom: 'next', btnGo: 'play', btnReadyHome: 'home' };
+  const LABEL = { btnHomeR: '메인으로', btnRetry: '다시하기', btnResume: '계속하기', btnRetryP: '다시하기', btnHomeP: '게임 선택', btnMapR: '지도 보기', btnMapP: '지도 보기', btnNext: '다음 스테이지' };
+  if (STAGE[game]) { LABEL.btnGo = '시작하기'; LABEL.btnReadyHome = '메인으로'; }
 
-  const game = (location.pathname.match(/\/([a-z]+)\/(index\.html)?$/) || [])[1];
   // 지금 캐릭터 계열 (은유 계열 / 은결 계열)
   const who = () => {
     const c = HUB && HUB.active(); if (!c) return 'eunyu';
@@ -50,6 +55,18 @@
 .gp-slot.off{opacity:.45;pointer-events:none}.gp-slot.off .buy{display:none}
 .gp-tip{font-size:14px;color:#8A6E58;text-align:center;flex:none}
 #result .res-face, #result #resFace, #result #resBest.badge{display:none!important}
+#ready > .panel > .logo{display:none!important}
+#ready .gp-info{flex:none;width:100%;box-sizing:border-box;border-radius:18px;background:#FFF3DE;border:3px solid #F5D9A8;padding:10px 12px;font-size:14px;line-height:1.45;color:#6B4A30;text-align:center}
+#ready .gp-info .p-text{margin:0 0 6px}
+#ready .gp-items{margin-top:2px}
+#result .r-stars{display:flex;justify-content:center;gap:6px;margin:0;flex:none}
+#result .r-stars span{display:block;width:46px;height:44px;font-size:0;color:transparent;background:url(${IMG}star_on.webp) center/contain no-repeat;text-shadow:none!important}
+#result .r-stars span:nth-child(2){width:56px;height:53px;margin-top:-8px}
+#result .r-stars span.off{background-image:url(${IMG}star_off.webp)}
+#result .panel.fail .r-stars{display:none}
+.pp-acts .pp-pair > button.pp-adb{--h:58px;flex:1 1 0}
+.gp-tap{position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(24,40,62,.35);font-family:Jua,system-ui,sans-serif;font-size:30px;color:#fff;text-shadow:0 3px 0 #C2406A,0 0 6px rgba(0,0,0,.4);animation:gpBlink 1.2s ease-in-out infinite;cursor:pointer}
+@keyframes gpBlink{50%{opacity:.75}}
 `;
   document.head.appendChild(css);
 
@@ -131,7 +148,9 @@
   }
   function decorateResult() {
     const panel = document.querySelector('#result:not(.hidden) .panel');
-    if (!panel || !ENDLESS.includes(game)) return;
+    if (!panel) return;
+    if (STAGE[game]) { decorateStageResult(); return; }
+    if (!ENDLESS.includes(game)) return;
     const best = !!(last && last.res && last.res.newBest);
     const key = best ? 'great' : 'sad';
     let sc = panel.querySelector(':scope > .gp-scene');
@@ -144,6 +163,71 @@
       if (t) t.after(sc); else panel.prepend(sc);
     }
   }
+  // ---------- 스테이지형 시작 팝업 (#ready 를 새 배치로) ----------
+  //  [판 이름 리본] [X = 지도 보기] / 지금 캐릭터 신난 그림 (두더지: 두더지 설명) / 판 정보 / 아이템 칸 / [시작하기] [메인으로]
+  function stageReady() {
+    const panel = document.querySelector('#ready > .panel'); if (!panel || panel.dataset.gp) return;
+    panel.dataset.gp = '1';
+    const t = $('readyTitle'); if (t) panel.prepend(t);
+    const x = document.createElement('button'); x.className = 'gp-x'; x.setAttribute('aria-label', '지도 보기');
+    x.addEventListener('click', (e) => { e.stopPropagation(); blip(500); if ($('btnReadyMap')) $('btnReadyMap').click(); });
+    panel.appendChild(x);
+    const txt = panel.querySelector(':scope > .p-text'), leg = $('legend');
+    const box = document.createElement('div');
+    if (game === 'mole') { box.className = 'gp-info'; if (txt) box.appendChild(txt); if (leg) box.appendChild(leg); }
+    else { box.innerHTML = scene('start'); if (txt) txt.remove(); }
+    (t || panel.firstChild).after(box.firstChild && game !== 'mole' ? box.firstChild : box);
+    const items = document.createElement('div'); items.className = 'gp-items'; items.id = 'gpStageItems';
+    const row = panel.querySelector(':scope > .row') || $('btnGo');
+    panel.insertBefore(items, row);
+    drawStageItems();
+  }
+  function drawStageItems() {
+    const box = $('gpStageItems'); if (!box) return;
+    const K = (HUB && HUB.BOOSTS[game]) || [];
+    box.innerHTML = '';
+    for (const id of STAGE[game]) {
+      const def = K.find((x) => x.id === id), n = HUB ? HUB.boostCount(game, id) : 0, start = id === 'life', on = start && HUB && HUB.isUsing(game, id);
+      const b = document.createElement('button');
+      b.className = 'gp-slot' + (on ? ' on' : '') + (n > 0 ? '' : ' none') + (def ? '' : ' off');
+      b.innerHTML = `<img class="ic" src="${itemSrc(id)}" alt=""><span class="nm">${def ? ITEM_NAME[id] : '준비 중'}</span><span class="n">${n}</span>`
+        + (def && n <= 0 ? `<span class="buy"><img src="${BASE}common/ui/coin.webp" alt="">${def.price}</span>` : '');
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (start && n > 0) { blip(on ? 500 : 900); HUB.setUsing(game, id, !on); drawStageItems(); return; }
+        if (n > 0) { toast(`${ITEM_NAME[id]}: 게임 화면의 버튼으로 써요`); return; }
+        buy(game, id, def, () => { if (start) HUB.setUsing(game, id, true); drawStageItems(); });
+      });
+      box.appendChild(b);
+    }
+  }
+  // ---------- 스테이지형 결과 창: CLEAR!/FAIL, 별 수에 따라 표정, 실패면 '다음 스테이지' 자리에 '광고 보고 이어하기' ----------
+  function decorateStageResult() {
+    const panel = document.querySelector('#result:not(.hidden) .panel'); if (!panel) return;
+    const ok = !panel.classList.contains('fail');
+    const st = ok ? [...panel.querySelectorAll('.r-stars span')].filter((x) => !x.classList.contains('off')).length : 0;
+    const key = !ok ? 'sad' : st >= 3 ? 'great' : st === 2 ? 'good' : 'smile';
+    let sc = panel.querySelector(':scope > .gp-scene');
+    if (!sc || sc.dataset.mood !== key) {
+      if (sc) sc.remove();
+      const d = document.createElement('div');
+      d.innerHTML = scene(key, `<img class="gp-title" src="${IMG}title_${ok ? 'clear' : 'fail'}.webp" alt="${ok ? 'CLEAR!' : 'FAIL'}">`);
+      sc = d.firstChild; sc.dataset.mood = key;
+      const after = panel.querySelector(':scope > .r-stars') || panel.querySelector(':scope > .r-title');
+      after.after(sc);
+    }
+    // 이어하기 광고 버튼을 '다음 스테이지' 자리로 (common/monet.js 가 광고 줄에 넣은 것을 옮김)
+    const next = $('btnNext'), retry = $('btnRetry');
+    panel.querySelectorAll('.pp-pair > .pp-adb.cont').forEach((b) => { if (ok) b.remove(); });
+    const cont = panel.querySelector('.pp-ad > .pp-adb.cont');
+    if (cont && !ok && retry && retry.parentElement) retry.after(cont);
+  }
+  // 이어하기 뒤: 화면을 한 번 터치하면 다시 움직임
+  function tapToGo(fn) {
+    const el = document.createElement('div'); el.className = 'gp-tap'; el.textContent = '터치하면 다시 시작!';
+    ($('root') || document.body).appendChild(el);
+    el.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); el.remove(); fn(); }, { once: true });
+  }
   function decoratePause() {
     const panel = document.querySelector('#pause:not(.hidden) .panel');
     if (!panel || panel.querySelector(':scope > .gp-scene')) return;
@@ -154,10 +238,12 @@
 
   function boot() {
     dressAll();
+    if (STAGE[game]) stageReady();
     const obs = new MutationObserver(() => { decorateResult(); decoratePause(); dressAll(); });
     for (const id of ['result', 'pause']) if ($(id)) obs.observe($(id), { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
+    if (STAGE[game] && $('ready')) new MutationObserver(() => { if (!$('ready').classList.contains('hidden')) drawStageItems(); }).observe($('ready'), { attributes: true, attributeFilter: ['class'] });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 
-  window.GamePop = { start, close, ENDLESS, charImg };
+  window.GamePop = { start, close, tapToGo, ENDLESS, STAGE, charImg };
 })();

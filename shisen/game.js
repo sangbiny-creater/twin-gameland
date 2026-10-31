@@ -56,7 +56,7 @@ const mmss = (t) => { t = Math.max(0, Math.ceil(t)); return `${String(Math.floor
 function shuffleArr(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 // ---------- sprites ----------
-const ASSET_V = '202611010049';
+const ASSET_V = '202611010106';
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => { SP.f = j; SP.img.onload = () => { SP.ready = true; }; SP.img.src = `assets/sprites/sprites.webp?v=${ASSET_V}`; });
 const EXTRA_V = '20261027a';
@@ -257,7 +257,7 @@ function reshuffle() {
 function startStage(si) {
   G.si = si; const st = STAGES[si];
   buildBoard(si);
-  G.limit = st.s; G.time = st.s; G.elapsed = 0; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.lastMatchT = -99;
+  G.limit = st.s; G.time = st.s; G.elapsed = 0; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.lastMatchT = -99; G.coinBase = 0; G.contUsed = false;
   // 도움 아이템: 메인 화면에서 들어오면 캐릭터가 가진 수량을 그대로 씀(판이 바뀌어도 다시 채워지지 않음)
   // 단독 실행일 때만 판마다 기본 수량을 줌
   G.items = { hint: 3, shuffle: 2, time: 1, bomb: 0 }; G.hint = null; G.hintT = 0; G.hintBig = false; G.findT = 0; G.comboX2 = false;
@@ -356,7 +356,7 @@ function clearStage() {
   let earn = null;
   let reward = [];
   if (HUB) {
-    earn = HUB.record('shisen', { stage: G.si, cleared: true, dist: 0, coins: G.coins, stars: st, time: Math.round(G.elapsed) });
+    earn = HUB.record('shisen', { stage: G.si, cleared: true, dist: 0, coins: G.coins - G.coinBase, stars: st, time: Math.round(G.elapsed) });
     reward = earn.god ? [] : clearReward(st, earn.firstClear);
   } else { Save.data.cleared[G.si] = true; Save.store(); }
   setTimeout(() => showResult(true, st, earn, reward), 900);
@@ -375,7 +375,7 @@ const GOD = () => !!(window.Hub && window.Hub.god); // 무적 쿠폰 (테스트�
 function failStage() {
   setState('done'); Audio.sfx('fail'); Audio.stopBgm();
   let earn = null;
-  if (HUB) earn = HUB.record('shisen', { stage: G.si, cleared: false, dist: 0, coins: G.coins, stars: 0 });
+  if (HUB) earn = HUB.record('shisen', { stage: G.si, cleared: false, dist: 0, coins: G.coins - G.coinBase, stars: 0 });
   setTimeout(() => showResult(false, 0, earn), 500);
 }
 const ITEM_NAME = { hint: '💡 힌트', shuffle: '🔀 섞기', time: '⏱ 시간 추가', bomb: '💣 폭탄' };
@@ -396,10 +396,6 @@ function showResult(ok, st, earn, reward = []) {
   // 다음 판: 같은 모드 안에서, 열려 있을 때만 (어려움은 쉬움 같은 월드를 다 깨야 열림)
   const hasNext = ok && G.si % HARD < HARD - 1 && unlocked(G.si + 1);
   $('btnNext').classList.toggle('hidden', !hasNext);
-  // 다음 스테이지가 없으면 다시하기가 그 자리(한 줄 전체·크게)로
-  const rb = $('btnRetry');
-  if (hasNext) $('resRow').prepend(rb); else $('btnNext').after(rb);
-  rb.className = 'btn ' + (hasNext ? 'blue' : 'gold big');
   setState('result');
 }
 
@@ -623,6 +619,12 @@ function setState(s) {
 }
 function pauseGame() { if (G.state === 'play') { setState('pause'); Audio.stopBgm(); } }
 function resumeGame() { if (G.state === 'pause') { setState('play'); Audio.startBgm(); last = performance.now(); } }
+// 광고 보고 이어하기 (common/monet.js): 시간 +30초로 그 판을 이어서, 화면을 한 번 터치하면 다시 시작. 한 판에 한 번
+window.GameContinue = {
+  can: () => !G.contUsed,
+  go() { G.contUsed = true; G.coinBase = G.coins; G.time = Math.max(G.time, 0) + 30; G.limit = Math.max(G.limit, G.time); setState('done'); GamePop.tapToGo(() => { setState('play'); Audio.startBgm(); }); },
+};
+function goMain() { if (typeof clearTimers === 'function') clearTimers(); Audio.stopBgm(); location.href = '../index.html#lobby'; } // 메인으로 (첫 화면)
 function goMap() {
   Audio.stopBgm();
   // 지도도 지금 하던 모드(쉬움·어려움)로 열리게 (hub.js 의 MODE_KEY 와 같은 키)
@@ -656,7 +658,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) pause
 window.addEventListener('blur', () => pauseGame());
 const click = (id, fn) => $(id).addEventListener('click', () => { Audio.unlock(); Audio.sfx('ui'); fn(); });
 click('btnGo', () => startStage(G.si));
-click('btnReadyMap', goMap); click('btnMapP', goMap); click('btnMapR', goMap);
+click('btnReadyMap', goMap); click('btnReadyHome', goMain); click('btnHomeR', goMain); click('btnMapP', goMap); click('btnMapR', goMap);
 click('btnPause', pauseGame); click('btnResume', resumeGame);
 click('btnRetryP', () => startStage(G.si)); click('btnRetry', () => startStage(G.si));
 click('btnNext', () => showReady(G.si + 1));

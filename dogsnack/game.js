@@ -14,7 +14,7 @@
 let W = 540, H = 960;
 const L = window.SnackLevels, D = window.DogArt;
 const { PTS, JUDGE, LANES } = L;
-const ASSET_V = '202611010049';
+const ASSET_V = '202611010106';
 const MAX_HEARTS = 3;
 const START_HEARTS = 2;
 const HEART_GAP = 50; // 하트 아이템 사이 최소 시간(초) — 2026-10-28 달콤 베이커리와 같게(25→50초)

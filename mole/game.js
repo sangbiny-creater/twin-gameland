@@ -21,7 +21,7 @@ const HEART_STAY = 0.6;    // 하트 두더지가 다 올라와 머무는 시간
 const HEART_FULL_PTS = 300; // 하트가 꽉 찼을 때 하트 두더지를 잡으면 받는 점수
 const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611010049';
+const ASSET_V = '202611010106';
 const asset = (p) => `assets/${p}.webp?v=${ASSET_V}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -234,7 +234,7 @@ function stepHoles(dt) {
 function startStage(si) {
   G.si = si; const st = STAGES[si];
   clearTimers();
-  G.limit = st.time; G.time = st.time; G.score = 0; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.caught = 0;
+  G.limit = st.time; G.time = st.time; G.score = 0; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.caught = 0; G.coinBase = 0; G.contUsed = false;
   G.fx = []; G.t = 0; G.dblT = 0; G.comboX2 = false; G.spawnT = 0.3; G.tickT = 0;
   G.hearts = START_HEARTS; G.heartT = 0; G.dead = false; renderHearts();
   for (const h of G.holes) { h.m = null; h.cool = 0; }
@@ -399,7 +399,7 @@ function endStage() {
   if (ok) for (let i = 0; i < 50; i++) G.fx.push({ kind: 'confetti', x: Math.random() * W, y: -20 - Math.random() * 200, vx: (Math.random() - 0.5) * 80, vy: 120 + Math.random() * 160, r: Math.random() * 6, c: ['#FFB5C5', '#FFD34D', '#79C89C', '#5CA9E6', '#C9A8FF'][i % 5], t: 0, life: 3 });
   let earn = null, reward = [];
   if (HUB) {
-    earn = HUB.record('mole', { stage: G.si, cleared: ok, dist: G.score, coins: G.coins, stars: s });
+    earn = HUB.record('mole', { stage: G.si, cleared: ok, dist: G.score, coins: G.coins - G.coinBase, stars: s });
     reward = ok && !earn.god ? clearReward(s, earn.firstClear) : [];
   } else if (ok) { Save.data.cleared[G.si] = true; Save.store(); }
   G.fx.push({ kind: 'text', text: G.dead ? '하트가 없어요!' : ok ? '타임 업! 클리어!' : '타임 업!', x: W / 2, y: H * 0.45, t: 0, life: 1.2, big: true, bad: !ok });
@@ -435,10 +435,6 @@ function showResult(ok, st, earn, reward, stage) {
   }
   const hasNext = ok && G.si < STAGES.length - 1;
   $('btnNext').classList.toggle('hidden', !hasNext);
-  // 다음 스테이지가 없으면 다시하기가 그 자리(한 줄 전체·크게)로
-  const rb = $('btnRetry');
-  if (hasNext) $('resRow').prepend(rb); else $('btnNext').after(rb);
-  rb.className = 'btn ' + (hasNext ? 'blue' : 'gold big');
   setState('result');
 }
 
@@ -663,6 +659,17 @@ function setState(s) {
 }
 function pauseGame() { if (G.state === 'play' || G.state === 'count') { G.pausedFrom = G.state; setState('pause'); Audio.stopBgm(); } }
 function resumeGame() { if (G.state === 'pause') { setState(G.pausedFrom); Audio.startBgm(); last = performance.now(); } }
+// 광고 보고 이어하기 (common/monet.js): 하트 1개(+시간이 끝났으면 15초)로 그 판을 이어서, 화면을 한 번 터치하면 다시 시작. 한 판에 한 번
+window.GameContinue = {
+  can: () => !G.contUsed,
+  go() {
+    G.contUsed = true; G.coinBase = G.coins; clearTimers();
+    if (G.dead || G.hearts <= 0) { G.dead = false; G.hearts = Math.max(1, G.hearts); renderHearts(); }
+    if (G.time <= 0.5) G.time = 15;
+    setState('done'); GamePop.tapToGo(() => { setState('play'); Audio.startBgm(); });
+  },
+};
+function goMain() { if (typeof clearTimers === 'function') clearTimers(); Audio.stopBgm(); location.href = '../index.html#lobby'; } // 메인으로 (첫 화면)
 function goMap() { clearTimers(); Audio.stopBgm(); location.href = HUB ? '../index.html#map-mole' : '../index.html'; }
 
 // ---------- input ----------
@@ -687,7 +694,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) pause
 window.addEventListener('blur', () => pauseGame());
 const click = (id, fn) => $(id).addEventListener('click', () => { Audio.unlock(); Audio.sfx('ui'); fn(); });
 click('btnGo', () => startStage(G.si));
-click('btnReadyMap', goMap); click('btnMapP', goMap); click('btnMapR', goMap);
+click('btnReadyMap', goMap); click('btnReadyHome', goMain); click('btnHomeR', goMain); click('btnMapP', goMap); click('btnMapR', goMap);
 click('btnPause', pauseGame); click('btnResume', resumeGame);
 click('btnRetryP', () => startStage(G.si)); click('btnRetry', () => startStage(G.si));
 click('btnNext', () => showReady(Math.min(STAGES.length - 1, G.si + 1)));

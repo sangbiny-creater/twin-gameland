@@ -246,7 +246,7 @@ img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #
    놀이공원은 폭 540 기둥(가로 화면은 가운데)에 위아래 스크롤. 위 막대·롤러코스터·프로필·편집 버튼은 화면에 고정 */
 #scrLobby { padding: 0; overflow: hidden; }
 body.in-park { background: #7CC46A; }
-.pk-side { position: absolute; inset: -30px; background: #7CC46A url(park/bg/mid_a.webp?v=202611010049) center / cover; filter: blur(14px) brightness(.92) saturate(1.1); }
+.pk-side { position: absolute; inset: -30px; background: #7CC46A url(park/bg/mid_a.webp?v=202611010106) center / cover; filter: blur(14px) brightness(.92) saturate(1.1); }
 .pk-scroll { position: absolute; inset: 0; z-index: 0; overflow-y: auto; overflow-x: hidden; touch-action: pan-y; scrollbar-width: none; overscroll-behavior: contain; }
 .pk-scroll::-webkit-scrollbar { display: none; }
 .pk-world { position: relative; width: 540px; margin: 0 auto; overflow: hidden; box-shadow: 0 0 30px rgba(24,59,91,.35); }
@@ -273,7 +273,7 @@ body.in-park { background: #7CC46A; }
 .pk-ride.soon:active .art { transform: scale(.8); }
 .pk-ride.soon .name b { color: #59606E; }
 /* ▶ 플레이 버튼: 놀이기구 그림의 오른쪽 아래, 이름판 바로 위 (놀이기구 그림 안쪽). 잠긴 게임은 큰 자물쇠만 (작은 자물쇠 버튼 없음) */
-.pk-ride .play { position: absolute; right: 10%; width: 30px; height: 30px; background: url(park/ui/play.webp?v=202611010049) center / contain no-repeat; filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); animation: pkBob 1.6s ease-in-out infinite; animation-delay: var(--d, 0s); pointer-events: none; }
+.pk-ride .play { position: absolute; right: 10%; width: 30px; height: 30px; background: url(park/ui/play.webp?v=202611010106) center / contain no-repeat; filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); animation: pkBob 1.6s ease-in-out infinite; animation-delay: var(--d, 0s); pointer-events: none; }
 .pk-ride.mn-locked .play { display: none; }
 @keyframes pkBob { 50% { transform: translateY(-4px); } }
 /* 편집 중: 흔들흔들, 고른 것 · 놓을 자리 표시 */
@@ -397,7 +397,7 @@ body.in-park { background: #7CC46A; }
 .sel-bg { position: absolute; max-width: none; pointer-events: none; }
 .sel-logo { position: relative; width: 230px; margin-top: 6px; filter: drop-shadow(0 4px 6px rgba(24,59,91,.35)); }
 .sel-ask { position: relative; display: flex; flex-direction: column; align-items: center; margin-top: 4px; }
-.sel-ask b { display: flex; align-items: center; justify-content: center; width: 470px; max-width: 96vw; height: 76px; padding: 0 56px 16px; background: url(../common/ui/monet/ribbon.webp?v=202611010049) center / 100% 100% no-repeat;
+.sel-ask b { display: flex; align-items: center; justify-content: center; width: 470px; max-width: 96vw; height: 76px; padding: 0 56px 16px; background: url(../common/ui/monet/ribbon.webp?v=202611010106) center / 100% 100% no-repeat;
   font-weight: normal; font-size: 21px; color: #fff; text-shadow: 0 2px 0 #C2406A, 0 0 3px #C2406A; white-space: nowrap; }
 .sel-ask small { margin-top: -6px; padding: 2px 12px; border-radius: 10px; background: rgba(255,255,255,.88); font-size: 14px; color: #8A5A6E; }
 .sel-chars { position: absolute; inset: 0; pointer-events: none; }

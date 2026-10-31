@@ -20,7 +20,9 @@
     const acts = document.createElement('div'); acts.className = 'pp-acts';
     acts.innerHTML = '<div class="pp-row pp-ad"></div><div class="pp-row pp-main"></div>';
     const parents = new Set(btns.map((b) => b.parentElement));
-    let main = btns.find((b) => MAIN.includes(b.id));
+    // 팝업 v2 스테이지 게임(사천성·메모리·두더지) 결과 창은 [다시하기][다음 스테이지] / [메인으로][지도 보기] 두 줄 (큰 버튼 줄 없음)
+    const v2 = /\/(shisen|memory|mole)\//.test(location.pathname);
+    let main = btns.find((b) => MAIN.includes(b.id) && !(v2 && b.id === 'btnNext'));
     const rest = btns.filter((b) => b !== main);
     if (!main && rest.length === 1) main = rest.pop(); // 버튼이 하나뿐이면 한 줄 가득
     const put = (b, row) => { b.classList.add('pp-b'); paint(b); row.appendChild(b); b._ppRow = row; b._ppAt = row.children.length - 1; };
