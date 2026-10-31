@@ -18,8 +18,9 @@
 - 게임·아이템샵·저장 데이터는 두 버전이 같이 써요. 첫 화면만 달라요.
 - v0.1은 `v0.1/` 폴더(index.html·hub.js·hub.css)에 얼려 둔 것 — 고치지 않아요. v0.1이 쓰는 그림(`hub/cards`, `hub/ui` 등)은 지우지 않기.
 - v0.1에서 게임을 하고 돌아오면 같은 탭에서는 v0.1 첫 화면으로 돌아와요(`sessionStorage` 의 `twin_ver`). 오른쪽 아래 'v0.1 · 새 버전으로'를 누르면 v0.2로.
-- 놀이공원 그림: `hub/park/`(배경 `bg/`, 놀이기구 `rides/<게임>.webp` — 받침 크기·자리가 모두 같음, 롤러코스터 `coaster/`, `ui/`), 만드는 도구 `tools/park_assets.py`.
-  새 게임을 추가하면 놀이기구 그림 `hub/park/rides/<게임>.webp`과 `hub/hub.js` 의 `EN_NAME`에 영어 이름을 넣어요. 자리·배경은 저절로 늘어나요.
+- 놀이공원 그림: `hub/park/`(배경 `bg/` 입구·가운데 A·B·맨 위, 놀이기구 `rides/<게임>.webp` — 받침 크기·자리가 모두 같음, 남는 자리 장식 `rides/deco1~3`, 롤러코스터 `coaster/`, `ui/`), 만드는 도구 `tools/park_assets.py`.
+  배경은 컨셉 초안처럼 돌바닥 광장·분수대가 그려진 GPT 그림이고, 그림 속 빈 받침 자리를 `hub/hub.js` 의 `PARK_SECTIONS` 에 적어 둠(배경을 다시 받으면 다시 재기). 배치 안내도: `tools/park_layout.py`.
+  새 게임을 추가하면 놀이기구 그림 `hub/park/rides/<게임>.webp`과 `hub/hub.js` 의 `EN_NAME`에 영어 이름을 넣어요. 자리가 모자라면 가운데 구간이 위로 저절로 붙어요.
 - 화면 확인 도구: `node tools/screen_check.mjs <폴더> [이름 필터]` (헤드리스 Chrome으로 폰·태블릿 화면 캡처 + 오류·404 + 놀이공원 편집 시험).
 
 ## 로컬 실행
