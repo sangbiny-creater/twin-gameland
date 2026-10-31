@@ -107,6 +107,16 @@ const EDIT_TEST = `(async () => {
 })()`;
 add('hub-edittest-pp', 'index.html#lobby', { vp: 'pp', js: EDIT_TEST, wait: 4000, wait2: 300 });
 add('hub-edittest-pl', 'index.html#lobby', { vp: 'pl', js: EDIT_TEST, wait2: 300 });
+// 쿠폰 restart·dayplus: 아이템샵 쿠폰 창에 직접 입력 → 첫 화면으로 넘어간 뒤(after) 저장 상태를 봄
+const COUPON = (code) => `(() => { document.getElementById('btnCoupon').click(); document.getElementById('couponInput').value = ${JSON.stringify(code)};
+  document.getElementById('couponOk').click(); const msg = document.getElementById('couponMsg').textContent; sessionStorage.setItem('__seeded', '1'); return msg; })()`;
+const STATE = `(() => { const d = JSON.parse(localStorage.getItem('twin_gameland_v1') || 'null'), c = d && d.chars.find((x) => x.id === d.activeId);
+  return { chars: d ? d.chars.length : 0, backup: !!localStorage.getItem('twin_gameland_v1_backup'), tip: localStorage.getItem('twin_tip_closed'), att: c && c.v3 && c.v3.att, gems: c && c.gems,
+    screen: [...document.querySelectorAll('section.screen:not(.hidden), .screen:not(.hidden)')].map((e) => e.id).join(','), modal: (document.querySelector('.mn-modal h3') || {}).textContent || '' }; })()`;
+for (const vp of ['pp', 'tb']) {
+  add(`coupon-restart-${vp}`, 'shop/index.html', { vp, js: COUPON('Restart'), wait2: 3500, after: STATE });
+  add(`coupon-dayplus-${vp}`, 'shop/index.html', { vp, js: COUPON('dayplus'), wait2: 3500, after: STATE });
+}
 
 // ---- CDP ----
 async function wsUrl() {
@@ -157,6 +167,7 @@ for (const sc of S) {
       if (r.exceptionDetails) errs.push('JS ' + (r.exceptionDetails.exception?.description || r.exceptionDetails.text).split('\n')[0]);
       await sleep(sc.wait2 || 0);
     }
+    if (sc.after) { const r = await send('Runtime.evaluate', { expression: sc.after, returnByValue: true }, sessionId); sc.result = { coupon: sc.result, after: r.result && r.result.value }; }
     const u = await send('Runtime.evaluate', { expression: 'location.pathname + location.search + location.hash', returnByValue: true }, sessionId);
     const shot = await send('Page.captureScreenshot', { format: 'png' }, sessionId);
     fs.writeFileSync(path.join(OUT, sc.name + '.png'), Buffer.from(shot.data, 'base64'));

@@ -177,7 +177,13 @@
     // v0.3 상용화 검수용 (docs/spec/트윈게임랜드_스펙_v1.3.md)
     showmethediamond: { gems: 100, once: false, msg: '다이아 100개를 받았어요! (검수용)' },
     resetv3: { resetV3: true, once: false, msg: '게임 잠금·열쇠·출석을 처음 상태로 돌렸어요 (검수용)' },
+    // 검수용: 처음 깔았을 때처럼 (모든 캐릭터·코인·기록 지움, 지우기 전 내용은 twin_gameland_v1_backup 에 한 벌 남김)
+    restart: { restart: true, go: 'index.html', once: false, msg: '처음 시작하는 상태로 돌아가요!' },
+    // 검수용: 하루가 지난 것처럼 (오늘 출석을 아직 안 한 상태로 → 첫 화면에서 다음 날 출석 창이 뜸)
+    dayplus: { dayPlus: true, go: 'index.html', once: false, msg: '하루가 지났어요! 첫 화면에서 출석해 보세요' },
   };
+  // restart 쿠폰이 지우는 이 사이트의 저장 (같은 주소를 쓰는 다른 사이트 저장은 건드리지 않음)
+  const SITE_KEYS = ['twin_tip_closed', 'twin_gameland_mapmode', 'skyhook_v1', 'twinheli_v1', 'stairs_v1', 'shisen_v1', 'downhill_v1', 'memory_v1', 'mole_v1', 'bakery_v2', 'dogsnack_v1', 'darts_v1'];
 
   // 캐릭터 모양: 기본 은유·은결 + 새 캐릭터 v2 (그림은 common/chars, common/charv2.js)
   const LOOKS = (window.CHAR_LOOKS || [{ look: 'eunyu' }, { look: 'eungyeol' }]).map((l) => l.look);
@@ -275,7 +281,7 @@
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610311435` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610311612` : null; },
     buyCostume(id, c = this.active()) {
       const it = COSTUMES.find((x) => x.id === id);
       if (!c || !it || this.ownsCostume(id, c)) return { ok: false };
@@ -289,6 +295,13 @@
       const key = String(code || '').toLowerCase().replace(/\s+/g, '');
       const cp = COUPONS[key];
       if (!c || !cp) return { ok: false, msg: '없는 쿠폰 번호예요' };
+      if (cp.restart) {
+        try {
+          const old = localStorage.getItem(KEY); if (old) localStorage.setItem(KEY + '_backup', old);
+          localStorage.removeItem(KEY); SITE_KEYS.forEach((k) => localStorage.removeItem(k)); sessionStorage.clear();
+        } catch (e) { /* ignore */ }
+        data = blank(); godBadge(); return { ok: true, msg: cp.msg, go: cp.go, restart: true };
+      }
       c.coupons = c.coupons || [];
       if (cp.once && c.coupons.includes(key)) return { ok: false, msg: '이미 사용한 쿠폰이에요' };
       c.coins += cp.coins || 0; c.earned += cp.coins || 0; c.coupons.push(key);
@@ -296,6 +309,7 @@
       if (cp.openAll != null) data.settings.openAll = cp.openAll;
       if (cp.gems) c.gems = (c.gems || 0) + cp.gems;
       if (cp.resetV3) delete c.v3;
+      if (cp.dayPlus && c.v3 && c.v3.att) c.v3.att.last = ''; // 출석 기록의 '마지막 날'만 비움 (누적 일수는 그대로)
       if (cp.ver != null) { try { if (cp.ver) sessionStorage.setItem('twin_ver', cp.ver); else sessionStorage.removeItem('twin_ver'); } catch (e) { /* ignore */ } }
       save(); return { ok: true, msg: cp.msg, coins: c.coins, go: cp.go };
     },
