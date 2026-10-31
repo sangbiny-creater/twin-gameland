@@ -48,12 +48,12 @@ const $ = (id) => document.getElementById(id);
 
 // ---------- sprites (asset.PNG cut into assets/sprites/sprites.webp + sprites.json) ----------
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
-fetch('assets/sprites/sprites.json?v=202610312054').then((r) => r.json()).then((j) => {
+fetch('assets/sprites/sprites.json?v=202610312111').then((r) => r.json()).then((j) => {
   SP.f = j;
   SP.img.onload = () => { SP.ready = true; };
-  SP.img.src = 'assets/sprites/sprites.webp?v=202610312054';
+  SP.img.src = 'assets/sprites/sprites.webp?v=202610312111';
 });
-for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=202610312054`; SP.bg.push(im); }
+for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=202610312111`; SP.bg.push(im); }
 // draw sprite centered at (x,y) with its width scaled to w (height keeps aspect)
 function spr(g, name, x, y, w, rot = 0, alpha = 1) {
   if (!SP.ready || !SP.f[name]) return;
@@ -780,7 +780,7 @@ function frame(now) {
 resize();
 if (HUB) {
   // 메인 화면·인트로 START로 들어오면 게임 화면을 먼저 보여 주고, 화면을 한 번 터치해야 출발
-  $('btnHomeR').textContent = '메인으로'; $('btnHomeP').textContent = '메인으로';
+  $('btnHomeR').textContent = '게임 선택'; $('btnHomeP').textContent = '게임 선택'; // 나가기 버튼 이름: 끝없는 게임은 모두 '게임 선택'
   startRun();
 } else setState('home');
 requestAnimationFrame(frame);

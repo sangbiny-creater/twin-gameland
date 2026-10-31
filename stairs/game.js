@@ -47,7 +47,7 @@ const rand = (a, b) => a + (b - a) * Math.random();
 const $ = (id) => document.getElementById(id);
 
 // ---------- sprites ----------
-const ASSET_V = '202610312054'; // 캐시 버전 (tools/bump_version.py가 올림)
+const ASSET_V = '202610312111'; // 캐시 버전 (tools/bump_version.py가 올림)
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -761,7 +761,7 @@ function frame(now) {
 }
 resize();
 if (HUB) {
-  $('btnHomeR').textContent = '메인으로'; $('btnHomeP').textContent = '메인으로';
+  $('btnHomeR').textContent = '게임 선택'; $('btnHomeP').textContent = '게임 선택'; // 나가기 버튼 이름: 끝없는 게임은 모두 '게임 선택'
   startRun();
   if (new URLSearchParams(location.search).get('go') === '1') setState('play'); // 인트로 START로 들어오면 대기 화면 없이 바로 시작
 } else setState('home');

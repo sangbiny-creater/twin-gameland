@@ -119,6 +119,9 @@ for (const vp of ['pp', 'tb']) {
 }
 
 for (const g of ['shisen', 'memory', 'mole', 'bakery', 'dogsnack', 'darts']) add(`pop-ready-${g}-pp`, `${g}/index.html${['shisen', 'memory', 'mole'].includes(g) ? '?stage=0' : ''}`, { vp: 'pp', wait: 2800 });
+// 지도 돌다리 → 바로 게임의 출발 준비 창 하나만 (QA: 출발 창 두 번)
+for (const g of ['shisen', 'memory', 'mole']) add(`flow-stone-${g}-pp`, `index.html#map-${g}`, { vp: 'pp', js: `(() => { sessionStorage.setItem('__seeded', '1'); document.querySelector('#mapTrack .stone').click(); return !document.querySelector('.modal:not(.hidden)'); })()`, wait2: 3500,
+  after: `({ url: location.pathname + location.search, ready: !document.getElementById('ready').classList.contains('hidden'), buttons: [...document.querySelectorAll('#ready .pp-b')].map((b) => b.textContent.trim()).join(' | ') })` });
 // 실제로 게임을 시작해서 게임 코드로 끝냄 → 결과 창 버튼 줄(실제 흐름) 확인
 const ROWS = `(() => { const p = document.querySelector('#result .panel'); if (!p || document.getElementById('result').classList.contains('hidden')) return 'no result';
   const rows = [...p.querySelectorAll('.pp-row')].filter((r) => r.offsetHeight).map((r) => [...r.children].filter((b) => b.offsetHeight).map((b) => b.textContent.trim()).join(' | '));
