@@ -3,7 +3,7 @@
 const $ = (id) => document.getElementById(id);
 const root = $('root');
 // 얼굴: 옷을 입었으면 옷 그림(윗부분을 동그랗게 보여 줌)
-const face = (c) => Hub.costumeImg(c) || `common/faces/${c.look}_base.webp?v=202610312111`;
+const face = (c) => Hub.costumeImg(c) || `common/faces/${c.look}_base.webp?v=202610312145`;
 
 // 버튼 효과음·알림 (common/ui.js)
 const { blip, toast } = window.UI;
@@ -58,8 +58,8 @@ function renderSelect() {
     const c = charOf(base);
     const b = document.createElement('button');
     b.className = `sel-char base-${base}` + (c ? '' : ' new');
-    b.innerHTML = `<span class="sel-stage"></span><img src="hub/select/${base}.webp?v=202610312111" alt=""><span class="sel-name"></span>
-      <span class="sel-stat">${c ? `<i class="coin"></i>${c.coins}<img src="hub/park/ui/star.webp?v=202610312111" alt="">${Hub.starsTotal(c)}<img src="hub/park/ui/gem.webp?v=202610312111" alt="">${Hub.gems(c)}` : '처음 시작하기'}</span>`;
+    b.innerHTML = `<span class="sel-stage"></span><img src="hub/select/${base}.webp?v=202610312145" alt=""><span class="sel-name"></span>
+      <span class="sel-stat">${c ? `<i class="coin"></i>${c.coins}<img src="hub/park/ui/star.webp?v=202610312145" alt="">${Hub.starsTotal(c)}<img src="hub/park/ui/gem.webp?v=202610312145" alt="">${Hub.gems(c)}` : '처음 시작하기'}</span>`;
     b.querySelector('.sel-name').textContent = c ? c.name : name;
     b.addEventListener('click', () => { blip(880); if (c) { Hub.setActive(c.id); preload(c.look); go('lobby'); } else openCreate(base); });
     grid.appendChild(b);
@@ -80,7 +80,7 @@ function layoutSelect() {
   // 세로: 배경 아래를 화면 아래에 / 가로: 무대(발)가 화면 높이 84% 에 오게 (위 로고·질문 아래로 캐릭터가 크게 보이게)
   const s = Math.max(W / B.w, (H * (portraitNow ? 0.8 : 1)) / B.h), bw = B.w * s, bh = B.h * s, bx = (W - bw) / 2;
   const by = portraitNow ? H - bh : Math.min(0, H * 0.84 - B.stages[0][1] * bh);
-  const bg = $('selBg'), src = `hub/select/${B.img}.webp?v=202610312111`;
+  const bg = $('selBg'), src = `hub/select/${B.img}.webp?v=202610312145`;
   if (bg.getAttribute('src') !== src) bg.src = src;
   Object.assign(bg.style, { left: bx + 'px', top: by + 'px', width: bw + 'px', height: bh + 'px' });
   const ask = document.querySelector('.sel-ask').getBoundingClientRect(), askB = (ask.bottom - root.getBoundingClientRect().top) / scaleNow;
@@ -97,7 +97,7 @@ let createLook = 'eunyu3';
 function openCreate(base) {
   createLook = Hub.latestLook(base);
   $('createTitle').textContent = `${BASES.find((x) => x.base === base).name}로 시작해요`;
-  $('createArt').src = `hub/select/${base}.webp?v=202610312111`;
+  $('createArt').src = `hub/select/${base}.webp?v=202610312145`;
   $('inName').value = ''; // 이름은 비워 두고 회색 안내 글자(이름을 입력하세요)만
   openModal('popCreate');
 }
@@ -158,7 +158,7 @@ const LV_STEP = 500;
 // 배경은 아래부터 입구(E) → 가운데 A → 가운데 B → A … → 맨 위(하늘). 게임이 늘면 가운데 구간이 위로 더 붙음
 // 자리 채우기: 아래 자리부터 게임 → 남는 자리는 장식(꽃 정원·간식 카트·포토존) → 맨 위 자리는 항상 Open soon
 // 자리 순서는 캐릭터마다 저장 (Hub.park: 자리마다 게임 id 또는 null=장식). 편집: '편집' 버튼 또는 놀이기구 길게 누르기
-const PARK_V = '?v=202610312111';
+const PARK_V = '?v=202610312145';
 const EN_NAME = { skyhook: 'Sky Hook Runner', helicopter: 'Sky Rider', stairs: 'Stair Climb', shisen: 'Tile Match', downhill: 'Downhill Runner',
   memory: 'Memory Game', mole: 'Whack-a-Mole', bakery: 'Sweet Bakery', dogsnack: 'Doggy Snack Time', darts: 'Dart Game' };
 // 배경 그림(1024 폭) 속 빈 받침 자리: [받침 가운데 x, 받침 아랫선 y] (그림 px, 아래 자리부터). 그림을 다시 받으면 여기를 다시 잼
@@ -176,26 +176,26 @@ const PARK_SECTIONS = {
 };
 // 이름판 (놀이공원 꾸미기 아이템, 기본 = 나무판): 그림 hub/park/ui/<img>.webp, ar = 폭/높이,
 //  box = 그림 속 크림색 글자 칸 [위, 오른쪽, 아래, 왼쪽] (그림 크기에 대한 비율, tools/park_assets.py plate_box 로 잼)
-//  글자는 그 칸 안쪽에 칸 폭의 6%씩 더 비워 두고 씀 (글자 끝이 테두리에 붙지 않게)
+//  w = 가장 넓을 때 폭(그림 그대로). 이름이 짧으면 그림 가운데를 잘라 내어 좁힘: 왼쪽 끝 · 가운데 장식(mid = 그림 폭에 대한 비율) · 오른쪽 끝만 남김
+//  글자 칸 양쪽에 글자 크기의 0.7배씩 여백을 두고 이름표가 끝남. 가장 넓어도 모자라면 fitPlates 가 글자를 줄임
 const PLATES = {
-  wood: { img: 'plate_wood', ar: 300 / 99, box: [0.202, 0.147, 0.343, 0.137], w: 178 },
-  ribbon: { img: 'plate_ribbon', ar: 300 / 105, box: [0.324, 0.157, 0.286, 0.153], w: 178 },
-  star: { img: 'plate_star', ar: 4.054, box: [0.243, 0.157, 0.216, 0.157], w: 182 },
-  rabbit: { img: 'plate_rabbit', ar: 3.659, box: [0.244, 0.183, 0.244, 0.183], w: 186 },
-  rainbow: { img: 'plate_rainbow', ar: 3.226, box: [0.344, 0.163, 0.215, 0.163], w: 180 },
-  flower: { img: 'plate_flower', ar: 3.371, box: [0.315, 0.167, 0.236, 0.167], w: 180 },
-  soon: { img: 'plate_soon', ar: 300 / 113, box: [0.221, 0.107, 0.354, 0.093], w: 132 },
+  wood: { img: 'plate_wood', ar: 300 / 99, box: [0.202, 0.147, 0.343, 0.137], w: 178, mid: 0 },
+  ribbon: { img: 'plate_ribbon', ar: 300 / 105, box: [0.324, 0.157, 0.286, 0.153], w: 178, mid: 0.16 },
+  star: { img: 'plate_star', ar: 4.054, box: [0.243, 0.157, 0.216, 0.157], w: 182, mid: 0 },
+  rabbit: { img: 'plate_rabbit', ar: 3.659, box: [0.244, 0.183, 0.244, 0.183], w: 186, mid: 0.14 },
+  rainbow: { img: 'plate_rainbow', ar: 3.226, box: [0.344, 0.163, 0.215, 0.163], w: 180, mid: 0.2 },
+  flower: { img: 'plate_flower', ar: 3.371, box: [0.315, 0.167, 0.236, 0.167], w: 180, mid: 0.12 },
+  soon: { img: 'plate_soon', ar: 300 / 113, box: [0.221, 0.107, 0.354, 0.093], w: 132, mid: 0 },
 };
 const plateOf = (c) => { const id = Hub.PARK_ITEMS.plate.ids[Hub.parkDeco('plate', c) - 1]; return PLATES[id] ? id : 'wood'; };
-// 이름판 하나 꾸미기: 크기·글자 칸 여백·글자 크기 (px)
+// 이름판 하나 꾸미기: 높이·글자 크기 (px). 폭은 화면에 붙인 뒤 fitPlates 가 글자 길이를 재서 정함
 function stylePlate(el, kind) {
-  const P = PLATES[kind], W = P.w, H = W / P.ar, [t, r, b, l] = P.box, pad = (1 - l - r) * W * 0.06;
-  const inH = (1 - t - b) * H;
-  Object.assign(el.style, { width: W + 'px', height: H + 'px', backgroundImage: `url(hub/park/ui/${P.img}.webp${PARK_V})`,
-    padding: `${t * H}px ${r * W + pad}px ${b * H}px ${l * W + pad}px` });
-  const two = el.querySelector('small');
-  el.querySelector('b').style.fontSize = Math.min(14, inH * (two ? 0.5 : 0.62)) + 'px';
-  if (two) two.style.fontSize = Math.min(11, inH * 0.38) + 'px';
+  const P = PLATES[kind], H = P.w / P.ar, [t, , b] = P.box;
+  el.dataset.plate = kind;
+  Object.assign(el.style, { width: P.w + 'px', height: H + 'px', paddingTop: t * H + 'px', paddingBottom: b * H + 'px' });
+  el.querySelector('b').style.fontSize = Math.min(15, (1 - t - b) * H * 0.66) + 'px';
+  el.insertAdjacentHTML('afterbegin', '<i class="pl l"></i><i class="pl c"></i><i class="pl r"></i>');
+  for (const i of el.querySelectorAll('.pl')) i.style.backgroundImage = `url(hub/park/ui/${P.img}.webp${PARK_V})`;
   return H;
 }
 // 화면 크기 (논리 px, 놀이공원 기둥 폭 540 = 그림 1024px). 놀이기구 칸은 받침 폭 255px(그림 기준)에 맞춘 460x470 그림
@@ -238,12 +238,6 @@ function parkIds(c, nSlots) {
   return order;
 }
 const slotPos = (i) => parkSlots[i];
-// 놀이기구 이름표 아래 한 줄: 징검다리 게임은 모은 별, 나머지는 최고 기록
-function rideSub(g, c) {
-  const r = Hub.rec(g.id, c);
-  if (Hub.GAMES[g.id].stages) return `<img src="hub/park/ui/star.webp${PARK_V}" alt="">${Object.values(r.stages).reduce((a, x) => a + (x.stars || 0), 0)}`;
-  return r.plays ? `BEST ${r.best.toLocaleString()}${g.unit === '점' ? '' : 'm'}` : 'NEW';
-}
 function renderLobby() {
   const c = Hub.active();
   $('meFace').src = face(c); $('meName').textContent = c.name;
@@ -318,7 +312,7 @@ function renderPark(keepScroll) {
     b.style.setProperty('--d', `${(i % 5) * -0.37}s`); // 말풍선·흔들림이 다 같이 움직이지 않게
     b.dataset.i = i; if (g) b.dataset.id = g.id;
     b.innerHTML = g
-      ? `<img class="art" src="hub/park/rides/${g.id}.webp${PARK_V}" alt=""><span class="name"><b></b><small>${rideSub(g, c)}</small></span><span class="play"></span>`
+      ? `<img class="art" src="hub/park/rides/${g.id}.webp${PARK_V}" alt=""><span class="name"><b></b></span><span class="play"></span>`
       : soon ? `<img class="art" src="hub/park/rides/soon.webp${PARK_V}" alt=""><span class="name soon"><b>Open soon</b></span>`
         : `<img class="art" src="hub/park/rides/${DECOS[i % DECOS.length]}.webp${PARK_V}" alt="">`;
     if (g) b.querySelector('.name b').textContent = EN_NAME[g.id] || g.name;
@@ -336,12 +330,23 @@ function renderPark(keepScroll) {
     sc.scrollTop = y != null ? +y : sc.scrollHeight;
   }
 }
-// 이름판 글자가 칸을 넘으면 칸에 꼭 맞을 때까지 글자를 줄임 (긴 게임 이름도 잘리지 않게)
+// 이름판 폭 = 글자 길이 + 양쪽 여백 + 그림 양 끝 테두리 (가장 넓어도 그림 그대로의 폭까지, 그래도 넘치면 글자를 줄임)
+//  그림은 세 조각: 왼쪽 끝(왼쪽 맞춤) · 가운데 장식(가운데 맞춤) · 오른쪽 끝(오른쪽 맞춤) — 좁아지면 그림 가운데가 잘려 나감
 function fitPlates(world) {
-  world.querySelectorAll('.pk-ride .name b, .pk-ride .name small').forEach((el) => {
-    el.style.fontSize = '';
-    let fs = parseFloat(getComputedStyle(el).fontSize);
-    while (el.scrollWidth > el.clientWidth + 0.5 && fs > 8) { fs -= 0.5; el.style.fontSize = fs + 'px'; }
+  world.querySelectorAll('.pk-ride .name[data-plate]').forEach((el) => {
+    const P = PLATES[el.dataset.plate], W0 = P.w, H = W0 / P.ar, [, r, , l] = P.box, t = el.querySelector('b');
+    let fs = parseFloat(t.style.fontSize), w;
+    const need = () => { t.style.width = 'auto'; const tw = t.scrollWidth; t.style.width = ''; return tw + fs * 1.4 + (l + r) * W0; };
+    while ((w = need()) > W0 && fs > 8) { fs -= 0.5; t.style.fontSize = fs + 'px'; }
+    w = Math.max(Math.min(w, W0), (l + r + P.mid) * W0 + fs * 2);
+    el.style.width = w + 'px';
+    el.style.paddingLeft = l * W0 + 'px'; el.style.paddingRight = r * W0 + 'px';
+    const cw = P.mid * W0, side = (w - cw) / 2;
+    const [L, C, R] = el.querySelectorAll('.pl');
+    for (const i of [L, C, R]) i.style.backgroundSize = `${W0}px ${H}px`;
+    Object.assign(L.style, { left: 0, width: Math.ceil(side + 0.5) + 'px' });
+    Object.assign(C.style, { left: side + 'px', width: cw + 'px', display: cw ? '' : 'none' });
+    Object.assign(R.style, { right: 0, width: Math.ceil(side + 0.5) + 'px' });
   });
 }
 // 꾸미기 고르기 (동상·분수·대문은 그 자리를 눌러서, 로고는 로고를 눌러서, 이름표는 편집 중 '이름표' 버튼): 가진 것만 보여 줌
@@ -460,7 +465,7 @@ $('setOld').addEventListener('click', () => { blip(); try { sessionStorage.setIt
 let titleGame = null;
 // 인트로 그림: 화면이 가로면 가로 그림(<id>_land.webp), 세로면 세로 그림 — 폰·태블릿을 돌리면 바로 바뀜
 const landMQ = window.matchMedia('(orientation: landscape)');
-const introSrc = (g) => `${landMQ.matches ? g.key.replace('.webp', '_land.webp') : g.key}?v=202610312111`;
+const introSrc = (g) => `${landMQ.matches ? g.key.replace('.webp', '_land.webp') : g.key}?v=202610312145`;
 function setTitleArt(g) {
   const src = introSrc(g);
   $('tsArt').src = src; $('tsArt').alt = g.name;
@@ -513,7 +518,7 @@ $('setRename').addEventListener('click', () => { closeModals(); renameMe(); });
 // 월드마다 배경 그림 카드 1장, 그 안에서 돌다리 5개(사천성은 10개)가 아래 → 위로 올라감
 // 가로 화면: 카드가 옆으로 나란히 (좌우로 밀기) / 폰 세로 화면: 카드가 위아래로 (위아래로 밀기)
 let portraitNow = false, mapPortrait = null; // mapPortrait: 지도를 그릴 때의 화면 방향
-const WORLD_BG = (w) => `common/worlds/w${w + 1}.webp?v=202610312111`;
+const WORLD_BG = (w) => `common/worlds/w${w + 1}.webp?v=202610312145`;
 // 판 위치 (카드 안에서 %): 아래(1판) → 위(마지막 판) 지그재그, 월드마다 조금씩 다르게
 //  · 월드당 5판(스카이훅) / 10판(사천성: 두 줄로 번갈아 올라감)
 function stoneSpot(w, k, K = 5) {
@@ -635,7 +640,7 @@ function renderMap() {
         currentPanel = panel;
       }
     }
-    if (w === GM.worlds.length - 1) { const g = document.createElement('img'); g.className = 'goal-flag'; g.src = 'hub/ui/map/trophy.webp?v=202610312111'; g.alt = '마지막 트로피'; panel.appendChild(g); }
+    if (w === GM.worlds.length - 1) { const g = document.createElement('img'); g.className = 'goal-flag'; g.src = 'hub/ui/map/trophy.webp?v=202610312145'; g.alt = '마지막 트로피'; panel.appendChild(g); }
     track.appendChild(panel);
   });
   requestAnimationFrame(() => {
@@ -651,7 +656,7 @@ function openStage(i) {
   stageSel = i;
   const st = Hub.stage(mapGame, i);
   $('stTitle').textContent = `${Hub.stageLabel(i, mapGame)} ${Hub.stageName(i, mapGame)}`;
-  $('stStars').innerHTML = [0, 1, 2].map((k) => `<img src="hub/ui/map/${k < st.stars ? 'star' : 'star_off'}.webp?v=202610312111" alt="${k < st.stars ? '별' : '빈 별'}">`).join('');
+  $('stStars').innerHTML = [0, 1, 2].map((k) => `<img src="hub/ui/map/${k < st.stars ? 'star' : 'star_off'}.webp?v=202610312145" alt="${k < st.stars ? '별' : '빈 별'}">`).join('');
   const shisen = mapGame === 'shisen' || mapGame === 'memory'; // 시간 안에 깨는 게임: 빨리 깬 기록·남은 시간으로 별
   const mole = mapGame === 'mole'; // 점수 게임: 최고 점수·점수로 별
   const bestTxt = mole ? `최고 점수 <b>${st.best.toLocaleString()}점</b>` : shisen ? (st.bestTime ? `가장 빨리 깬 기록 <b>${mmss(st.bestTime)}</b>` : '') : `최고 기록 <b>${st.best}m</b>`;
@@ -670,7 +675,7 @@ function renderRecords() {
   const c = Hub.active();
   $('recTitle').textContent = `${c.name}의 기록`;
   $('recSummary').innerHTML = `<div class="rec-card total"><div class="v">지금 코인 <b>${c.coins}</b> · 지금까지 모은 코인 <b>${c.earned}</b> · 별 <b>${Hub.starsTotal(c)}</b></div></div>`
-    + GAME_CARDS.map((g) => `<div class="rec-card"><div class="thumb" style="background-image:url(${g.thumb}?v=202610312111)"></div>
+    + GAME_CARDS.map((g) => `<div class="rec-card"><div class="thumb" style="background-image:url(${g.thumb}?v=202610312145)"></div>
       <div><div class="t">${g.name}${Hub.isFav(g.id, c) ? ' <span class="star-on">★</span>' : ''}</div><div class="v">${g.rec(c, Hub.rec(g.id, c))}</div></div></div>`).join('');
   const list = $('recList'); list.innerHTML = '';
   if (!c.history.length) list.innerHTML = '<li><span>아직 기록이 없어요. 게임을 해봐요!</span></li>';

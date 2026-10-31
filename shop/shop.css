@@ -237,7 +237,9 @@ main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; 
 .park-row { margin-top: 8px; }
 .park-k { font-size: 17px; margin: 0 2px 6px; color: #2A7A4A; }
 .park-card .bi { width: 72px; height: 72px; }
-.park-card.owned { border-color: #2FB86A; }
+.park-card.on { border-color: #2FB86A; box-shadow: 0 0 0 2px #2FB86A inset; }
+.park-card .check { position: absolute; right: 4px; top: 4px; z-index: 1; width: 24px; height: 24px; border-radius: 50%; background: #2FB86A; color: #fff; font-size: 14px; line-height: 21px; border: 2px solid #fff; box-sizing: border-box; text-align: center; }
+.park-card .park-apply { width: 86%; height: 30px; margin-top: 2px; }
 .park-card .cnt-pill { font-size: 13px; color: #2FB86A; }
 .park-card { position: relative; }
 .park-card .bi { object-fit: contain; }

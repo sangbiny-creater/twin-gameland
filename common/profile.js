@@ -309,7 +309,7 @@
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610312111` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610312145` : null; },
     buyCostume(id, c = this.active()) {
       const it = COSTUMES.find((x) => x.id === id);
       if (!c || !it || this.ownsCostume(id, c)) return { ok: false };
@@ -453,13 +453,28 @@
       c.gems -= K.price; c.parkItems = c.parkItems || {}; c.parkItems[kind] = [...(c.parkItems[kind] || []), n];
       save(); return { ok: true };
     },
-    // 자리(key = '<구간 번호>-<종류>', 이름표·로고는 'plate'·'logo')에 놓인 것 (안 골랐으면 그 종류의 기본 def)
+    // 자리(key = '<구간 번호>-<종류>', 이름표·로고는 'plate'·'logo')에 놓인 것
+    //  (그 자리에서 따로 안 골랐으면 아이템샵 '적용하기'로 고른 그 종류 전체(key = 종류 이름), 그것도 없으면 기본 def)
     parkDeco(key, c = this.active()) {
       if (c && c.parkDeco && c.parkDeco[key]) return c.parkDeco[key];
       const kind = key.includes('-') ? key.split('-')[1] : key, d = PARK_ITEMS[kind] && PARK_ITEMS[kind].def;
+      if (c && c.parkDeco && c.parkDeco[kind]) return c.parkDeco[kind];
       return typeof d === 'object' ? d[c ? lookBase(c.look) : 'eunyu'] || 1 : d || 1; // 동상: 은유 캐릭터는 은유 동상, 은결 캐릭터는 은결 동상
     },
     setParkDeco(key, n, c = this.active()) { if (!c) return; c.parkDeco = c.parkDeco || {}; c.parkDeco[key] = n; save(); },
+    // 아이템샵 '적용하기': 그 종류의 모든 자리를 n번으로 (자리마다 따로 고른 것도 지움)
+    applyParkKind(kind, n, c = this.active()) {
+      if (!c || !this.ownsParkItem(kind, n, c)) return;
+      c.parkDeco = c.parkDeco || {};
+      for (const k of Object.keys(c.parkDeco)) if (k.endsWith('-' + kind)) delete c.parkDeco[k];
+      c.parkDeco[kind] = n; save();
+    },
+    // 아이템샵에 '사용 중'으로 보일 번호들: 종류 전체에 놓인 것 + 자리마다 따로 고른 것
+    parkKindUsed(kind, c = this.active()) {
+      const u = new Set([this.parkDeco(kind, c)]);
+      for (const [k, v] of Object.entries((c && c.parkDeco) || {})) if (k.endsWith('-' + kind)) u.add(v);
+      return u;
+    },
     setPark(order, c = this.active()) { if (!c) return; if (order) c.park = order.slice(); else delete c.park; save(); },
     // 다이아 (v0.3 상용화 검수: common/monet.js 가 늘리고 씀. 보관판 v0.1·v0.2에서는 보이기만)
     gems(c = this.active()) { return (c && c.gems) || 0; },

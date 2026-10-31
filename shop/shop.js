@@ -4,7 +4,7 @@
 //  · 게임 카드(스크롤해도 고정)로 게임을 고르면 그 게임의 게임 부스트 / 보유 아이템이 보임
 //  · 게임 부스트: 1개씩 사서 모음. 수량은 구매·게임 보상·게임에서 사용 모두 같은 숫자(common/profile.js)
 const $ = (id) => document.getElementById(id);
-const V = '?v=202610312111'; // bump when images change so phones don't show old cached ones
+const V = '?v=202610312145'; // bump when images change so phones don't show old cached ones
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 
 const GAMES = [
@@ -245,16 +245,20 @@ function renderPark() {
     row.innerHTML = `<div class="park-k">${K.name}</div><div class="bgrid"></div>`;
     K.order.forEach((n) => {
       const k = n - 1, name = K.items[k], own = Hub.ownsParkItem(kind, n), d = document.createElement('div'), img = '../' + Hub.parkItemImg(kind, n) + V;
-      d.className = `bcard park-card ${kind}` + (own ? ' owned' : '') + (!own && gems() < K.price ? ' poor' : '');
-      d.innerHTML = `<span class="park-theme">${(K.themes && K.themes[k]) || ''}</span><img class="bi" src="${img}" alt=""><div class="bn"></div>`
-        + (own ? '<div class="cnt-pill">가지고 있어요</div>' : `<button class="price-pill gem"><img src="${GEM}" alt="">${K.price}</button>`);
+      const used = own && Hub.parkKindUsed(kind).has(n);
+      d.className = `bcard park-card ${kind}` + (own ? ' owned' : '') + (used ? ' on' : '') + (!own && gems() < K.price ? ' poor' : '');
+      // 가진 것: 배경 스킨처럼 '적용하기' → 첫 화면의 그 종류 전체가 바뀜 (첫 화면에서 눌러 고르는 것도 그대로)
+      d.innerHTML = `<span class="park-theme">${(K.themes && K.themes[k]) || ''}</span>${used ? '<span class="check">✓</span>' : ''}<img class="bi" src="${img}" alt=""><div class="bn"></div>`
+        + (used ? '<button class="sbtn green park-apply" disabled>적용중</button>' : own ? '<button class="sbtn gold park-apply">적용하기</button>' : `<button class="price-pill gem"><img src="${GEM}" alt="">${K.price}</button>`);
       d.querySelector('.bn').textContent = name;
+      const ap = d.querySelector('.park-apply');
+      if (ap) ap.onclick = () => { Hub.applyParkKind(kind, n); blip(900); toast(`${name} 적용! 첫 화면의 ${K.name}이(가) 바뀌어요`); renderPark(); };
       const btn = d.querySelector('.price-pill');
       if (btn) btn.onclick = () => {
         if (gems() < K.price) { blip(300); toast(`다이아가 ${K.price - gems()}개 모자라요! 첫 화면의 다이아 칸에서 모을 수 있어요`); return; }
         confirmBox('놀이공원 꾸미기', `<img class="mthumb" src="${img}" alt=""><b>${name}</b>을(를) 살까요?<br>${gemImg} 다이아 ${K.price}개`, '구매', () => {
           const r = Hub.buyParkItem(kind, n);
-          if (r.ok) { ching(); toast(kind === 'plate' ? `${name}을(를) 샀어요! 첫 화면 '편집' → '이름표'에서 바꿔요` : kind === 'logo' ? `${name}을(를) 샀어요! 첫 화면 왼쪽 위 로고를 눌러 바꿔요` : `${name}을(를) 샀어요! 첫 화면의 ${K.name}을 눌러 바꿔 보세요`); renderHeader(true); renderAll(); }
+          if (r.ok) { ching(); toast(`${name}을(를) 샀어요! '적용하기'를 누르면 첫 화면에 놓여요`); renderHeader(true); renderAll(); }
         });
       };
       row.querySelector('.bgrid').appendChild(d);
