@@ -16,7 +16,7 @@
 let W = 540, H = 960;
 const L = window.BakeryLevels, A = window.BakeryArt;
 const { PTS, JUDGE } = L;
-const ASSET_V = '202610311940';
+const ASSET_V = '202610312054';
 const MAX_HEARTS = 3;
 const START_HEARTS = 2;
 const HEART_GAP = 50; // 하트 아이템 사이 최소 시간(초) — 2026-10-27 반으로 줄임(25→50초)
@@ -694,7 +694,7 @@ $('btnReadyHome').classList.toggle('hidden', !HUB);
 function wideLayout() { return W > H; }
 function resize() {
   const vv = window.visualViewport;
-  const vw = Math.round(vv ? vv.width : window.innerWidth), vh = Math.round(vv ? vv.height : window.innerHeight);
+  const vw = Math.round(vv ? vv.width : window.innerWidth), vh = Math.round(window.fullViewH ? fullViewH() : (vv ? vv.height : window.innerHeight));
   const s = $('safe').getBoundingClientRect();
   const inset = { t: s.top, l: s.left, r: vw - s.right, b: vh - s.bottom };
   if (vh > vw) { W = 540; H = Math.round(clamp(W * vh / vw, 860, 1240)); }

@@ -65,7 +65,7 @@ const $ = (id) => document.getElementById(id);
 const rng = (seed) => { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let x = s; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; };
 
 // ---------- sprites ----------
-const ASSET_V = '202610311940';
+const ASSET_V = '202610312054';
 const SP = { img: new Image(), f: null, ready: false };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -951,7 +951,7 @@ document.querySelectorAll('.char').forEach((b) => b.addEventListener('click', ()
 const isTouch = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
 function resize() {
   const vv = window.visualViewport;
-  const vw = Math.round(vv ? vv.width : window.innerWidth), vh = Math.round(vv ? vv.height : window.innerHeight);
+  const vw = Math.round(vv ? vv.width : window.innerWidth), vh = Math.round(window.fullViewH ? fullViewH() : (vv ? vv.height : window.innerHeight));
   const s = $('safe').getBoundingClientRect();
   const inset = { t: s.top, l: s.left, r: vw - s.right, b: vh - s.bottom };
   const rotated = isTouch && vw > vh;

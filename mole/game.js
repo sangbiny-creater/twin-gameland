@@ -21,7 +21,7 @@ const HEART_STAY = 0.6;    // 하트 두더지가 다 올라와 머무는 시간
 const HEART_FULL_PTS = 300; // 하트가 꽉 찼을 때 하트 두더지를 잡으면 받는 점수
 const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202610311940';
+const ASSET_V = '202610312054';
 const asset = (p) => `assets/${p}.webp?v=${ASSET_V}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -698,7 +698,7 @@ G.items = { time: 1, double: 1, rainbow: 1 }; // 단독 실행일 때 기본 수
 function wideLayout() { return W > H; }
 function resize() {
   const vv = window.visualViewport;
-  const vw = Math.round(vv ? vv.width : window.innerWidth), vh = Math.round(vv ? vv.height : window.innerHeight);
+  const vw = Math.round(vv ? vv.width : window.innerWidth), vh = Math.round(window.fullViewH ? fullViewH() : (vv ? vv.height : window.innerHeight));
   const s = $('safe').getBoundingClientRect();
   const inset = { t: s.top, l: s.left, r: vw - s.right, b: vh - s.bottom };
   if (vh > vw) { W = 540; H = Math.round(clamp(W * vh / vw, 860, 1240)); }

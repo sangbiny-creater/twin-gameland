@@ -48,12 +48,12 @@ const $ = (id) => document.getElementById(id);
 
 // ---------- sprites (asset.PNG cut into assets/sprites/sprites.webp + sprites.json) ----------
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
-fetch('assets/sprites/sprites.json?v=202610311940').then((r) => r.json()).then((j) => {
+fetch('assets/sprites/sprites.json?v=202610312054').then((r) => r.json()).then((j) => {
   SP.f = j;
   SP.img.onload = () => { SP.ready = true; };
-  SP.img.src = 'assets/sprites/sprites.webp?v=202610311940';
+  SP.img.src = 'assets/sprites/sprites.webp?v=202610312054';
 });
-for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=202610311940`; SP.bg.push(im); }
+for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=202610312054`; SP.bg.push(im); }
 // draw sprite centered at (x,y) with its width scaled to w (height keeps aspect)
 function spr(g, name, x, y, w, rot = 0, alpha = 1) {
   if (!SP.ready || !SP.f[name]) return;
@@ -741,7 +741,7 @@ document.querySelectorAll('.char').forEach((b) => b.addEventListener('click', ()
 const isTouch = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
 function resize() {
   const vv = window.visualViewport;
-  const vw = Math.round(vv ? vv.width : window.innerWidth), vh = Math.round(vv ? vv.height : window.innerHeight);
+  const vw = Math.round(vv ? vv.width : window.innerWidth), vh = Math.round(window.fullViewH ? fullViewH() : (vv ? vv.height : window.innerHeight));
   const s = $('safe').getBoundingClientRect();
   const inset = { t: s.top, l: s.left, r: vw - s.right, b: vh - s.bottom };
   const rotated = isTouch && vh > vw;

@@ -118,6 +118,19 @@ for (const vp of ['pp', 'tb']) {
   add(`coupon-dayplus-${vp}`, 'shop/index.html', { vp, js: COUPON('dayplus'), wait2: 3500, after: STATE });
 }
 
+for (const g of ['shisen', 'memory', 'mole', 'bakery', 'dogsnack', 'darts']) add(`pop-ready-${g}-pp`, `${g}/index.html${['shisen', 'memory', 'mole'].includes(g) ? '?stage=0' : ''}`, { vp: 'pp', wait: 2800 });
+// 실제로 게임을 시작해서 게임 코드로 끝냄 → 결과 창 버튼 줄(실제 흐름) 확인
+const ROWS = `(() => { const p = document.querySelector('#result .panel'); if (!p || document.getElementById('result').classList.contains('hidden')) return 'no result';
+  const rows = [...p.querySelectorAll('.pp-row')].filter((r) => r.offsetHeight).map((r) => [...r.children].filter((b) => b.offsetHeight).map((b) => b.textContent.trim()).join(' | '));
+  const stray = [...p.querySelectorAll('button')].filter((b) => !b.closest('.pp-acts') && b.offsetHeight).map((b) => b.id || b.textContent.trim());
+  const pr = p.getBoundingClientRect(), out = [...p.querySelectorAll('.pp-acts button')].filter((b) => { const r = b.getBoundingClientRect(); return b.offsetHeight && (r.left < pr.left || r.right > pr.right || r.bottom > pr.bottom); }).length;
+  return { rows, stray, out }; })()`;
+const END = { helicopter: 'startRun(); showResult()', stairs: 'startRun(); gameOver()', downhill: 'startRun(); gameOver()', bakery: 'startRun(1); G.state = \'play\'; gameOver()', dogsnack: 'startRun(1); G.state = \'play\'; gameOver()', darts: 'startRun(); finish()',
+  'shisen-clear': 'startStage(0); clearStage()', 'shisen-fail': 'startStage(0); failStage()', 'memory-clear': 'startStage(0); G.state = \'play\'; clearStage()', 'memory-fail': 'startStage(0); failStage()', mole: 'startStage(0); G.state = \'play\'; endStage()' };
+for (const [k, js] of Object.entries(END)) {
+  const g = k.split('-')[0];
+  add(`real-${k}-pp`, `${g}/index.html`, { vp: 'pp', wait: 2600, js: `(async () => { try { ${js}; } catch (e) { return 'ERR ' + e.message; } await new Promise((r) => setTimeout(r, 6000)); return ${ROWS}; })()`, wait2: 200 });
+}
 // 새 팝업 꾸밈 (QA 23·26): 일시정지 창 · 결과 창(광고 버튼이 창 안에 들어가는지)
 for (const g of ['helicopter', 'stairs', 'shisen', 'downhill', 'memory', 'mole', 'bakery', 'dogsnack', 'darts']) for (const vp of ['pp', 'pl']) {
   add(`pop-pause-${g}-${vp}`, `${g}/index.html`, { vp, wait: 2500, js: `(() => { document.querySelectorAll('.screen.dim,#ready').forEach((e) => e.classList.add('hidden')); document.getElementById('pause').classList.remove('hidden'); })()`, wait2: 400 });

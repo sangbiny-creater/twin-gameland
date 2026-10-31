@@ -56,13 +56,13 @@
   const css = document.createElement('style');
   css.textContent = `
 .mn-modal{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;background:rgba(20,30,50,.55);font-family:Jua,system-ui,sans-serif;padding:16px}
-.mn-panel{position:relative;width:min(340px,100%);box-sizing:border-box;border:0 solid transparent;border-image:url(${IMG}panel.webp) 150 70 90 fill / 85px 40px 51px stretch;padding:26px 30px 34px;text-align:center;color:#5A3B22;max-height:92vh;overflow:auto;filter:drop-shadow(0 10px 24px rgba(0,0,0,.35))}
-.mn-panel h3{margin:-14px auto 4px;width:250px;max-width:100%;height:68px;box-sizing:border-box;padding:0 30px 14px;display:flex;align-items:center;justify-content:center;background:url(${IMG}ribbon.webp) center/contain no-repeat;color:#fff;font-size:20px;font-weight:400;line-height:1.1;text-shadow:0 2px 0 #C2406A,0 0 3px #C2406A}
+.mn-panel{position:relative;width:min(318px,100%);box-sizing:border-box;border:0 solid transparent;border-image:url(${IMG}panel_plain.webp) 215 72 190 fill / 114px 38px 101px stretch;min-height:240px;padding:16px 37px 62px;text-align:center;color:#5A3B22;overflow:visible;filter:drop-shadow(0 10px 24px rgba(0,0,0,.35))}
+.mn-panel h3{margin:-28px auto 2px;width:238px;max-width:100%;height:65px;box-sizing:border-box;padding:0 42px 14px;white-space:nowrap;display:flex;align-items:center;justify-content:center;background:url(${IMG}ribbon.webp) center/contain no-repeat;color:#fff;font-size:20px;font-weight:400;line-height:1.1;text-shadow:0 2px 0 #C2406A,0 0 3px #C2406A}
 .mn-art{display:block;margin:0 auto 2px;width:auto;max-width:78%;max-height:min(150px,20vh)}
 .mn-panel p{margin:6px 0 10px;font-size:15px;line-height:1.45;color:#6B4A30}
 .mn-ic{width:1.35em;height:1.35em;object-fit:contain;vertical-align:-.32em}
 .mn-have{display:flex;justify-content:center;gap:14px;font-size:15px;margin:2px 0 8px}
-.mn-btn{position:relative;display:flex;align-items:center;justify-content:center;gap:4px;width:100%;min-height:48px;margin:6px 0 0;border:0 solid transparent;border-image:url(${IMG}btn_blue.webp) 0 50 fill / 0 24px stretch;background:none;padding:6px 18px 9px;font:inherit;font-size:17px;line-height:1.15;color:#fff;text-shadow:0 2px 0 rgba(30,70,140,.55);cursor:pointer}
+.mn-btn{position:relative;display:flex;align-items:center;justify-content:center;gap:4px;width:100%;height:44px;min-height:0;white-space:nowrap;margin:8px 0 0;border:0 solid transparent;border-image:url(${IMG}btn_blue.webp) 0 50 fill / 0 24px stretch;background:none;padding:6px 18px 9px;font:inherit;font-size:17px;line-height:1.15;color:#fff;text-shadow:0 2px 0 rgba(30,70,140,.55);cursor:pointer}
 .mn-btn.pink{border-image-source:url(${IMG}btn_pink.webp);text-shadow:0 2px 0 rgba(170,40,80,.55)}
 .mn-btn.gold{border-image-source:url(${IMG}btn_gold.webp);text-shadow:0 2px 0 rgba(170,90,10,.6)}
 .mn-btn.gray{border-image-source:url(${IMG}btn_gray.webp);color:#5A6478;text-shadow:0 1px 0 rgba(255,255,255,.7)}
@@ -73,8 +73,8 @@
 .mn-pack{display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:rgba(255,255,255,.65);border-radius:14px;padding:6px 4px 0;font:inherit;color:#5A3B22;cursor:pointer}
 .mn-pack img{height:62px;width:auto}
 .mn-pack.cont{grid-column:1/-1;display:grid;grid-template-columns:52px 1fr auto;grid-template-rows:auto auto;column-gap:8px;align-items:center;text-align:left;padding:6px 8px}
-.mn-pack.cont img{grid-row:1/3;height:46px}.mn-pack.cont b{font-weight:400;font-size:15px}.mn-pack.cont small{grid-column:2;font-size:11px;color:#8A6E58}
-.mn-pack.cont .mn-btn{grid-column:3;grid-row:1/3;width:auto;margin:0;padding:3px 16px 6px}.mn-pack .mn-btn{min-height:38px;font-size:15px;padding:3px 10px 6px;border-image-width:0 19px}
+.mn-pack.cont img{grid-row:1/3;width:48px;height:auto}.mn-pack.cont b{font-weight:400;font-size:15px}.mn-pack.cont small{grid-column:2;font-size:11px;color:#8A6E58}
+.mn-pack.cont .mn-btn{grid-column:3;grid-row:1/3;width:auto;margin:0;padding:3px 16px 6px}.mn-pack .mn-btn{height:38px;min-height:0;font-size:15px;padding:3px 10px 6px;border-image-width:0 19px}
 .mn-stamps{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:4px 6px 6px}
 .mn-stamps span{position:relative;aspect-ratio:1;display:flex;align-items:center;justify-content:center}
 .mn-stamps img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
@@ -85,11 +85,6 @@
 .mn-bonus{display:flex;align-items:center;justify-content:center;gap:6px}.mn-bonus img{height:44px}
 .mn-ad{position:fixed;inset:0;z-index:9500;background:#111;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Jua,system-ui,sans-serif;text-align:center;gap:12px}
 .mn-ad img{width:84px}.mn-ad b{font-size:64px}.mn-ad span{font-size:16px;opacity:.85;padding:0 24px}
-.mn-reward{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:4px;font-family:Jua,system-ui,sans-serif;width:min(290px,100%);margin:4px auto;align-self:center;flex:none}
-.mn-reward button{position:relative;min-height:48px;border:0 solid transparent;border-image:url(${IMG}btn_ad_double.webp) 0 50 0 100 fill / 0 24px 0 48px stretch;background:none;padding:6px 14px 8px 56px;font:inherit;font-size:16px;line-height:1.15;color:#fff;text-align:left;text-shadow:0 2px 0 rgba(70,30,140,.6);filter:drop-shadow(0 3px 4px rgba(0,0,0,.2));cursor:pointer;width:100%}
-.mn-reward button>img{position:absolute;left:10px;top:50%;width:30px;height:30px;object-fit:contain;transform:translateY(-55%)}
-.mn-reward button.cont{border-image-source:url(${IMG}btn_ad_continue.webp);text-shadow:0 2px 0 rgba(10,110,90,.6)}
-.mn-reward button:disabled{opacity:.7}
 .mn-block{position:fixed;inset:0;z-index:9500;background:transparent}
 .mn-trial{position:fixed;left:50%;top:calc(8px + env(safe-area-inset-top));transform:translateX(-50%);z-index:8000;display:flex;align-items:center;gap:4px;background:rgba(43,58,103,.85);color:#fff;font-family:Jua,system-ui,sans-serif;font-size:15px;border-radius:12px;padding:3px 12px 3px 6px;pointer-events:none}
 .mn-pop{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:9600;display:flex;align-items:center;gap:6px;white-space:nowrap;background:rgba(43,58,103,.92);color:#fff;font-family:Jua,system-ui,sans-serif;font-size:20px;border-radius:16px;padding:10px 18px;pointer-events:none;animation:mnPop 1.6s ease forwards}
@@ -115,7 +110,11 @@
       box.appendChild(el);
     }
     for (const ev of ['pointerdown', 'pointerup', 'touchstart', 'keydown']) m.addEventListener(ev, (e) => e.stopPropagation());
-    document.body.appendChild(m); return m;
+    document.body.appendChild(m);
+    // 창이 화면보다 크면 창 전체를 줄임 (위 리본이 잘리지 않게 — 스크롤 대신)
+    const pn = m.querySelector('.mn-panel'), room = window.innerHeight - 40;
+    if (pn.offsetHeight > room) pn.style.zoom = Math.max(0.6, room / pn.offsetHeight);
+    return m;
   }
   // 화면 전체를 잠깐 막는 투명 막 (창을 닫을 때 손을 뗀 터치가 뒤의 놀이기구·버튼을 누르지 않게). 돌려주는 함수를 부르면 걷힘
   function block() {
@@ -142,7 +141,7 @@
   function gemShop(after) {
     const m = modal(`<h3>다이아 상점</h3><span class="mn-tag">검수용 · 진짜 결제 없음</span>${haveLine()}
       <div class="mn-packs">${PACKS.map((p, i) => `<button class="mn-pack" data-i="${i}"><img src="${IMG}pack_${i + 1}.webp" alt=""><span class="mn-btn gold">${I('ico_gem')}${p.gems}</span></button>`).join('')}
-      <button class="mn-pack cont" data-i="cont"><img src="${IMG}pack_continue.webp" alt=""><b>${CONT_PACK.name}</b><small>게임이 끝났을 때 광고를 안 보고 이어해요 · 지금 ${st().conts || 0}장</small><span class="mn-btn pink">구매</span></button></div>
+      <button class="mn-pack cont" data-i="cont"><img src="${IMG}pack_continue.webp" alt=""><b>${CONT_PACK.name}</b><small>광고 없이 이어해요 · 지금 ${st().conts || 0}장</small><span class="mn-btn pink">구매</span></button></div>
       <p style="font-size:13px;margin:6px 0 0">앱에서는 여기서 구글 결제 창이 떠요. 가격은 아직 정하지 않았어요.</p>`,
       [{ text: '닫기', cls: 'gray', on: after }],
       '상품 ID: ' + PACKS.map((p) => p.id).concat(CONT_PACK.id).join(' · '));
@@ -194,29 +193,31 @@
     }
     return res;
   };
-  // 결과 창 안(다시하기·게임 선택 버튼 바로 위)에 광고 버튼: 코인 2배 · 이어하기 (이어하기권이 있으면 광고 없이)
-  function rewardBar(earned, failed) {
-    document.querySelectorAll('.mn-reward').forEach((x) => x.remove());
+  // 결과 창의 ① 광고 줄(common/popup.js 가 만든 .pp-ad)에 광고 버튼: 코인 2배 · 이어하기 (이어하기권이 있으면 광고 없이)
+  //  1개면 한 줄 가득, 2개면 반씩 나란히 (common/popup.css)
+  function rewardBar(earned, failed, tries = 0) {
+    document.querySelectorAll('.pp-ad').forEach((x) => { x.innerHTML = ''; });
     if (!(earned > 0) && !failed) return;
     const panel = document.querySelector('#result:not(.hidden) .panel');
-    if (!panel) return;
-    const bar = document.createElement('div'); bar.className = 'mn-reward';
-    for (const ev of ['pointerdown', 'pointerup', 'touchstart']) bar.addEventListener(ev, (e) => e.stopPropagation());
-    // 버튼 왼쪽 흰 동그라미에 아이콘, 오른쪽에 글자
-    const add = (text, cls, ico, fn) => { const b = document.createElement('button'); b.className = cls; b.innerHTML = (ico ? I(ico, '') : '') + `<span>${text}</span>`; b.addEventListener('click', (e) => { e.stopPropagation(); fn(b); }); bar.appendChild(b); return b; };
-    const say = (b, t) => { b.querySelector('span').textContent = t; };
-    if (earned > 0) add(`광고 보고 코인 2배 (+${earned})`, '', 'ico_x2', (b) => fakeAd(() => { Hub.addCoins(earned); b.disabled = true; say(b, `코인 +${earned} 더 받았어요!`); pop(`${I('ico_x2')} +${earned}`); }));
+    if (!panel) { if (tries < 15) setTimeout(() => rewardBar(earned, failed, tries + 1), 300); return; } // 결과 창이 늦게 뜨는 게임은 뜰 때까지 기다림
+    if (window.PopupUI) PopupUI.arrange(panel);
+    const row = panel.querySelector('.pp-ad'); if (!row) return;
+    // 버튼 왼쪽 흰 동그라미에 아이콘, 오른쪽에 위 작은 글자(광고 보고) + 큰 글자
+    const add = (top, text, cls, ico, fn) => {
+      const b = document.createElement('button'); b.className = 'pp-adb ' + cls; b.innerHTML = I(ico, '') + `<span><small>${top}</small><b>${text}</b></span>`;
+      for (const ev of ['pointerdown', 'pointerup', 'touchstart']) b.addEventListener(ev, (e) => e.stopPropagation());
+      b.addEventListener('click', (e) => { e.stopPropagation(); fn(b); }); row.appendChild(b); return b;
+    };
+    const say = (b, t) => { b.querySelector('small').textContent = ''; b.querySelector('b').textContent = t; };
+    if (earned > 0) add('광고 보고', `코인 2배 +${earned}`, 'dbl', 'ico_x2', (b) => fakeAd(() => { Hub.addCoins(earned); b.disabled = true; say(b, `+${earned} 받았어요!`); pop(`${I('ico_x2')} +${earned}`); }));
     if (failed) {
       const cont = () => st().conts || 0;
-      if (cont() > 0) add(`광고 없이 이어하기 (이어하기권 ${cont()}장)`, 'cont', 'ico_continue', (b) => { Hub.mutate((c) => { c.v3.conts--; }); b.disabled = true; say(b, '앱에서는 여기서 이어서 해요 (연결 예정)'); });
-      else add('광고 보고 이어하기', 'cont', 'ico_continue', (b) => fakeAd(() => { b.disabled = true; say(b, '앱에서는 여기서 이어서 해요 (연결 예정)'); }));
+      if (cont() > 0) add(`이어하기권 ${cont()}장`, '광고 없이 이어하기', 'cont', 'ico_continue', (b) => { Hub.mutate((c) => { c.v3.conts--; }); b.disabled = true; say(b, '연결 예정이에요'); });
+      else add('광고 보고', '이어하기', 'cont', 'ico_continue', (b) => fakeAd(() => { b.disabled = true; say(b, '연결 예정이에요'); }));
     }
-    // 창의 버튼 줄(다시하기·게임 선택) 바로 위에. 창이 화면보다 커지면 창을 조금 줄임
-    const rows = [...panel.children].filter((el) => el.tagName === 'BUTTON' || el.querySelector('button'));
-    panel.insertBefore(bar, rows[0] || null); // 첫 버튼 줄(다음 스테이지·다시하기 …) 바로 위
-    const r = panel.getBoundingClientRect(), vh = window.innerHeight;
-    if (r.height > vh * 0.96) panel.style.zoom = Math.max(0.6, (vh * 0.94) / r.height);
+    if (window.PopupUI) PopupUI.fit(panel);
   }
+
   // ---------- 게임 화면: 잠긴 게임의 체험 ----------
   if (gameId && !isOpen(gameId)) {
     const toMap = () => { location.href = ROOT + 'index.html#' + (G[gameId].stages ? 'map-' + gameId : 'lobby'); };

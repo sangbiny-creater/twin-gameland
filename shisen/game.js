@@ -56,7 +56,7 @@ const mmss = (t) => { t = Math.max(0, Math.ceil(t)); return `${String(Math.floor
 function shuffleArr(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 // ---------- sprites ----------
-const ASSET_V = '202610311940';
+const ASSET_V = '202610312054';
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => { SP.f = j; SP.img.onload = () => { SP.ready = true; }; SP.img.src = `assets/sprites/sprites.webp?v=${ASSET_V}`; });
 const EXTRA_V = '20261027a';
@@ -672,7 +672,7 @@ const SAFE = { t: 0, b: 0 }; // 노치·홈 막대 여백 (게임 좌표)
 function wideLayout() { return W > H; }
 function resize() {
   const vv = window.visualViewport;
-  const vw = Math.round(vv ? vv.width : window.innerWidth), vh = Math.round(vv ? vv.height : window.innerHeight);
+  const vw = Math.round(vv ? vv.width : window.innerWidth), vh = Math.round(window.fullViewH ? fullViewH() : (vv ? vv.height : window.innerHeight));
   const s = $('safe').getBoundingClientRect();
   const inset = { t: s.top, l: s.left, r: vw - s.right, b: vh - s.bottom };
   rotated = isTouch && vw > vh;

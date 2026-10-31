@@ -1,29 +1,75 @@
-/* 모든 팝업 공통 꾸밈 (v0.3 QA 20·23·26): 상용화 그림(common/ui/monet, GPT U01~U11)의 창 틀 · 분홍 리본 제목 · 반짝 버튼
-   쓰는 곳: 모든 게임의 출발 준비(#ready)·일시정지(#pause)·결과(#result)·고르기(#choose) 창, 첫 화면(index.html)·아이템샵의 .modal 창
-   각 게임 style.css 다음에 불러와서 창 바탕·제목·버튼 모양만 덮어씀 (창 안 배치·크기는 게임 것 그대로) */
+/* 모든 팝업 공통 모양 (v0.3 QA): 창 틀 · 분홍 리본 제목 · 버튼 — common/popup.js 가 버튼을 아래 규칙대로 줄 세움
+   쓰는 곳: 모든 게임의 출발 준비(#ready)·일시정지(#pause)·결과(#result)·고르기(#choose), 첫 화면(index.html)·아이템샵의 .modal 창
+   (상용화 창 .mn-panel 은 common/monet.js 가 같은 숫자로 그림)
+
+   [창] 틀 그림은 panel_plain.webp (panel.webp 양옆 점·반짝이를 민무늬로 고른 것 — 늘어나는 가운데 부분이 어느 창에서나 같게).
+        폭은 언제나 440 (게임 화면 폭 540 기준 = 폰에서 화면 폭의 81%). 틀 그림(panel.webp 600px)을 한 비율(440/600)로만 그려서
+        모서리 하트·별 크기가 모든 창에서 같음. 버튼·글자는 틀 안쪽 크림색 칸에서 좌우 18px 안쪽, 아래 모서리 별 위까지만.
+   [제목] 리본 330x90 고정, 글자가 길면 popup.js 가 글자만 줄임.
+   [버튼 줄] 위에서부터 (없는 줄은 빠짐)
+        ① 광고 줄  : 광고 버튼 1개 = 한 줄 가득 / 2개 = 반씩 나란히   (높이 52)
+        ② 큰 버튼  : '다음 스테이지'·'계속하기' 같은 가장 중요한 버튼 1개, 한 줄 가득 (높이 64 = ③의 1.1배)
+        ③ 두 버튼  : 언제나 같은 폭 두 개 나란히 (다시하기·지도로 / 지도로·출발! / 닫기·확인)  (높이 58)
+        → 버튼은 2개(③) · 3개(②+③ 또는 ①+③) · 4개(①①+③ 또는 ①+②+③) 어떤 경우도 같은 모양 */
+:root { --pp-w: 440px; --pp-k: .7333; }
 .screen.dim > .panel, #ready > .panel, .modal > .panel, .modal > .mpanel {
+  box-sizing: border-box !important; width: var(--pp-w) !important; min-width: 0 !important; max-width: calc(100% - 16px) !important;
   background: none !important; border-radius: 0 !important; box-shadow: none !important;
-  border: 0 solid transparent !important; border-image: url(ui/monet/panel.webp) 150 70 90 fill / 85px 40px 51px stretch !important;
-  padding-top: 26px !important; padding-left: max(30px, var(--pp-x, 0px)) !important; padding-right: max(30px, var(--pp-x, 0px)) !important; padding-bottom: 32px !important;
+  border: 0 solid transparent !important; border-image: url(ui/monet/panel_plain.webp) 215 72 190 fill / calc(215px * var(--pp-k)) calc(72px * var(--pp-k)) calc(190px * var(--pp-k)) stretch !important;
+  min-height: 330px !important; /* 틀 위·아래 장식(그림 크기 그대로) + 가운데 민무늬 부분 */
+  padding: 22px calc(44px * var(--pp-k) + 18px) calc(107px * var(--pp-k) + 6px) !important;
   filter: drop-shadow(0 10px 22px rgba(0, 0, 0, .35)); color: #5A3B22;
+  display: flex !important; flex-direction: column !important; align-items: center !important; gap: 8px !important;
 }
-/* 제목: 분홍 리본 위 흰 글자 */
+/* 제목 리본 */
 .screen.dim > .panel > .p-title:first-child, .screen.dim > .panel > .title:first-child, .screen.dim > .panel > .r-title:first-child,
 .modal > .panel > .p-title:first-child, .modal > .mpanel > .m-title:first-child {
-  display: flex; align-items: center; justify-content: center; box-sizing: border-box; align-self: center;
-  width: min(300px, 100%); min-height: 70px; margin: -12px auto 6px !important; padding: 0 44px 15px !important;
-  background: url(ui/monet/ribbon.webp) center / 100% 100% no-repeat !important;
-  color: #fff !important; font-size: 24px !important; line-height: 1.1; text-shadow: 0 2px 0 #C2406A, 0 0 3px #C2406A !important; white-space: nowrap;
+  display: flex; align-items: center; justify-content: center; box-sizing: border-box; flex: none;
+  width: 330px !important; max-width: 100%; height: 90px !important; min-height: 0 !important; margin: -38px auto -4px !important; padding: 0 58px 20px !important;
+  background: url(ui/monet/ribbon.webp) center / 100% 100% no-repeat !important; border: 0 !important;
+  color: #fff !important; font-size: 26px !important; line-height: 1 !important; text-shadow: 0 2px 0 #C2406A, 0 0 3px #C2406A !important; white-space: nowrap; overflow: hidden;
 }
-/* 버튼: 큰 버튼은 분홍, 작은 버튼은 파랑 반짝 버튼 (그림을 양옆으로 늘려 씀) */
-.screen.dim > .panel .btn-start, .screen.dim > .panel .btn.gold, .screen.dim > .panel .btn-orange, #result #btnRetry, .screen.dim > .panel .btn-main, #ready > .panel .btn-start, #ready > .panel .btn.gold, .modal .btn-main, .modal .mbtn.gold {
-  background: none !important; box-shadow: none !important; border: 0 solid transparent !important; border-radius: 0 !important;
-  border-image: url(ui/monet/btn_pink.webp) 0 50 fill / 0 26px stretch !important; color: #fff !important; text-shadow: 0 2px 0 rgba(170, 40, 80, .55) !important;
+/* 버튼 줄 (popup.js 가 만듦) */
+.pp-acts { display: flex; flex-direction: column; gap: 10px; width: 100%; margin: auto 0; padding-top: 6px; flex: none; } /* 창이 내용보다 크면(일시정지) 버튼을 제목 아래 빈 곳 가운데에 */
+.pp-row { display: flex; gap: 12px; width: 100%; }
+.pp-row:empty, .pp-gone { display: none !important; }
+.pp-row > * { flex: 1 1 0; min-width: 0; }
+.pp-acts button.pp-b {
+  box-sizing: border-box !important; width: auto !important; margin: 0 !important; padding: 0 calc(var(--h) * .5) 4px !important;
+  height: var(--h) !important; min-height: 0 !important; max-height: none !important; flex: 1 1 0 !important;
+  display: flex !important; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden;
+  font-family: Jua, 'Apple SD Gothic Neo', system-ui, sans-serif !important; font-weight: normal !important; letter-spacing: 0 !important;
+  background: none !important; box-shadow: none !important; border-radius: 0 !important; transform: none;
+  border: 0 solid transparent !important; border-image: url(ui/monet/btn_pink.webp) 0 50 fill / 0 calc(var(--h) * .495) stretch !important;
+  color: #fff !important; text-shadow: 0 2px 0 rgba(170, 40, 80, .55) !important; text-decoration: none !important;
 }
-.screen.dim > .panel .btn-sub, .screen.dim > .panel .btn.white, .screen.dim > .panel .btn-gray, .screen.dim > .panel .btn-blue:not(#btnRetry), #ready > .panel .btn-sub, #ready > .panel .btn.white, .modal .btn-sub, .modal .mbtn.gray {
-  background: none !important; box-shadow: none !important; border: 0 solid transparent !important; border-radius: 0 !important;
-  border-image: url(ui/monet/btn_blue.webp) 0 50 fill / 0 24px stretch !important; color: #fff !important; text-shadow: 0 2px 0 rgba(30, 70, 140, .55) !important;
-}
-.screen.dim > .panel button:active, #ready > .panel button:active, .modal button:active { transform: translateY(2px); }
+.pp-acts button.pp-b.blue { border-image-source: url(ui/monet/btn_blue.webp) !important; text-shadow: 0 2px 0 rgba(30, 70, 140, .55) !important; }
+.pp-acts button.pp-b:active { transform: translateY(2px); }
+.pp-main > button.pp-b { --h: 64px; font-size: 27px !important; }
+.pp-pair > button.pp-b { --h: 58px; font-size: 23px !important; }
+.pp-acts button.pp-b.hidden { display: none !important; }
 /* 창 틀·리본·버튼 그림을 처음부터 받아 둠 (일시정지·결과 창을 처음 열 때 꾸밈이 늦게 붙지 않게) */
-body::after { content: url(ui/monet/panel.webp) url(ui/monet/ribbon.webp) url(ui/monet/btn_pink.webp) url(ui/monet/btn_blue.webp); position: absolute; width: 0; height: 0; overflow: hidden; opacity: 0; pointer-events: none; }
+body::after { content: url(ui/monet/panel_plain.webp) url(ui/monet/ribbon.webp) url(ui/monet/btn_pink.webp) url(ui/monet/btn_blue.webp) url(ui/monet/btn_ad_double.webp) url(ui/monet/btn_ad_continue.webp); position: absolute; width: 0; height: 0; overflow: hidden; opacity: 0; pointer-events: none; }
+/* ① 광고 줄: 왼쪽 흰 동그라미에 아이콘(광고 버튼 그림 btn_ad_*), 오른쪽 두 줄 글자 */
+.pp-ad > button.pp-adb { --h: 52px; position: relative; box-sizing: border-box; height: var(--h); margin: 0; flex: 1 1 0; min-width: 0;
+  border: 0 solid transparent; border-image: url(ui/monet/btn_ad_double.webp) 0 50 0 100 fill / 0 calc(var(--h) * .515) 0 calc(var(--h) * 1.03) stretch;
+  background: none; padding: 0 calc(var(--h) * .42) 3px calc(var(--h) * 1.12); display: flex; align-items: center; justify-content: center; text-align: center;
+  font-family: Jua, 'Apple SD Gothic Neo', system-ui, sans-serif; color: #fff; text-shadow: 0 2px 0 rgba(70, 30, 140, .6); cursor: pointer; overflow: hidden; }
+.pp-ad > button.pp-adb.cont { border-image-source: url(ui/monet/btn_ad_continue.webp); text-shadow: 0 2px 0 rgba(10, 110, 90, .6); }
+.pp-ad > button.pp-adb > img { position: absolute; left: calc(var(--h) * .17); top: 50%; width: calc(var(--h) * .62); height: calc(var(--h) * .62); object-fit: contain; transform: translateY(-54%); }
+.pp-ad > button.pp-adb > span { display: flex; flex-direction: column; align-items: center; line-height: 1.05; white-space: nowrap; min-width: 0; }
+.pp-ad > button.pp-adb small { font-size: 13px; opacity: .92; }
+.pp-ad > button.pp-adb small:empty { display: none; }
+.pp-ad > button.pp-adb b { font-weight: normal; font-size: 18px; }
+.pp-ad > button.pp-adb:disabled { opacity: .7; }
+.pp-ad > button.pp-adb:active { transform: translateY(2px); }
+/* 창 바탕이 밝은 크림색으로 바뀌어서, 예전 어두운 창에 맞춘 밝은 글자(흰색·연노랑)를 진한 색으로 */
+.screen.dim > .panel.result, .screen.dim > .panel { color: #5A3B22 !important; }
+.screen.dim > .panel .earn { color: #E0761A !important; text-shadow: none !important; }
+.screen.dim > .panel .earn small { color: #8A6E58 !important; opacity: 1 !important; }
+.screen.dim > .panel .earn .reward { color: #8A5A30 !important; background: #FFF0DA !important; }
+.screen.dim > .panel .r-why { color: #D24C73 !important; }
+.screen.dim > .panel .r-score { color: #F2A93B !important; }
+.screen.dim > .panel .r-score small { color: #C77A1A !important; text-shadow: none !important; }
+/* 리본 제목은 기울이지 않음 (예전 제목 글자는 -3도 기울어져 있었음) */
+.screen.dim > .panel > .r-title:first-child, .screen.dim > .panel > .title:first-child, .screen.dim > .panel > .p-title:first-child { transform: none !important; }

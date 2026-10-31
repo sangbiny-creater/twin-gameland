@@ -17,7 +17,7 @@ const MISS_SHOW = 0.75;  // 틀린 두 장을 보여 주는 시간 (초)
 const MISS_TIME = 0.2;   // 틀리면 줄어드는 시간 (초)
 const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202610311940';
+const ASSET_V = '202610312054';
 const cardSrc = (n) => `assets/cards/${n}.webp?v=${ASSET_V}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -42,7 +42,7 @@ function shuffleArr(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math
 // ---------- images ----------
 const BG = { port: new Image(), land: new Image(), skin: [] };
 BG.port.src = `assets/bg/port.webp?v=${ASSET_V}`; BG.land.src = `assets/bg/land.webp?v=${ASSET_V}`;
-for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `../shisen/assets/bg/bg_${i}.webp?v=202610311940`; BG.skin.push(im); }
+for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `../shisen/assets/bg/bg_${i}.webp?v=202610312054`; BG.skin.push(im); }
 const BACK = `assets/cards/back.webp?v=${ASSET_V}`;
 // 그림을 미리 받아 둠 (첫 판부터 뒤집을 때 바로 보이게)
 [BACK, ...FRONTS.map(cardSrc)].forEach((s) => { const im = new Image(); im.src = s; });
@@ -497,7 +497,7 @@ G.items = { hint: 3, find: 1, time: 1, bomb: 0 }; // 단독 실행일 때 기본
 function wideLayout() { return W > H; }
 function resize() {
   const vv = window.visualViewport;
-  const vw = Math.round(vv ? vv.width : window.innerWidth), vh = Math.round(vv ? vv.height : window.innerHeight);
+  const vw = Math.round(vv ? vv.width : window.innerWidth), vh = Math.round(window.fullViewH ? fullViewH() : (vv ? vv.height : window.innerHeight));
   const s = $('safe').getBoundingClientRect();
   const inset = { t: s.top, l: s.left, r: vw - s.right, b: vh - s.bottom };
   if (vh > vw) { W = 540; H = Math.round(clamp(W * vh / vw, 860, 1240)); }

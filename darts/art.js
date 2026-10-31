@@ -6,7 +6,7 @@
 //  · 링 반지름 R 은 GPT 다트판 그림(A01)에서 잰 값 (tools/darts_assets.py 가 출력) — 그림과 점수가 꼭 같아야 함
 (function () {
   const BASE = (document.currentScript && document.currentScript.src.replace(/art\.js.*$/, '')) || '';
-  const V = '?v=202610311940';
+  const V = '?v=202610312054';
   const img = (n) => { const im = new Image(); im.src = `${BASE}assets/${n}.webp${V}`; return im; };
   const ok = (im) => im && im.complete && im.naturalWidth > 0;
   const IMG = { board: img('board'), bg: img('bg/port'), dart: [img('dart_0'), img('dart_1'), img('dart_2')] };

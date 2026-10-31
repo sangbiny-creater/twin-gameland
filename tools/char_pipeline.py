@@ -537,9 +537,24 @@ def cmd_build(eid, cname, base_look):
         if have(p): frames[p] = (L(p), 0.5)
     # 헬리콥터 자리: 구름 비행선 (구름 몸체 → 캐릭터 → 구름 앞부분 → 구름 얼굴)
     shared = f'{ROOT}/character/shared'
+    # 구름 앞부분(ride_cloud_front)은 구름 몸체 아랫부분을 잘라 낸 그림인데, 몸체와 그려진 높이가 달라서 그대로 겹치면
+    # 구름이 두 겹으로 보임(QA: Sky Rider 구름 겹침) → 몸체를 앞부분에 딱 맞는 자리로 옮겨서 한 겹으로 (캐릭터·앞부분 자리는 그대로)
+    def cloud_offset():
+        body = np.asarray(L('ride_cloud_body').reduce(2)).astype(np.float32); fr = np.asarray(L('ride_cloud_front').reduce(2)).astype(np.float32)
+        m = fr[..., 3] > 200; ys, xs = np.nonzero(m); best = (1e9, 0, 0)
+        for dy in range(-60, 61):
+            for dx in range(-20, 21):
+                y2, x2 = ys + dy, xs + dx; ok = (y2 >= 0) & (y2 < body.shape[0]) & (x2 >= 0) & (x2 < body.shape[1])
+                if ok.sum() < len(ys) * 0.9: continue
+                d = np.abs(body[y2[ok], x2[ok], :3] - fr[ys[ok], xs[ok], :3]).mean()
+                if d < best[0]: best = (d, dy, dx)
+        return best[1] * 2, best[2] * 2  # 앞부분 그림의 (y, x) 가 몸체에서는 (y+dy, x+dx)
+    off = cloud_offset() if have('ride_cloud_body') and have('ride_cloud_front') else (0, 0)
+    print('  구름 몸체 맞춤 (dy, dx):', off)
     def ride(face_pose, rider):
         if not (have('ride_cloud_body') and have(rider)): return None
-        c = L('ride_cloud_body').copy(); c.alpha_composite(L(rider))
+        b = L('ride_cloud_body'); c = b.transform(b.size, Image.AFFINE, (1, 0, off[1], 0, 1, off[0]))  # 몸체를 (dx, dy) 만큼 위·옆으로
+        c.alpha_composite(L(rider))
         if have('ride_cloud_front'): c.alpha_composite(L('ride_cloud_front'))
         fp = f'{shared}/ride_cloud_face_{face_pose}.png'
         if os.path.exists(fp): c.alpha_composite(Image.open(fp).convert('RGBA').resize(c.size))

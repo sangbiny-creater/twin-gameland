@@ -47,7 +47,7 @@ const rand = (a, b) => a + (b - a) * Math.random();
 const $ = (id) => document.getElementById(id);
 
 // ---------- sprites ----------
-const ASSET_V = '202610311940'; // 캐시 버전 (tools/bump_version.py가 올림)
+const ASSET_V = '202610312054'; // 캐시 버전 (tools/bump_version.py가 올림)
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -719,7 +719,7 @@ document.querySelectorAll('.char').forEach((b) => b.addEventListener('click', ()
 const isTouch = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
 function resize() {
   const vv = window.visualViewport;
-  const vw = Math.round(vv ? vv.width : window.innerWidth), vh = Math.round(vv ? vv.height : window.innerHeight);
+  const vw = Math.round(vv ? vv.width : window.innerWidth), vh = Math.round(window.fullViewH ? fullViewH() : (vv ? vv.height : window.innerHeight));
   const s = $('safe').getBoundingClientRect();
   const inset = { t: s.top, l: s.left, r: vw - s.right, b: vh - s.bottom };
   const rotated = isTouch && vw > vh;

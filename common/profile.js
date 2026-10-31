@@ -291,6 +291,15 @@
     if (document.body) put(); else document.addEventListener('DOMContentLoaded', put);
   }
 
+  // 화면 높이: 아이폰(iOS 26 사파리·홈 화면 앱)은 visualViewport·innerHeight 가 실제 보이는 화면보다 작게 나와서
+  // 아래에 빈 띠가 생김 → 화면에 꽉 붙인(position: fixed; top 0; bottom 0) 투명 막대의 높이까지 보고 가장 큰 값을 씀
+  window.fullViewH = function () {
+    let p = document.getElementById('__vh');
+    if (!p && document.body) { p = document.createElement('div'); p.id = '__vh'; p.style.cssText = 'position:fixed;left:0;top:0;bottom:0;width:0;visibility:hidden;pointer-events:none'; document.body.appendChild(p); }
+    const vv = window.visualViewport;
+    return Math.max(vv ? vv.height : 0, window.innerHeight, p ? p.offsetHeight : 0);
+  };
+
   const Hub = {
     GAMES, WORLDS, FREE_SLOTS, MAX_CHARS, SKINS, BOOSTS, COSTUMES,
 
@@ -300,7 +309,7 @@
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610311940` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202610312054` : null; },
     buyCostume(id, c = this.active()) {
       const it = COSTUMES.find((x) => x.id === id);
       if (!c || !it || this.ownsCostume(id, c)) return { ok: false };
