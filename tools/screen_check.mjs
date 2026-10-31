@@ -122,6 +122,17 @@ for (const g of ['shisen', 'memory', 'mole', 'bakery', 'dogsnack', 'darts']) add
 // 지도 돌다리 → 바로 게임의 출발 준비 창 하나만 (QA: 출발 창 두 번)
 for (const g of ['shisen', 'memory', 'mole']) add(`flow-stone-${g}-pp`, `index.html#map-${g}`, { vp: 'pp', js: `(() => { sessionStorage.setItem('__seeded', '1'); document.querySelector('#mapTrack .stone').click(); return !document.querySelector('.modal:not(.hidden)'); })()`, wait2: 3500,
   after: `({ url: location.pathname + location.search, ready: !document.getElementById('ready').classList.contains('hidden'), buttons: [...document.querySelectorAll('#ready .pp-b')].map((b) => b.textContent.trim()).join(' | ') })` });
+// BM B안: 게임 성과 다이아 · 다이아 상점 (docs/bm/BM_제안_v1.md)
+const BM_T = (js) => `(async () => { const g0 = Hub.gems(); ${js}; await new Promise((r) => setTimeout(r, 300)); const v = Hub.active().v3; return { before: g0, after: Hub.gems(), bm: v && v.bm }; })()`;
+add('bm-endless-pp', 'downhill/index.html', { vp: 'pp', wait: 2500, js: BM_T(`Hub.record('downhill', { dist: 1200, coins: 5 }); Hub.record('downhill', { dist: 1500, coins: 5 })`), wait2: 3500 });
+add('bm-world-pp', 'memory/index.html', { vp: 'pp', ch: 'c4', wait: 2500, js: BM_T(`Hub.mutate((c) => { c.v3 = { tickets: 0, unlocked: ['memory'], dUnlocks: 0, plays: 0, att: { count: 1, last: '${new Date().getFullYear()}' }, welcomed: true }; });
+  for (let i = 0; i < 10; i++) Hub.record('memory', { stage: i, cleared: true, stars: 3, coins: 1 })`), wait2: 4000 });
+add('bm-shop-pp', 'index.html#lobby', { vp: 'pp', js: `document.getElementById('btnGems').click()`, wait2: 600 });
+add('bm-shop-locked-pp', 'index.html#lobby', { vp: 'pp', ch: 'c4', wait: 3000, js: `(async () => { document.querySelectorAll('.mn-modal').forEach((m) => m.remove()); document.getElementById('btnGems').click(); })()`, wait2: 600 });
+add('bm-adgem-pp', 'index.html#lobby', { vp: 'pp', js: BM_T(`document.getElementById('btnGems').click(); await new Promise((r) => setTimeout(r, 300)); document.querySelector('.mn-pack[data-ad]').click(); await new Promise((r) => setTimeout(r, 1500))`), wait2: 300 });
+add('bm-unlockall-pp', 'index.html#lobby', { vp: 'pp', ch: 'c4', wait: 3000, js: `(async () => { document.querySelectorAll('.mn-modal').forEach((m) => m.remove()); document.getElementById('btnGems').click(); await new Promise((r) => setTimeout(r, 300));
+  document.querySelector('.mn-pack[data-o=unlock_all]').click(); await new Promise((r) => setTimeout(r, 300)); document.querySelector('.mn-modal .mn-btn.gold').click(); await new Promise((r) => setTimeout(r, 800));
+  return { locked: document.querySelectorAll('.pk-ride.mn-locked').length, bm: Hub.active().v3.bm }; })()`, wait2: 300 });
 // 실제로 게임을 시작해서 게임 코드로 끝냄 → 결과 창 버튼 줄(실제 흐름) 확인
 const ROWS = `(() => { const p = document.querySelector('#result .panel'); if (!p || document.getElementById('result').classList.contains('hidden')) return 'no result';
   const rows = [...p.querySelectorAll('.pp-row')].filter((r) => r.offsetHeight).map((r) => [...r.children].filter((b) => b.offsetHeight).map((b) => b.textContent.trim()).join(' | '));

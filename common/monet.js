@@ -18,10 +18,26 @@
   const TRIAL_ROUNDS = { darts: 2 };                  // 라운드로 끝나는 게임은 시간 대신 라운드 (다트: 2라운드까지)
   const GEM_EVERY = 10;                               // 게임 10판마다 다이아 1개
   const AD_SEC = 1;                                   // 가짜 광고 길이 (검수판: 1초만 띄우고 진짜 광고를 본 것과 같은 흐름으로)
-  const ATT_DAILY = 1;                                // 출석 매일 다이아
-  const ATT_BONUS = { 10: { tickets: 1, text: '열쇠 1개', img: 'att_key' }, 30: { text: '프로필 프레임 (준비 중)', img: 'att_frame' }, 50: { gems: 20, text: '다이아 20개', img: 'att_gems' }, 100: { text: '특별 코스튬 (준비 중)', img: 'att_gift' } };
-  const PACKS = [{ id: 'diamond_60', gems: 60 }, { id: 'diamond_140', gems: 140 }, { id: 'diamond_300', gems: 300 }, { id: 'diamond_650', gems: 650 }];
-  const CONT_PACK = { id: 'continue_10', conts: 10, name: '이어하기권 10장' }; // 다이아 상점 맨 끝: 게임이 끝났을 때 광고 없이 이어하기 (🟡 임시값)
+  const ATT_DAILY = 2;                                // 출석 매일 다이아 (BM B안)
+  const ATT_BONUS = { 10: { tickets: 1, text: '열쇠 1개', img: 'att_key' }, 30: { gems: 10, text: '다이아 10개', img: 'att_gems' }, 50: { gems: 20, text: '다이아 20개', img: 'att_gems' }, 100: { text: '특별 코스튬 (준비 중)', img: 'att_gift' } };
+  // ---------- BM B안 (docs/bm/BM_제안_v1.md, 2026-11-01 사용자 결정) — 숫자는 모두 🟡 임시값 ----------
+  // 게임 성과 다이아 (모두 처음 한 번만, 열린 게임에서만): 스테이지 게임 월드(10판) 첫 클리어 · 월드 별 30개 · 사천성 어려움 월드
+  //  끝없는 게임은 기록 5단계를 처음 넘을 때 (단계마다 STEP_GEMS). 기록 = Hub.record 의 dist (m 또는 점)
+  const WORLD_GEMS = 5, STAR_GEMS = 3, HARD_WORLD_GEMS = 8;
+  const STEP_GEMS = [2, 3, 4, 5, 6];
+  const GOALS = { downhill: [300, 1000, 2000, 3500, 5000], bakery: [2000, 5000, 10000, 15000, 25000], dogsnack: [2000, 5000, 10000, 15000, 25000],
+    helicopter: [100, 300, 600, 1000, 2000], stairs: [50, 100, 200, 400, 700], darts: [200, 300, 400, 500, 600] };
+  const UNIT = { downhill: 'm', helicopter: 'm', stairs: 'm', bakery: '점', dogsnack: '점', darts: '점' };
+  const AD_GEMS = 2, AD_GEMS_DAY = 3;                 // 광고 보고 다이아 2개, 하루 3번
+  // 다이아 상품 (원화, 구글 가격 칸). 첫 결제는 2배
+  const PACKS = [{ id: 'diamond_60', gems: 60, won: 1200 }, { id: 'diamond_140', gems: 140, won: 2500 }, { id: 'diamond_300', gems: 300, won: 5000, hot: true }, { id: 'diamond_650', gems: 650, won: 10000 }];
+  const OFFERS = [
+    { id: 'unlock_all', won: 6900, name: '모든 게임 열기', desc: '잠긴 게임을 한 번에 모두 열어요 (한 번만)', img: 'unlocked_fx' },
+    { id: 'gem_pass_30', won: 3900, name: '월 다이아 패스', desc: '바로 60개 + 30일 동안 매일 10개', img: 'pack_2', now: 60, daily: 10, days: 30 },
+    { id: 'no_ads_reward', won: 5900, name: '광고 없이 보상', desc: '광고 보상을 광고 없이 바로 (계속)', img: 'ico_ad' },
+  ];
+  const CONT_PACK = { id: 'continue_10', conts: 10, gems: 30, name: '이어하기권 10장' }; // 다이아 30개로 삼: 게임이 끝났을 때 광고 없이 이어하기
+  const won = (n) => n.toLocaleString() + '원';
   const NO_CONTINUE = ['darts']; // 실패 없이 끝나는 게임 (이어하기 자리 없음)
 
   const ROOT = SRC.replace(/common\/monet\.js.*$/, '');
@@ -50,6 +66,9 @@
     });
   }
   const addGems = (n) => Hub.mutate((c) => { c.gems = (c.gems || 0) + n; });
+  // BM 기록 (캐릭터마다 c.v3.bm): w 월드 첫 클리어 받음 · s 별 30개 받음 · ms 끝없는 게임 넘은 단계 수 · ad 오늘 광고 다이아 · pass 남은 패스 날 · noAds · paid(첫 결제 했음) · all(모든 게임 열기 삼)
+  const bmOf = (s) => (s.bm = s.bm || { w: {}, s: {}, ms: {}, ad: { day: '', n: 0 }, pass: 0, noAds: false, paid: false, all: false });
+  const bm = () => bmOf(st());
   window.Monet = { isOpen, st, price }; // 다른 코드·검사 도구용
 
   // ---------- 화면 조각 (CSS는 여기서 넣음) ----------
@@ -69,12 +88,16 @@
 .mn-btn:active{transform:translateY(2px)}.mn-btn:disabled{opacity:.45}
 .mn-note{font-size:12px;color:#9A8470;margin-top:10px}
 .mn-tag{display:inline-block;background:#FFE9F0;color:#D24C73;border-radius:8px;padding:1px 8px;font-size:12px;margin:2px 0 4px}
-.mn-packs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:4px 0 2px}
+.mn-packs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:6px 0 2px}
 .mn-pack{display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:rgba(255,255,255,.65);border-radius:14px;padding:6px 4px 0;font:inherit;color:#5A3B22;cursor:pointer}
-.mn-pack img{height:62px;width:auto}
+.mn-pack{min-width:0;box-sizing:border-box}.mn-pack>img{height:56px;width:auto;max-width:100%;object-fit:contain}.mn-pack .mn-btn img{height:1.15em;width:auto}
+.mn-pack{position:relative}.mn-flag{position:absolute;left:4px;top:4px;z-index:1;background:#FF5C7A;color:#fff;font-style:normal;font-size:11px;border-radius:8px;padding:1px 6px}.mn-won{font-size:12px;color:#8A6E58;margin:-2px 0 4px}
+.mn-pack.offer{width:100%;margin-top:6px;display:grid;grid-template-columns:52px 1fr auto;grid-template-rows:auto auto;column-gap:8px;align-items:center;text-align:left;padding:6px 8px}
+.mn-pack.offer>img{grid-row:1/3;width:40px;height:auto}.mn-pack.offer{grid-template-columns:44px minmax(0,1fr) auto}.mn-pack.offer b{font-weight:400;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mn-pack.offer small{grid-column:2;font-size:11px;color:#8A6E58}
+.mn-pack.offer .mn-btn{grid-column:3;grid-row:1/3;width:auto;min-width:72px;margin:0;padding:3px 12px 6px;height:34px;font-size:14px;white-space:nowrap}.mn-pack:disabled{opacity:.55}
 .mn-pack.cont{grid-column:1/-1;display:grid;grid-template-columns:52px 1fr auto;grid-template-rows:auto auto;column-gap:8px;align-items:center;text-align:left;padding:6px 8px}
-.mn-pack.cont img{grid-row:1/3;width:48px;height:auto}.mn-pack.cont b{font-weight:400;font-size:15px}.mn-pack.cont small{grid-column:2;font-size:11px;color:#8A6E58}
-.mn-pack.cont .mn-btn{grid-column:3;grid-row:1/3;width:auto;margin:0;padding:3px 16px 6px}.mn-pack .mn-btn{height:38px;min-height:0;font-size:15px;padding:3px 10px 6px;border-image-width:0 19px}
+.mn-pack.cont>img{grid-row:1/3;width:44px;height:auto}.mn-pack.cont b{font-weight:400;font-size:14px}.mn-pack.cont small{grid-column:2;font-size:11px;color:#8A6E58}
+.mn-pack.cont .mn-btn{grid-column:3;grid-row:1/3;width:auto;min-width:72px;margin:0;padding:3px 12px 6px;height:34px}.mn-pack .mn-btn{height:38px;min-height:0;font-size:15px;padding:3px 10px 6px;border-image-width:0 19px}
 .mn-stamps{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:4px 6px 6px}
 .mn-stamps span{position:relative;aspect-ratio:1;display:flex;align-items:center;justify-content:center}
 .mn-stamps img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
@@ -130,6 +153,7 @@
 
   // 가짜 광고: AD_SEC초 세고 done()
   function fakeAd(done) {
+    if (st().bm && st().bm.noAds) { done(); return; } // '광고 없이 보상' 산 사람은 광고 없이 바로
     const a = document.createElement('div'); a.className = 'mn-ad';
     a.innerHTML = `<img src="${IMG}ico_ad.webp" alt=""><div>광고 자리</div><span>앱에서는 여기서 보상형 광고가 나와요<br>(웹 검수판: ${AD_SEC}초 뒤 광고를 본 것처럼 이어져요)</span>`;
     for (const ev of ['pointerdown', 'pointerup', 'touchstart', 'click', 'keydown']) a.addEventListener(ev, (e) => e.stopPropagation());
@@ -137,22 +161,53 @@
     setTimeout(() => { a.remove(); done(); }, AD_SEC * 1000);
   }
 
-  // 다이아 상점 (가짜 결제)
+  // 다이아 상점 (가짜 결제): 광고 보고 다이아 · 다이아 4종(원화, 첫 결제 2배) · 묶음 상품 3개 · 이어하기권(다이아로)
+  const adLeft = () => { const a = bm().ad; return a.day === today() ? AD_GEMS_DAY - a.n : AD_GEMS_DAY; };
   function gemShop(after) {
+    const B = bm(), first = !B.paid, lockedLeft = Object.keys(G).filter((g) => !isOpen(g) && g !== 'skyhook').length;
+    const offer = (o) => {
+      if (o.id === 'unlock_all' && (B.all || !lockedLeft)) return '';
+      const have = (o.id === 'no_ads_reward' && B.noAds) ? '가지고 있어요' : (o.id === 'gem_pass_30' && B.pass > 0) ? `${B.pass}일 남음` : '';
+      return `<button class="mn-pack offer" data-o="${o.id}"${have && o.id === 'no_ads_reward' ? ' disabled' : ''}><img src="${IMG}${o.img}.webp" alt=""><b>${o.name}</b><small>${have || o.desc}</small><span class="mn-btn pink">${won(o.won)}</span></button>`;
+    };
     const m = modal(`<h3>다이아 상점</h3><span class="mn-tag">검수용 · 진짜 결제 없음</span>${haveLine()}
-      <div class="mn-packs">${PACKS.map((p, i) => `<button class="mn-pack" data-i="${i}"><img src="${IMG}pack_${i + 1}.webp" alt=""><span class="mn-btn gold">${I('ico_gem')}${p.gems}</span></button>`).join('')}
-      <button class="mn-pack cont" data-i="cont"><img src="${IMG}pack_continue.webp" alt=""><b>${CONT_PACK.name}</b><small>광고 없이 이어해요 · 지금 ${st().conts || 0}장</small><span class="mn-btn pink">구매</span></button></div>
-      <p style="font-size:13px;margin:6px 0 0">앱에서는 여기서 구글 결제 창이 떠요. 가격은 아직 정하지 않았어요.</p>`,
+      <button class="mn-pack offer ad" data-ad="1"${adLeft() > 0 ? '' : ' disabled'}><img src="${IMG}ico_ad.webp" alt=""><b>광고 보고 받기</b><small>${I('ico_gem')} ${AD_GEMS}개 · 오늘 ${adLeft()}번 남음</small><span class="mn-btn gold">${adLeft() > 0 ? '받기' : '내일 또'}</span></button>
+      <div class="mn-packs">${PACKS.map((p, i) => `<button class="mn-pack" data-i="${i}">${first ? '<i class="mn-flag">첫 구매 2배</i>' : p.hot ? '<i class="mn-flag">인기</i>' : ''}<img src="${IMG}pack_${i + 1}.webp" alt=""><span class="mn-btn gold">${I('ico_gem')}${first ? p.gems * 2 : p.gems}</span><small class="mn-won">${won(p.won)}</small></button>`).join('')}</div>
+      ${OFFERS.map(offer).join('')}
+      <button class="mn-pack offer cont" data-i="cont"><img src="${IMG}pack_continue.webp" alt=""><b>${CONT_PACK.name}</b><small>지금 ${st().conts || 0}장</small><span class="mn-btn gold">${I('ico_gem')}${CONT_PACK.gems}</span></button>
+      <p style="font-size:12px;margin:6px 0 0">앱에서는 여기서 구글 결제 창이 떠요 (값은 🟡 임시).</p>`,
       [{ text: '닫기', cls: 'gray', on: after }],
-      '상품 ID: ' + PACKS.map((p) => p.id).concat(CONT_PACK.id).join(' · '));
-    m.querySelectorAll('.mn-pack').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); if (window.UI) UI.blip(); m.remove(); fakePay(b.dataset.i === 'cont' ? CONT_PACK : PACKS[+b.dataset.i], after); }));
+      '상품 ID: ' + PACKS.map((p) => p.id).concat(OFFERS.map((o) => o.id)).join(' · '));
+    const reopen = () => gemShop(after);
+    m.querySelectorAll('.mn-pack').forEach((b) => b.addEventListener('click', (e) => {
+      e.stopPropagation(); if (b.disabled) return; if (window.UI) UI.blip(); m.remove();
+      if (b.dataset.ad) { fakeAd(() => { Hub.mutate((c) => { const a = bmOf(c.v3 || (c.v3 = fresh())).ad; if (a.day !== today()) { a.day = today(); a.n = 0; } a.n++; c.gems = (c.gems || 0) + AD_GEMS; }); pop(`${I('ico_gem')} +${AD_GEMS}`); refreshHub(); reopen(); }); return; }
+      if (b.dataset.i === 'cont') { buyConts(reopen); return; }
+      if (b.dataset.o) { fakePay(OFFERS.find((o) => o.id === b.dataset.o), reopen); return; }
+      fakePay(PACKS[+b.dataset.i], reopen);
+    }));
   }
+  // 이어하기권: 다이아 30개로
+  function buyConts(after) {
+    if (Hub.gems() < CONT_PACK.gems) { pop('다이아가 모자라요'); if (after) after(); return; }
+    Hub.mutate((c) => { c.gems -= CONT_PACK.gems; const v = c.v3 || (c.v3 = fresh()); v.conts = (v.conts || 0) + CONT_PACK.conts; });
+    pop(`${I('ico_continue')} 이어하기권 +${CONT_PACK.conts}`); refreshHub(); if (after) after();
+  }
+  // 가짜 결제 창: 다이아 상품(첫 결제 2배) 또는 묶음 상품
   function fakePay(p, after) {
-    const cont = p === CONT_PACK, art = cont ? 'pack_continue' : `pack_${PACKS.indexOf(p) + 1}`;
-    modal(`<h3>${cont ? '이어하기권' : `다이아 ${p.gems}개`}</h3><span class="mn-tag">검수용 가짜 결제</span><img class="mn-art" src="${IMG}${art}.webp" alt="" style="max-height:110px"><p>${cont ? `${p.name}<br>` : ''}여기가 앱의 결제 창 자리예요.<br>확인을 누르면 ${cont ? '이어하기권이' : '다이아가'} 들어와요 (돈 안 나감).</p>`,
-      [{ text: '확인 (가짜 결제)', cls: 'gold', on: () => {
-        if (cont) { Hub.mutate((c) => { const v = c.v3 || (c.v3 = fresh()); v.conts = (v.conts || 0) + p.conts; }); pop(`${I('ico_continue')} 이어하기권 +${p.conts}`); }
-        else { addGems(p.gems); pop(`${I('ico_gem')} +${p.gems}`); }
+    const isPack = PACKS.includes(p), first = !bm().paid, gems = isPack ? (first ? p.gems * 2 : p.gems) : 0;
+    const art = isPack ? `pack_${PACKS.indexOf(p) + 1}` : p.img;
+    modal(`<h3>${isPack ? `다이아 ${gems}개` : p.name}</h3><span class="mn-tag">검수용 가짜 결제 · ${won(p.won)}</span><img class="mn-art" src="${IMG}${art}.webp" alt="" style="max-height:110px"><p>${isPack ? (first ? '첫 결제라서 2배로 받아요!<br>' : '') : p.desc + '<br>'}여기가 앱의 결제 창 자리예요.<br>확인을 누르면 바로 들어와요 (돈 안 나감).</p>`,
+      [{ text: `확인 (가짜 결제 ${won(p.won)})`, cls: 'gold', on: () => {
+        Hub.mutate((c) => {
+          const v = c.v3 || (c.v3 = fresh()), B = bmOf(v); B.paid = true;
+          if (isPack) c.gems = (c.gems || 0) + gems;
+          else if (p.id === 'unlock_all') { B.all = true; for (const g of Object.keys(G)) if (!OPEN.includes(g) && !v.unlocked.includes(g)) v.unlocked.push(g); }
+          else if (p.id === 'gem_pass_30') { B.pass += p.days; c.gems = (c.gems || 0) + p.now; }
+          else if (p.id === 'no_ads_reward') B.noAds = true;
+        });
+        pop(isPack ? `${I('ico_gem')} +${gems}` : p.id === 'gem_pass_30' ? `${I('ico_gem')} +${p.now} · 패스 ${p.days}일` : `${p.name}!`);
+        if (p.id === 'unlock_all') fx();
         refreshHub(); if (after) after();
       } }, { text: '취소', cls: 'gray', on: after }]);
   }
@@ -187,12 +242,37 @@
     if (!res || res.god) return res;
     const gem = Hub.mutate((c) => { const s = c.v3 || (c.v3 = fresh()); s.plays = (s.plays || 0) + 1; if (s.plays % GEM_EVERY === 0) { c.gems = (c.gems || 0) + 1; return true; } return false; });
     if (gem) setTimeout(() => pop(`${I('ico_gem')} +1 (게임 ${GEM_EVERY}판마다)`), 400);
+    const got = isOpen(game) ? playGems(game, r) : [];
+    got.forEach(([n, why], k) => setTimeout(() => pop(`${I('ico_gem')} +${n} ${why}`), 1300 + k * 1500));
     if (isOpen(game)) { // 체험 중에는 광고 없음
       const failed = G[game].stages ? !r.cleared : !NO_CONTINUE.includes(game);
       setTimeout(() => rewardBar(res.earned || 0, failed), 900);
     }
     return res;
   };
+  // 게임 성과 다이아 (BM B안): 처음 한 번만. 돌려줌: [[다이아, 이유] …]
+  function playGems(game, r) {
+    const GM = G[game], out = [];
+    Hub.mutate((c) => {
+      const v = c.v3 || (c.v3 = fresh()), B = bmOf(v);
+      let add = 0;
+      if (GM.stages) {
+        if (!r.cleared || r.stage == null) return;
+        const hard = r.stage >= GM.stages, k = GM.perWorld, w = Math.floor((r.stage % GM.stages) / k), o = (hard ? GM.stages : 0) + w * k;
+        const sts = Array.from({ length: k }, (_, i) => Hub.stage(game, o + i, c));
+        const key = `${game}-${hard ? 'h' : 'e'}${w}`, label = `${hard ? '어려움 ' : ''}${w + 1}월드`;
+        if (sts.every((x) => x.cleared) && !B.w[key]) { B.w[key] = 1; const n = hard ? HARD_WORLD_GEMS : WORLD_GEMS; add += n; out.push([n, `${label} 첫 클리어!`]); }
+        if (!hard && sts.reduce((a, x) => a + (x.stars || 0), 0) >= k * 3 && !B.s[key]) { B.s[key] = 1; add += STAR_GEMS; out.push([STAR_GEMS, `${label} 별 ${k * 3}개!`]); }
+      } else if (GOALS[game]) {
+        const goals = GOALS[game], had = B.ms[game] || 0;
+        let now = had; while (now < goals.length && (r.dist || 0) >= goals[now]) now++;
+        for (let i = had; i < now; i++) { add += STEP_GEMS[i]; out.push([STEP_GEMS[i], `기록 ${goals[i].toLocaleString()}${UNIT[game]} 달성!`]); }
+        B.ms[game] = now;
+      }
+      c.gems = (c.gems || 0) + add;
+    });
+    return out;
+  }
   // 결과 창의 ① 광고 줄(common/popup.js 가 만든 .pp-ad)에 광고 버튼: 코인 2배 · 이어하기 (이어하기권이 있으면 광고 없이)
   //  1개면 한 줄 가득, 2개면 반씩 나란히 (common/popup.css)
   function rewardBar(earned, failed, tries = 0) {
@@ -337,10 +417,12 @@
         const base = Math.floor((n - 1) / 10) * 10;
         const stamps = Array.from({ length: 10 }, (_, i) => { const d = base + i + 1; return `<span class="${d < n ? 'on' : d === n ? 'now' : ''}"><img src="${IMG}${d < n ? 'stamp_on' : 'stamp_off'}.webp" alt=""><i>${d < n ? '' : d}</i></span>`; }).join('');
         modal(`<h3>출석 ${n}일째</h3><img class="mn-art" src="${IMG}attend.webp" alt="" style="max-height:min(120px,16vh)"><div class="mn-stamps">${stamps}</div>
-          <p>오늘의 선물: <b>${I('ico_gem')} 다이아 ${ATT_DAILY}개</b></p>${bonus ? `<div class="mn-bonus"><img src="${IMG}${bonus.img}.webp" alt=""><b>${n}일 선물: ${bonus.text}</b></div>` : ''}${next ? `<p style="font-size:13px">${next}일째 선물: ${ATT_BONUS[next].text}</p>` : ''}`,
+          <p>오늘의 선물: <b>${I('ico_gem')} 다이아 ${ATT_DAILY}개</b>${(s.bm && s.bm.pass > 0) ? `<br>월 다이아 패스: <b>${I('ico_gem')} +${OFFERS[1].daily}</b> (${s.bm.pass}일 남음)` : ''}</p>${bonus ? `<div class="mn-bonus"><img src="${IMG}${bonus.img}.webp" alt=""><b>${n}일 선물: ${bonus.text}</b></div>` : ''}${next ? `<p style="font-size:13px">${next}일째 선물: ${ATT_BONUS[next].text}</p>` : ''}`,
           [{ text: '출석하기', cls: 'pink', on: () => {
-            Hub.mutate((c) => { const v = c.v3; if (v.att.last === today()) return; v.att.last = today(); v.att.count = n; c.gems = (c.gems || 0) + ATT_DAILY + ((bonus && bonus.gems) || 0); v.tickets += (bonus && bonus.tickets) || 0; });
-            pop(`${I('ico_gem')} +${ATT_DAILY + ((bonus && bonus.gems) || 0)}${bonus && bonus.tickets ? ` ${I('ico_key')} +1` : ''}`); busy = false; refreshHub();
+            let passGems = 0;
+            Hub.mutate((c) => { const v = c.v3; if (v.att.last === today()) return; v.att.last = today(); v.att.count = n; c.gems = (c.gems || 0) + ATT_DAILY + ((bonus && bonus.gems) || 0); v.tickets += (bonus && bonus.tickets) || 0;
+              const B = bmOf(v); if (B.pass > 0) { B.pass--; passGems = OFFERS[1].daily; c.gems += passGems; } });
+            pop(`${I('ico_gem')} +${ATT_DAILY + ((bonus && bonus.gems) || 0) + passGems}${bonus && bonus.tickets ? ` ${I('ico_key')} +1` : ''}`); busy = false; refreshHub();
           } }], '누적 출석이에요 (빠진 날이 있어도 이어져요)');
       }
     };
