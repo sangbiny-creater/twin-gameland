@@ -21,7 +21,7 @@ const HEART_STAY = 0.6;    // 하트 두더지가 다 올라와 머무는 시간
 const HEART_FULL_PTS = 300; // 하트가 꽉 찼을 때 하트 두더지를 잡으면 받는 점수
 const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202610311426';
+const ASSET_V = '202610311435';
 const asset = (p) => `assets/${p}.webp?v=${ASSET_V}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------

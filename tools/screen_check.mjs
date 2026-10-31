@@ -63,6 +63,8 @@ for (const vp of ['pp', 'pl', 'tb']) {
 }
 add('hub-lobby-oldlook-pp', 'index.html#lobby', { vp: 'pp', ch: 'c3' });
 add('hub-lobby-tp', 'index.html#lobby', { vp: 'tp' });
+// 이름판 검사: 화면을 위·가운데·아래로 옮기며 이름판 위치와 글자가 칸을 넘는지 (넘침 = scrollWidth > clientWidth)
+for (const [k, top] of [['bottom', 99999], ['mid', 700], ['top', 0]]) for (const vp of ['pp', 'tb']) add(`hub-plates-${k}-${vp}`, 'index.html#lobby', { vp, js: `(async () => { document.getElementById('pkScroll').scrollTop = ${top}; await new Promise((r) => setTimeout(r, 400)); return [...document.querySelectorAll('.pk-ride .name')].map((n) => { const r = n.getBoundingClientRect(); const over = [...n.querySelectorAll('b, small')].some((e) => e.scrollWidth > e.clientWidth + 0.5); return { t: n.querySelector('b').textContent, x: r.x, y: r.y, w: r.width, h: r.height, over, fs: getComputedStyle(n.querySelector('b')).fontSize }; }).filter((q) => q.y > -60 && q.y < innerHeight); })()` });
 add('hub-ribbon-pp', 'index.html#lobby', { vp: 'pp', js: "document.querySelectorAll('.pk-ride .name.wood').forEach((e) => { e.classList.remove('wood'); e.classList.add('ribbon'); })", wait2: 400 });
 add('hub-decopick-pp', 'index.html#lobby', { vp: 'pp', js: "document.querySelector('.pk-item.statue').click()", wait2: 700 });
 add('hub-decopick-gate-pp', 'index.html#lobby', { vp: 'pp', js: "document.querySelector('.pk-item.gate').click()", wait2: 700 });
