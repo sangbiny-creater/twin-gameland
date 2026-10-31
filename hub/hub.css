@@ -245,7 +245,8 @@ img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #
 /* ---------- 2. 로비 = 놀이공원 (v0.2, 그림 hub/park/) ----------
    놀이공원은 폭 540 기둥(가로 화면은 가운데)에 위아래 스크롤. 위 막대·롤러코스터·프로필·편집 버튼은 화면에 고정 */
 #scrLobby { padding: 0; overflow: hidden; }
-.pk-side { position: absolute; inset: -30px; background: #7CC46A url(park/bg/mid.webp?v=202610310843) center / cover; filter: blur(14px) brightness(.92) saturate(1.1); }
+body.in-park { background: #7CC46A; }
+.pk-side { position: absolute; inset: -30px; background: #7CC46A url(park/bg/mid.webp?v=202610310906) center / cover; filter: blur(14px) brightness(.92) saturate(1.1); }
 .pk-scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; touch-action: pan-y; scrollbar-width: none; overscroll-behavior: contain; }
 .pk-scroll::-webkit-scrollbar { display: none; }
 .pk-world { position: relative; width: 540px; margin: 0 auto; overflow: hidden; box-shadow: 0 0 30px rgba(24,59,91,.35); }
@@ -266,6 +267,9 @@ img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #
 .pk-ride .name b { display: block; font-weight: normal; font-size: 17px; color: #26365A; }
 .pk-ride .name small { display: flex; align-items: center; justify-content: center; gap: 3px; font-size: 13px; color: #D9761A; }
 .pk-ride .name small img { width: 15px; height: 15px; }
+/* Open soon: 놀이기구의 80% 크기 (받침 아래 가운데 기준으로 줄임) */
+.pk-ride.soon .art { transform: scale(.8); transform-origin: 50% 97%; }
+.pk-ride.soon:active .art { transform: scale(.8); }
 .pk-ride.soon .name { background: rgba(90,100,125,.9); border-color: rgba(255,255,255,.7); }
 .pk-ride.soon .name b { color: #fff; }
 .pk-ride .play { position: absolute; right: -6px; top: 22%; padding: 3px 10px 4px; border-radius: 14px; background: linear-gradient(#FF8DB4, #FF5C98); color: #fff; font-size: 16px; letter-spacing: .5px; box-shadow: 0 3px 0 #D23C76, 0 4px 8px rgba(210,60,118,.3); animation: pkBob 1.6s ease-in-out infinite; animation-delay: var(--d, 0s); }
@@ -282,8 +286,10 @@ img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #
 /* 입구 가게 · 표지판 */
 .pk-shop { position: absolute; width: 160px; padding: 0; background: none; }
 .pk-shop img { display: block; width: 100%; filter: drop-shadow(0 5px 4px rgba(40,70,30,.25)); }
-.pk-shop span { position: absolute; left: 50%; top: 35%; transform: translate(-50%, -50%); font-size: 13px; color: #B8336A; white-space: nowrap; }
-.pk-shop.dress span { color: #C5641A; }
+/* 가게도 놀이기구처럼 아래에 이름표 (누르는 곳이라는 표시) */
+.pk-shop .name { position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); padding: 3px 14px 4px; border-radius: 16px; background: rgba(255,255,255,.96); border: 2px solid #FFD8E6; box-shadow: 0 3px 8px rgba(24,59,91,.2); white-space: nowrap; }
+.pk-shop .name b { font-weight: normal; font-size: 16px; color: #B8336A; }
+.pk-shop.dress .name b { color: #C5641A; }
 .pk-sign { position: absolute; width: 150px; pointer-events: none; }
 .pk-sign img { display: block; width: 100%; }
 .pk-sign span { position: absolute; left: 22%; right: 3%; top: 31%; height: 37%; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 12px; line-height: 1.25; color: #6B3E1C; }

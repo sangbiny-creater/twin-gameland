@@ -14,8 +14,8 @@
   function load(look) {
     if (!LOOKS[look] || atlas[look]) return;
     const a = atlas[look] = { img: new Image(), f: null, ok: false };
-    fetch(`${base}common/chars/${look}.json?v=202610310843`).then((r) => r.json()).then((j) => {
-      a.f = j.frames; a.img.onload = () => { a.ok = true; }; a.img.src = `${base}common/chars/${look}.webp?v=202610310843`;
+    fetch(`${base}common/chars/${look}.json?v=202610310906`).then((r) => r.json()).then((j) => {
+      a.f = j.frames; a.img.onload = () => { a.ok = true; }; a.img.src = `${base}common/chars/${look}.webp?v=202610310906`;
     }).catch(() => { /* 그림이 없으면 기본 그림으로 */ });
   }
   const get = (look, name) => { const a = atlas[look]; return a && a.ok && a.f[name] ? [a, a.f[name]] : null; };

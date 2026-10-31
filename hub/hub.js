@@ -3,7 +3,7 @@
 const $ = (id) => document.getElementById(id);
 const root = $('root');
 // 얼굴: 옷을 입었으면 옷 그림(윗부분을 동그랗게 보여 줌)
-const face = (c) => Hub.costumeImg(c) || `common/faces/${c.look}_base.webp?v=202610310843`;
+const face = (c) => Hub.costumeImg(c) || `common/faces/${c.look}_base.webp?v=202610310906`;
 
 // 버튼 효과음·알림 (common/ui.js)
 const { blip, toast } = window.UI;
@@ -17,6 +17,7 @@ function go(name) {
   const hash = name === 'map' ? 'map-' + mapGame : name;
   if (location.hash !== '#' + hash) history.replaceState(null, '', '#' + hash);
   for (const [k, id] of Object.entries(SCREENS)) $(id).classList.toggle('hidden', k !== name);
+  document.body.classList.toggle('in-park', name === 'lobby'); // 놀이공원 바깥(화면 끝)도 풀색으로
   closeModals();
   ({ select: renderSelect, lobby: renderLobby, map: renderMap, records: renderRecords })[name]();
 }
@@ -93,7 +94,7 @@ function setLook(l) { createLook = l; document.querySelectorAll('.look').forEach
     if (l.hidden) continue; // 숨긴 옛 모습은 고를 수 없음
     const b = document.createElement('button');
     b.className = `look base-${l.base}` + (l.atlas ? ' v2' : ''); b.dataset.look = l.look;
-    b.innerHTML = `<img src="common/faces/${l.look}_base.webp?v=202610310843" alt=""><span></span>`;
+    b.innerHTML = `<img src="common/faces/${l.look}_base.webp?v=202610310906" alt=""><span></span>`;
     b.querySelector('span').textContent = l.name;
     if (l.isNew) b.querySelector('span').insertAdjacentHTML('beforeend', ' <i class="new">NEW</i>');
     b.addEventListener('click', () => { blip(); setLook(l.look); });
@@ -175,7 +176,7 @@ const LV_STEP = 500;
 // 게임 = 놀이기구 (hub/park/rides/<id>.webp, 받침 크기·자리가 모두 같은 460x470 그림 → tools/park_assets.py)
 // 한 줄에 2자리씩 지그재그로 아래(입구) → 위로. 맨 위 1자리는 항상 Open soon. 게임이 늘면 줄과 배경이 위로 늘어남
 // 자리 순서는 캐릭터마다 저장 (Hub.park). 편집: 오른쪽 아래 '편집' 버튼 또는 놀이기구를 길게 누르기
-const PARK_V = '?v=202610310843';
+const PARK_V = '?v=202610310906';
 const EN_NAME = { skyhook: 'Sky Hook Runner', helicopter: 'Twin Helicopter', stairs: 'Stair Climb', shisen: 'Tile Match', downhill: 'Downhill Runner',
   memory: 'Memory Game', mole: 'Whack-a-Mole', bakery: 'Sweet Bakery', dogsnack: 'Doggy Snack Time', darts: 'Dart Game' };
 // 놀이공원 크기 (논리 px, 폭 540 기둥 기준). 배경 한 장 = 540x810, 위아래로 OV만큼 겹쳐 부드럽게 이음
@@ -239,7 +240,7 @@ function renderPark(keepScroll) {
   for (const [cls, x, b, label, href] of [['shop', 112, 236, 'Item Shop', 'shop/index.html'], ['dress', 428, 236, 'Dress Up', 'shop/index.html?dress=1']]) {
     const s = document.createElement('button'); s.className = 'pk-shop ' + cls;
     s.style.left = x - 80 + 'px'; s.style.bottom = b + 'px';
-    s.innerHTML = `<img src="hub/park/ui/${cls}.webp${PARK_V}" alt=""><span>${label}</span>`;
+    s.innerHTML = `<img src="hub/park/ui/${cls}.webp${PARK_V}" alt=""><span class="name"><b>${label}</b></span>`;
     s.addEventListener('click', () => { if (editing) return; blip(); location.href = href; });
     world.appendChild(s);
   }
@@ -362,7 +363,7 @@ $('setOld').addEventListener('click', () => { blip(); try { sessionStorage.setIt
 let titleGame = null;
 // 인트로 그림: 화면이 가로면 가로 그림(<id>_land.webp), 세로면 세로 그림 — 폰·태블릿을 돌리면 바로 바뀜
 const landMQ = window.matchMedia('(orientation: landscape)');
-const introSrc = (g) => `${landMQ.matches ? g.key.replace('.webp', '_land.webp') : g.key}?v=202610310843`;
+const introSrc = (g) => `${landMQ.matches ? g.key.replace('.webp', '_land.webp') : g.key}?v=202610310906`;
 function setTitleArt(g) {
   const src = introSrc(g);
   $('tsArt').src = src; $('tsArt').alt = g.name;
@@ -415,7 +416,7 @@ $('setRename').addEventListener('click', () => { closeModals(); renameMe(); });
 // 월드마다 배경 그림 카드 1장, 그 안에서 돌다리 5개(사천성은 10개)가 아래 → 위로 올라감
 // 가로 화면: 카드가 옆으로 나란히 (좌우로 밀기) / 폰 세로 화면: 카드가 위아래로 (위아래로 밀기)
 let portraitNow = false, mapPortrait = null; // mapPortrait: 지도를 그릴 때의 화면 방향
-const WORLD_BG = (w) => `common/worlds/w${w + 1}.webp?v=202610310843`;
+const WORLD_BG = (w) => `common/worlds/w${w + 1}.webp?v=202610310906`;
 // 판 위치 (카드 안에서 %): 아래(1판) → 위(마지막 판) 지그재그, 월드마다 조금씩 다르게
 //  · 월드당 5판(스카이훅) / 10판(사천성: 두 줄로 번갈아 올라감)
 function stoneSpot(w, k, K = 5) {
@@ -536,7 +537,7 @@ function renderMap() {
         currentPanel = panel;
       }
     }
-    if (w === GM.worlds.length - 1) { const g = document.createElement('img'); g.className = 'goal-flag'; g.src = 'hub/ui/map/trophy.webp?v=202610310843'; g.alt = '마지막 트로피'; panel.appendChild(g); }
+    if (w === GM.worlds.length - 1) { const g = document.createElement('img'); g.className = 'goal-flag'; g.src = 'hub/ui/map/trophy.webp?v=202610310906'; g.alt = '마지막 트로피'; panel.appendChild(g); }
     track.appendChild(panel);
   });
   requestAnimationFrame(() => {
@@ -551,7 +552,7 @@ function openStage(i) {
   stageSel = i;
   const st = Hub.stage(mapGame, i);
   $('stTitle').textContent = `${Hub.stageLabel(i, mapGame)} ${Hub.stageName(i, mapGame)}`;
-  $('stStars').innerHTML = [0, 1, 2].map((k) => `<img src="hub/ui/map/${k < st.stars ? 'star' : 'star_off'}.webp?v=202610310843" alt="${k < st.stars ? '별' : '빈 별'}">`).join('');
+  $('stStars').innerHTML = [0, 1, 2].map((k) => `<img src="hub/ui/map/${k < st.stars ? 'star' : 'star_off'}.webp?v=202610310906" alt="${k < st.stars ? '별' : '빈 별'}">`).join('');
   const shisen = mapGame === 'shisen' || mapGame === 'memory'; // 시간 안에 깨는 게임: 빨리 깬 기록·남은 시간으로 별
   const mole = mapGame === 'mole'; // 점수 게임: 최고 점수·점수로 별
   const bestTxt = mole ? `최고 점수 <b>${st.best.toLocaleString()}점</b>` : shisen ? (st.bestTime ? `가장 빨리 깬 기록 <b>${mmss(st.bestTime)}</b>` : '') : `최고 기록 <b>${st.best}m</b>`;
@@ -570,7 +571,7 @@ function renderRecords() {
   const c = Hub.active();
   $('recTitle').textContent = `${c.name}의 기록`;
   $('recSummary').innerHTML = `<div class="rec-card total"><div class="v">지금 코인 <b>${c.coins}</b> · 지금까지 모은 코인 <b>${c.earned}</b> · 별 <b>${Hub.starsTotal(c)}</b></div></div>`
-    + GAME_CARDS.map((g) => `<div class="rec-card"><div class="thumb" style="background-image:url(${g.thumb}?v=202610310843)"></div>
+    + GAME_CARDS.map((g) => `<div class="rec-card"><div class="thumb" style="background-image:url(${g.thumb}?v=202610310906)"></div>
       <div><div class="t">${g.name}${Hub.isFav(g.id, c) ? ' <span class="star-on">★</span>' : ''}</div><div class="v">${g.rec(c, Hub.rec(g.id, c))}</div></div></div>`).join('');
   const list = $('recList'); list.innerHTML = '';
   if (!c.history.length) list.innerHTML = '<li><span>아직 기록이 없어요. 게임을 해봐요!</span></li>';
@@ -657,7 +658,8 @@ function resize() {
   const kb = keyboardOn();
   root.classList.toggle('typing', kb); document.body.classList.toggle('typing', kb);
   if (kb) { fitModals(); return; }
-  const { vw, vh } = viewSize();
+  // 아이폰 홈 화면 앱: visualViewport 높이가 실제 화면보다 작게 나올 때가 있어서(아래 흰 띠) 더 큰 쪽을 씀
+  const { vw } = viewSize(), vh = Math.max(viewSize().vh, window.innerHeight);
   const s = $('safe').getBoundingClientRect();
   const inset = { t: s.top, l: s.left, r: vw - s.right, b: vh - s.bottom };
   portraitNow = isTouch && vh > vw;
