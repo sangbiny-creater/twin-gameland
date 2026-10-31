@@ -23,7 +23,7 @@ button {
 }
 button:active { transform: translateY(3px); }
 .ico { display: inline-block; width: 26px; height: 26px; background: center/contain no-repeat; vertical-align: -4px; }
-.ico-crown { background-image: url("../hub/ui/crown.webp?v=202610311229"); }
+.ico-crown { background-image: url("../hub/ui/crown.webp?v=202610311426"); }
 .ico-sound { display: inline-block; width: 26px; height: 26px; background: center/contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 9h4l5-4v14l-5-4H4z' fill='%23fff'/%3E%3Cpath d='M16 8.5c1.6 1.8 1.6 5.2 0 7M18.5 6c3 3.2 3 8.8 0 12' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E"); }
 .muted .ico-sound { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 9h4l5-4v14l-5-4H4z' fill='%23fff'/%3E%3Cpath d='M16 9l5 6M21 9l-5 6' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E"); }
 
@@ -36,7 +36,7 @@ button:active { transform: translateY(3px); }
 .pad.down img { transform: scale(.88); opacity: 1; }
 /* 점프하기 버튼 (가운데, 아이템이 있을 때만) */
 .jump { position: absolute; left: 50%; bottom: calc(14px + var(--safe-b, 0px)); width: 118px; height: 120px; margin-left: -59px; padding: 0; z-index: 2; touch-action: none;
-  background: url("assets/ui/btn_jump.webp?v=202610311229") center/contain no-repeat; filter: drop-shadow(0 6px 6px rgba(24,59,91,.35)); }
+  background: url("assets/ui/btn_jump.webp?v=202610311426") center/contain no-repeat; filter: drop-shadow(0 6px 6px rgba(24,59,91,.35)); }
 .jump:active { transform: scale(.92); }
 .jump span { position: absolute; left: 50%; bottom: -12px; transform: translateX(-50%); background: #fff; color: #C2620A; font-size: 19px; padding: 1px 12px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,.2); white-space: nowrap; }
 .jump i { position: absolute; top: -6px; right: -6px; min-width: 40px; height: 40px; padding: 0 8px; border-radius: 20px; background: #FF5C7A; color: #fff; border: 3px solid #fff; font-style: normal; font-size: 24px; line-height: 34px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,.25); }

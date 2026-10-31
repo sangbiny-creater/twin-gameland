@@ -63,6 +63,7 @@ for (const vp of ['pp', 'pl', 'tb']) {
 }
 add('hub-lobby-oldlook-pp', 'index.html#lobby', { vp: 'pp', ch: 'c3' });
 add('hub-lobby-tp', 'index.html#lobby', { vp: 'tp' });
+add('hub-ribbon-pp', 'index.html#lobby', { vp: 'pp', js: "document.querySelectorAll('.pk-ride .name.wood').forEach((e) => { e.classList.remove('wood'); e.classList.add('ribbon'); })", wait2: 400 });
 add('hub-decopick-pp', 'index.html#lobby', { vp: 'pp', js: "document.querySelector('.pk-item.statue').click()", wait2: 700 });
 add('hub-decopick-gate-pp', 'index.html#lobby', { vp: 'pp', js: "document.querySelector('.pk-item.gate').click()", wait2: 700 });
 add('shop-park-pp', 'shop/index.html#park', { vp: 'pp', wait: 2500 });

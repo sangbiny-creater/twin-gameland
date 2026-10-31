@@ -1,7 +1,7 @@
 """첫 화면(놀이공원, v0.2) 그림 만들기 → hub/park/ 에 webp로 저장
   python3 tools/park_assets.py
   · GPT 그림: making_GPT/첫화면_놀이공원/ P05~P26(1차: 놀이기구·로고·버튼·가게), Q01~Q07·R01~R02(2차: 배경·장식·롤러코스터),
-    U01~U03·W01~W15(3차: 새 배경, 동상·분수·대문 아이템)
+    U01~U03·W01~W15(3차: 새 배경, 동상·분수·대문 아이템), V01~V03·X01~X05(4차: 배경·이름판·플레이 버튼)
     (요청 글: 같은 폴더 GPT_요청_첫화면_놀이공원.txt, GPT_요청_첫화면_2차.txt / 배치 안내도: tools/park_layout.py)
   · 배경 속 놀이기구 받침 자리는 hub/hub.js 의 PARK_SECTIONS 에 적어 둠 (그림을 다시 받으면 거기를 다시 재기)
   · 놀이기구(P06~P16)는 받침(둥근 꽃밭)의 폭·아랫선을 재서 모두 같은 크기·같은 자리에 오게 맞춤
@@ -83,6 +83,10 @@ def bg(n, name, pre='Q'):
 
 
 if __name__ == '__main__':
+    # 4차 (v0.3): 배경 V01~V03 (사용자 초안 배치), 이름판 X01 나무·X02 리본·X03 Open soon, 플레이 버튼 X04·X05(잠김)
+    for n, name in [(1, 'entrance4'), (2, 'mid4_a'), (3, 'mid4_b')]: bg(n, name, 'V')
+    for n, name, w in [(1, 'plate_wood', 300), (2, 'plate_ribbon', 300), (3, 'plate_soon', 300), (4, 'play', 84), (5, 'play_lock', 84)]:
+        save(tight(key(src(n, 'X'))), f'ui/{name}', w=w, lossless=False, q=90)
     # 배경 (3차, v0.3): 입구 U01(대문·분수 없음, 동상 자리), 가운데 A U02(분수 광장), 가운데 B U03 — v0.2 가 쓰는 2차 배경은 그대로 둠
     for n, name in [(1, 'entrance3'), (2, 'mid3_a'), (3, 'mid3_b')]: bg(n, name, 'U')
     # 놀이공원 꾸미기 아이템 (3차): 동상 W01~05, 분수 W06~10, 대문 W11~15 → items/<종류>_<번호>.webp (물건만 꼭 맞게 잘라서)

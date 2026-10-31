@@ -246,7 +246,7 @@ img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #
    놀이공원은 폭 540 기둥(가로 화면은 가운데)에 위아래 스크롤. 위 막대·롤러코스터·프로필·편집 버튼은 화면에 고정 */
 #scrLobby { padding: 0; overflow: hidden; }
 body.in-park { background: #7CC46A; }
-.pk-side { position: absolute; inset: -30px; background: #7CC46A url(park/bg/mid_a.webp?v=202610311229) center / cover; filter: blur(14px) brightness(.92) saturate(1.1); }
+.pk-side { position: absolute; inset: -30px; background: #7CC46A url(park/bg/mid_a.webp?v=202610311426) center / cover; filter: blur(14px) brightness(.92) saturate(1.1); }
 .pk-scroll { position: absolute; inset: 0; z-index: 0; overflow-y: auto; overflow-x: hidden; touch-action: pan-y; scrollbar-width: none; overscroll-behavior: contain; }
 .pk-scroll::-webkit-scrollbar { display: none; }
 .pk-world { position: relative; width: 540px; margin: 0 auto; overflow: hidden; box-shadow: 0 0 30px rgba(24,59,91,.35); }
@@ -258,17 +258,22 @@ body.in-park { background: #7CC46A; }
 .pk-ride:active { transform: none; }
 .pk-ride .art { display: block; width: 100%; height: 100%; filter: drop-shadow(0 6px 5px rgba(40,70,30,.28)); transition: transform 120ms; }
 .pk-ride:active .art { transform: scale(.96); }
-.pk-ride .name { position: absolute; left: 50%; bottom: -10px; transform: translateX(-50%); min-width: 112px; padding: 2px 10px 3px; border-radius: 14px; background: rgba(255,255,255,.96); border: 2px solid #FFD8E6; box-shadow: 0 3px 8px rgba(24,59,91,.2); white-space: nowrap; line-height: 1.1; z-index: 2; }
-.pk-ride .name b { display: block; font-weight: normal; font-size: 15px; color: #26365A; }
-.pk-ride .name small { display: flex; align-items: center; justify-content: center; gap: 3px; font-size: 12px; color: #D9761A; }
-.pk-ride .name small img { width: 13px; height: 13px; }
+/* 이름판: 공원 그림체의 빈 판(hub/park/ui/plate_*.webp) 위에 영어 이름·별·기록을 씀. 모든 그림 위 층 (아래 놀이기구에 안 가려짐) */
+.pk-ride .name { position: absolute; left: 50%; bottom: -14px; transform: translateX(-50%); z-index: 3000; width: 138px; aspect-ratio: 300 / 99;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 16px 9px; background: center / 100% 100% no-repeat; white-space: nowrap; line-height: 1.05; pointer-events: none; }
+.pk-ride .name.wood { background-image: url(park/ui/plate_wood.webp?v=202610311426); }
+.pk-ride .name.ribbon { background-image: url(park/ui/plate_ribbon.webp?v=202610311426); aspect-ratio: 300 / 105; padding: 4px 22px 8px; }
+.pk-ride .name.soon { background-image: url(park/ui/plate_soon.webp?v=202610311426); aspect-ratio: 300 / 113; padding-bottom: 12px; }
+.pk-ride .name b { display: block; font-weight: normal; font-size: 13.5px; color: #5A3418; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.pk-ride .name small { display: flex; align-items: center; justify-content: center; gap: 2px; font-size: 11px; color: #C2621A; }
+.pk-ride .name small img { width: 11px; height: 11px; }
 /* Open soon: 놀이기구의 80% 크기 (받침 아래 가운데 기준으로 줄임) */
 .pk-ride.soon .art { transform: scale(.8); transform-origin: 50% 97%; }
 .pk-ride.soon:active .art { transform: scale(.8); }
-.pk-ride.soon .name { background: rgba(90,100,125,.9); border-color: rgba(255,255,255,.7); }
-.pk-ride.soon .name b { color: #fff; }
-.pk-ride .play { position: absolute; right: -8px; top: 16%; padding: 2px 8px 3px; border-radius: 12px; background: linear-gradient(#FF8DB4, #FF5C98); color: #fff; font-size: 14px; letter-spacing: .5px; box-shadow: 0 3px 0 #D23C76, 0 4px 8px rgba(210,60,118,.3); animation: pkBob 1.6s ease-in-out infinite; animation-delay: var(--d, 0s); }
-.pk-ride .play::after { content: ''; position: absolute; left: 14px; bottom: -8px; border: 6px solid transparent; border-top-color: #FF5C98; border-left-color: #FF5C98; }
+.pk-ride.soon .name b { color: #59606E; }
+/* ▶ 플레이 버튼: 이름판 오른쪽 끝에 붙임 (다른 놀이기구 이름을 가리지 않게). 잠긴 게임은 자물쇠 버튼 */
+.pk-ride .play { position: absolute; right: -15px; top: 50%; width: 30px; height: 30px; margin-top: -19px; background: url(park/ui/play.webp?v=202610311426) center / contain no-repeat; filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); animation: pkBob 1.6s ease-in-out infinite; animation-delay: var(--d, 0s); }
+.pk-ride.mn-locked .play { background-image: url(park/ui/play_lock.webp?v=202610311426); }
 @keyframes pkBob { 50% { transform: translateY(-4px); } }
 /* 편집 중: 흔들흔들, 고른 것 · 놓을 자리 표시 */
 .pk-world.editing .pk-ride:not(.soon) { touch-action: none; animation: pkWiggle .5s ease-in-out infinite alternate; animation-delay: var(--d, 0s); }
