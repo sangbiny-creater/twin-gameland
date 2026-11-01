@@ -137,6 +137,8 @@ for (const g of ['helicopter', 'stairs', 'downhill', 'shisen', 'memory', 'mole',
   js: `(() => { document.querySelectorAll('#gpStart,.mn-modal').forEach((e) => e.remove()); document.querySelectorAll('.screen.dim,#ready,#home').forEach((e) => e.classList.add('hidden')); document.getElementById('hud').classList.remove('hidden');
     const r = document.getElementById('root').getBoundingClientRect(); return [...document.querySelectorAll('#hud .hp')].filter((e) => e.offsetParent).map((e) => { const b = e.getBoundingClientRect(); return [e.textContent.trim(), Math.round(b.height / r.height * (r.height > r.width ? 960 : 540))]; }); })()`, wait2: 300 });
 add('hub-map-hard-pp', 'index.html#map-shisen', { vp: 'pp', js: `document.querySelector('#mapMode [data-mode=hard]').click()`, wait2: 500 });
+// 놀이기구 자리를 바꾼 첫 화면 (배경 받침과 안 맞는지 보기): 장식·게임을 섞어서
+add('hub-lobby-swap-pp', 'index.html#lobby', { vp: 'pp', js: `(() => { const o = parkOrder.slice(); [o[0], o[3]] = [o[3], o[0]]; [o[1], o[6]] = [o[6], o[1]]; [o[2], o[4]] = [o[4], o[2]]; o[5] = null; Hub.setPark(o); location.reload(); })()`, wait2: 3500 });
 // 지도 돌다리 → 바로 게임의 출발 준비 창 하나만 (QA: 출발 창 두 번)
 for (const g of ['shisen', 'memory', 'mole']) add(`flow-stone-${g}-pp`, `index.html#map-${g}`, { vp: 'pp', js: `(() => { sessionStorage.setItem('__seeded', '1'); document.querySelector('#mapTrack .stone').click(); return !document.querySelector('.modal:not(.hidden)'); })()`, wait2: 3500,
   after: `({ url: location.pathname + location.search, ready: !document.getElementById('ready').classList.contains('hidden'), buttons: [...document.querySelectorAll('#ready .pp-b')].map((b) => b.textContent.trim()).join(' | ') })` });
