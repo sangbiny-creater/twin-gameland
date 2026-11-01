@@ -146,7 +146,7 @@ for (const g of ['shisen', 'memory', 'mole']) for (const vp of ['pp', 'pl', 'tb'
 for (const g of ['memory', 'shisen']) add(`map3dbg-${g}`, `index.html#map-${g}`, { vp: 'pp', wait2: 300, js: `(() => { const sc = document.getElementById('mapScroll'), tr = document.getElementById('mapTrack'), me = tr.querySelector('.coaster3');
   return { sh: sc.scrollHeight, ch: sc.clientHeight, st: sc.scrollTop, panels: tr.children.length, trH: tr.offsetHeight, me: me && [me.parentElement.offsetTop, me.offsetTop], scrMap: document.getElementById('scrMap').className, hash: location.hash }; })()` });
 // 지도 돌다리 → 바로 게임의 출발 준비 창 하나만 (QA: 출발 창 두 번)
-for (const g of ['shisen', 'memory', 'mole']) add(`flow-stone-${g}-pp`, `index.html#map-${g}`, { vp: 'pp', js: `(() => { sessionStorage.setItem('__seeded', '1'); document.querySelector('#mapTrack .stone').click(); return !document.querySelector('.modal:not(.hidden)'); })()`, wait2: 3500,
+for (const g of ['shisen', 'memory', 'mole']) add(`flow-stone-${g}-pp`, `index.html#map-${g}`, { vp: 'pp', js: `(() => { sessionStorage.setItem('__seeded', '1'); document.querySelector('#mapTrack .stone, #mapTrack .stone3').click(); return !document.querySelector('.modal:not(.hidden)'); })()`, wait2: 3500,
   after: `({ url: location.pathname + location.search, ready: !document.getElementById('ready').classList.contains('hidden'), buttons: [...document.querySelectorAll('#ready .pp-b')].map((b) => b.textContent.trim()).join(' | ') })` });
 // BM B안: 게임 성과 다이아 · 다이아 상점 (docs/bm/BM_제안_v1.md)
 const BM_T = (js) => `(async () => { const g0 = Hub.gems(); ${js}; await new Promise((r) => setTimeout(r, 300)); const v = Hub.active().v3; return { before: g0, after: Hub.gems(), bm: v && v.bm }; })()`;

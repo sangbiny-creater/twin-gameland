@@ -184,10 +184,12 @@
     }
   }
   // ---------- 스테이지형 시작 팝업 (#ready 를 새 배치로) ----------
-  //  [판 이름 리본] [X = 지도 보기] / 지금 캐릭터 신난 그림 (두더지: 두더지 설명) / 판 정보 / 아이템 칸 / [시작하기] [메인으로]
+  //  [판 이름 리본] [X = 지도 보기] / 지금 캐릭터 신난 그림 (두더지: 두더지 설명) / 판 정보 / 아이템 칸 / [시작하기] (한 줄 가득)
   function stageReady() {
     const panel = document.querySelector('#ready > .panel'); if (!panel || panel.dataset.gp) return;
     panel.dataset.gp = '1';
+    // 시작 팝업 버튼은 '시작하기' 하나만 (무제한형과 같게). 지도로 가기는 오른쪽 위 X, 첫 화면은 지도의 뒤로 버튼
+    const home = $('btnReadyHome'); if (home) { home.classList.add('hidden'); home.setAttribute('aria-hidden', 'true'); }
     const t = $('readyTitle'); if (t) panel.prepend(t);
     const x = document.createElement('button'); x.className = 'gp-x'; x.setAttribute('aria-label', '지도 보기');
     x.addEventListener('click', (e) => { e.stopPropagation(); blip(500); if ($('btnReadyMap')) $('btnReadyMap').click(); });

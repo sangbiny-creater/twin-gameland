@@ -246,7 +246,7 @@ img[src*="costumes/"] { object-fit: cover; object-position: 50% 0; background: #
    놀이공원은 폭 540 기둥(가로 화면은 가운데)에 위아래 스크롤. 위 막대·롤러코스터·프로필·편집 버튼은 화면에 고정 */
 #scrLobby { padding: 0; overflow: hidden; }
 body.in-park { background: #7CC46A; }
-.pk-side { position: absolute; inset: -30px; background: #7CC46A url(park/bg/mid_a.webp?v=202611011554) center / cover; filter: blur(14px) brightness(.92) saturate(1.1); }
+.pk-side { position: absolute; inset: -30px; background: #7CC46A url(park/bg/mid_a.webp?v=202611011610) center / cover; filter: blur(14px) brightness(.92) saturate(1.1); }
 .pk-scroll { position: absolute; inset: 0; z-index: 0; overflow-y: auto; overflow-x: hidden; touch-action: pan-y; scrollbar-width: none; overscroll-behavior: contain; }
 .pk-scroll::-webkit-scrollbar { display: none; }
 .pk-world { position: relative; width: 540px; margin: 0 auto; overflow: hidden; box-shadow: 0 0 30px rgba(24,59,91,.35); }
@@ -273,7 +273,7 @@ body.in-park { background: #7CC46A; }
 .pk-ride.soon:active .art { transform: scale(.8); }
 .pk-ride.soon .name b { color: #59606E; }
 /* ▶ 플레이 버튼: 놀이기구 그림의 오른쪽 아래, 이름판 바로 위 (놀이기구 그림 안쪽). 잠긴 게임은 큰 자물쇠만 (작은 자물쇠 버튼 없음) */
-.pk-ride .play { position: absolute; right: 10%; width: 30px; height: 30px; background: url(park/ui/play.webp?v=202611011554) center / contain no-repeat; filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); animation: pkBob 1.6s ease-in-out infinite; animation-delay: var(--d, 0s); pointer-events: none; }
+.pk-ride .play { position: absolute; right: 10%; width: 30px; height: 30px; background: url(park/ui/play.webp?v=202611011610) center / contain no-repeat; filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); animation: pkBob 1.6s ease-in-out infinite; animation-delay: var(--d, 0s); pointer-events: none; }
 .pk-ride.mn-locked .play { display: none; }
 @keyframes pkBob { 50% { transform: translateY(-4px); } }
 /* 편집 중: 흔들흔들, 고른 것 · 놓을 자리 표시 */
@@ -384,8 +384,8 @@ body.in-park { background: #7CC46A; }
 
 /* 쉬움·어려움 단추 (사천성 지도) */
 /* 쉬움/어려움 스위치 (GPT M01·M02): 고른 쪽이 볼록하게 빛나는 그림, 글자는 위에 (왼쪽 끝 새싹 · 오른쪽 끝 불꽃 아이콘을 비켜서) */
-.map-mode { display: inline-flex; margin-top: 4px; width: 240px; height: 71px; padding: 0; gap: 0; border: 0; border-radius: 0; background: url(ui/map/mode_easy.webp?v=202611011554) center / 100% 100% no-repeat; box-shadow: none; filter: drop-shadow(0 3px 4px rgba(0,0,0,.2)); }
-.map-mode:has(button.on[data-mode="hard"]) { background-image: url(ui/map/mode_hard.webp?v=202611011554); }
+.map-mode { display: inline-flex; margin-top: 4px; width: 240px; height: 71px; padding: 0; gap: 0; border: 0; border-radius: 0; background: url(ui/map/mode_easy.webp?v=202611011610) center / 100% 100% no-repeat; box-shadow: none; filter: drop-shadow(0 3px 4px rgba(0,0,0,.2)); }
+.map-mode:has(button.on[data-mode="hard"]) { background-image: url(ui/map/mode_hard.webp?v=202611011610); }
 .map-mode button { font: inherit; flex: 1 1 0; height: 100%; padding: 0 0 4px; border: 0; border-radius: 0; background: none !important; box-shadow: none !important; font-size: 20px; color: #8A93A0; cursor: pointer; white-space: nowrap; }
 .map-mode button[data-mode="easy"] { padding-left: 40px; }
 .map-mode button[data-mode="hard"] { padding-right: 46px; padding-left: 4px; }
@@ -400,7 +400,7 @@ body.in-park { background: #7CC46A; }
 .sel-bg { position: absolute; max-width: none; pointer-events: none; }
 .sel-logo { position: relative; width: 230px; margin-top: 6px; filter: drop-shadow(0 4px 6px rgba(24,59,91,.35)); }
 .sel-ask { position: relative; display: flex; flex-direction: column; align-items: center; margin-top: 4px; }
-.sel-ask b { display: flex; align-items: center; justify-content: center; box-sizing: border-box; overflow: hidden; width: 470px; max-width: 96vw; height: 76px; padding: 0 19% 16px; background: url(../common/ui/monet/ribbon.webp?v=202611011554) center / 100% 100% no-repeat;
+.sel-ask b { display: flex; align-items: center; justify-content: center; box-sizing: border-box; overflow: hidden; width: 470px; max-width: 96vw; height: 76px; padding: 0 19% 16px; background: url(../common/ui/monet/ribbon.webp?v=202611011610) center / 100% 100% no-repeat;
   font-weight: normal; font-size: 21px; color: #fff; text-shadow: 0 2px 0 #C2406A, 0 0 3px #C2406A; white-space: nowrap; }
 .sel-ask small { margin-top: -6px; padding: 2px 12px; border-radius: 10px; background: rgba(255,255,255,.88); font-size: 14px; color: #8A5A6E; }
 .sel-chars { position: absolute; inset: 0; pointer-events: none; }
@@ -434,63 +434,60 @@ body.in-park { background: #7CC46A; }
 .sel-name.sex img { display: block; width: 100%; height: 100%; filter: drop-shadow(0 3px 3px rgba(0,0,0,.25)); }
 /* 언어 고르기 버튼: 가운데 아래 (GPT H03 — 왼쪽 지구본, 오른쪽 글자 칸) */
 .sel-lang { position: absolute; left: 50%; bottom: calc(14px + var(--safe-b, 0px)); transform: translateX(-50%); width: 168px; height: 53px; padding: 0 14px 4px 52px; border: 0; border-radius: 0;
-  background: url(select/lang.webp?v=202611011554) center / 100% 100% no-repeat; color: #fff; font-size: 19px; text-shadow: 0 2px 0 #1F6FB0; filter: drop-shadow(0 4px 6px rgba(24,59,91,.25)); }
+  background: url(select/lang.webp?v=202611011610) center / 100% 100% no-repeat; color: #fff; font-size: 19px; text-shadow: 0 2px 0 #1F6FB0; filter: drop-shadow(0 4px 6px rgba(24,59,91,.25)); }
 .sel-lang:active { transform: translate(-50%, 3px); }
 .lang-list { display: flex; flex-direction: column; gap: 10px; width: 100%; }
 
 /* ---------- 스테이지 지도 v0.3 (사천성·메모리·두더지) — hub.js renderMap3 ---------- */
-#scrMap.map3 { padding-left: 0; padding-right: 0; background: #8FD0FA; }
-#scrMap.map3 .top-bar { position: absolute; left: 0; right: 0; top: 0; z-index: 30; padding: calc(8px + var(--safe-t, 0px)) 8px 6px; gap: 5px; flex-wrap: nowrap; align-items: center; background: none; }
+#scrMap.map3 { padding-left: 0; padding-right: 0; background: linear-gradient(#8FD0FA, #CDEBFF); }
+/* 위쪽 줄: 뒤로 · 깬 판 수 · 별 · 쉬움/어려움 — 모두 높이 44, 세로 가운데 맞춤, 한 줄 가운데 정렬 (그림: GPT T01~T05) */
+#scrMap.map3 .top-bar { position: absolute; left: 0; right: 0; top: 0; z-index: 30; padding: calc(10px + var(--safe-t, 0px)) 8px 8px; display: flex; flex-wrap: nowrap;
+  align-items: center; justify-content: center; gap: 8px; background: linear-gradient(rgba(143,208,250,.95) 70%, rgba(143,208,250,0)); }
 #scrMap.map3 .map-title { display: contents; }
 #scrMap.map3 #mapName, #scrMap.map3 #mapProg, #scrMap.map3 .me.mini, #scrMap.map3 .map-hint { display: none; }
-#scrMap.map3 .map-back { order: 0; width: 48px; height: 48px; }
-#scrMap.map3 .mapbar3 { order: 1; }
-#scrMap.map3 #mapMode { order: 2; margin: 0 0 0 auto; width: 176px; height: 52px; }
-#scrMap.map3 #mapMode button { font-size: 17px; }
-#scrMap.map3 #mapMode button[data-mode="easy"] { padding-left: 30px; }
-#scrMap.map3 #mapMode button[data-mode="hard"] { padding-right: 34px; }
-#scrMap.map3 #mapMode.locked button[data-mode="hard"]::before { content: '🔒'; font-size: 13px; margin-right: 1px; }
-.mapbar3 { display: flex; gap: 6px; align-items: center; }
-#scrMap .mapbar3.hidden { display: none; }
-#scrMap.map3 .top-bar .mapbar3 { display: flex; }
-/* 위쪽 줄 그림 (GPT T01~T05): 뒤로 · 깬 판 수(깃발) · 별 · 쉬움/어려움 스위치. 높이 40 (스위치 44) */
-.mb3-pill { position: relative; box-sizing: border-box; height: 40px; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;
-  background: center / 100% 100% no-repeat; color: #fff; font-size: 17px; line-height: 1; text-shadow: 0 2px 0 rgba(10,30,90,.6); }
-.mb3-pill b { font-weight: normal; }
+#scrMap.map3 .map-back { order: 0; flex: none; width: 44px; height: 44px; filter: drop-shadow(0 2px 3px rgba(0,0,0,.2)); }
+#scrMap.map3 .map-back img { content: url(ui/map/top_back.webp?v=202611011610); width: 100%; height: 100%; }
+#scrMap.map3 .top-bar .mapbar3 { order: 1; display: flex; align-items: center; gap: 8px; }
+#scrMap .mapbar3.hidden { display: none !important; }
+.mb3-pill { position: relative; box-sizing: border-box; height: 44px; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;
+  color: #fff; font-size: 17px; line-height: 1; text-shadow: 0 2px 0 rgba(10,30,90,.6); background: none; border: 0 solid transparent; }
+.mb3-pill b { font-weight: normal; display: flex; align-items: baseline; gap: 4px; }
 .mb3-pill em { font-style: normal; color: #FFE07A; }
-.mb3-pill small { font-size: 13px; margin-left: 2px; }
-.mb3-pill.flag { min-width: 150px; padding: 0 14px 2px 48px; background: none; border: 0 solid transparent; border-image: url(ui/map/top_clear.webp?v=202611011554) 0 44 0 96 fill / 0 18px 0 40px stretch; } /* 깃발 쪽은 그대로, 가운데만 늘어남 */
-.mb3-pill.star { min-width: 82px; padding: 0 14px 2px 44px; background: none; border: 0 solid transparent; border-image: url(ui/map/top_star.webp?v=202611011554) 0 44 0 92 fill / 0 18px 0 38px stretch; }
-#scrMap.map3 .map-back { width: 44px; height: 44px; }
-#scrMap.map3 .map-back img { content: url(ui/map/top_back.webp?v=202611011554); }
-#scrMap.map3 #mapMode { width: 128px; height: 44px; background-image: url(ui/map/top_easy.webp?v=202611011554); filter: none; }
-#scrMap.map3 #mapMode:has(button.on[data-mode="hard"]) { background-image: url(ui/map/top_hard.webp?v=202611011554); }
-#scrMap.map3 #mapMode button { font-size: 14px; padding: 0 0 2px; color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,.35); }
-#scrMap.map3 #mapMode button[data-mode="easy"] { padding-left: 12px; }
+.mb3-pill small { font-size: 13px; }
+/* 아이콘 쪽(왼쪽)은 그림 그대로, 글자 칸만 늘어남. 글자는 아이콘 오른쪽 빈 칸의 가운데 */
+.mb3-pill.flag { min-width: 158px; padding: 0 16px 3px 50px; border-image: url(ui/map/top_clear.webp?v=202611011610) 0 44 0 96 fill / 0 20px 0 44px stretch; }
+.mb3-pill.star { min-width: 86px; padding: 0 16px 3px 46px; border-image: url(ui/map/top_star.webp?v=202611011610) 0 44 0 92 fill / 0 20px 0 42px stretch; }
+#scrMap.map3 #mapMode { order: 2; flex: none; margin: 0; width: 130px; height: 44px; padding: 0; display: flex; background: url(ui/map/top_easy.webp?v=202611011610) center / 100% 100% no-repeat; border: 0; box-shadow: none; filter: none; }
+#scrMap.map3 #mapMode:has(button.on[data-mode="hard"]) { background-image: url(ui/map/top_hard.webp?v=202611011610); }
+#scrMap.map3 #mapMode button { flex: 1 1 0; height: 100%; display: flex; align-items: center; justify-content: center; padding: 0 0 3px; font-size: 14px; color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,.35); background: none !important; box-shadow: none !important; border: 0; min-width: 0; }
+#scrMap.map3 #mapMode button[data-mode="easy"] { padding-left: 14px; }
 #scrMap.map3 #mapMode button[data-mode="hard"] { padding-right: 16px; }
 #scrMap.map3 #mapMode button:not(.on) { color: #7C8594; text-shadow: none; }
 #scrMap.map3 #mapMode.locked button[data-mode="hard"] { opacity: 1; }
 #scrMap.map3 #mapMode.locked button[data-mode="hard"]::before { content: '🔒'; font-size: 10px; margin-right: 1px; }
+/* 월드 카드: 예전처럼 월드마다 끊어서 (그림 common/worlds/w1~10), 사이 14px */
 #scrMap.map3 .map-scroll { position: absolute; inset: 0; z-index: 0; margin: 0; padding: 0; overflow-x: hidden; overflow-y: auto; }
-.map-track.map3track { display: flex; flex-direction: column-reverse; width: 540px; height: auto; margin: 0 auto; }
-.wpanel3 { position: relative; flex: none; width: 540px; height: 810px; background: center / 100% 100% no-repeat; }
-.wpanel3.locked .stone3.locked { filter: saturate(.85); }
-.w3name { position: absolute; left: 12px; top: 74px; z-index: 5; padding: 2px 10px; border-radius: 10px; background: rgba(255,255,255,.55); color: #6A4A30; font-size: 13px; }
-.stone3 { position: absolute; width: 111px; height: 118px; margin: -118px 0 0 -55px; padding: 0; background: center bottom / 100% auto no-repeat; border: 0; }
+.map-track.map3track { display: flex; flex-direction: column-reverse; gap: 14px; width: 540px; height: auto; margin: 0 auto; padding: 70px 0 14px; }
+.wpanel3 { position: relative; flex: none; width: 540px; height: 900px; border-radius: 22px; overflow: hidden; background: #8FCFF5 center / cover no-repeat; box-shadow: 0 6px 16px rgba(24,59,91,.25); }
+.wpanel3.locked::after { content: ''; position: absolute; inset: 0; background: rgba(40,50,70,.18); pointer-events: none; z-index: 2500; }
+.w3name { position: absolute; left: 12px; bottom: 10px; z-index: 5; padding: 2px 10px; border-radius: 10px; background: rgba(255,255,255,.55); color: #6A4A30; font-size: 13px; }
+/* 코드로 그린 롤러코스터 레일 */
+.rail3 { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: visible; }
+.rail3 path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.rail3 .r-shadow { stroke: rgba(40,40,80,.18); stroke-width: 30; transform: translate(0, 6px); }
+.rail3 .r-out { stroke: #E2558F; stroke-width: 24; }
+.rail3 .r-in { stroke: #FFB3CF; stroke-width: 12; }
+.rail3 .r-tie { stroke: #fff; stroke-width: 12; stroke-dasharray: 3 14; opacity: .85; }
+/* 판 표시 (그림 300x320, 크림색 이름표 칸 = 가로 28~72%, 세로 70~82% — 번호는 칸 안 가운데, 별은 칸 바로 아래) */
+.stone3 { position: absolute; width: 168px; height: 179px; margin: -179px 0 0 -84px; z-index: 2; padding: 0; border: 0; border-radius: 0; box-shadow: none; background: center bottom / 100% 100% no-repeat; }
 .stone3:active { transform: scale(.96); }
-.stone3 .s3lbl { position: absolute; left: 18%; right: 18%; top: 66%; text-align: center; font-size: 15px; line-height: 1; color: #6A3A20; }
-.stone3 .s3star { position: absolute; left: 0; right: 0; top: 80%; display: flex; justify-content: center; gap: 1px; }
-.stone3 .s3star i { width: 12px; height: 12px; background: url(ui/map/star_off.webp?v=202611011554) center / contain no-repeat; }
-.stone3 .s3star i.on { background-image: url(ui/map/star.webp?v=202611011554); }
-.stone3.locked .s3star { opacity: .55; }
+.stone3 .s3box { position: absolute; left: 28%; right: 28%; top: 70.3%; height: 11.6%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.stone3 .s3box b { font-weight: normal; font-size: 17px; line-height: 1; color: #6A3A20; white-space: nowrap; }
+.stone3 .s3star { position: absolute; left: 0; right: 0; top: 83.5%; display: flex; justify-content: center; gap: 1px; }
+.stone3 .s3star i { width: 15px; height: 15px; filter: drop-shadow(0 1px 1px rgba(0,0,0,.3)); background: url(ui/map/star_off.webp?v=202611011610) center / contain no-repeat; }
+.stone3 .s3star i.on { background-image: url(ui/map/star.webp?v=202611011610); }
+.stone3.locked .s3box b { color: #8A7A6A; }
+.stone3.locked .s3star { opacity: .5; }
 .stone3.next { animation: s3bob 1.4s ease-in-out infinite; }
-@keyframes s3bob { 50% { transform: translateY(-4px); } }
-.coaster3 { position: absolute; z-index: 3000; width: 82px; height: auto; margin: -40px 0 0 -41px; pointer-events: none; filter: drop-shadow(0 4px 4px rgba(0,0,0,.25)); }
-.coaster3.flip { transform: scaleX(-1); }
-/* 예전 돌다리 모양(.stone.next 빛 테두리·흔들림·글자색)은 새 지도에서 끔 */
-.wpanel3 .stone3 { display: block; border-radius: 0; box-shadow: none; text-shadow: none; animation: none; filter: none; }
-.wpanel3 .stone3::after, .wpanel3 .stone3::before { content: none !important; }
-.wpanel3 .stone3.next { animation: s3bob 1.4s ease-in-out infinite; }
-.wpanel3 .stone3.locked .s3lbl { color: #8A7A6A; }
-/* 2월드부터: 아래 월드 위에 30px 겹쳐 놓고 아래 끝을 흐리게 → 월드 사이 하늘·레일이 자연스럽게 이어짐 */
-.wpanel3.joined { margin-bottom: -30px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 34px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 34px), transparent); }
+@keyframes s3bob { 50% { transform: translateY(-5px); } }
+.coaster3 { position: absolute; z-index: 1; width: 96px; height: auto; margin: -84px 0 0 -48px; transform-origin: 50% 88%; pointer-events: none; filter: drop-shadow(0 4px 4px rgba(0,0,0,.25)); } /* 바퀴가 레일 위에 (그림 아래 12% 쯤이 바퀴) */
