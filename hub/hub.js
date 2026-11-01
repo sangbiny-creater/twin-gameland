@@ -3,7 +3,7 @@
 const $ = (id) => document.getElementById(id);
 const root = $('root');
 // 얼굴: 옷을 입었으면 옷 그림(윗부분을 동그랗게 보여 줌)
-const face = (c) => Hub.costumeImg(c) || `common/faces/${c.look}_base.webp?v=202611010825`;
+const face = (c) => Hub.costumeImg(c) || `common/faces/${c.look}_base.webp?v=202611010908`;
 
 // 버튼 효과음·알림 (common/ui.js)
 const { blip, toast } = window.UI;
@@ -18,7 +18,7 @@ function go(name) {
   if (location.hash !== '#' + hash) history.replaceState(null, '', '#' + hash);
   for (const [k, id] of Object.entries(SCREENS)) $(id).classList.toggle('hidden', k !== name);
   document.body.classList.toggle('in-park', name === 'lobby'); // 놀이공원 바깥(화면 끝)도 풀색으로
-  if (!isTouch) resize(); // PC: 첫 화면만 세로 모양이라 화면이 바뀌면 배치를 다시
+  resize(); // 첫 화면만 세로 모양(PC 가로 창: 가운데에 / 폰 가로: 돌려서)이라 화면이 바뀌면 배치를 다시
   closeModals();
   ({ select: renderSelect, lobby: renderLobby, map: renderMap, records: renderRecords })[name]();
 }
@@ -58,14 +58,17 @@ function renderSelect() {
     const c = charOf(base);
     const b = document.createElement('button');
     b.className = `sel-char base-${base}` + (c ? '' : ' new');
-    b.innerHTML = `<span class="sel-stage"></span><img src="hub/select/${base}.webp?v=202611010825" alt=""><span class="sel-name"></span>
-      <span class="sel-stat">${c ? `<i class="coin"></i>${c.coins}<img src="hub/park/ui/star.webp?v=202611010825" alt="">${Hub.starsTotal(c)}<img src="hub/park/ui/gem.webp?v=202611010825" alt="">${Hub.gems(c)}` : '처음 시작하기'}</span>`;
-    b.querySelector('.sel-name').textContent = c ? c.name : name;
+    // 아직 안 만든 캐릭터는 이름 대신 성별 아이콘 (GPT H01·H02 오기 전 임시 기호)
+    b.innerHTML = `<span class="sel-stage"></span><img src="hub/select/${base}.webp?v=202611010908" alt=""><span class="sel-name${c ? '' : ' sex'}"></span>
+      <span class="sel-stat">${c ? `<i class="coin"></i>${c.coins}<img src="hub/park/ui/star.webp?v=202611010908" alt="">${Hub.starsTotal(c)}<img src="hub/park/ui/gem.webp?v=202611010908" alt="">${Hub.gems(c)}` : '처음 시작하기'}</span>`;
+    b.querySelector('.sel-name').textContent = c ? c.name : base === 'eunyu' ? '♀' : '♂';
+    if (!c) b.setAttribute('aria-label', name);
     b.addEventListener('click', () => { blip(880); if (c) { Hub.setActive(c.id); preload(c.look); go('lobby'); } else openCreate(base); });
     grid.appendChild(b);
   }
   document.body.classList.toggle('muted', !Hub.settings.sound);
-  layoutSelect();
+  $('btnLang').querySelector('span').textContent = LANGS[Hub.settings.lang || 'ko'];
+  layoutSelect(); fitAsk();
 }
 // 배경(GPT C01 세로·C02 가로) 속 무대 2개 위에 은유·은결을 세움. 배경은 화면 아래에 맞추고(위는 하늘색으로 이어짐), 폭은 조금만 넘치게
 //  STAGE: 무대 윗면 가운데 [x, y] · 무대 폭 (그림 크기에 대한 비율, 그림을 다시 받으면 다시 잼)
@@ -80,7 +83,7 @@ function layoutSelect() {
   // 세로: 배경 아래를 화면 아래에 / 가로: 무대(발)가 화면 높이 84% 에 오게 (위 로고·질문 아래로 캐릭터가 크게 보이게)
   const s = Math.max(W / B.w, (H * (portraitNow ? 0.8 : 1)) / B.h), bw = B.w * s, bh = B.h * s, bx = (W - bw) / 2;
   const by = portraitNow ? H - bh : Math.min(0, H * 0.84 - B.stages[0][1] * bh);
-  const bg = $('selBg'), src = `hub/select/${B.img}.webp?v=202611010825`;
+  const bg = $('selBg'), src = `hub/select/${B.img}.webp?v=202611010908`;
   if (bg.getAttribute('src') !== src) bg.src = src;
   Object.assign(bg.style, { left: bx + 'px', top: by + 'px', width: bw + 'px', height: bh + 'px' });
   const ask = document.querySelector('.sel-ask').getBoundingClientRect(), askB = (ask.bottom - root.getBoundingClientRect().top) / scaleNow;
@@ -91,13 +94,26 @@ function layoutSelect() {
     el.style.setProperty('--ch', ch + 'px');
   });
 }
+// 질문 리본: 글자가 리본 글자 칸보다 길면 글자를 줄임 (QA2 8)
+function fitAsk() {
+  const el = document.querySelector('.sel-ask b'); if (!el) return;
+  el.style.fontSize = ''; let fs = parseFloat(getComputedStyle(el).fontSize);
+  while (el.scrollWidth > el.clientWidth + 0.5 && fs > 12) { fs -= 0.5; el.style.fontSize = fs + 'px'; }
+}
+// 언어 고르기 (영어판 준비 중: 지금은 고른 것만 저장). GPT H03 버튼 그림 오기 전 임시 모양
+const LANGS = { ko: '한국어', en: 'English' };
+$('btnLang').addEventListener('click', () => { blip(); openModal('popLang'); });
+document.querySelectorAll('#popLang [data-lang]').forEach((b) => b.addEventListener('click', () => {
+  blip(880); Hub.setLang(b.dataset.lang); closeModals(); renderSelect();
+  if (b.dataset.lang !== 'ko') toast('영어판은 준비 중이에요!');
+}));
 $('btnSound').addEventListener('click', () => { Hub.setSound(!Hub.settings.sound); document.body.classList.toggle('muted', !Hub.settings.sound); blip(); });
 
 let createLook = 'eunyu3';
 function openCreate(base) {
   createLook = Hub.latestLook(base);
-  $('createTitle').textContent = `${BASES.find((x) => x.base === base).name}로 시작해요`;
-  $('createArt').src = `hub/select/${base}.webp?v=202611010825`;
+  $('createTitle').textContent = '캐릭터 만들기';
+  $('createArt').src = `common/faces/${createLook}_base.webp?v=202611010908`; // 프로필과 같은 얼굴 그림 (QA2 5)
   $('inName').value = ''; // 이름은 비워 두고 회색 안내 글자(이름을 입력하세요)만
   openModal('popCreate');
 }
@@ -158,7 +174,7 @@ const LV_STEP = 500;
 // 배경은 아래부터 입구(E) → 가운데 A → 가운데 B → A … → 맨 위(하늘). 게임이 늘면 가운데 구간이 위로 더 붙음
 // 자리 채우기: 아래 자리부터 게임 → 남는 자리는 장식(꽃 정원·간식 카트·포토존) → 맨 위 자리는 항상 Open soon
 // 자리 순서는 캐릭터마다 저장 (Hub.park: 자리마다 게임 id 또는 null=장식). 편집: '편집' 버튼 또는 놀이기구 길게 누르기
-const PARK_V = '?v=202611010825';
+const PARK_V = '?v=202611010908';
 const EN_NAME = { skyhook: 'Sky Hook Runner', helicopter: 'Sky Rider', stairs: 'Stair Climb', shisen: 'Tile Match', downhill: 'Downhill Runner',
   memory: 'Memory Game', mole: 'Whack-a-Mole', bakery: 'Sweet Bakery', dogsnack: 'Doggy Snack Time', darts: 'Dart Game' };
 // 배경 그림(1024 폭) 속 빈 받침 자리: [받침 가운데 x, 받침 아랫선 y] (그림 px, 아래 자리부터). 그림을 다시 받으면 여기를 다시 잼
@@ -330,7 +346,17 @@ function renderPark(keepScroll) {
   else {
     let y = null; try { y = sessionStorage.getItem('park_scroll'); } catch (e) { /* ignore */ }
     sc.scrollTop = y != null ? +y : sc.scrollHeight;
+    if (y == null) alignStart();
   }
+}
+// 처음 열 때 위치: 매표소(Guild) 이름표 아래 끝이 왼쪽 아래 프로필 칸 아래 끝과 같은 높이 (QA2 1)
+//  그 아래 바닥 그림은 남겨 둬서 위로 밀면 조금 더 내려갈 수 있음. 회전·크기와 상관없게 놀이공원 좌표로 계산
+function alignStart() {
+  const sc = $('pkScroll'), lab = document.querySelector('.pk-shop.ticket .name'), me = $('pkMe'); if (!lab || !me) return;
+  const shop = lab.parentElement;
+  const labBottom = shop.offsetTop + lab.offsetTop + lab.offsetHeight - 14; // 이름표는 위로 14px 당겨져 있음 (hub.css .pk-shop.ticket .name)
+  const meBottom = me.offsetTop + me.offsetHeight; // 화면(root) 위에서부터
+  sc.scrollTop = Math.max(0, labBottom - meBottom);
 }
 // 이름판 폭 = 글자 길이 + 양쪽 여백 + 그림 양 끝 테두리 (가장 넓어도 그림 그대로의 폭까지, 그래도 넘치면 글자를 줄임)
 //  그림은 세 조각: 왼쪽 끝(왼쪽 맞춤) · 가운데 장식(가운데 맞춤) · 오른쪽 끝(오른쪽 맞춤) — 좁아지면 그림 가운데가 잘려 나감
@@ -404,7 +430,8 @@ $('setOld').addEventListener('click', () => { blip(); try { sessionStorage.setIt
   let press = null, longT = 0, drag = null, auto = 0, skipClick = false;
   const rideAt = (e) => e.target.closest && e.target.closest('.pk-ride');
   // 화면 좌표 → 놀이공원 좌표 (x, 바닥에서 위로 b)
-  const toWorld = (cx, cy) => { const r = world.getBoundingClientRect(); return { x: (cx - r.left) / scaleNow, b: (r.bottom - cy) / scaleNow }; };
+  // 폰을 가로로 들어 화면을 돌려 보일 때(rotatedNow): 놀이공원 아래쪽이 화면 오른쪽, 왼쪽이 화면 아래쪽
+  const toWorld = (cx, cy) => { const r = world.getBoundingClientRect(); return rotatedNow ? { x: (r.bottom - cy) / scaleNow, b: (r.right - cx) / scaleNow } : { x: (cx - r.left) / scaleNow, b: (r.bottom - cy) / scaleNow }; };
   const nearest = (w) => {
     let best = -1, bd = 1e9;
     for (let i = 0; i < parkOrder.length; i++) { const p = slotPos(i), dd = Math.hypot(p.x - w.x, p.b + PK.RH * 0.35 - w.b); if (dd < bd) { bd = dd; best = i; } }
@@ -427,7 +454,8 @@ $('setOld').addEventListener('click', () => { blip(); try { sessionStorage.setIt
       drag = { el, i: press.i, w0: toWorld(press.x, press.y) }; el.classList.add('drag');
       auto = setInterval(() => { // 화면 위·아래 끝에 가까우면 저절로 스크롤
         const r = sc.getBoundingClientRect(), m = 70 * scaleNow;
-        if (drag.cy < r.top + m) sc.scrollTop -= 12; else if (drag.cy > r.bottom - m) sc.scrollTop += 12; else return;
+        const near0 = rotatedNow ? drag.cx < r.left + m : drag.cy < r.top + m, near1 = rotatedNow ? drag.cx > r.right - m : drag.cy > r.bottom - m;
+        if (near0) sc.scrollTop -= 12; else if (near1) sc.scrollTop += 12; else return;
         follow();
       }, 16);
     }
@@ -467,7 +495,7 @@ $('setOld').addEventListener('click', () => { blip(); try { sessionStorage.setIt
 let titleGame = null;
 // 인트로 그림: 화면이 가로면 가로 그림(<id>_land.webp), 세로면 세로 그림 — 폰·태블릿을 돌리면 바로 바뀜
 const landMQ = window.matchMedia('(orientation: landscape)');
-const introSrc = (g) => `${landMQ.matches ? g.key.replace('.webp', '_land.webp') : g.key}?v=202611010825`;
+const introSrc = (g) => `${landMQ.matches ? g.key.replace('.webp', '_land.webp') : g.key}?v=202611010908`;
 function setTitleArt(g) {
   const src = introSrc(g);
   $('tsArt').src = src; $('tsArt').alt = g.name;
@@ -520,7 +548,7 @@ $('setRename').addEventListener('click', () => { closeModals(); renameMe(); });
 // 월드마다 배경 그림 카드 1장, 그 안에서 돌다리 5개(사천성은 10개)가 아래 → 위로 올라감
 // 가로 화면: 카드가 옆으로 나란히 (좌우로 밀기) / 폰 세로 화면: 카드가 위아래로 (위아래로 밀기)
 let portraitNow = false, mapPortrait = null; // mapPortrait: 지도를 그릴 때의 화면 방향
-const WORLD_BG = (w) => `common/worlds/w${w + 1}.webp?v=202611010825`;
+const WORLD_BG = (w) => `common/worlds/w${w + 1}.webp?v=202611010908`;
 // 판 위치 (카드 안에서 %): 아래(1판) → 위(마지막 판) 지그재그, 월드마다 조금씩 다르게
 //  · 월드당 5판(스카이훅) / 10판(사천성: 두 줄로 번갈아 올라감)
 function stoneSpot(w, k, K = 5) {
@@ -642,7 +670,7 @@ function renderMap() {
         currentPanel = panel;
       }
     }
-    if (w === GM.worlds.length - 1) { const g = document.createElement('img'); g.className = 'goal-flag'; g.src = 'hub/ui/map/trophy.webp?v=202611010825'; g.alt = '마지막 트로피'; panel.appendChild(g); }
+    if (w === GM.worlds.length - 1) { const g = document.createElement('img'); g.className = 'goal-flag'; g.src = 'hub/ui/map/trophy.webp?v=202611010908'; g.alt = '마지막 트로피'; panel.appendChild(g); }
     track.appendChild(panel);
   });
   requestAnimationFrame(() => {
@@ -658,7 +686,7 @@ function openStage(i) {
   stageSel = i;
   const st = Hub.stage(mapGame, i);
   $('stTitle').textContent = `${Hub.stageLabel(i, mapGame)} ${Hub.stageName(i, mapGame)}`;
-  $('stStars').innerHTML = [0, 1, 2].map((k) => `<img src="hub/ui/map/${k < st.stars ? 'star' : 'star_off'}.webp?v=202611010825" alt="${k < st.stars ? '별' : '빈 별'}">`).join('');
+  $('stStars').innerHTML = [0, 1, 2].map((k) => `<img src="hub/ui/map/${k < st.stars ? 'star' : 'star_off'}.webp?v=202611010908" alt="${k < st.stars ? '별' : '빈 별'}">`).join('');
   const shisen = mapGame === 'shisen' || mapGame === 'memory'; // 시간 안에 깨는 게임: 빨리 깬 기록·남은 시간으로 별
   const mole = mapGame === 'mole'; // 점수 게임: 최고 점수·점수로 별
   const bestTxt = mole ? `최고 점수 <b>${st.best.toLocaleString()}점</b>` : shisen ? (st.bestTime ? `가장 빨리 깬 기록 <b>${mmss(st.bestTime)}</b>` : '') : `최고 기록 <b>${st.best}m</b>`;
@@ -677,7 +705,7 @@ function renderRecords() {
   const c = Hub.active();
   $('recTitle').textContent = `${c.name}의 기록`;
   $('recSummary').innerHTML = `<div class="rec-card total"><div class="v">지금 코인 <b>${c.coins}</b> · 지금까지 모은 코인 <b>${c.earned}</b> · 별 <b>${Hub.starsTotal(c)}</b></div></div>`
-    + GAME_CARDS.map((g) => `<div class="rec-card"><div class="thumb" style="background-image:url(${g.thumb}?v=202611010825)"></div>
+    + GAME_CARDS.map((g) => `<div class="rec-card"><div class="thumb" style="background-image:url(${g.thumb}?v=202611010908)"></div>
       <div><div class="t">${g.name}${Hub.isFav(g.id, c) ? ' <span class="star-on">★</span>' : ''}</div><div class="v">${g.rec(c, Hub.rec(g.id, c))}</div></div></div>`).join('');
   const list = $('recList'); list.innerHTML = '';
   if (!c.history.length) list.innerHTML = '<li><span>아직 기록이 없어요. 게임을 해봐요!</span></li>';
@@ -766,22 +794,31 @@ function resize() {
   if (kb) { fitModals(); return; }
   // 아이폰 홈 화면 앱: visualViewport 높이가 실제 화면보다 작게 나올 때가 있어서(아래 흰 띠) 더 큰 쪽을 씀
   // 아이폰 홈 화면 앱은 innerHeight 도 작게 나올 때가 있어서(QA01 아래 초록 띠) 문서 높이·화면 높이까지 봄
-  const { vw } = viewSize(), scrH = isIOS && isStandalone ? (vw < Math.min(screen.width, screen.height) + 2 ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height)) : 0;
-  const vh = Math.max(viewSize().vh, window.innerHeight, document.documentElement.clientHeight, scrH, window.fullViewH ? fullViewH() : 0);
+  const { vw } = viewSize();
+  const vh = Math.max(viewSize().vh, window.innerHeight, window.fullViewH ? fullViewH() : 0);
   const s = $('safe').getBoundingClientRect();
   const inset = { t: s.top, l: s.left, r: vw - s.right, b: vh - s.bottom };
   // 첫 화면(놀이공원)은 세로 전용: PC 가로 창에서도 세로 모양으로 가운데에. 폰·태블릿을 가로로 들면 '세로로 돌려 주세요' 안내
-  portraitNow = (isTouch && vh > vw) || (!isTouch && !$('scrLobby').classList.contains('hidden'));
+  // 폰·태블릿을 가로로 들어도 첫 화면은 세로 모양 그대로 돌려서 보여 줌 (안내 문구 없이, QA2 4)
+  const lobby = !$('scrLobby').classList.contains('hidden'), rot = isTouch && lobby && vw > vh;
+  portraitNow = (isTouch && vh > vw) || (!isTouch && lobby) || rot;
+  const sw = rot ? vh : vw, sh = rot ? vw : vh; // 돌렸을 때는 화면 폭·높이를 바꿔서 계산
   let W, H;
-  if (portraitNow) { W = 540; H = Math.round(Math.max(W * vh / vw, 860)); }
+  if (portraitNow) { W = 540; H = Math.round(Math.max(W * sh / sw, 860)); }
   else { H = 540; W = Math.round(H * Math.max(vw / vh, 16 / 9)); }
-  const scale = Math.min(vw / W, vh / H);
-  rotatedNow = false; scaleNow = scale; full = { w: vw, h: vh };
+  const scale = Math.min(sw / W, sh / H);
+  rotatedNow = rot; scaleNow = scale; full = { w: vw, h: vh };
   root.style.width = W + 'px'; root.style.height = H + 'px';
   root.classList.toggle('portrait', portraitNow);
-  const ox = (vw - W * scale) / 2, oy = (vh - H * scale) / 2; oyNow = oy;
-  root.style.transform = `translate(${ox}px, ${oy}px) scale(${scale})`;
-  for (const k of ['l', 'r', 't', 'b']) root.style.setProperty('--safe-' + k, Math.max(0, inset[k] / scale - (k === 'l' || k === 'r' ? ox : oy) / scale) + 'px');
+  if (rot) {
+    const ox = (vw - H * scale) / 2, oy = (vh - W * scale) / 2; oyNow = 0;
+    root.style.transform = `translate(${ox}px, ${oy + W * scale}px) rotate(-90deg) scale(${scale})`;
+    for (const k of ['l', 'r', 't', 'b']) root.style.setProperty('--safe-' + k, '0px');
+  } else {
+    const ox = (vw - W * scale) / 2, oy = (vh - H * scale) / 2; oyNow = oy;
+    root.style.transform = `translate(${ox}px, ${oy}px) scale(${scale})`;
+    for (const k of ['l', 'r', 't', 'b']) root.style.setProperty('--safe-' + k, Math.max(0, inset[k] / scale - (k === 'l' || k === 'r' ? ox : oy) / scale) + 'px');
+  }
   fitModals(); layoutSelect();
   // 지도는 화면 방향이 바뀔 때만 다시 그림. 안드로이드는 손가락을 대면 주소창이 숨으며 크기가 바뀌는데,
   // 그때마다 다시 그리면 누르던 돌다리가 사라져서 눌리지 않음

@@ -119,6 +119,19 @@ for (const vp of ['pp', 'tb']) {
 }
 
 for (const g of ['shisen', 'memory', 'mole', 'bakery', 'dogsnack', 'darts']) add(`pop-ready-${g}-pp`, `${g}/index.html${['shisen', 'memory', 'mole'].includes(g) ? '?stage=0' : ''}`, { vp: 'pp', wait: 2800 });
+// 첫 화면 놀이기구 4개 좌우 끝 (놀이공원 좌표 0~540, 그림의 보이는 부분 + 이름표)
+add('ride-edges-pp', 'index.html#lobby', { vp: 'pp', js: `(() => { const w = document.getElementById('pkWorld').getBoundingClientRect(), k = w.width / 540, B = { helicopter: [22, 439], bakery: [30, 430], stairs: [29, 430], mole: [30, 431] }, o = {};
+  for (const id of Object.keys(B)) { const r = document.querySelector('.pk-ride[data-id=' + id + ']'), a = r.getBoundingClientRect(), n = r.querySelector('.name').getBoundingClientRect();
+    o[id] = { artL: ((a.left - w.left) + a.width * B[id][0] / 460) / k, artR: ((a.left - w.left) + a.width * B[id][1] / 460) / k, nameL: (n.left - w.left) / k, nameR: (n.right - w.left) / k }; }
+  return o; })()` });
+// QA2 1: 처음 위치 — Guild 이름표 아래 끝 = 프로필 칸 아래 끝
+for (const vp of ['pp', 'tb', 'pl']) add(`align-start-${vp}`, 'index.html#lobby', { vp, js: `(() => { const a = document.querySelector('.pk-shop.ticket .name').getBoundingClientRect(), b = document.getElementById('pkMe').getBoundingClientRect();
+  return { guildBottom: Math.round(a.bottom), guildRight: Math.round(a.right), meBottom: Math.round(b.bottom), meRight: Math.round(b.right) }; })()` });
+// QA2 10·11: 스테이지 시작 팝업 아이템 — 다음 스테이지로 가도 개수·체크가 맞는지, 체크 풀면 게임 화면 버튼이 숨는지
+for (const g of ['shisen', 'memory']) add(`stage-items-${g}-pp`, `${g}/index.html?stage=0`, { vp: 'pp', wait: 3000, js: `(async () => { const sl = (t) => new Promise((r) => setTimeout(r, t)), slots = () => [...document.querySelectorAll('#gpStageItems .gp-slot')].map((b) => b.querySelector('.nm').textContent + (b.classList.contains('on') ? ':on' : ':off') + ':' + b.querySelector('.n').textContent);
+  const a = slots(); document.querySelector('#gpStageItems .gp-slot').click(); await sl(100); const b = slots(), hidden = document.getElementById('btnHint').classList.contains('gp-off');
+  Hub.mutate((c) => { c.shop.boosts['${g}'].hint = 9; }); startStage(0); G.state = 'play'; clearStage(); await sl(2600); document.getElementById('btnNext').click(); await sl(500);
+  return { first: a, afterTap: b, hintHidden: hidden, nextStage: slots() }; })()` });
 // 지도 돌다리 → 바로 게임의 출발 준비 창 하나만 (QA: 출발 창 두 번)
 for (const g of ['shisen', 'memory', 'mole']) add(`flow-stone-${g}-pp`, `index.html#map-${g}`, { vp: 'pp', js: `(() => { sessionStorage.setItem('__seeded', '1'); document.querySelector('#mapTrack .stone').click(); return !document.querySelector('.modal:not(.hidden)'); })()`, wait2: 3500,
   after: `({ url: location.pathname + location.search, ready: !document.getElementById('ready').classList.contains('hidden'), buttons: [...document.querySelectorAll('#ready .pp-b')].map((b) => b.textContent.trim()).join(' | ') })` });

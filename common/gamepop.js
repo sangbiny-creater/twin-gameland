@@ -52,6 +52,7 @@
 .gp-slot.none{filter:saturate(.35)}.gp-slot.none .n{display:none}
 .gp-slot .buy{position:absolute;left:50%;bottom:-11px;transform:translateX(-50%);display:flex;align-items:center;gap:2px;background:#FFF4D2;border:2px solid #F5C860;border-radius:12px;padding:0 6px;font-size:13px;color:#6A3A00;white-space:nowrap;filter:none}
 .gp-slot .buy img{width:14px;height:14px}
+.gp-off{display:none!important}
 .gp-slot.off{opacity:.45;pointer-events:none}.gp-slot.off .buy{display:none}
 .gp-tip{font-size:14px;color:#8A6E58;text-align:center;flex:none}
 .gp-ask{z-index:60}.gp-ask > .panel{min-height:0!important}
@@ -133,7 +134,11 @@
   function buy(g, id, def, done) {
     if (!HUB || !def) return;
     const c = HUB.active(), name = ITEMS[id][0];
-    if (!c || c.coins < def.price) { blip(300); toast(`코인이 ${def.price - ((c && c.coins) || 0)}개 모자라요`); return; }
+    if (!c || c.coins < def.price) {
+      blip(300);
+      ask('아이템 구매', `<img class="gp-buy-ic" src="${itemSrc(id)}" alt=""><div class="gp-buy-t"><b>${name}</b> ${def.price} 코인<br>코인이 <b>${def.price - ((c && c.coins) || 0)}개</b> 모자라요.<br>게임을 해서 코인을 모아요!</div>`, '확인', () => {});
+      return;
+    }
     ask('아이템 구매', `<img class="gp-buy-ic" src="${itemSrc(id)}" alt=""><div class="gp-buy-t"><b>${name}</b> 1개를 살까요?<br><img src="${BASE}common/ui/coin.webp" alt="" class="gp-coin">${def.price} 코인 (지금 ${c.coins})</div>`, '사기', () => {
       const r = HUB.buyBoost(g, id);
       if (r.ok) { blip(1046); HUB.setUsing(g, id, false); toast(`${name}을(를) 샀어요!`); done(); }
@@ -199,12 +204,19 @@
     // 시작할 때 체크한 하트는 이번 판에만 (게임이 Hub.takeBoosts 로 꺼낸 뒤 체크를 풀어 둠)
     const go = $('btnGo'); if (go) go.addEventListener('click', () => setTimeout(() => { if (HUB) for (const id of STAGE[game]) if (id === 'life' && HUB.isUsing(game, id)) HUB.setUsing(game, id, false); }, 0));
   }
+  // 스테이지형 게임 안 아이템 버튼 (시작 팝업에서 체크를 푼 아이템은 이번 판 게임 화면에서 숨김)
+  const IN_GAME = { shisen: { hint: 'btnHint', time: 'btnTime', bomb: 'btnBomb' }, memory: { hint: 'btnHint', find: 'btnPeek', time: 'btnTime', bomb: 'btnBomb' } };
+  const stageOff = new Set(); // 이번 판에 안 가져갈 아이템 (기본: 가진 것은 모두 가져감)
+  function applyStageOff() {
+    const M = IN_GAME[game] || {};
+    for (const [id, bid] of Object.entries(M)) { const b = $(bid); if (b) b.classList.toggle('gp-off', stageOff.has(id)); }
+  }
   function drawStageItems() {
     const box = $('gpStageItems'); if (!box) return;
     const K = (HUB && HUB.BOOSTS[game]) || [];
     box.innerHTML = '';
     for (const id of STAGE[game]) {
-      const def = K.find((x) => x.id === id), n = HUB ? HUB.boostCount(game, id) : 0, start = id === 'life', on = start && HUB && HUB.isUsing(game, id);
+      const def = K.find((x) => x.id === id), n = HUB ? HUB.boostCount(game, id) : 0, start = id === 'life', on = start ? !!(HUB && HUB.isUsing(game, id)) : n > 0 && !stageOff.has(id);
       const b = document.createElement('button');
       b.className = 'gp-slot' + (on ? ' on' : '') + (n > 0 ? '' : ' none') + (def ? '' : ' off');
       b.innerHTML = `<img class="ic" src="${itemSrc(id)}" alt=""><span class="nm">${def ? ITEM_NAME[id] : '준비 중'}</span><span class="n">${n}</span>`
@@ -212,8 +224,9 @@
       b.addEventListener('click', (e) => {
         e.stopPropagation();
         if (start && n > 0) { blip(on ? 500 : 900); HUB.setUsing(game, id, !on); drawStageItems(); return; }
-        if (n > 0) { toast(`${ITEM_NAME[id]}: 게임 화면의 버튼으로 써요`); return; }
-        buy(game, id, def, () => { if (start) HUB.setUsing(game, id, true); drawStageItems(); });
+        // 게임 중에 버튼으로 쓰는 아이템(힌트·시간 추가·폭탄·모두 보기): 눌러서 이번 판에 가져갈지 체크 / 체크 풀기
+        if (n > 0) { blip(on ? 500 : 900); on ? stageOff.add(id) : stageOff.delete(id); drawStageItems(); applyStageOff(); return; }
+        buy(game, id, def, () => { if (start) HUB.setUsing(game, id, true); else stageOff.delete(id); drawStageItems(); applyStageOff(); });
       });
       box.appendChild(b);
     }
@@ -248,6 +261,7 @@
   function decoratePause() {
     const panel = document.querySelector('#pause:not(.hidden) .panel');
     if (!panel || panel.querySelector(':scope > .gp-scene')) return;
+    const r = $('root'); if (r && r.offsetWidth > r.offsetHeight) return; // 가로 화면은 높이가 모자라서 그림 없이 (QA2 9)
     const t = panel.querySelector(':scope > .p-title'); if (t) t.textContent = '일시정지';
     const d = document.createElement('div'); d.innerHTML = scene('start');
     if (t) t.after(d.firstChild); else panel.prepend(d.firstChild);
@@ -256,6 +270,8 @@
   function boot() {
     dressAll();
     if (STAGE[game]) stageReady();
+    const rd = $('ready');
+    if (rd && STAGE[game]) new MutationObserver(() => { if (!rd.classList.contains('hidden')) { drawStageItems(); applyStageOff(); } }).observe(rd, { attributes: true, attributeFilter: ['class'] });
     const obs = new MutationObserver(() => { decorateResult(); decoratePause(); dressAll(); });
     for (const id of ['result', 'pause']) if ($(id)) obs.observe($(id), { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
     if (STAGE[game] && $('ready')) new MutationObserver(() => { if (!$('ready').classList.contains('hidden')) drawStageItems(); }).observe($('ready'), { attributes: true, attributeFilter: ['class'] });

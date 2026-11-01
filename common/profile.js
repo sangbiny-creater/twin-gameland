@@ -297,7 +297,7 @@
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611010825` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611010908` : null; },
     buyCostume(id, c = this.active()) {
       const it = COSTUMES.find((x) => x.id === id);
       if (!c || !it || this.ownsCostume(id, c)) return { ok: false };
@@ -397,6 +397,7 @@
     // 무적 모드 (쿠폰 supermanon / supermanoff)
     get god() { return !!data.settings.god; },
     setSound(on) { data.settings.sound = !!on; save(); },
+    setLang(l) { data.settings.lang = l; save(); }, // 'ko' | 'en' (영어판 준비 중)
     reload,
 
     chars() { return data.chars; },
