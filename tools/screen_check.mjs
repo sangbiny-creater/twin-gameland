@@ -145,6 +145,8 @@ for (const k of [1, 2, 3]) add(`park-scroll-${k}-pp`, 'index.html#lobby', { vp: 
 for (const g of ['shisen', 'memory', 'mole']) for (const vp of ['pp', 'pl', 'tb']) add(`map3-${g}-${vp}`, `index.html#map-${g}`, { vp, wait2: 600 });
 for (const g of ['memory', 'shisen']) add(`map3dbg-${g}`, `index.html#map-${g}`, { vp: 'pp', wait2: 300, js: `(() => { const sc = document.getElementById('mapScroll'), tr = document.getElementById('mapTrack'), me = tr.querySelector('.coaster3');
   return { sh: sc.scrollHeight, ch: sc.clientHeight, st: sc.scrollTop, panels: tr.children.length, trH: tr.offsetHeight, me: me && [me.parentElement.offsetTop, me.offsetTop], scrMap: document.getElementById('scrMap').className, hash: location.hash }; })()` });
+// 지금 판이 10판일 때 (빈 섬 110% + 캐릭터 그대로), 은결로
+add('map3-last-pp', 'index.html#map-mole', { vp: 'pp', ch: 'c2', js: `(() => { Hub.mutate((c) => { for (let i = 0; i < 9; i++) c.games.mole.stages[i] = { cleared: true, stars: 3, best: 1, plays: 1 }; for (let i = 9; i < 100; i++) delete c.games.mole.stages[i]; }); renderMap(); })()`, wait2: 700 });
 // 지도 돌다리 → 바로 게임의 출발 준비 창 하나만 (QA: 출발 창 두 번)
 for (const g of ['shisen', 'memory', 'mole']) add(`flow-stone-${g}-pp`, `index.html#map-${g}`, { vp: 'pp', js: `(() => { sessionStorage.setItem('__seeded', '1'); document.querySelector('#mapTrack .stone, #mapTrack .stone3').click(); return !document.querySelector('.modal:not(.hidden)'); })()`, wait2: 3500,
   after: `({ url: location.pathname + location.search, ready: !document.getElementById('ready').classList.contains('hidden'), buttons: [...document.querySelectorAll('#ready .pp-b')].map((b) => b.textContent.trim()).join(' | ') })` });
