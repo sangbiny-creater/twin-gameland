@@ -132,6 +132,11 @@ for (const g of ['shisen', 'memory']) add(`stage-items-${g}-pp`, `${g}/index.htm
   const a = slots(); document.querySelector('#gpStageItems .gp-slot').click(); await sl(100); const b = slots(), hidden = document.getElementById('btnHint').classList.contains('gp-off');
   Hub.mutate((c) => { c.shop.boosts['${g}'].hint = 9; }); startStage(0); G.state = 'play'; clearStage(); await sl(2600); document.getElementById('btnNext').click(); await sl(500);
   return { first: a, afterTap: b, hintHidden: hidden, nextStage: slots() }; })()` });
+// QA2 12: 게임 중 위쪽 표시 (시작 팝업 닫고 게임 화면 그대로)
+for (const g of ['helicopter', 'stairs', 'downhill', 'shisen', 'memory', 'mole', 'bakery', 'dogsnack', 'darts']) for (const vp of ['pp', 'pl']) add(`hudplay-${g}-${vp}`, `${g}/index.html${['shisen', 'memory', 'mole'].includes(g) ? '?stage=12' : ''}`, { vp, wait: 2800,
+  js: `(() => { document.querySelectorAll('#gpStart,.mn-modal').forEach((e) => e.remove()); document.querySelectorAll('.screen.dim,#ready,#home').forEach((e) => e.classList.add('hidden')); document.getElementById('hud').classList.remove('hidden');
+    const r = document.getElementById('root').getBoundingClientRect(); return [...document.querySelectorAll('#hud .hp')].filter((e) => e.offsetParent).map((e) => { const b = e.getBoundingClientRect(); return [e.textContent.trim(), Math.round(b.height / r.height * (r.height > r.width ? 960 : 540))]; }); })()`, wait2: 300 });
+add('hub-map-hard-pp', 'index.html#map-shisen', { vp: 'pp', js: `document.querySelector('#mapMode [data-mode=hard]').click()`, wait2: 500 });
 // 지도 돌다리 → 바로 게임의 출발 준비 창 하나만 (QA: 출발 창 두 번)
 for (const g of ['shisen', 'memory', 'mole']) add(`flow-stone-${g}-pp`, `index.html#map-${g}`, { vp: 'pp', js: `(() => { sessionStorage.setItem('__seeded', '1'); document.querySelector('#mapTrack .stone').click(); return !document.querySelector('.modal:not(.hidden)'); })()`, wait2: 3500,
   after: `({ url: location.pathname + location.search, ready: !document.getElementById('ready').classList.contains('hidden'), buttons: [...document.querySelectorAll('#ready .pp-b')].map((b) => b.textContent.trim()).join(' | ') })` });

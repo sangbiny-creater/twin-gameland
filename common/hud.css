@@ -1,0 +1,25 @@
+/* 게임 화면 위쪽 표시 공통 모양 (QA2 12): 숫자 칸 하나 = 파란 젤리 알약(왼쪽 흰 동그라미에 아이콘) — GPT J01·J02·J03
+   common/hud.js 가 9개 게임의 표시(코인·거리·BEST·시간·스테이지·남은 짝·점수·콤보·레벨·다트 라운드)에 .hp 와 아이콘을 붙임
+   크기 규칙: 높이 40 · 글자 20 · 아이콘 32 (게임 화면 540 기준, 가로 게임 960x540 도 같은 크기). 하트는 칸 없이 하트 그림만 */
+#hud .hp {
+  position: relative; box-sizing: border-box; height: 40px !important; min-width: 92px; margin: 0; padding: 0 16px 3px 45px !important;
+  display: inline-flex !important; align-items: center; justify-content: center; gap: 2px; flex: none;
+  background: none !important; border: 0 solid transparent !important; border-radius: 0 !important; box-shadow: none !important; backdrop-filter: none !important;
+  border-image: url(ui/hud/pill.webp) 0 64 0 120 fill / 0 20px 0 39px stretch !important;
+  font-family: Jua, 'Apple SD Gothic Neo', system-ui, sans-serif !important; font-size: 20px !important; line-height: 1 !important; letter-spacing: 0 !important;
+  color: #fff !important; text-shadow: 0 2px 0 rgba(10, 40, 100, .55) !important; white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+#hud .hp::before { content: ''; position: absolute; left: 4px; top: 50%; width: 31px; height: 31px; transform: translateY(-53%); background: var(--hud-ico) center / contain no-repeat; }
+#hud .hp > img, #hud .hp > .ico { display: none !important; }
+#hud .hp b, #hud .hp small, #hud .hp span:not(.ico) { font-weight: normal !important; font-size: inherit !important; color: inherit !important; -webkit-text-stroke: 0 !important; text-shadow: inherit !important; }
+#hud .hp small { font-size: 15px !important; opacity: .9; margin-left: 2px; }
+#hud .hp.warn { color: #FFD1D1 !important; animation: hudWarn .6s ease-in-out infinite alternate; }
+#hud .hp.hot { color: #FFE07A !important; }
+@keyframes hudWarn { to { transform: scale(1.06); } }
+/* 하트: 칸 없이 하트 그림만 (하트 통일 규칙: common/ui/heart.webp) */
+#hud .pill.hearts { background: none !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; }
+/* 다트: 큰 총점판(J03) + 라운드 칸 */
+#hud .total.hp-board { padding: 6px 34px 10px !important; border: 0 solid transparent; border-image: url(ui/hud/board.webp) 0 70 fill / 0 44px stretch; align-items: center; }
+#hud .total.hp-board > b { color: #fff !important; -webkit-text-stroke: 0 !important; text-shadow: 0 3px 0 rgba(10, 40, 100, .6) !important; }
+#hud .total.hp-board > small { color: #fff !important; text-shadow: 0 2px 0 rgba(10, 40, 100, .6) !important; }
+#hud .total .rnd.hp { margin-left: 8px; }
