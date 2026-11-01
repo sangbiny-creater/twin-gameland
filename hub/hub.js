@@ -3,7 +3,7 @@
 const $ = (id) => document.getElementById(id);
 const root = $('root');
 // 얼굴: 옷을 입었으면 옷 그림(윗부분을 동그랗게 보여 줌)
-const face = (c) => Hub.costumeImg(c) || `common/faces/${c.look}_base.webp?v=202611011624`;
+const face = (c) => Hub.costumeImg(c) || `common/faces/${c.look}_base.webp?v=202611011828`;
 
 // 버튼 효과음·알림 (common/ui.js)
 const { blip, toast } = window.UI;
@@ -59,10 +59,10 @@ function renderSelect() {
     const b = document.createElement('button');
     b.className = `sel-char base-${base}` + (c ? '' : ' new');
     // 아직 안 만든 캐릭터는 이름 대신 성별 아이콘
-    b.innerHTML = `<span class="sel-stage"></span><img src="hub/select/${base}.webp?v=202611011624" alt=""><span class="sel-name${c ? '' : ' sex'}"></span>
-      <span class="sel-stat">${c ? `<i class="coin"></i>${c.coins}<img src="hub/park/ui/star.webp?v=202611011624" alt="">${Hub.starsTotal(c)}<img src="hub/park/ui/gem.webp?v=202611011624" alt="">${Hub.gems(c)}` : '처음 시작하기'}</span>`;
+    b.innerHTML = `<span class="sel-stage"></span><img src="hub/select/${base}.webp?v=202611011828" alt=""><span class="sel-name${c ? '' : ' sex'}"></span>
+      <span class="sel-stat">${c ? `<i class="coin"></i>${c.coins}<img src="hub/park/ui/star.webp?v=202611011828" alt="">${Hub.starsTotal(c)}<img src="hub/park/ui/gem.webp?v=202611011828" alt="">${Hub.gems(c)}` : '처음 시작하기'}</span>`;
     if (c) b.querySelector('.sel-name').textContent = c.name;
-    else b.querySelector('.sel-name').innerHTML = `<img src="hub/select/sex_${base === 'eunyu' ? 'girl' : 'boy'}.webp?v=202611011624" alt="">`; // 성별 아이콘 (GPT H01·H02)
+    else b.querySelector('.sel-name').innerHTML = `<img src="hub/select/sex_${base === 'eunyu' ? 'girl' : 'boy'}.webp?v=202611011828" alt="">`; // 성별 아이콘 (GPT H01·H02)
     if (!c) b.setAttribute('aria-label', name);
     b.addEventListener('click', () => { blip(880); if (c) { Hub.setActive(c.id); preload(c.look); go('lobby'); } else openCreate(base); });
     grid.appendChild(b);
@@ -84,7 +84,7 @@ function layoutSelect() {
   // 세로: 배경 아래를 화면 아래에 / 가로: 무대(발)가 화면 높이 84% 에 오게 (위 로고·질문 아래로 캐릭터가 크게 보이게)
   const s = Math.max(W / B.w, (H * (portraitNow ? 0.8 : 1)) / B.h), bw = B.w * s, bh = B.h * s, bx = (W - bw) / 2;
   const by = portraitNow ? H - bh : Math.min(0, H * 0.84 - B.stages[0][1] * bh);
-  const bg = $('selBg'), src = `hub/select/${B.img}.webp?v=202611011624`;
+  const bg = $('selBg'), src = `hub/select/${B.img}.webp?v=202611011828`;
   if (bg.getAttribute('src') !== src) bg.src = src;
   Object.assign(bg.style, { left: bx + 'px', top: by + 'px', width: bw + 'px', height: bh + 'px' });
   const ask = document.querySelector('.sel-ask').getBoundingClientRect(), askB = (ask.bottom - root.getBoundingClientRect().top) / scaleNow;
@@ -114,7 +114,7 @@ let createLook = 'eunyu3';
 function openCreate(base) {
   createLook = Hub.latestLook(base);
   $('createTitle').textContent = '캐릭터 만들기';
-  $('createArt').src = `common/faces/${createLook}_base.webp?v=202611011624`; // 프로필과 같은 얼굴 그림 (QA2 5)
+  $('createArt').src = `common/faces/${createLook}_base.webp?v=202611011828`; // 프로필과 같은 얼굴 그림 (QA2 5)
   $('inName').value = ''; // 이름은 비워 두고 회색 안내 글자(이름을 입력하세요)만
   openModal('popCreate');
 }
@@ -175,7 +175,7 @@ const LV_STEP = 500;
 // 배경은 아래부터 입구(E) → 가운데 A → 가운데 B → A … → 맨 위(하늘). 게임이 늘면 가운데 구간이 위로 더 붙음
 // 자리 채우기: 아래 자리부터 게임 → 남는 자리는 장식(꽃 정원·간식 카트·포토존) → 맨 위 자리는 항상 Open soon
 // 자리 순서는 캐릭터마다 저장 (Hub.park: 자리마다 게임 id 또는 null=장식). 편집: '편집' 버튼 또는 놀이기구 길게 누르기
-const PARK_V = '?v=202611011624';
+const PARK_V = '?v=202611011828';
 const EN_NAME = { skyhook: 'Sky Hook Runner', helicopter: 'Sky Rider', stairs: 'Stair Climb', shisen: 'Tile Match', downhill: 'Downhill Runner',
   memory: 'Memory Game', mole: 'Whack-a-Mole', bakery: 'Sweet Bakery', dogsnack: 'Doggy Snack Time', darts: 'Dart Game' };
 // 배경 그림(1024 폭) 속 빈 받침 자리: [받침 가운데 x, 받침 아랫선 y] (그림 px, 아래 자리부터). 그림을 다시 받으면 여기를 다시 잼
@@ -496,7 +496,7 @@ $('setOld').addEventListener('click', () => { blip(); try { sessionStorage.setIt
 let titleGame = null;
 // 인트로 그림: 화면이 가로면 가로 그림(<id>_land.webp), 세로면 세로 그림 — 폰·태블릿을 돌리면 바로 바뀜
 const landMQ = window.matchMedia('(orientation: landscape)');
-const introSrc = (g) => `${landMQ.matches ? g.key.replace('.webp', '_land.webp') : g.key}?v=202611011624`;
+const introSrc = (g) => `${landMQ.matches ? g.key.replace('.webp', '_land.webp') : g.key}?v=202611011828`;
 function setTitleArt(g) {
   const src = introSrc(g);
   $('tsArt').src = src; $('tsArt').alt = g.name;
@@ -549,7 +549,7 @@ $('setRename').addEventListener('click', () => { closeModals(); renameMe(); });
 // 월드마다 배경 그림 카드 1장, 그 안에서 돌다리 5개(사천성은 10개)가 아래 → 위로 올라감
 // 가로 화면: 카드가 옆으로 나란히 (좌우로 밀기) / 폰 세로 화면: 카드가 위아래로 (위아래로 밀기)
 let portraitNow = false, mapPortrait = null; // mapPortrait: 지도를 그릴 때의 화면 방향
-const WORLD_BG = (w) => `common/worlds/w${w + 1}.webp?v=202611011624`;
+const WORLD_BG = (w) => `common/worlds/w${w + 1}.webp?v=202611011828`;
 // 판 위치 (카드 안에서 %): 아래(1판) → 위(마지막 판) 지그재그, 월드마다 조금씩 다르게
 //  · 월드당 5판(스카이훅) / 10판(사천성: 두 줄로 번갈아 올라감)
 function stoneSpot(w, k, K = 5) {
@@ -615,8 +615,17 @@ requestAnimationFrame(heroTick);
 //  + 게임별 판 표시 3상태 hub/ui/map/stone_<게임>_<cleared|current|locked> + 롤러코스터 탄 캐릭터 (tools/map_assets.py, GPT S03~S13)
 //  판 자리 MAP3_SPOTS: 월드 카드(540x900) 안 [가운데 x, 섬 아래 y], 아래(1판) → 위(10판) 지그재그
 const MAP3_GAMES = ['shisen', 'memory', 'mole'];
-const MAP3_W = 540, MAP3_H = 900, MAP3_STONE = 168;
-const MAP3_SPOTS = [[260, 885], [395, 805], [150, 725], [390, 645], [155, 565], [385, 485], [150, 405], [390, 325], [165, 245], [330, 170]];
+const MAP3_W = 540, MAP3_H = 810, MAP3_STONE = 150;
+// 판 자리 = 레일 그림(GPT R03 hub/ui/map/rail.webp 1024x1536) 위 [가운데 x, 섬 아래 y] (카드 540x810 기준) — 그림을 다시 받으면 다시 잼
+const MAP3_SPOTS = [[253, 797], [390, 747], [206, 676], [475, 586], [132, 486], [296, 444], [459, 380], [121, 312], [274, 238], [438, 154]];
+// 레일 그림의 가운데 선 (1024x1536 기준, 아래 출발 → 위 도착) — 캐릭터 자리용. railAt(0~1) = 카드(540x810) 안 [x, y]
+const MAP3_RAIL = [[0, 1370], [300, 1385], [420, 1390], [600, 1385], [700, 1350], [745, 1300], [720, 1260], [620, 1240], [500, 1215], [390, 1175], [380, 1140], [430, 1100], [600, 1080], [780, 1060], [890, 1020], [905, 960], [860, 915], [700, 895], [500, 880], [300, 860], [240, 820], [250, 770], [330, 730], [450, 720], [780, 710], [890, 660], [900, 620], [880, 580], [780, 560], [450, 550], [300, 530], [220, 490], [240, 440], [370, 410], [500, 380], [520, 340], [530, 300], [600, 260], [750, 240], [860, 200], [840, 150], [800, 120]];
+function railAt(t) {
+  const P = MAP3_RAIL, L = [0]; for (let i = 1; i < P.length; i++) L.push(L[i - 1] + Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]));
+  const d = Math.max(0, Math.min(1, t)) * L[L.length - 1]; let i = 1; while (i < P.length - 1 && L[i] < d) i++;
+  const f = (d - L[i - 1]) / (L[i] - L[i - 1] || 1), k = 540 / 1024;
+  return [(P[i - 1][0] + (P[i][0] - P[i - 1][0]) * f) * k, (P[i - 1][1] + (P[i][1] - P[i - 1][1]) * f) * k];
+}
 const useMap3 = () => Hub.ver === '0.3' && MAP3_GAMES.includes(mapGame);
 // 판 사이를 잇는 부드러운 레일 (Catmull-Rom → 베지어). 레일은 섬 윗면(섬 아래에서 섬 높이의 40% 위)을 지나감
 function railPath(pts) {
@@ -650,25 +659,16 @@ function renderMap3() {
     panel.className = 'wpanel3' + (Hub.stageUnlocked(mapGame, O + w * K, c) ? '' : ' locked');
     panel.style.backgroundImage = `url(${WORLD_BG(w)})`;
     panel.innerHTML = `<span class="w3name">${w + 1}. ${name}</span>`;
-    // 롤러코스터 레일: 판 1 → 10을 차례로 지나가며, 판 사이에서는 다음 판 바깥쪽으로 크게 둥글게 돌아 올라감
+    // 롤러코스터 레일 그림 (월드마다 같은 레일, 아래 출발 승강장 → 위 도착 승강장). 캐릭터 자리 계산용 선은 안 보이게
     top = MAP3_SPOTS.map(([x, y]) => [x, railY(y)]);
-    const pts = [[top[0][0] - 40, MAP3_H + 30]];
-    top.forEach((p, j) => {
-      pts.push(p);
-      const q = top[j + 1]; if (!q) return;
-      const out = q[0] > p[0] ? Math.min(MAP3_W - 30, q[0] + 95) : Math.max(30, q[0] - 95); // 다음 판 바깥쪽
-      pts.push([out, (p[1] + q[1]) / 2 + 6]);
-    });
-    pts.push([top[K - 1][0] + 60, -30]);
-    const d = railPath(pts);
-    panel.insertAdjacentHTML('beforeend', `<svg class="rail3" viewBox="0 0 ${MAP3_W} ${MAP3_H}"><path d="${d}" class="r-shadow"/><path d="${d}" class="r-out"/><path d="${d}" class="r-in"/><path d="${d}" class="r-tie"/></svg>`);
+    panel.insertAdjacentHTML('beforeend', `<img class="start3" src="hub/ui/map/start_gate.webp?v=202611011828" alt=""><img class="rail3img" src="hub/ui/map/rail.webp?v=202611011828" alt=""><svg class="rail3" viewBox="0 0 ${MAP3_W} ${MAP3_H}"><path d="${railPath(top)}" class="r-in"/></svg>`);
     for (let j = 0; j < K; j++) {
       const i = O + w * K + j, [x, y] = MAP3_SPOTS[j], st = Hub.stage(mapGame, i, c), open = Hub.stageUnlocked(mapGame, i, c);
       const state = st.cleared ? 'cleared' : open ? 'current' : 'locked';
       const b = document.createElement('button');
-      b.className = `stone3 ${state}` + (i === next && !allClear ? ' next' : '');
+      b.className = `stone3 ${state}` + (i === next && !allClear ? ' next' : '') + (j === K - 1 ? ' last' : ''); // 10번(마지막)은 110%
       b.style.left = x + 'px'; b.style.top = y + 'px'; b.style.zIndex = 2000 - y; // 아래(앞) 판이 위(뒤) 판을 가림
-      b.style.backgroundImage = `url(hub/ui/map/stone_${mapGame}_${state}.webp?v=202611011624)`;
+      b.style.backgroundImage = `url(hub/ui/map/${state === 'current' ? 'stone_current' : `stone_${mapGame}_${state}`}.webp?v=202611011828)`; // 지금 할 판 = 빈 섬 (그 위에 캐릭터)
       const stars = [0, 1, 2].map((q) => `<i class="${st.cleared && q < st.stars ? 'on' : ''}"></i>`).join('');
       b.innerHTML = `<span class="s3box"><b>${Hub.stageLabel(i - O, mapGame)}</b></span><span class="s3star">${stars}</span>`; // 번호는 크림색 칸 안, 별은 칸 바로 아래
       b.addEventListener('click', () => {
@@ -679,17 +679,13 @@ function renderMap3() {
       if (i === meAt) meAt3 = { panel, j };
     }
     track.appendChild(panel);
-    // 캐릭터: 지금 할 판 바로 앞 레일 위 (레일 길이를 따라 판에 닿기 조금 전 자리, 레일 기울기만큼 기울임)
+    // 캐릭터: 지금 할 판(빈 섬) 위에 롤러코스터 탄 캐릭터. 다음 판이 왼쪽이면 좌우를 뒤집음
     if (meAt3 && meAt3.panel === panel) {
-      const path = panel.querySelector('.rail3 .r-in'), len = path.getTotalLength(), j = meAt3.j;
-      let atStone = 0, best = 1e9; // 레일에서 지금 판 윗면과 가장 가까운 곳
-      for (let L = 0; L <= len; L += 4) { const q = path.getPointAtLength(L), dd = Math.hypot(q.x - top[j][0], q.y - top[j][1]); if (dd < best) { best = dd; atStone = L; } }
-      const L0 = Math.max(0, atStone - 70), p = path.getPointAtLength(L0), p2 = path.getPointAtLength(Math.min(len, L0 + 6));
-      const right = p2.x >= p.x, ang = Math.atan2(p2.y - p.y, Math.abs(p2.x - p.x) || 0.01) * 180 / Math.PI;
-      const me = document.createElement('img'); me.className = 'coaster3';
-      me.src = `hub/ui/map/coaster_${base}.webp?v=202611011624`; me.alt = '';
-      me.style.left = p.x + 'px'; me.style.top = p.y + 'px';
-      me.style.transform = `${right ? '' : 'scaleX(-1) '}rotate(${right ? ang : ang}deg)`;
+      const j = meAt3.j, [x, y] = MAP3_SPOTS[j], left = j + 1 < K ? MAP3_SPOTS[j + 1][0] < x : MAP3_SPOTS[j - 1][0] > x;
+      const me = document.createElement('img'); me.className = 'coaster3' + (left ? ' flip' : '');
+      me.src = `hub/ui/map/coaster_${base}.webp?v=202611011828`; me.alt = '';
+      me.style.left = x + 'px'; me.style.top = y - SH * 0.52 + 'px'; // 섬 윗면 풀밭 위
+      me.style.zIndex = 2000 - y + 1;
       panel.appendChild(me);
     }
   });
@@ -760,7 +756,7 @@ function renderMap() {
         currentPanel = panel;
       }
     }
-    if (w === GM.worlds.length - 1) { const g = document.createElement('img'); g.className = 'goal-flag'; g.src = 'hub/ui/map/trophy.webp?v=202611011624'; g.alt = '마지막 트로피'; panel.appendChild(g); }
+    if (w === GM.worlds.length - 1) { const g = document.createElement('img'); g.className = 'goal-flag'; g.src = 'hub/ui/map/trophy.webp?v=202611011828'; g.alt = '마지막 트로피'; panel.appendChild(g); }
     track.appendChild(panel);
   });
   requestAnimationFrame(() => {
@@ -776,7 +772,7 @@ function openStage(i) {
   stageSel = i;
   const st = Hub.stage(mapGame, i);
   $('stTitle').textContent = `${Hub.stageLabel(i, mapGame)} ${Hub.stageName(i, mapGame)}`;
-  $('stStars').innerHTML = [0, 1, 2].map((k) => `<img src="hub/ui/map/${k < st.stars ? 'star' : 'star_off'}.webp?v=202611011624" alt="${k < st.stars ? '별' : '빈 별'}">`).join('');
+  $('stStars').innerHTML = [0, 1, 2].map((k) => `<img src="hub/ui/map/${k < st.stars ? 'star' : 'star_off'}.webp?v=202611011828" alt="${k < st.stars ? '별' : '빈 별'}">`).join('');
   const shisen = mapGame === 'shisen' || mapGame === 'memory'; // 시간 안에 깨는 게임: 빨리 깬 기록·남은 시간으로 별
   const mole = mapGame === 'mole'; // 점수 게임: 최고 점수·점수로 별
   const bestTxt = mole ? `최고 점수 <b>${st.best.toLocaleString()}점</b>` : shisen ? (st.bestTime ? `가장 빨리 깬 기록 <b>${mmss(st.bestTime)}</b>` : '') : `최고 기록 <b>${st.best}m</b>`;
@@ -795,7 +791,7 @@ function renderRecords() {
   const c = Hub.active();
   $('recTitle').textContent = `${c.name}의 기록`;
   $('recSummary').innerHTML = `<div class="rec-card total"><div class="v">지금 코인 <b>${c.coins}</b> · 지금까지 모은 코인 <b>${c.earned}</b> · 별 <b>${Hub.starsTotal(c)}</b></div></div>`
-    + GAME_CARDS.map((g) => `<div class="rec-card"><div class="thumb" style="background-image:url(${g.thumb}?v=202611011624)"></div>
+    + GAME_CARDS.map((g) => `<div class="rec-card"><div class="thumb" style="background-image:url(${g.thumb}?v=202611011828)"></div>
       <div><div class="t">${g.name}${Hub.isFav(g.id, c) ? ' <span class="star-on">★</span>' : ''}</div><div class="v">${g.rec(c, Hub.rec(g.id, c))}</div></div></div>`).join('');
   const list = $('recList'); list.innerHTML = '';
   if (!c.history.length) list.innerHTML = '<li><span>아직 기록이 없어요. 게임을 해봐요!</span></li>';
