@@ -141,6 +141,10 @@ add('hub-map-hard-pp', 'index.html#map-shisen', { vp: 'pp', js: `document.queryS
 add('hub-lobby-swap-pp', 'index.html#lobby', { vp: 'pp', js: `(() => { const o = parkOrder.slice(); [o[0], o[3]] = [o[3], o[0]]; [o[1], o[6]] = [o[6], o[1]]; [o[2], o[4]] = [o[4], o[2]]; o[5] = null; Hub.setPark(o); location.reload(); })()`, wait2: 3500 });
 // 첫 화면 놀이공원을 아래부터 위까지 화면 한 장씩 (배경 구간마다 보기)
 for (const k of [1, 2, 3]) add(`park-scroll-${k}-pp`, 'index.html#lobby', { vp: 'pp', js: `(() => { const sc = document.getElementById('pkScroll'); sc.scrollTop = sc.scrollHeight - sc.clientHeight * ${k + 1}; })()`, wait2: 700 });
+// 스테이지 지도 v0.3: 세 게임 · 폰 세로/가로/태블릿
+for (const g of ['shisen', 'memory', 'mole']) for (const vp of ['pp', 'pl', 'tb']) add(`map3-${g}-${vp}`, `index.html#map-${g}`, { vp, wait2: 600 });
+for (const g of ['memory', 'shisen']) add(`map3dbg-${g}`, `index.html#map-${g}`, { vp: 'pp', wait2: 300, js: `(() => { const sc = document.getElementById('mapScroll'), tr = document.getElementById('mapTrack'), me = tr.querySelector('.coaster3');
+  return { sh: sc.scrollHeight, ch: sc.clientHeight, st: sc.scrollTop, panels: tr.children.length, trH: tr.offsetHeight, me: me && [me.parentElement.offsetTop, me.offsetTop], scrMap: document.getElementById('scrMap').className, hash: location.hash }; })()` });
 // 지도 돌다리 → 바로 게임의 출발 준비 창 하나만 (QA: 출발 창 두 번)
 for (const g of ['shisen', 'memory', 'mole']) add(`flow-stone-${g}-pp`, `index.html#map-${g}`, { vp: 'pp', js: `(() => { sessionStorage.setItem('__seeded', '1'); document.querySelector('#mapTrack .stone').click(); return !document.querySelector('.modal:not(.hidden)'); })()`, wait2: 3500,
   after: `({ url: location.pathname + location.search, ready: !document.getElementById('ready').classList.contains('hidden'), buttons: [...document.querySelectorAll('#ready .pp-b')].map((b) => b.textContent.trim()).join(' | ') })` });
