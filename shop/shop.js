@@ -4,7 +4,7 @@
 //  · 게임 카드(스크롤해도 고정)로 게임을 고르면 그 게임의 게임 부스트 / 보유 아이템이 보임
 //  · 게임 부스트: 1개씩 사서 모음. 수량은 구매·게임 보상·게임에서 사용 모두 같은 숫자(common/profile.js)
 const $ = (id) => document.getElementById(id);
-const V = '?v=202611041158'; // bump when images change so phones don't show old cached ones
+const V = '?v=202611042123'; // bump when images change so phones don't show old cached ones
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 
 const GAMES = [
@@ -19,14 +19,14 @@ const GAMES = [
   { id: 'dogsnack', name: '멍멍이 간식 타임', img: 'assets/games/dogsnack.webp' },
 ];
 // v0.3: 스카이훅 런너는 게임 목록에서 뺌 (보관판 v0.1·v0.2에서는 그대로)
-if (Hub.ver === '0.3') GAMES.splice(GAMES.findIndex((g) => g.id === 'skyhook'), 1);
+if (Hub.ver === '0.4') GAMES.splice(GAMES.findIndex((g) => g.id === 'skyhook'), 1);
 // 부스트 그림: 새 아이콘이 있으면 그것, 없으면 예전 아이콘
 const boostIcon = (id) => `../common/items/${id}.webp${V}`;
 const skinThumb = (id) => `assets/skins/${id}.webp${V}`;
 const COIN = `assets/ui/coin.webp${V}`;
 
 // v0.3: 아이템을 게임마다 나누지 않음 → 게임 고르기·보유 아이템 칸 숨김 (아래 renderItems)
-if (Hub.ver === '0.3') {
+if (Hub.ver === '0.4') {
   document.querySelector('.games-wrap').classList.add('hidden'); $('sec-owned').classList.add('hidden');
   document.querySelector('#sec-boosts .sec-head b').textContent = '아이템';
   document.querySelector('#sec-boosts .sec-desc').textContent = '한 번 사면 모든 게임에서 같이 써요!';
@@ -54,7 +54,7 @@ const coinImg = `<img src="${COIN}" alt="" style="width:20px;height:20px;display
 function renderHeader(bump) {
   const c = Hub.active();
   $('myCoins').textContent = c.coins;
-  if (Hub.ver === '0.3') { $('gemPill').classList.remove('hidden'); $('myGems').textContent = Hub.gems(c); } // 다이아 (놀이공원 꾸미기)
+  if (Hub.ver === '0.4') { $('gemPill').classList.remove('hidden'); $('myGems').textContent = Hub.gems(c); } // 다이아 (놀이공원 꾸미기)
   $('myFace').src = faceOf(c);
   if (bump) { const p = document.querySelector('.coin-pill'); p.classList.remove('bump'); void p.offsetWidth; p.classList.add('bump'); }
 }
@@ -106,7 +106,7 @@ function equipSkin(s) { Hub.equipSkin(s.id); blip(900); toast(`${s.name} 적용!
 
 // ---------- 아이템 (v0.3, 팝업 v2): 7개를 한 화면에 — 아이콘·이름·가격, 오른쪽 위에 가진 수량 (수량은 모든 게임이 같이 씀)
 //  누르면 구매 창에서 어떤 게임에 쓰는지 알려 줌. 하트 그림은 하트 통일 규칙대로 common/ui/heart.webp
-const V3 = Hub.ver === '0.3';
+const V3 = Hub.ver === '0.4';
 const itemIcon = (id) => (id === 'life' ? `../common/ui/heart.webp${V}` : boostIcon(id));
 const gameName = (g) => (Hub.GAMES[g] && Hub.GAMES[g].name) || g;
 function renderItems() {
@@ -169,9 +169,9 @@ function renderOwned() {
   }
 }
 // ---------- 캐릭터 꾸미기 ----------
-const COS_IMG = (look, id) => (id ? `../common/costumes/${look}_${id}.webp${V}` : `../common/faces/${look}_base.webp${V}`);
+const COS_IMG = (look, id) => (id ? `../common/costumes/${look}_${id}.webp${V}` : `../v0.3/common/faces/${look}_base.webp${V}`);
 const BASE_FULL = (look) => `../common/costumes/${look}_base.webp${V}`; // 기본 옷 전신 그림
-const faceOf = (c) => Hub.costumeImg(c, '../') || `../common/faces/${c.look}_base.webp${V}`;
+const faceOf = (c) => Hub.costumeImg(c, '../') || `../v0.3/common/faces/${c.look}_base.webp${V}`;
 const fullOf = (look, id) => (id ? COS_IMG(look, id) : BASE_FULL(look));
 const DRESS_ALL = [{ id: null, name: '기본 옷', price: 0, desc: '처음 입고 있던 옷이에요' }, ...Hub.COSTUMES];
 // 새 캐릭터(v2)는 아직 옷 그림이 없어서 기본 옷만
@@ -258,7 +258,7 @@ function useCoupon() {
   const r = Hub.redeem($('couponInput').value);
   $('couponMsg').textContent = r.msg; $('couponMsg').className = 'coupon-msg' + (r.ok ? ' ok' : '');
   if (r.ok && !r.restart) { ching(); renderHeader(true); renderAll(); $('couponInput').value = ''; } else if (r.ok) ching(); else blip(300);
-  if (r.ok && r.go) setTimeout(() => { location.href = '../' + r.go; }, 700); // 버전 이동 쿠폰 (enterv1·enterv2·enterv3)·restart·dayplus 는 첫 화면으로
+  if (r.ok && r.go) setTimeout(() => { location.href = '../' + r.go; }, 700); // 버전 이동 쿠폰 (enterv1~enterv4)·restart·dayplus 는 첫 화면으로
 }
 $('couponOk').onclick = useCoupon;
 $('couponInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') useCoupon(); });
@@ -267,7 +267,7 @@ $('couponInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') use
 const GEM = `../hub/park/ui/gem.webp${V}`;
 const gemImg = `<img src="${GEM}" alt="" style="width:20px;height:20px;display:inline-block;vertical-align:-4px">`;
 function renderPark() {
-  if (Hub.ver !== '0.3' || !Hub.PARK_ITEMS) return;
+  if (Hub.ver !== '0.4' || !Hub.PARK_ITEMS) return;
   $('park').classList.remove('hidden');
   const box = $('parkShop'); box.innerHTML = '';
   const gems = () => Hub.gems();

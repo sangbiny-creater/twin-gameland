@@ -1,0 +1,23 @@
+{
+  "name": "은유와 은결",
+  "short_name": "은유와 은결",
+  "start_url": "../index.html",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#8cc9f0",
+  "theme_color": "#5CA9E6",
+  "icons": [
+    {
+      "src": "icons/icon-180.png?v=202611041158",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png?v=202611041158",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "scope": "../",
+  "id": "../index.html"
+}

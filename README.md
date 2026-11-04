@@ -12,12 +12,14 @@
 
 | 버전 | 주소 | 내용 |
 | --- | --- | --- |
-| **v0.3** (지금) | https://sangbiny-creater.github.io/twin-gameland/ | v0.2 놀이공원 + 상용화 검수 자리: 게임 잠금·체험·열쇠·다이아·출석·가짜 광고(2배 받기·이어하기)·가짜 결제. 규칙 `docs/spec/트윈게임랜드_스펙_v1.3.md`, 코드 `common/monet.js` |
+| **v0.4** (지금) | https://sangbiny-creater.github.io/twin-gameland/ | v0.3과 같고 캐릭터가 어른 은유·은결 (스카이훅·아이템샵·옷장 제외). 인트로·카드·로고는 언어별. 그림 적용: `tools/adult_assets.py`, 요청 글: `making_GPT/성인캐릭터_교체/` |
+| v0.3 (보관) | https://sangbiny-creater.github.io/twin-gameland/v0.3/ | 어린이 캐릭터판. `v0.3/` 폴더에 사이트 전체를 얼려 둠 (게임·그림 모두 따로). 고치지 않아요 |
+| v0.3 설명 | (위 보관판) | v0.2 놀이공원 + 상용화 검수 자리: 게임 잠금·체험·열쇠·다이아·출석·가짜 광고(2배 받기·이어하기)·가짜 결제. 규칙 `docs/spec/트윈게임랜드_스펙_v1.3.md`, 코드 `common/monet.js` |
 | v0.2 (보관) | https://sangbiny-creater.github.io/twin-gameland/v0.2/ | 놀이공원 첫 화면 (상용화 기능 없음). `v0.2/` 폴더에 얼려 둠 |
 | v0.1 (보관) | https://sangbiny-creater.github.io/twin-gameland/v0.1/ | 예전 첫 화면(게임 카드 목록). 설정 → '예전 첫 화면 보기'로도 들어감 |
 
-- 아이템샵 쿠폰으로 이동: `enterv1` → v0.1, `enterv2` → v0.2, `enterv3` → v0.3. 검수용 쿠폰: `showmethediamond`(다이아 +100), `resetv3`(잠금·열쇠·출석 처음으로).
-- 상용화 기능(`common/monet.js`)은 v0.3에서만 켜져요 (`Hub.ver`: 보관판 주소이거나 그 탭의 `twin_ver` 가 0.1·0.2면 꺼짐).
+- 아이템샵 쿠폰으로 이동: `enterv1` → v0.1, `enterv2` → v0.2, `enterv3` → v0.3, `enterv4` → v0.4. 검수용 쿠폰: `showmethediamond`(다이아 +100), `resetv3`(잠금·열쇠·출석 처음으로).
+- 상용화 기능(`common/monet.js`)은 기본 주소(v0.4)와 v0.3 보관판에서 켜져요 (`Hub.ver`: v0.1·v0.2 주소이거나 그 탭의 `twin_ver` 가 0.1·0.2면 꺼짐).
 - 게임·아이템샵·저장 데이터는 모든 버전이 같이 써요. 첫 화면만 달라요.
 - v0.1은 `v0.1/` 폴더(index.html·hub.js·hub.css)에 얼려 둔 것 — 고치지 않아요. v0.1이 쓰는 그림(`hub/cards`, `hub/ui` 등)은 지우지 않기.
 - v0.1에서 게임을 하고 돌아오면 같은 탭에서는 v0.1 첫 화면으로 돌아와요(`sessionStorage` 의 `twin_ver`). 오른쪽 아래 'v0.1 · 새 버전으로'(v0.2 보관판은 'v0.2 · 새 버전으로')를 누르면 v0.3으로.

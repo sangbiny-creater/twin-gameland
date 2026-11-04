@@ -12,6 +12,8 @@
   try { lang = ((JSON.parse(localStorage.getItem('twin_gameland_v1') || '{}').settings) || {}).lang === 'en' ? 'en' : 'ko'; } catch (e) { /* ignore */ }
   const pairs = D[lang] || [];
   window.I18N = { lang };
+  // 준비 창 로고: 영어판은 logo_en.webp (tools/adult_assets.py)
+  if (lang === 'en') document.addEventListener('DOMContentLoaded', () => { for (const im of document.querySelectorAll('img[src*="assets/ui/logo.webp"]')) im.src = im.getAttribute('src').replace('logo.webp', 'logo_en.webp'); });
   if (!pairs.length) return;
   document.documentElement.lang = lang;
   const HANGUL = /[가-힣]/;

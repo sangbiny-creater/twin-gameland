@@ -3544,6 +3544,18 @@ window.I18N_DATA = {
 "Tap/Space = Jump · Hold in midair = Hook · Release = Swing!"
 ],
 [
+"v0.4 상용화 검수판",
+"v0.4 Release Review Build"
+],
+[
+"v0.3 (어린이 캐릭터)로 가요!",
+"Go to v0.3 (kid characters)!"
+],
+[
+"v0.4 (최신 버전)으로 가요!",
+"Go to v0.4 (latest version)!"
+],
+[
 "놀이기구는 놀이기구끼리, 장식은 장식끼리만 바꿀 수 있어요",
 "Rides can only swap with rides, and decorations with decorations."
 ],

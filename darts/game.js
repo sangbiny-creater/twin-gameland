@@ -11,7 +11,7 @@
 
 let W = 540, H = 960;
 const D = window.DartArt;
-const ASSET_V = '202611041158';
+const ASSET_V = '202611042123';
 const ROUNDS = 8, PER = 3;
 const AMP = 1.2; // 줄이 움직이는 범위 (더블 링 바깥 = 1, 조금 밖까지 나감)
 // 한 번 갔다 오는 시간(초), 모든 라운드 같음 (사용자 요청으로 맞춘 값)
@@ -87,7 +87,8 @@ const IMG = (() => {
   const im = (n) => { const x = new Image(); x.src = `assets/${n}.webp?v=${ASSET_V}`; return x; };
   const who = myLook.startsWith('eungyeol') ? 'eungyeol' : 'eunyu';
   return {
-    btn: Object.fromEntries(['idle', 'aim', 'throw', 'happy', 'sad'].map((k) => [k, im(`btn/${who}_${k}`)])),
+    btn: [0, 1, 2].map((i) => im(`btn/${who}_${i}`)), // 가운데 버튼: 이번 다트 색의 뒷모습
+    ch: Object.fromEntries(['ready', 'aim', 'throw'].map((k) => [k, im(`chars/${who}_${k}`)])), // 왼쪽 아래 상체
     bar: im('bar'), dot: [0, 1, 2].map((i) => im(`dot_${i}`)), reticle: [0, 1, 2].map((i) => im(`reticle_${i}`)),
   };
 })();
@@ -111,7 +112,7 @@ const DART_COLS = ['#FF5A8C', '#FFB21E', '#2F9AE8'];
 //      (가로): 가운데 세로로 다트판 → 게이지 → 캐릭터 버튼, 왼쪽에 총점·점수 칸, 오른쪽에 응원하는 쌍둥이
 // LAY: 판 가운데 cx·cy, 더블 링 반지름 s, 게이지 막대 가운데 gx·gy·반폭 gw, 캐릭터 자리 ch[[x, 발 y, 키]] (0 = 나(뒷모습 버튼), 1 = 쌍둥이), 던지는 손 hand
 const BAR_H = 64; // 게이지 막대 틀 높이 (안쪽 색 칸 높이 = 44%)
-const LAY = { cx: 270, cy: 300, s: 170, gx: 270, gy: 640, gw: 200, btn: [270, 860, 150], ch: [[270, 900, 200], [470, 900, 120]], hand: [300, 700] };
+const LAY = { cx: 270, cy: 300, s: 170, gx: 270, gy: 640, gw: 200, btn: [270, 860, 150], ch: [[270, 900, 200], [470, 900, 120]], hand: [300, 700], me: [0, 900, 200] };
 const rim = () => LAY.s * D.R.rim;
 function layout() {
   const sv = (k) => parseFloat(getComputedStyle(root).getPropertyValue('--safe-' + k)) || 0;
@@ -129,7 +130,8 @@ function layout() {
   LAY.btn = [W / 2, LAY.gy + BAR_H / 2 + 10 + bd / 2 + extra * 0.1, bd];
   LAY.ch = [[W / 2, LAY.btn[1] + bd / 2, bd], [W - 66, LAY.btn[1] + bd / 2 + 6, Math.min(120, bd * 0.8)]];
   Object.assign(head.style, { left: '70px', top: headTop + 'px', width: (W - 140) + 'px' });
-  LAY.hand = [LAY.btn[0] + bd * 0.22, LAY.btn[1] - bd * 0.2]; // 버튼 그림 속 던지는 손
+  LAY.me = [-6, H - sb, Math.min(W * 0.42, avail - (LAY.gy + BAR_H / 2 + 8 - st))]; // 왼쪽 아래 상체: x, 아래 끝, 크기
+  LAY.hand = [LAY.me[0] + LAY.me[2] * 0.9, LAY.me[1] - LAY.me[2] * 0.78]; // 상체 그림 속 던지는 손
 }
 // 판 좌표 ↔ 화면 좌표
 const toX = (u) => LAY.cx + u * LAY.s, toY = (v) => LAY.cy + v * LAY.s;
@@ -334,6 +336,7 @@ function render() {
   for (const d of G.darts) { const k = Math.min(1, (G.t - d.t) / 0.12); D.dart(ctx, toX(d.x), toY(d.y), (s / 170) * (1.35 - 0.35 * k), d.ci, -0.35); }
   ctx.restore();
   if (play) drawAim();
+  drawMe();
   drawThrower();
   drawTwin();
   if (G.phase === 'fly' && play) drawFlying();
@@ -413,12 +416,16 @@ function drawFlying() {
   }
   D.dart(ctx, x, y, sc, ci, ang);
 }
-// 내 캐릭터 뒷모습 = 던지기 버튼 (GPT 그림: 기본·꾹 누름·던짐·기쁨·아쉬움). 누르는 동안 버튼이 살짝 작아짐
-const BTN = { idle: 'idle', aim: 'aim', throw: 'throw', cheer: 'happy', happy: 'happy', hit: 'sad' };
+// 던지기 버튼 = 이번 다트 뒷모습. 누르는 동안 버튼이 살짝 작아짐
+// 내 캐릭터는 왼쪽 아래 상체: 준비 / 꾹 누르는 동안 팔을 뒤로 / 떼면 앞으로 던짐
+function drawMe() {
+  const [x, bottom, s] = LAY.me, im = IMG.ch[G.phase === 'y' && G.state === 'play' ? 'aim' : G.pose[0] === 'throw' ? 'throw' : 'ready'];
+  if (ok(im)) ctx.drawImage(im, x, bottom - s, s, s);
+}
 function drawThrower() {
   const [x, y, d] = LAY.btn, play = G.state === 'play' || G.state === 'pause';
   const down = G.phase === 'y' && play, ready = G.phase === 'x' && play, ci = Math.min(G.dart, PER - 1), col = DART_COLS[ci];
-  const im = IMG.btn[BTN[G.pose[0]] || 'idle'];
+  const im = IMG.btn[ci];
   const bob = G.pose[0] === 'cheer' ? -Math.abs(Math.sin(G.t * 10)) * 6 : 0, sc = down ? 0.95 : 1;
   ctx.save();
   if (ready) { ctx.globalAlpha = 0.3 + 0.25 * Math.sin(G.t * 6); ctx.beginPath(); ctx.arc(x, y, d * 0.5 + 8, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill(); ctx.globalAlpha = 1; }

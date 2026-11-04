@@ -17,8 +17,8 @@ FACE = (8, 8, TW - 8, TH - 18)  # 그림이 들어가는 크림색 판
 SRC = [
     # 메모리 게임: 확실히 다른 은유·은결 + 아이콘 같은 그림
     ('x_mem_raincoat', 'card', 'memory/assets/cards/f02.webp'),
-    ('x_mem_hug', 'card', 'memory/assets/cards/f08.webp'),
-    ('x_mem_book', 'card', 'memory/assets/cards/f09.webp'),
+    ('x_mem_hug', 'card', 'character/adult/shisen/N01.png'),
+    ('x_mem_book', 'card', 'character/adult/shisen/N02.png'),
     ('x_mem_explorer', 'card', 'memory/assets/cards/f11.webp'),
     ('x_mem_pinkhat', 'card', 'memory/assets/cards/f12.webp'),
     ('x_mem_bluehat', 'card', 'memory/assets/cards/f13.webp'),

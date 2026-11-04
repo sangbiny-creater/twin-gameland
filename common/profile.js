@@ -161,7 +161,8 @@
     // 버전 이동 (보관판 v0.1·v0.2 ↔ 기본 v0.3). go: 사이트 맨 위 폴더 기준 주소
     enterv1: { ver: '0.1', go: 'v0.1/', once: false, msg: 'v0.1 (예전 카드 목록)으로 가요!' },
     enterv2: { ver: '0.2', go: 'v0.2/', once: false, msg: 'v0.2 (놀이공원)로 가요!' },
-    enterv3: { ver: '', go: 'index.html', once: false, msg: 'v0.3 (지금 버전)으로 가요!' },
+    enterv3: { ver: '0.3', go: 'v0.3/', once: false, msg: 'v0.3 (어린이 캐릭터)로 가요!' },
+    enterv4: { ver: '', go: 'index.html', once: false, msg: 'v0.4 (최신 버전)으로 가요!' },
     // v0.3 상용화 검수용 (docs/spec/트윈게임랜드_스펙_v1.3.md)
     showmethediamond: { gems: 100, once: false, msg: '다이아 100개를 받았어요! (검수용)' },
     resetv3: { resetV3: true, once: false, msg: '게임 잠금·열쇠·출석을 처음 상태로 돌렸어요 (검수용)' },
@@ -301,7 +302,7 @@
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611041158` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611042123` : null; },
     buyCostume(id, c = this.active()) {
       const it = COSTUMES.find((x) => x.id === id);
       if (!c || !it || this.ownsCostume(id, c)) return { ok: false };
@@ -419,7 +420,7 @@
     },
     create(name, look) {
       // v0.3: 캐릭터는 은유 1명·은결 1명 (자리 사기 없음). 보관판 v0.1·v0.2는 예전 규칙(자리)
-      if (this.ver === '0.3' ? data.chars.some((x) => lookBase(x.look) === lookBase(look)) : !this.canCreate()) return null;
+      if (this.ver === '0.4' ? data.chars.some((x) => lookBase(x.look) === lookBase(look)) : !this.canCreate()) return null;
       const c = { id: 'c' + data.nextId++, name: String(name).trim().slice(0, 8) || '친구', look: LOOKS.includes(look) && !(lookInfo(look) || {}).hidden ? look : latestLook(lookBase(look)), coins: 0, earned: 0, created: Date.now(), games: {}, history: [] };
       data.chars.push(c);
       if (!data.activeId) data.activeId = c.id;
@@ -471,10 +472,10 @@
     setPark(order, c = this.active()) { if (!c) return; if (order) c.park = order.slice(); else delete c.park; save(); },
     // 다이아 (v0.3 상용화 검수: common/monet.js 가 늘리고 씀. 보관판 v0.1·v0.2에서는 보이기만)
     gems(c = this.active()) { return (c && c.gems) || 0; },
-    // 지금 보고 있는 버전: 보관판이면 '0.1'·'0.2', 기본 주소면 '0.3' (상용화 기능은 0.3에서만)
+    // 지금 보고 있는 버전: 보관판이면 '0.1'·'0.2', 기본 주소면 '0.4' (상용화 기능은 0.4에서. v0.3 보관판은 v0.3/ 폴더가 따로 있음)
     get ver() {
       const m = location.pathname.match(/\/v(0\.[12])\//); if (m) return m[1]; // 보관판 첫 화면 주소
-      try { return sessionStorage.getItem('twin_ver') || '0.3'; } catch (e) { return '0.3'; } // 게임·아이템샵: 이 탭에서 들어온 버전
+      try { return sessionStorage.getItem('twin_ver') || '0.4'; } catch (e) { return '0.4'; } // 게임·아이템샵: 이 탭에서 들어온 버전
     },
     // 지금 캐릭터 데이터를 고치고 저장 (다른 탭·게임에서 바뀐 것을 먼저 다시 읽음). fn(c) 의 반환값을 돌려줌
     mutate(fn) { reload(); const c = this.active(); if (!c) return null; const r = fn(c); save(); return r; },
@@ -566,7 +567,7 @@
   window.Hub = Hub;
   godBadge();
   // v0.3 상용화 검수 기능(잠금·체험·다이아·출석·가짜 광고)은 기본 주소(v0.3)에서만: 이 파일 옆 monet.js 를 불러옴
-  if (Hub.ver === '0.3' && document.currentScript) {
+  if (Hub.ver === '0.4' && document.currentScript) {
     const s = document.createElement('script');
     s.src = document.currentScript.src.replace(/profile\.js(\?.*)?$/, 'monet.js$1');
     document.head.appendChild(s);

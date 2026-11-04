@@ -48,6 +48,9 @@ WHOLE = {
 }
 # 문서 뒤에 새로 생긴 글 (2026-11-04 작업)
 EXTRA = {
+    'v0.4 상용화 검수판': 'v0.4 Release Review Build',
+    'v0.3 (어린이 캐릭터)로 가요!': 'Go to v0.3 (kid characters)!',
+    'v0.4 (최신 버전)으로 가요!': 'Go to v0.4 (latest version)!',
     '놀이기구는 놀이기구끼리, 장식은 장식끼리만 바꿀 수 있어요': 'Rides can only swap with rides, and decorations with decorations.',
     '타일 자리를 섞어요': 'Shuffles the tiles',
     '적용 중': 'Equipped',

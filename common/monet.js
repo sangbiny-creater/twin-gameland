@@ -4,7 +4,7 @@
 // 모두 이 폰 안(twin_gameland_v1 의 캐릭터마다 c.gems, c.v3)에만 저장 — 진짜 돈·진짜 광고 없음
 // common/profile.js 가 기본 주소(v0.3)에서만 불러옴. 보관판(v0.1·v0.2)에서는 안 불림
 (function () {
-  if (!window.Hub || Hub.ver !== '0.3') return;
+  if (!window.Hub || Hub.ver !== '0.4') return;
   const SRC = (document.currentScript && document.currentScript.src) || '';
   // 게임 코드(startStage·startRun)와 화면이 다 준비된 뒤에 시작
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', main); else main();
@@ -428,7 +428,7 @@
       const s = st();
       if (!s.welcomed) {
         busy = true; Hub.mutate((c) => { c.v3.welcomed = true; });
-        modal(`<h3>환영 선물</h3><span class="mn-tag">v0.3 상용화 검수판</span><img class="mn-art" src="${IMG}welcome.webp" alt=""><p>처음에는 <b>${OPEN.map(name).join(' · ')}</b>이 열려 있어요.<br>잠긴 게임 하나를 열 수 있는 <b>${I('ico_key')} 열쇠 1개</b>를 줄게요!</p>`,
+        modal(`<h3>환영 선물</h3><span class="mn-tag">v0.4 상용화 검수판</span><img class="mn-art" src="${IMG}welcome.webp" alt=""><p>처음에는 <b>${OPEN.map(name).join(' · ')}</b>이 열려 있어요.<br>잠긴 게임 하나를 열 수 있는 <b>${I('ico_key')} 열쇠 1개</b>를 줄게요!</p>`,
           [{ text: '받기', cls: 'pink', on: () => { busy = false; refreshHub(); check(); } }]);
         return;
       }

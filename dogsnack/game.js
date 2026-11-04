@@ -14,7 +14,7 @@
 let W = 540, H = 960;
 const L = window.SnackLevels, D = window.DogArt;
 const { PTS, JUDGE, LANES } = L;
-const ASSET_V = '202611041158';
+const ASSET_V = '202611042123';
 const MAX_HEARTS = 3;
 const START_HEARTS = 2;
 const HEART_GAP = 50; // 하트 아이템 사이 최소 시간(초) — 2026-10-28 달콤 베이커리와 같게(25→50초)
@@ -547,7 +547,7 @@ function drawDogs() {
 //  이 게임 전용 그림(간식 바구니를 낀 은유·은결, tools/dogsnack_assets.py twins): 기본·던지기·기뻐함·아쉬움
 //  그림은 은유가 오른쪽, 은결이 왼쪽을 봄 → 가운데(강아지 쪽)를 보도록 자리에 따라 좌우 뒤집기
 //  그림을 아직 못 받았으면 공통 캐릭터 그림(CharV2)
-const TWIN_ART = { body: 360, foot: 21 }; // 기본 그림의 몸 높이(px), 그림 아래 끝이 발보다 내려간 만큼(px)
+const TWIN_ART = { body: 440, foot: 3 }; // 기본 그림의 몸 높이(px), 그림 아래 끝이 발보다 내려간 만큼(px)
 const TWIN_IMG = {};
 for (const nm of ['eunyu', 'eungyeol']) for (const p of ['idle', 'throw', 'happy', 'sad']) { const im = new Image(); im.src = `assets/chars/${nm}_${p}.webp?v=${ASSET_V}`; TWIN_IMG[`${nm}_${p}`] = im; }
 function drawTwins() {
