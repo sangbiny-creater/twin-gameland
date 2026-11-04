@@ -240,6 +240,7 @@ main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; 
 .park-card.on { border-color: #2FB86A; box-shadow: 0 0 0 2px #2FB86A inset; }
 .park-card .check { position: absolute; right: 4px; top: 4px; z-index: 1; width: 24px; height: 24px; border-radius: 50%; background: #2FB86A; color: #fff; font-size: 14px; line-height: 21px; border: 2px solid #fff; box-sizing: border-box; text-align: center; }
 .park-card .park-apply { width: 86%; height: 30px; margin-top: 2px; }
+.park-card .park-apply.statue-how { background: #EAF4FF; color: #3D6FA8; box-shadow: 0 3px 0 #C6DCF2; font-size: 13px; } /* 동상: 첫 화면에서 바꿈 (누르면 안내) */
 .park-card .cnt-pill { font-size: 13px; color: #2FB86A; }
 .park-card { position: relative; }
 .park-card .bi { object-fit: contain; }

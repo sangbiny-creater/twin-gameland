@@ -56,7 +56,7 @@ const mmss = (t) => { t = Math.max(0, Math.ceil(t)); return `${String(Math.floor
 function shuffleArr(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 // ---------- sprites ----------
-const ASSET_V = '202611041135';
+const ASSET_V = '202611041138';
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => { SP.f = j; SP.img.onload = () => { SP.ready = true; }; SP.img.src = `assets/sprites/sprites.webp?v=${ASSET_V}`; });
 const EXTRA_V = '20261027a';
@@ -262,6 +262,7 @@ function startStage(si) {
   // 단독 실행일 때만 판마다 기본 수량을 줌
   G.items = { hint: 3, shuffle: 2, time: 1, bomb: 0 }; G.hint = null; G.hintT = 0; G.hintBig = false; G.findT = 0; G.comboX2 = false;
   if (HUB) HUB.starterKit('shisen');
+  takeRound('shisen', ['hint', 'time', 'shuffle', 'bomb']);
   G.lines = []; G.fx = []; G.texts = []; G.removing = []; G.sel = null; G.t = 0;
   G.skin = HUB ? HUB.equippedSkin('shisen') : 'default';
   const boosts = HUB ? HUB.takeBoosts('shisen') : [];
@@ -314,9 +315,16 @@ function removePair(a, b, path, byBomb = false) {
 }
 const same = (p, q) => p && q && p.x === q.x && p.y === q.y;
 
-const itemCount = (id) => (HUB ? HUB.boostCount('shisen', id) : G.items[id]);
+// 이번 판 아이템 (2026-11-04): 시작 팝업에서 고른 것만 이번 판에 1개씩 (판이 시작되면 가진 수량에서 바로 1개 쓴 것으로 — 안 써도 같음)
+//  고르기 표시(Hub.setUsing)는 꺼내 쓴 뒤 풀어서, 다음 판은 다시 아무것도 안 고른 상태로
+function takeRound(game, ids) {
+  G.round = {};
+  if (!HUB) return;
+  for (const id of ids) { if (HUB.isUsing(game, id)) { if (HUB.useBoost(game, id)) G.round[id] = 1; HUB.setUsing(game, id, false); } }
+}
+const itemCount = (id) => (HUB ? (G.round && G.round[id]) || 0 : G.items[id]);
 function spendItem(id) {
-  if (HUB) return HUB.useBoost('shisen', id);
+  if (HUB) { if (!(G.round && G.round[id] > 0)) return false; G.round[id]--; return true; }
   if (G.items[id] <= 0) return false;
   G.items[id]--; return true;
 }
@@ -597,8 +605,7 @@ function updateHud() {
 }
 function renderItems() {
   const set = (id, cid, n) => { $(cid).textContent = n; $(id).classList.toggle('empty', n <= 0); };
-  set('btnHint', 'cHint', itemCount('hint')); set('btnShuffle', 'cShuffle', itemCount('shuffle')); set('btnTime', 'cTime', itemCount('time'));
-  $('btnBomb').classList.toggle('hidden', itemCount('bomb') <= 0); $('cBomb').textContent = itemCount('bomb');
+  set('btnHint', 'cHint', itemCount('hint')); set('btnTime', 'cTime', itemCount('time')); set('btnShuffle', 'cShuffle', itemCount('shuffle')); set('btnBomb', 'cBomb', itemCount('bomb'));
 }
 function renderBuffs() {
   const el = $('buffs'); el.innerHTML = '';
@@ -660,7 +667,7 @@ const click = (id, fn) => $(id).addEventListener('click', () => { Audio.unlock()
 click('btnGo', () => startStage(G.si));
 click('btnReadyMap', goMap); click('btnReadyHome', goMain); click('btnHomeR', goMain); click('btnMapP', goMap); click('btnMapR', goMap);
 click('btnPause', pauseGame); click('btnResume', resumeGame);
-click('btnRetryP', () => startStage(G.si)); click('btnRetry', () => startStage(G.si));
+click('btnRetryP', () => showReady(G.si)); click('btnRetry', () => showReady(G.si)); // 다시하기도 시작 팝업(아이템 고르기)부터
 click('btnNext', () => showReady(G.si + 1));
 $('btnHint').addEventListener('click', () => { Audio.unlock(); useHint(); });
 $('btnShuffle').addEventListener('click', () => { Audio.unlock(); useShuffle(); });

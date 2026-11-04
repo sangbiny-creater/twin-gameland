@@ -17,7 +17,7 @@ const MISS_SHOW = 0.75;  // 틀린 두 장을 보여 주는 시간 (초)
 const MISS_TIME = 0.2;   // 틀리면 줄어드는 시간 (초)
 const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611041135';
+const ASSET_V = '202611041138';
 const cardSrc = (n) => `assets/cards/${n}.webp?v=${ASSET_V}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -42,7 +42,7 @@ function shuffleArr(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math
 // ---------- images ----------
 const BG = { port: new Image(), land: new Image(), skin: [] };
 BG.port.src = `assets/bg/port.webp?v=${ASSET_V}`; BG.land.src = `assets/bg/land.webp?v=${ASSET_V}`;
-for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `../shisen/assets/bg/bg_${i}.webp?v=202611041135`; BG.skin.push(im); }
+for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `../shisen/assets/bg/bg_${i}.webp?v=202611041138`; BG.skin.push(im); }
 const BACK = `assets/cards/back.webp?v=${ASSET_V}`;
 // 그림을 미리 받아 둠 (첫 판부터 뒤집을 때 바로 보이게)
 [BACK, ...FRONTS.map(cardSrc)].forEach((s) => { const im = new Image(); im.src = s; });
@@ -177,6 +177,7 @@ function startStage(si) {
   G.limit = st.s; G.time = st.s; G.elapsed = 0; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.tries = 0; G.coinBase = 0; G.contUsed = false;
   G.open = []; G.busy = 0; G.fx = []; G.t = 0; G.comboX2 = false; G.peekT = 0; G.hintT = 0;
   if (HUB) HUB.starterKit('memory');
+  takeRound('memory', ['hint', 'time', 'find', 'bomb']);
   G.skin = HUB ? HUB.equippedSkin('memory') : 'default';
   const boosts = HUB ? HUB.takeBoosts('memory') : [];
   if (boosts.includes('combo')) G.comboX2 = true;
@@ -260,9 +261,16 @@ function burst(x, y) {
 // ---------- items ----------
 // 힌트: 지금 뒤집은 카드가 있으면 그 짝을, 없으면 아무 짝 하나를 잠깐 보여 줌
 // 모두 보기: 남은 카드를 2초 동안 모두 앞면으로 / 시간 추가: +10초 / 짝 맞추기: 짝 하나를 바로 찾아 줌
-const itemCount = (id) => (HUB ? HUB.boostCount('memory', id) : G.items[id]);
+// 이번 판 아이템 (2026-11-04): 시작 팝업에서 고른 것만 이번 판에 1개씩 (판이 시작되면 가진 수량에서 바로 1개 쓴 것으로 — 안 써도 같음)
+//  고르기 표시(Hub.setUsing)는 꺼내 쓴 뒤 풀어서, 다음 판은 다시 아무것도 안 고른 상태로
+function takeRound(game, ids) {
+  G.round = {};
+  if (!HUB) return;
+  for (const id of ids) { if (HUB.isUsing(game, id)) { if (HUB.useBoost(game, id)) G.round[id] = 1; HUB.setUsing(game, id, false); } }
+}
+const itemCount = (id) => (HUB ? (G.round && G.round[id]) || 0 : G.items[id]);
 function spendItem(id) {
-  if (HUB) return HUB.useBoost('memory', id);
+  if (HUB) { if (!(G.round && G.round[id] > 0)) return false; G.round[id]--; return true; }
   if (G.items[id] <= 0) return false;
   G.items[id]--; return true;
 }
@@ -442,8 +450,7 @@ function updateHud() {
 }
 function renderItems() {
   const set = (id, cid, n) => { $(cid).textContent = n; $(id).classList.toggle('empty', n <= 0); };
-  set('btnHint', 'cHint', itemCount('hint')); set('btnPeek', 'cPeek', itemCount('find')); set('btnTime', 'cTime', itemCount('time'));
-  $('btnBomb').classList.toggle('hidden', itemCount('bomb') <= 0); $('cBomb').textContent = itemCount('bomb');
+  set('btnHint', 'cHint', itemCount('hint')); set('btnTime', 'cTime', itemCount('time')); set('btnPeek', 'cPeek', itemCount('find')); set('btnBomb', 'cBomb', itemCount('bomb'));
 }
 function renderBuffs() {
   const el = $('buffs'); el.innerHTML = '';
@@ -487,7 +494,7 @@ const click = (id, fn) => $(id).addEventListener('click', () => { Audio.unlock()
 click('btnGo', () => startStage(G.si));
 click('btnReadyMap', goMap); click('btnReadyHome', goMain); click('btnHomeR', goMain); click('btnMapP', goMap); click('btnMapR', goMap);
 click('btnPause', pauseGame); click('btnResume', resumeGame);
-click('btnRetryP', () => startStage(G.si)); click('btnRetry', () => startStage(G.si));
+click('btnRetryP', () => showReady(G.si)); click('btnRetry', () => showReady(G.si)); // 다시하기도 시작 팝업(아이템 고르기)부터
 click('btnNext', () => showReady(Math.min(STAGES.length - 1, G.si + 1)));
 $('btnHint').addEventListener('click', () => { Audio.unlock(); useHint(); });
 $('btnPeek').addEventListener('click', () => { Audio.unlock(); usePeek(); });

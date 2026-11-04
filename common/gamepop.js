@@ -16,8 +16,9 @@
   const ITEMS = { life: ['하트', BASE + 'common/ui/heart.webp'], shield: ['보호막', BASE + 'common/items/shield.webp'], slow: ['슬로우', BASE + 'common/items/slow.webp'] };
   const START_ITEMS = ['life', 'shield', 'slow'];
   // 스테이지형 게임의 시작 팝업 아이템 칸 (힌트·시간 추가·폭탄·모두 보기는 게임 화면 버튼으로 꺼내 씀, 하트는 시작할 때 체크)
-  const STAGE = { shisen: ['hint', 'time', 'bomb'], memory: ['hint', 'time', 'bomb', 'find'], mole: ['life'] };
-  const ITEM_NAME = { life: '하트', shield: '보호막', slow: '슬로우', hint: '힌트', time: '시간 추가', bomb: '폭탄', find: '모두 보기' };
+  //  게임 화면 아래 아이템 버튼과 같은 순서·같은 그림 (2026-11-04). 처음엔 아무것도 안 고른 상태, 고르면 그 판에 1개 (판이 시작되면 쓴 것)
+  const STAGE = { shisen: ['hint', 'time', 'shuffle', 'bomb'], memory: ['hint', 'time', 'find', 'bomb'], mole: ['life'] };
+  const ITEM_NAME = { life: '하트', shield: '보호막', slow: '슬로우', hint: '힌트', time: '시간 추가', shuffle: '섞기', bomb: '폭탄', find: '모두 보기' };
   const itemSrc = (id) => (id === 'life' ? BASE + 'common/ui/heart.webp' : `${BASE}common/items/${id}.webp`);
   // 버튼 앞 흰 아이콘 (A09)
   const ICO = { btnRetry: 'retry', btnRetryP: 'retry', btnHomeR: 'home', btnHomeP: 'games', btnResume: 'play', btnMapR: 'map', btnMapP: 'map', btnNext: 'next', gpGo: 'play', gpFrom: 'next', btnGo: 'play', btnReadyHome: 'home' };
@@ -52,7 +53,6 @@
 .gp-slot.none{filter:saturate(.35)}.gp-slot.none .n{display:none}
 .gp-slot .buy{position:absolute;left:50%;bottom:-11px;transform:translateX(-50%);display:flex;align-items:center;gap:2px;background:#FFF4D2;border:2px solid #F5C860;border-radius:12px;padding:0 6px;font-size:13px;color:#6A3A00;white-space:nowrap;filter:none}
 .gp-slot .buy img{width:14px;height:14px}
-.gp-off{display:none!important}
 .gp-slot.off{opacity:.45;pointer-events:none}.gp-slot.off .buy{display:none}
 .gp-tip{font-size:14px;color:#8A6E58;text-align:center;flex:none}
 .gp-ask{z-index:60}.gp-ask > .panel{min-height:0!important}
@@ -203,32 +203,25 @@
     const row = panel.querySelector(':scope > .row') || $('btnGo');
     panel.insertBefore(items, row);
     drawStageItems();
-    // 시작할 때 체크한 하트는 이번 판에만 (게임이 Hub.takeBoosts 로 꺼낸 뒤 체크를 풀어 둠)
-    const go = $('btnGo'); if (go) go.addEventListener('click', () => setTimeout(() => { if (HUB) for (const id of STAGE[game]) if (id === 'life' && HUB.isUsing(game, id)) HUB.setUsing(game, id, false); }, 0));
+    // 시작할 때 체크한 것은 이번 판에만 (게임이 startStage 에서 꺼낸 뒤 체크를 풀어 둠)
+    const go = $('btnGo'); if (go) go.addEventListener('click', () => setTimeout(clearStageSel, 0));
   }
-  // 스테이지형 게임 안 아이템 버튼 (시작 팝업에서 체크를 푼 아이템은 이번 판 게임 화면에서 숨김)
-  const IN_GAME = { shisen: { hint: 'btnHint', time: 'btnTime', bomb: 'btnBomb' }, memory: { hint: 'btnHint', find: 'btnPeek', time: 'btnTime', bomb: 'btnBomb' } };
-  const stageOff = new Set(); // 이번 판에 안 가져갈 아이템 (기본: 가진 것은 모두 가져감)
-  function applyStageOff() {
-    const M = IN_GAME[game] || {};
-    for (const [id, bid] of Object.entries(M)) { const b = $(bid); if (b) b.classList.toggle('gp-off', stageOff.has(id)); }
-  }
+  const clearStageSel = () => { if (HUB) for (const id of STAGE[game] || []) if (HUB.isUsing(game, id)) HUB.setUsing(game, id, false); };
   function drawStageItems() {
     const box = $('gpStageItems'); if (!box) return;
     const K = (HUB && HUB.BOOSTS[game]) || [];
     box.innerHTML = '';
     for (const id of STAGE[game]) {
-      const def = K.find((x) => x.id === id), n = HUB ? HUB.boostCount(game, id) : 0, start = id === 'life', on = start ? !!(HUB && HUB.isUsing(game, id)) : n > 0 && !stageOff.has(id);
+      const def = K.find((x) => x.id === id), n = HUB ? HUB.boostCount(game, id) : 0, on = !!(HUB && HUB.isUsing(game, id));
       const b = document.createElement('button');
       b.className = 'gp-slot' + (on ? ' on' : '') + (n > 0 ? '' : ' none') + (def ? '' : ' off');
       b.innerHTML = `<img class="ic" src="${itemSrc(id)}" alt=""><span class="nm">${def ? ITEM_NAME[id] : '준비 중'}</span><span class="n">${n}</span>`
         + (def && n <= 0 ? `<span class="buy"><img src="${BASE}common/ui/coin.webp" alt="">${def.price}</span>` : '');
       b.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (start && n > 0) { blip(on ? 500 : 900); HUB.setUsing(game, id, !on); drawStageItems(); return; }
-        // 게임 중에 버튼으로 쓰는 아이템(힌트·시간 추가·폭탄·모두 보기): 눌러서 이번 판에 가져갈지 체크 / 체크 풀기
-        if (n > 0) { blip(on ? 500 : 900); on ? stageOff.add(id) : stageOff.delete(id); drawStageItems(); applyStageOff(); return; }
-        buy(game, id, def, () => { if (start) HUB.setUsing(game, id, true); else stageOff.delete(id); drawStageItems(); applyStageOff(); });
+        // 가진 것: 눌러서 이번 판에 쓸지 체크 / 체크 풀기. 안 가진 것: 사면 바로 체크
+        if (n > 0) { blip(on ? 500 : 900); HUB.setUsing(game, id, !on); drawStageItems(); return; }
+        buy(game, id, def, () => { HUB.setUsing(game, id, true); drawStageItems(); });
       });
       box.appendChild(b);
     }
@@ -271,12 +264,12 @@
 
   function boot() {
     dressAll();
-    if (STAGE[game]) stageReady();
+    if (STAGE[game]) { clearStageSel(); stageReady(); }
+    // 시작 팝업이 열릴 때마다 아무것도 안 고른 상태로
     const rd = $('ready');
-    if (rd && STAGE[game]) new MutationObserver(() => { if (!rd.classList.contains('hidden')) { drawStageItems(); applyStageOff(); } }).observe(rd, { attributes: true, attributeFilter: ['class'] });
+    if (rd && STAGE[game]) new MutationObserver(() => { if (!rd.classList.contains('hidden')) { clearStageSel(); drawStageItems(); } }).observe(rd, { attributes: true, attributeFilter: ['class'] });
     const obs = new MutationObserver(() => { decorateResult(); decoratePause(); dressAll(); });
     for (const id of ['result', 'pause']) if ($(id)) obs.observe($(id), { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
-    if (STAGE[game] && $('ready')) new MutationObserver(() => { if (!$('ready').classList.contains('hidden')) drawStageItems(); }).observe($('ready'), { attributes: true, attributeFilter: ['class'] });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 

@@ -4,7 +4,7 @@
 //  · 게임 카드(스크롤해도 고정)로 게임을 고르면 그 게임의 게임 부스트 / 보유 아이템이 보임
 //  · 게임 부스트: 1개씩 사서 모음. 수량은 구매·게임 보상·게임에서 사용 모두 같은 숫자(common/profile.js)
 const $ = (id) => document.getElementById(id);
-const V = '?v=202611041135'; // bump when images change so phones don't show old cached ones
+const V = '?v=202611041138'; // bump when images change so phones don't show old cached ones
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 
 const GAMES = [
@@ -279,11 +279,15 @@ function renderPark() {
       const used = own && Hub.parkKindUsed(kind).has(n);
       d.className = `bcard park-card ${kind}` + (own ? ' owned' : '') + (used ? ' on' : '') + (!own && gems() < K.price ? ' poor' : '');
       // 가진 것: 배경 스킨처럼 '적용하기' → 첫 화면의 그 종류 전체가 바뀜 (첫 화면에서 눌러 고르는 것도 그대로)
+      // 동상은 첫 화면에 자리가 여러 곳이라 아이템샵에서 한꺼번에 적용하지 않음 → 첫 화면에서 동상을 눌러 바꿈 (누르면 안내)
+      const statue = kind === 'statue';
       d.innerHTML = `<span class="park-theme">${(K.themes && K.themes[k]) || ''}</span>${used ? '<span class="check">✓</span>' : ''}<img class="bi" src="${img}" alt=""><div class="bn"></div>`
-        + (used ? '<button class="sbtn green park-apply" disabled>적용중</button>' : own ? '<button class="sbtn gold park-apply">적용하기</button>' : `<button class="price-pill gem"><img src="${GEM}" alt="">${K.price}</button>`);
+        + (used ? '<button class="sbtn green park-apply" disabled>적용 중</button>' : own && statue ? '<button class="sbtn park-apply statue-how">첫 화면에서</button>' : own ? '<button class="sbtn gold park-apply">적용하기</button>' : `<button class="price-pill gem"><img src="${GEM}" alt="">${K.price}</button>`);
       d.querySelector('.bn').textContent = name;
       const ap = d.querySelector('.park-apply');
-      if (ap) ap.onclick = () => { Hub.applyParkKind(kind, n); blip(900); toast(`${name} 적용! 첫 화면의 ${K.name}이(가) 바뀌어요`); renderPark(); };
+      if (ap && statue) { if (!used) ap.onclick = () => statueHow(img, name); }
+      else if (ap) ap.onclick = () => { Hub.applyParkKind(kind, n); blip(900); toast(`${name} 적용! 첫 화면의 ${K.name}이(가) 바뀌어요`); renderPark(); };
+      if (statue && own) d.querySelector('.bi').onclick = () => statueHow(img, name);
       const btn = d.querySelector('.price-pill');
       if (btn) btn.onclick = () => {
         if (gems() < K.price) { blip(300); toast(`다이아가 ${K.price - gems()}개 모자라요! 첫 화면의 다이아 칸에서 모을 수 있어요`); return; }
@@ -296,6 +300,10 @@ function renderPark() {
     });
     box.appendChild(row);
   }
+}
+// 동상 안내: 동상은 첫 화면의 동상 자리를 눌러서 바꿈 (자리가 여러 곳)
+function statueHow(img, name) {
+  blip(); confirmBox('동상 바꾸기', `<img class="mthumb" src="${img}" alt=""><b>${name}</b><br>동상은 첫 화면에서 바꿔요!<br>첫 화면의 동상을 누르면 가진 동상 중에서 골라 놓을 수 있어요.`, '확인', () => {}, false);
 }
 function renderAll() { renderGames(); renderSkins(); renderBoosts(); renderOwned(); renderDressEntry(); renderPark(); }
 

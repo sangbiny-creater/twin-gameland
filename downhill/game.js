@@ -65,7 +65,7 @@ const $ = (id) => document.getElementById(id);
 const rng = (seed) => { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let x = s; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; };
 
 // ---------- sprites ----------
-const ASSET_V = '202611041135';
+const ASSET_V = '202611041138';
 const SP = { img: new Image(), f: null, ready: false };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -765,7 +765,21 @@ function drawItem(it, p, fade) {
   const y = p.y - 44 * p.k + Math.sin(G.t * 5 + it.Z) * 4 * p.k;
   ctx.fillStyle = 'rgba(70,100,140,.15)';
   ctx.beginPath(); ctx.ellipse(p.x, p.y, w * 0.4, w * 0.12, 0, 0, 7); ctx.fill();
-  if (it.kind !== 'coin') { ctx.save(); ctx.globalAlpha = 0.35 * fade; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p.x, y, w * 0.7, 0, 7); ctx.fill(); ctx.restore(); }
+  // 아이템은 장애물과 바로 구분되게 은은하게 빛남 (2026-11-04): 숨 쉬듯 커졌다 작아지는 노란 빛 + 둘레에 도는 반짝이 4개
+  if (it.kind !== 'coin') {
+    const pulse = 0.85 + Math.sin(G.t * 4 + it.Z) * 0.15, R = w * 1.05 * pulse;
+    ctx.save(); ctx.globalAlpha = fade;
+    const gr = ctx.createRadialGradient(p.x, y, 0, p.x, y, R);
+    gr.addColorStop(0, 'rgba(255,248,200,.85)'); gr.addColorStop(0.45, 'rgba(255,224,110,.45)'); gr.addColorStop(1, 'rgba(255,214,80,0)');
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(p.x, y, R, 0, 7); ctx.fill();
+    ctx.fillStyle = '#FFF6C8';
+    for (let k = 0; k < 4; k++) {
+      const an = G.t * 1.6 + it.Z + k * Math.PI / 2, sx = p.x + Math.cos(an) * w * 0.78, sy = y + Math.sin(an) * w * 0.78, r = w * (0.07 + 0.03 * Math.sin(G.t * 6 + k));
+      ctx.beginPath(); ctx.moveTo(sx, sy - r * 2); ctx.lineTo(sx + r * 0.6, sy); ctx.lineTo(sx, sy + r * 2); ctx.lineTo(sx - r * 0.6, sy); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(sx - r * 2, sy); ctx.lineTo(sx, sy + r * 0.6); ctx.lineTo(sx + r * 2, sy); ctx.lineTo(sx, sy - r * 0.6); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
   const pic = it.kind === 'jump' ? JUMP_IMG : it.kind === 'heart' ? HEART_IMG : null; // 그림 파일로 그리는 아이템
   if (pic) {
     if (pic.complete && pic.naturalWidth) { const pw = w * 1.25, ph = pw * pic.naturalHeight / pic.naturalWidth; ctx.save(); ctx.globalAlpha = fade; ctx.drawImage(pic, p.x - pw / 2, y - ph / 2, pw, ph); ctx.restore(); }

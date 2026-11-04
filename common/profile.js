@@ -69,16 +69,17 @@
   // 예전(게임별) 스킨 id → 공통 id
   const OLD_SKIN = { autumn: 'forest', moon: 'space' };
   // 게임 부스트: 1개씩 사서 모아 두고, '사용중'으로 켜 둔 것만 게임을 시작할 때 1개씩 쓰임
-  // 아이템 (팝업 v2, docs/spec/팝업_아이템_정리_v1.md): 아이템샵에서 파는 것은 이 7개뿐, 수량은 모든 게임이 같이 씀(sh.boosts._all)
+  // 아이템 (팝업 v2, docs/spec/팝업_아이템_정리_v1.md): 아이템샵에서 파는 것은 이 8개뿐, 수량은 모든 게임이 같이 씀(sh.boosts._all)
   //  하트 = 하트 3칸·2개 대신 4칸·3개로 시작 / 보호막 = 처음 한 번 안 다침 / 슬로우 = 처음 20초 천천히 (무제한형·두더지는 시작 팝업에서 체크)
-  //  힌트·시간 추가·폭탄·모두 보기 = 게임 화면 버튼으로 하나씩 꺼내 씀 (manual)
-  //  게임 안에서만 줍는 아이템(자석·코인 2배·날개·섞기 등)은 팔지 않음. 스카이훅·다트는 이번에 안 바꿔서 예전 그대로(게임별 수량)
+  //  힌트·시간 추가·섞기(사천성만)·폭탄·모두 보기(메모리만) = 시작 팝업에서 고르면 그 판에 1개 (게임 화면 버튼으로 씀, 안 써도 판이 시작되면 1개 쓴 것)
+  //  게임 안에서만 줍는 아이템(자석·코인 2배·날개 등)은 팔지 않음. 스카이훅·다트는 이번에 안 바꿔서 예전 그대로(게임별 수량)
   const ITEMS = {
     life: { name: '하트', price: 300, games: ['downhill', 'bakery', 'stairs', 'helicopter', 'dogsnack', 'mole'], desc: '하트 4칸에 3개로 시작해요' },
     shield: { name: '보호막', price: 200, games: ['downhill', 'bakery', 'stairs', 'helicopter', 'dogsnack'], desc: '처음 한 번은 다쳐도 괜찮아요' },
     slow: { name: '슬로우', price: 200, games: ['downhill', 'bakery', 'stairs', 'helicopter', 'dogsnack'], desc: '처음 20초 동안 천천히 움직여요' },
     hint: { name: '힌트', price: 60, games: ['shisen', 'memory'], desc: '짝 하나를 알려 줘요', manual: true },
     time: { name: '시간 추가', price: 80, games: ['shisen', 'memory'], desc: '제한 시간 +10초', manual: true },
+    shuffle: { name: '섞기', price: 80, games: ['shisen'], desc: '타일 자리를 섞어요', manual: true },
     bomb: { name: '폭탄', price: 150, games: ['shisen', 'memory'], desc: '짝 하나를 바로 이어 줘요', manual: true },
     find: { name: '모두 보기', price: 120, games: ['memory'], desc: '모든 카드를 잠깐 보여 줘요', manual: true },
   };
@@ -92,9 +93,9 @@
     ],
     helicopter: ['life', 'shield', 'slow'],
     stairs: ['life', 'shield', 'slow'],
-    shisen: ['hint', 'time', 'bomb'],
+    shisen: ['hint', 'time', 'shuffle', 'bomb'],
     downhill: ['life', 'shield', 'slow'],
-    memory: ['hint', 'time', 'bomb', 'find'],
+    memory: ['hint', 'time', 'find', 'bomb'],
     mole: ['life'],
     bakery: ['life', 'shield', 'slow'],
     dogsnack: ['life', 'shield', 'slow'],
@@ -223,7 +224,10 @@
   function upgradeItems(d) {
     let changed = false;
     for (const c of d.chars) {
-      const sh = c.shop; if (!sh || sh.items2) continue;
+      const sh = c.shop; if (!sh) continue;
+      // 2026-11-04: 섞기도 같이 쓰는 칸으로 (사천성 수량을 옮김, 한 번만)
+      if (sh.items2 && !sh.items3) { const all = sh.boosts._all = sh.boosts._all || {}, s = sh.boosts.shisen || {}; if (s.shuffle) { all.shuffle = (all.shuffle || 0) + s.shuffle; delete s.shuffle; } sh.items3 = true; changed = true; }
+      if (sh.items2) continue;
       sh.boosts = sh.boosts || {}; const all = sh.boosts._all = sh.boosts._all || {};
       for (const g of Object.keys(sh.boosts)) {
         if (g === '_all' || g === 'skyhook' || g === 'darts') continue;
@@ -232,7 +236,7 @@
           all[id] = (all[id] || 0) + (sh.boosts[g][id] || 0); delete sh.boosts[g][id];
         }
       }
-      sh.items2 = true; changed = true;
+      sh.items2 = sh.items3 = true; changed = true;
     }
     return changed;
   }
@@ -297,7 +301,7 @@
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611041135` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611041138` : null; },
     buyCostume(id, c = this.active()) {
       const it = COSTUMES.find((x) => x.id === id);
       if (!c || !it || this.ownsCostume(id, c)) return { ok: false };
@@ -459,11 +463,10 @@
       for (const k of Object.keys(c.parkDeco)) if (k.endsWith('-' + kind)) delete c.parkDeco[k];
       c.parkDeco[kind] = n; save();
     },
-    // 아이템샵에 '사용 중'으로 보일 번호들: 종류 전체에 놓인 것 + 자리마다 따로 고른 것
+    // 아이템샵에 '적용 중'으로 보일 번호들: 첫 화면에 실제로 놓인 것만 (첫 화면이 적어 둔 자리 목록으로 셈, 없으면 종류 전체 값)
     parkKindUsed(kind, c = this.active()) {
-      const u = new Set([this.parkDeco(kind, c)]);
-      for (const [k, v] of Object.entries((c && c.parkDeco) || {})) if (k.endsWith('-' + kind)) u.add(v);
-      return u;
+      let keys = null; try { keys = (JSON.parse(localStorage.getItem('twin_park_spots') || '{}') || {})[kind]; } catch (e) { /* ignore */ }
+      return new Set((keys && keys.length ? keys : [kind]).map((k) => this.parkDeco(k, c)));
     },
     setPark(order, c = this.active()) { if (!c) return; if (order) c.park = order.slice(); else delete c.park; save(); },
     // 다이아 (v0.3 상용화 검수: common/monet.js 가 늘리고 씀. 보관판 v0.1·v0.2에서는 보이기만)

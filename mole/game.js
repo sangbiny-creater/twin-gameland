@@ -21,7 +21,7 @@ const HEART_STAY = 0.6;    // 하트 두더지가 다 올라와 머무는 시간
 const HEART_FULL_PTS = 300; // 하트가 꽉 찼을 때 하트 두더지를 잡으면 받는 점수
 const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611041135';
+const ASSET_V = '202611041138';
 const asset = (p) => `assets/${p}.webp?v=${ASSET_V}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -697,7 +697,7 @@ const click = (id, fn) => $(id).addEventListener('click', () => { Audio.unlock()
 click('btnGo', () => startStage(G.si));
 click('btnReadyMap', goMap); click('btnReadyHome', goMain); click('btnHomeR', goMain); click('btnMapP', goMap); click('btnMapR', goMap);
 click('btnPause', pauseGame); click('btnResume', resumeGame);
-click('btnRetryP', () => startStage(G.si)); click('btnRetry', () => startStage(G.si));
+click('btnRetryP', () => showReady(G.si)); click('btnRetry', () => showReady(G.si)); // 다시하기도 시작 팝업(하트 고르기)부터
 click('btnNext', () => showReady(Math.min(STAGES.length - 1, G.si + 1)));
 for (const id of ['time', 'double', 'rainbow']) $('it_' + id).addEventListener('pointerdown', (e) => { e.preventDefault(); Audio.unlock(); useItem(id); });
 G.items = { time: 1, double: 1, rainbow: 1 }; // 단독 실행일 때 기본 수량
