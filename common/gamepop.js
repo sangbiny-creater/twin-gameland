@@ -55,6 +55,8 @@
 .gp-slot .buy img{width:14px;height:14px}
 .gp-slot.off{opacity:.45;pointer-events:none}.gp-slot.off .buy{display:none}
 .gp-tip{font-size:14px;color:#8A6E58;text-align:center;flex:none}
+html[lang=en] .gp-slot .nm{font-size:12px;letter-spacing:-.2px;white-space:nowrap}html[lang=en] .gp-tip{font-size:13px}
+html[lang=en] .pp-acts button.pp-b{padding-left:14px!important;padding-right:14px!important}
 .gp-ask{z-index:60}.gp-ask > .panel{min-height:0!important}
 .gp-buy{display:flex;align-items:center;gap:12px;flex:none;font-size:18px;line-height:1.5;color:#5A3B22}
 .gp-buy-ic{width:72px;height:72px;object-fit:contain}.gp-coin{width:20px;height:20px;vertical-align:-4px;margin-right:2px}
@@ -77,7 +79,9 @@
   // 버튼 아이콘·글자 (게임 코드가 글자를 바꿔 아이콘이 지워지면 다시 붙임)
   function dress(b) {
     if (!b) return;
-    if (LABEL[b.id] && b.textContent.trim() !== LABEL[b.id] && !b.dataset.gpKeep) b.textContent = LABEL[b.id];
+    // (영어판: 글자는 common/i18n.js 가 바꿈 → 바뀐 글자와 비교해야 서로 되돌리기를 반복하지 않음)
+    const label = LABEL[b.id] && (window.I18N && I18N.tr ? I18N.tr(LABEL[b.id]) : LABEL[b.id]);
+    if (label && b.textContent.trim() !== label && !b.dataset.gpKeep) b.textContent = LABEL[b.id];
     const ic = ICO[b.id];
     if (ic && !b.querySelector('i.gp-ico')) { const i = document.createElement('i'); i.className = 'gp-ico'; i.style.backgroundImage = `url(${IMG}ico_${ic}.webp)`; b.prepend(i); }
   }

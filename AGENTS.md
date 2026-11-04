@@ -46,6 +46,8 @@
 - 그림은 webp(투명 그림은 무손실). 아이폰 홈 화면 아이콘만 PNG.
 - 새 게임은 README의 "새 게임 추가하는 법"과 최근 게임(`memory/`, `mole/`, `bakery/`, `dogsnack/`) 구조를 따라요. 일시정지 창은 `common/pause.css`, 하트는 `common/ui/heart.webp`·`heart_empty.webp` (모든 게임 같은 모양).
 
+- **한국어/영어:** 화면 글자는 코드에 한글로 두고 `common/i18n.js`가 고른 언어로 바꿔요 (표: `common/i18n_data.js`). 글자를 새로 넣거나 고치면 `docs/Twin_Gameland_KO_EN_Localization_5th_Final_Review_for_Claude.md` 표 또는 `tools/i18n_build.py`에 영어를 넣고 `python3 tools/i18n_build.py`를 다시 돌려요.
+
 ## 6. 게임 공통 규칙 (사용자가 정한 것 — 바꾸지 않기)
 
 - **스테이지 게임:** 10월드 × 10판 징검다리 지도. 인트로 START → 지도. 지금 해야 할 판은 분홍색으로 빛남.

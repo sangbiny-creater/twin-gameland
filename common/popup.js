@@ -51,7 +51,13 @@
     restore(panel);
     const t = panel.querySelector(':scope > .p-title:first-child, :scope > .title:first-child, :scope > .r-title:first-child, :scope > .m-title:first-child');
     if (t) { t.style.fontSize = ''; let fs = 26; while (t.scrollWidth > t.clientWidth + 0.5 && fs > 14) { fs -= 1; t.style.setProperty('font-size', fs + 'px', 'important'); } }
-    // 보이는 버튼이 없는 줄은 접음 (실패하면 '다음 스테이지'가 숨는 경우 등)
+    // 버튼 글자가 버튼보다 길면 글자만 줄임 (영어판은 글자가 길어요)
+    panel.querySelectorAll('button.pp-b, button.pp-adb b').forEach((b) => {
+      b.style.fontSize = ''; const el = b; if (!el.clientWidth) return;
+      let fs = parseFloat(getComputedStyle(el).fontSize), guard = 0;
+      while (el.scrollWidth > el.clientWidth + 0.5 && fs > 11 && guard++ < 30) { fs -= 1; el.style.setProperty('font-size', fs + 'px', 'important'); }
+    });
+        // 보이는 버튼이 없는 줄은 접음 (실패하면 '다음 스테이지'가 숨는 경우 등)
     panel.querySelectorAll('.pp-row').forEach((r) => { r.style.display = [...r.children].some((b) => getComputedStyle(b).display !== 'none') ? '' : 'none'; });
     panel.style.zoom = '';
     const box = panel.parentElement, room = box.clientHeight - 24;
