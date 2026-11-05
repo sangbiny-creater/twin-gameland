@@ -3,15 +3,10 @@
 //  ① 광고 줄(common/monet.js 가 채움) ② 큰 버튼 한 줄 가득(다음 스테이지·계속하기) ③ 같은 폭 두 버튼 나란히
 //  버튼은 그대로 옮기기만 해서 게임 코드의 버튼 기능(id·누르기)은 바뀌지 않음
 (function () {
-  const MAIN = ['btnNext', 'btnResume', 'btnFromLv'];                   // ② 큰 버튼
-  const BACK = /^(btnHome|btnMap|btnReadyMap|btnReadyHome|btnChooseBack|btnFromStart)/; // 파란 버튼 (나가기·뒤로)
-  // 버튼 색 약속 (docs/spec/팝업_아이템_정리_v1.md): 민트 = 메인으로·게임 선택 / 보라 = 지도 보기 / 파랑 = 다음 스테이지·XX판부터 / 나머지 분홍
-  const COLOR = { btnHomeR: 'mint', btnHomeP: 'mint', btnReadyHome: 'mint', btnMapR: 'purple', btnMapP: 'purple', btnReadyMap: 'purple', btnNext: 'blue', btnFromLv: 'blue', gpFrom: 'blue' };
-  const paint = (b) => { const c = COLOR[b.id] || (isBack(b) ? 'blue' : ''); for (const k of ['blue', 'mint', 'purple']) b.classList.toggle(k, k === c); };
+  const MAIN = ['btnNext', 'btnResume', 'btnFromLv', 'gpGo', 'btnGo'];   // ② 큰 버튼 (채운 버튼)
+  const paint = () => {}; // v0.4: 버튼 색은 캐릭터 색 하나 (common/popup.css)
   const ACTION = /(^|\s)(btn|btn-start|btn-sub|btn-main|btn-orange|btn-blue|btn-gray|mbtn|rb)(\s|$)/;
   const PANELS = '.screen.dim > .panel, #ready > .panel, .modal > .panel, .modal > .mpanel';
-  // 파란(나가기·뒤로) 버튼: 게임 버튼은 id 로만 정함 (다시하기·출발·계속은 분홍), 그 밖의 창은 닫기·취소
-  const isBack = (b) => (/^btn[A-Z]/.test(b.id) ? BACK.test(b.id) : b.hasAttribute('data-close') || /닫기|취소/.test(b.textContent) || /(^|\s)(gray|mbtn gray)(\s|$)/.test(b.className));
 
   function arrange(panel) {
     if (panel.querySelector(':scope > .pp-acts')) return;

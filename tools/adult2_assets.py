@@ -1,0 +1,81 @@
+"""어른 캐릭터 2차 그림 적용 (v0.4 디자인 시안) — character/adult2/ → 게임 그림
+  python3 tools/adult2_assets.py
+요청 글: making_GPT/성인캐릭터_교체2/ (00_전체안내.txt)
+  · 팝업 공통 재료(분홍=은유, 파랑=은결) → common/ui/popup/v4/ (common/popup.css 가 씀)
+  · 캐릭터 선택 → hub/select/ · 환영·출석·잠금 → common/ui/monet/ · 결과 캐릭터 → common/ui/popup/chars/
+  · 계단 SD → common/chars 묶음의 stairs_* · 다운힐 빛 → downhill/assets/ui/ · 롤러코스터 → hub/park/coaster/
+"""
+import json, os, shutil, sys
+import numpy as np
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from PIL import Image
+import adult_assets as A
+from adult_assets import ROOT, key, tight, cuts, save, scaled, ground_frame, pack
+
+SRC = f'{ROOT}/character/adult2'
+UI = 'common/ui/popup/v4'
+
+
+def ui():
+    for f, n, w in [('K01', 'panel_pink', 600), ('K02', 'panel_blue', 600), ('K03', 'ribbon_pink', 680), ('K04', 'ribbon_blue', 680),
+                    ('K05', 'btn_pink', 420), ('K06', 'btn_blue', 420), ('K07', 'fill_pink', 420), ('K08', 'fill_blue', 420), ('K09', 'x_pink', 120), ('K10', 'x_blue', 120)]:
+        p = tight(key(f'{SRC}/ui/{f}.png', soft=False)); p = scaled(p, w / p.width)
+        save(p, f'{UI}/{n}.webp'); print(n, p.size)
+
+
+def select():
+    for f, n, sz in [('Y01', 'bg', (1024, 1536)), ('Y02', 'bg_land', (1536, 1024))]:
+        # 하늘이 초록으로 와서 하늘색으로 채움 (구름·풍선은 그대로)
+        p = key(f'{SRC}/select/{f}.png'); sky = Image.new('RGBA', p.size); h = p.height
+        for y in range(h):
+            t = min(1, y / (h * .62)); sky.paste((round(92 + 150 * t), round(182 + 62 * t), round(246 + 8 * t), 255), (0, y, p.width, y + 1))
+        sky.alpha_composite(p); sky.convert('RGB').resize(sz, Image.LANCZOS).save(f'{ROOT}/hub/select/{n}.webp', 'WEBP', quality=84, method=6)
+    for f, n, w in [('Y03', 'card_eunyu', 480), ('Y04', 'card_eungyeol', 480), ('Y05', 'name_pink', 420), ('Y06', 'name_blue', 420), ('Y07', 'lang_pink', 420), ('Y08', 'lang_blue', 420)]:
+        p = tight(key(f'{SRC}/select/{f}.png')); p = scaled(p, w / p.width); save(p, f'hub/select/{n}.webp'); print(n, p.size)
+
+
+def monet():
+    for f, n in [('W01', 'welcome'), ('L01', 'locked'), ('N01', 'attend_eunyu'), ('N02', 'attend_eungyeol')]:
+        p = tight(key(f'{SRC}/monet/{f}.png')); p = scaled(p, 720 / p.width); save(p, f'common/ui/monet/{n}.webp'); print(n, p.size)
+    for c, n in zip(cuts(key(f'{SRC}/monet/N03.png'), 5), ['normal', 'today_pink', 'today_blue', 'done', 'd10']):
+        save(scaled(c, 160 / c.width), f'common/ui/monet/cell_{n}.webp')
+
+
+def result():
+    for who, b in [('eunyu', 1), ('eungyeol', 5)]:
+        for i, n in enumerate(['best', 'clear', 'end', 'sad']):
+            p = tight(key(f'{SRC}/result/R0{b + i}.png')); p = scaled(p, 660 / p.width); save(p, f'common/ui/popup/chars/{who}_{n}.webp'); print(who, n, p.size)
+
+
+def stairs():
+    names = (['stairs_idle', 'stairs_ready', 'stairs_jump', 'stairs_land', 'stairs_fall'], ['stairs_hurt', 'stairs_dizzy', 'stairs_happy', 'stairs_dead'])
+    for who, b, k in [('eunyu', 1, 1.0), ('eungyeol', 3, 1.04)]:
+        look = A.LOOK[who]; a = cuts(key(f'{SRC}/stairs_sd/U0{b}.png'), 5); c = cuts(key(f'{SRC}/stairs_sd/U0{b + 1}.png'), 4)
+        s = 393 * k / a[0].height; frames = {}
+        for n, x in zip(names[0], a): frames[n] = ground_frame(x, s)
+        for n, x in zip(names[1], c): frames[n] = ground_frame(x, s)
+        pack(f'{ROOT}/common/chars/{look}.json', f'{ROOT}/common/chars/{look}.webp', frames, look)
+        A.fit_bottom  # 결과 작은 그림
+        save(A.fit_bottom(frames['stairs_happy'][0], 240, 300), f'stairs/assets/chars/{look}_happy.webp')
+        save(A.fit_bottom(frames['stairs_dead'][0], 240, 300), f'stairs/assets/chars/{look}_dead.webp')
+
+
+def fx():
+    save(scaled(tight(key(f'{SRC}/downhill_fx/D11.png', soft=False)), 240 / tight(key(f'{SRC}/downhill_fx/D11.png', soft=False)).width), 'downhill/assets/ui/item_burst.webp')
+    r = tight(key(f'{SRC}/downhill_fx/D12.png', soft=False)); save(scaled(r, 240 / r.width), 'downhill/assets/ui/item_ring.webp')
+
+
+def coaster():
+    for f, who in [('H01', 'eunyu'), ('H02', 'eungyeol')]:
+        p = tight(key(f'{SRC}/hub/{f}.png', soft=False)); p = scaled(p, 620 / p.width)
+        # 차 앞부분이 그림 끝에서 곧게 잘려 있어서 오른쪽 위·아래 귀퉁이를 둥글게
+        a = np.array(p); W, Hh = p.size; y0 = int(np.where(a[:, -3, 3] > 128)[0][0]); r = 110
+        yy, xx = np.ogrid[:Hh, :W]
+        a[(xx > W - r) & (yy >= y0) & (yy < y0 + r) & ((xx - (W - r)) ** 2 + (yy - (y0 + r)) ** 2 > r * r), 3] = 0
+        a[(xx > W - r) & (yy > Hh - r) & ((xx - (W - r)) ** 2 + (yy - (Hh - r)) ** 2 > r * r), 3] = 0
+        p = Image.fromarray(a); save(p, f'hub/park/coaster/{who}.webp'); print(who, p.size)
+
+
+if __name__ == '__main__':
+    STEPS = dict(ui=ui, select=select, monet=monet, result=result, stairs=stairs, fx=fx, coaster=coaster)
+    for k in (sys.argv[1:] or STEPS): STEPS[k]()

@@ -65,7 +65,7 @@ const $ = (id) => document.getElementById(id);
 const rng = (seed) => { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let x = s; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; };
 
 // ---------- sprites ----------
-const ASSET_V = '202611042123';
+const ASSET_V = '202611052217';
 const SP = { img: new Image(), f: null, ready: false };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -760,24 +760,19 @@ function drawObs(o, p, fade) {
     spr(ctx, name, p.x, p.y, w, { alpha: fade });
   } else spr(ctx, name, p.x, p.y + 3 * p.k, w, { anchor: 'b', alpha: fade });
 }
+const FX_BURST = new Image(), FX_RING = new Image(); FX_BURST.src = `assets/ui/item_burst.webp?v=${ASSET_V}`; FX_RING.src = `assets/ui/item_ring.webp?v=${ASSET_V}`;
+const imgOk = (im) => im.complete && im.naturalWidth > 0;
 function drawItem(it, p, fade) {
   const w = (it.kind === 'coin' ? 0.42 : 0.55) * CFG.laneW * p.k;
   const y = p.y - 44 * p.k + Math.sin(G.t * 5 + it.Z) * 4 * p.k;
   ctx.fillStyle = 'rgba(70,100,140,.15)';
   ctx.beginPath(); ctx.ellipse(p.x, p.y, w * 0.4, w * 0.12, 0, 0, 7); ctx.fill();
-  // 아이템은 장애물과 바로 구분되게 은은하게 빛남 (2026-11-04): 숨 쉬듯 커졌다 작아지는 노란 빛 + 둘레에 도는 반짝이 4개
+  // 아이템은 흰 눈 위에서도 바로 보이게: 밑에 빛 고리, 뒤에 도는 후광 (GPT D11·D12, tools/adult2_assets.py)
   if (it.kind !== 'coin') {
-    const pulse = 0.85 + Math.sin(G.t * 4 + it.Z) * 0.15, R = w * 1.05 * pulse;
+    const pulse = 0.9 + Math.sin(G.t * 4 + it.Z) * 0.1;
     ctx.save(); ctx.globalAlpha = fade;
-    const gr = ctx.createRadialGradient(p.x, y, 0, p.x, y, R);
-    gr.addColorStop(0, 'rgba(255,248,200,.85)'); gr.addColorStop(0.45, 'rgba(255,224,110,.45)'); gr.addColorStop(1, 'rgba(255,214,80,0)');
-    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(p.x, y, R, 0, 7); ctx.fill();
-    ctx.fillStyle = '#FFF6C8';
-    for (let k = 0; k < 4; k++) {
-      const an = G.t * 1.6 + it.Z + k * Math.PI / 2, sx = p.x + Math.cos(an) * w * 0.78, sy = y + Math.sin(an) * w * 0.78, r = w * (0.07 + 0.03 * Math.sin(G.t * 6 + k));
-      ctx.beginPath(); ctx.moveTo(sx, sy - r * 2); ctx.lineTo(sx + r * 0.6, sy); ctx.lineTo(sx, sy + r * 2); ctx.lineTo(sx - r * 0.6, sy); ctx.closePath(); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(sx - r * 2, sy); ctx.lineTo(sx, sy + r * 0.6); ctx.lineTo(sx + r * 2, sy); ctx.lineTo(sx, sy - r * 0.6); ctx.closePath(); ctx.fill();
-    }
+    if (imgOk(FX_RING)) { const rw = w * 1.7 * pulse, rh = rw * FX_RING.naturalHeight / FX_RING.naturalWidth; ctx.drawImage(FX_RING, p.x - rw / 2, p.y - rh / 2, rw, rh); }
+    if (imgOk(FX_BURST)) { const r = w * 0.95 * pulse; ctx.translate(p.x, y); ctx.rotate(G.t * 0.9 + it.Z); ctx.drawImage(FX_BURST, -r, -r, r * 2, r * 2); }
     ctx.restore();
   }
   const pic = it.kind === 'jump' ? JUMP_IMG : it.kind === 'heart' ? HEART_IMG : null; // 그림 파일로 그리는 아이템

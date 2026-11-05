@@ -19,7 +19,6 @@
   const GEM_EVERY = 10;                               // 게임 10판마다 다이아 1개
   const AD_SEC = 1;                                   // 가짜 광고 길이 (검수판: 1초만 띄우고 진짜 광고를 본 것과 같은 흐름으로)
   const ATT_DAILY = 2;                                // 출석 매일 다이아 (BM B안)
-  const ATT_BONUS = { 10: { tickets: 1, text: '열쇠 1개', img: 'att_key' }, 30: { gems: 10, text: '다이아 10개', img: 'att_gems' }, 50: { gems: 20, text: '다이아 20개', img: 'att_gems' }, 100: { text: '특별 코스튬 (준비 중)', img: 'att_gift' } };
   // ---------- BM B안 (docs/bm/BM_제안_v1.md, 2026-11-01 사용자 결정) — 숫자는 모두 🟡 임시값 ----------
   // 게임 성과 다이아 (모두 처음 한 번만, 열린 게임에서만): 스테이지 게임 월드(10판) 첫 클리어 · 월드 별 30개 · 사천성 어려움 월드
   //  끝없는 게임은 기록 5단계를 처음 넘을 때 (단계마다 STEP_GEMS). 기록 = Hub.record 의 dist (m 또는 점)
@@ -42,9 +41,9 @@
 
   const ROOT = SRC.replace(/common\/monet\.js.*$/, '');
   // 그림: common/ui/monet/ (GPT U01~U11 → tools/monet_assets.py). 창 틀·버튼은 border-image 로 늘려 씀
-  const IMG = ROOT + 'common/ui/monet/';
+  const IMG = ROOT + 'common/ui/monet/', P4 = ROOT + 'common/ui/popup/v4/'; // P4: 공통 팝업 재료 (분홍 = 은유, 파랑 = 은결)
   const I = (n, cls = 'mn-ic') => `<img class="${cls}" src="${IMG}${n}.webp" alt="">`;
-  for (const n of ['panel', 'ribbon', 'btn_pink', 'btn_gold', 'btn_blue', 'btn_gray', 'ico_key', 'ico_gem', 'ico_lock']) new Image().src = IMG + n + '.webp';
+  for (const n of ['locked', 'welcome', 'ico_key', 'ico_gem', 'ico_lock']) new Image().src = IMG + n + '.webp';
   const G = Hub.GAMES;
   const name = (g) => (G[g] && G[g].name) || g;
   const today = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
@@ -75,16 +74,38 @@
   const css = document.createElement('style');
   css.textContent = `
 .mn-modal{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;background:rgba(20,30,50,.55);font-family:Jua,system-ui,sans-serif;padding:16px}
-.mn-panel{position:relative;width:min(318px,100%);box-sizing:border-box;border:0 solid transparent;border-image:url(${IMG}panel_plain.webp) 215 72 190 fill / 114px 38px 101px stretch;min-height:240px;padding:16px 37px 62px;text-align:center;color:#5A3B22;overflow:visible;filter:drop-shadow(0 10px 24px rgba(0,0,0,.35))}
-.mn-panel h3{margin:-28px auto 2px;width:238px;max-width:100%;height:65px;box-sizing:border-box;padding:0 42px 14px;white-space:nowrap;display:flex;align-items:center;justify-content:center;background:url(${IMG}ribbon.webp) center/contain no-repeat;color:#fff;font-size:20px;font-weight:400;line-height:1.1;text-shadow:0 2px 0 #C2406A,0 0 3px #C2406A}
+.mn-panel{position:relative;width:min(318px,100%);box-sizing:border-box;border:0 solid transparent;border-image:url(${P4}panel_pink.webp) 130 fill / 95px stretch;min-height:200px;padding:16px 20px 22px;text-align:center;color:#5A3B22;overflow:visible;filter:drop-shadow(0 10px 24px rgba(0,0,0,.35))}
+.mn-panel h3{margin:-58px auto -12px;width:270px;max-width:100%;height:101px;box-sizing:border-box;padding:6px 44px 0;white-space:nowrap;display:flex;align-items:center;justify-content:center;background:url(${P4}ribbon_pink.webp) center/contain no-repeat;color:#fff;font-size:20px;font-weight:400;line-height:1.1;text-shadow:0 2px 0 var(--who-d),0 0 3px var(--who-d)}
 .mn-art{display:block;margin:0 auto 2px;width:auto;max-width:78%;max-height:min(150px,20vh)}
 .mn-panel p{margin:6px 0 10px;font-size:15px;line-height:1.45;color:#6B4A30}
 .mn-ic{width:1.35em;height:1.35em;object-fit:contain;vertical-align:-.32em}
 .mn-have{display:flex;justify-content:center;gap:14px;font-size:15px;margin:2px 0 8px}
-.mn-btn{position:relative;display:flex;align-items:center;justify-content:center;gap:4px;width:100%;height:44px;min-height:0;white-space:nowrap;margin:8px 0 0;border:0 solid transparent;border-image:url(${IMG}btn_blue.webp) 0 50 fill / 0 24px stretch;background:none;padding:6px 18px 9px;font:inherit;font-size:17px;line-height:1.15;color:#fff;text-shadow:0 2px 0 rgba(30,70,140,.55);cursor:pointer}
-.mn-btn.pink{border-image-source:url(${IMG}btn_pink.webp);text-shadow:0 2px 0 rgba(170,40,80,.55)}
-.mn-btn.gold{border-image-source:url(${IMG}btn_gold.webp);text-shadow:0 2px 0 rgba(170,90,10,.6)}
-.mn-btn.gray{border-image-source:url(${IMG}btn_gray.webp);color:#5A6478;text-shadow:0 1px 0 rgba(255,255,255,.7)}
+.mn-btn{position:relative;display:flex;align-items:center;justify-content:center;gap:4px;width:100%;height:44px;min-height:0;white-space:nowrap;margin:8px 0 0;border:0 solid transparent;border-image:url(${P4}btn_pink.webp) 0 58 fill / 0 22px stretch;background:none;padding:6px 18px 9px;font:inherit;font-size:17px;line-height:1.15;color:var(--who);cursor:pointer}
+.mn-btn.pink{border-image-source:url(${P4}fill_pink.webp);color:#fff;text-shadow:0 2px 0 var(--who-d)}
+.mn-btn.fill-b.fill-b.fill-b{border-image-source:url(${P4}fill_blue.webp);color:#fff;text-shadow:0 2px 0 #1F62AE}
+.mn-btn.fill-p.fill-p.fill-p{border-image-source:url(${P4}fill_pink.webp);color:#fff;text-shadow:0 2px 0 #B92C62}
+html[data-who=eungyeol] .mn-btn{border-image-source:url(${P4}btn_blue.webp)}
+html[data-who=eungyeol] .mn-btn.pink{border-image-source:url(${P4}fill_blue.webp)}
+html[data-who=eungyeol] .mn-panel{border-image-source:url(${P4}panel_blue.webp)}
+html[data-who=eungyeol] .mn-panel h3{background-image:url(${P4}ribbon_blue.webp)}
+.mn-art-box{position:relative;background:center/100% 100% no-repeat;box-sizing:border-box;filter:drop-shadow(0 10px 24px rgba(0,0,0,.35));color:#5A3B22;text-align:center}
+.mn-art-t{position:absolute;left:0;right:0;transform:translateY(-50%);color:#fff;font-size:1.5em;white-space:nowrap;text-shadow:0 .1em 0 var(--who-d),0 0 .15em var(--who-d)}
+.mn-art-c{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35em}
+.mn-art-c p{margin:0;font-size:.86em;line-height:1.35;color:#6B4A30}
+.mn-art-c .mn-have{margin:0;font-size:1.05em;gap:1.4em}
+.mn-art-c .mn-btns{width:100%}.mn-art-c .mn-btn{height:2.7em;margin:.35em 0 0;font-size:1.05em;padding:.2em 1em .35em}
+.mn-art-c .mn-note{margin:0;font-size:.66em;line-height:1.3}
+.mn-art-x{position:absolute;z-index:2;width:2.7em;height:2.7em;border:0;padding:0;background:url(${P4}x_pink.webp) center/contain no-repeat;cursor:pointer}
+html[data-who=eungyeol] .mn-art-x{background-image:url(${P4}x_blue.webp)}
+.mn-art-box.wel .mn-art-c{gap:.1em}.mn-art-box.wel p{font-size:.76em;line-height:1.3}.mn-art-box.wel .mn-btn{height:2.3em;margin-top:.2em;font-size:1em}
+.mn-art-box.pk{--who:#E8457F;--who-d:#B92C62}.mn-art-box.pk .mn-art-x{background-image:url(${P4}x_pink.webp)}
+.mn-cells{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.3em;width:100%}
+.mn-cell{position:relative;aspect-ratio:160/170;background:center/100% 100% no-repeat;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;font-size:.72em;line-height:1;padding-bottom:.25em;color:#6B4A30}
+.mn-cell i{position:absolute;top:9.5%;left:0;right:0;text-align:center;font-style:normal;font-size:.86em;color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.35)}
+.mn-cell img{width:52%;height:46%;object-fit:contain;margin-bottom:.1em}
+.mn-cell.now{animation:mnBeat 1s ease-in-out infinite}
+.mn-cell.got img,.mn-cell.got b{opacity:0}
+.mn-cell b{font-weight:400}
 .mn-btn:active{transform:translateY(2px)}.mn-btn:disabled{opacity:.45}
 .mn-note{font-size:12px;color:#9A8470;margin-top:10px}
 .mn-tag{display:inline-block;background:#FFE9F0;color:#D24C73;border-radius:8px;padding:1px 8px;font-size:12px;margin:2px 0 4px}
@@ -138,6 +159,20 @@
     // 창이 화면보다 크면 창 전체를 줄임 (위 리본이 잘리지 않게 — 스크롤 대신)
     const pn = m.querySelector('.mn-panel'), room = window.innerHeight - 40;
     if (pn.offsetHeight > room) pn.style.zoom = Math.max(0.6, room / pn.offsetHeight);
+    return m;
+  }
+  // 그림 한 장이 창인 팝업 (환영 선물·출석·잠긴 게임). 글자·버튼은 그림의 빈 칸에 얹음 (글자는 언어별로 바뀜)
+  //  o: { img, ar(가로/세로), title, titleY(%), titleX(%), box:[위, 오른쪽, 아래, 왼쪽](%), html, buttons, note, onX, xPos:[위, 오른쪽](%) }
+  function artModal(o) {
+    const m = modal('', o.buttons, o.note); const pn = m.querySelector('.mn-panel'), btns = pn.querySelector('.mn-btns'), note = pn.querySelector('.mn-note');
+    const w = Math.min(innerWidth - 24, (innerHeight - 24) * o.ar, 420);
+    pn.className = 'mn-art-box' + (o.pink ? ' pk' : '') + (o.cls ? ' ' + o.cls : ''); pn.style.cssText = `width:${w}px;height:${w / o.ar}px;font-size:${w / 340 * 16}px;background-image:url(${IMG}${o.img}.webp)`;
+    pn.innerHTML = `<div class="mn-art-t" style="top:${o.titleY}%;${o.titleX ? `left:${o.titleX}%;right:auto;transform:translate(-50%,-50%)` : ''}">${o.title}</div><div class="mn-art-c" style="top:${o.box[0]}%;right:${o.box[1]}%;bottom:${o.box[2]}%;left:${o.box[3]}%">${o.html}</div>`;
+    const c = pn.querySelector('.mn-art-c'); c.appendChild(btns); if (note) c.appendChild(note);
+    if (o.onX !== undefined) {
+      const x = document.createElement('button'); x.className = 'mn-art-x'; x.setAttribute('aria-label', '닫기'); x.style.top = (o.xPos || [0, 0])[0] + '%'; x.style.right = (o.xPos || [0, 0])[1] + '%';
+      x.addEventListener('click', (e) => { e.stopPropagation(); if (window.UI) UI.blip(500); m.remove(); const k = block(); setTimeout(k, 400); if (o.onX) o.onX(); }); pn.appendChild(x);
+    }
     return m;
   }
   // 화면 전체를 잠깐 막는 투명 막 (창을 닫을 때 손을 뗀 터치가 뒤의 놀이기구·버튼을 누르지 않게). 돌려주는 함수를 부르면 걷힘
@@ -215,20 +250,20 @@
 
   // 게임 열기 창. opts: { trial(): 체험하기, trialText, onOpen(), onClose() }
   function unlockBox(g, opts = {}) {
-    const s = st(), p = price(), enough = Hub.gems() >= p;
-    const btns = [
-      { text: `${I('ico_key')} 열쇠로 열기 (${s.tickets}개 있음)`, cls: 'pink', off: s.tickets < 1, on: () => done(unlock(g, 'ticket')) },
-      { text: `${I('ico_gem')} 다이아 ${p}개로 열기${enough ? '' : ' (모자라요)'}`, cls: 'gold', on: () => (enough ? done(unlock(g, 'gem')) : gemShop(() => unlockBox(g, opts))) },
-    ];
-    if (opts.trial) btns.push({ text: opts.trialText || '▶ 체험해 보기', on: opts.trial });
-    btns.push({ text: opts.closeText || '닫기', cls: 'gray', on: opts.onClose });
+    const s = st(), p = price(), enough = Hub.gems() >= p, hasKey = s.tickets >= 1;
+    // 버튼 2개: 열쇠가 있으면 열쇠로, 없으면 다이아로 / 체험. 닫기는 오른쪽 위 X
+    const btns = [hasKey
+      ? { text: `${I('ico_key')} 열쇠 1개로 열기`, cls: 'fill-p', on: () => done(unlock(g, 'ticket')) }
+      : { text: `${I('ico_gem')} 다이아 ${p}개로 열기`, cls: 'fill-p', on: () => (enough ? done(unlock(g, 'gem')) : gemShop(() => unlockBox(g, opts))) }];
+    if (opts.trial) btns.push({ text: opts.trialText || '▶ 체험해 보기', cls: 'fill-b', on: opts.trial });
     function done(ok) {
       if (!ok) { pop('열 수 없어요'); return; }
       if (window.UI) UI.blip(1046);
       fx(); setTimeout(() => pop(`${esc(name(g))} 열림!`), 500); refreshHub(); if (opts.onOpen) opts.onOpen();
     }
-    modal(`<h3>${esc(name(g))}</h3><img class="mn-art" src="${IMG}locked.webp" alt="">${opts.msg ? `<p>${opts.msg}</p>` : '<p>잠긴 게임이에요. 열쇠나 다이아로 열 수 있어요.</p>'}${haveLine()}`, btns,
-      `한 번 열면 한 판만이 아니라 이 게임을 언제든지 계속 할 수 있어요!<br>다이아로 연 횟수에 따라 값이 올라요: ${PRICES.join(' → ')}`);
+    artModal({ img: 'locked', pink: true, ar: 720 / 981, title: '잠겨 있는 게임이에요!', titleY: 39.5, titleX: 57, box: [46, 9, 12, 9], buttons: btns, onX: opts.onClose || null, xPos: [31, -1],
+      html: `<p><b>${esc(name(g))}</b></p>${opts.msg ? `<p>${opts.msg}</p>` : '<p>이 게임을 열고 더 많은 즐거움을 만나 보세요!</p>'}${haveLine()}`,
+      note: `한 번 열면 언제든지 계속 할 수 있어요!<br>다이아로 연 횟수에 따라 값이 올라요: ${PRICES.join(' → ')}` });
   }
 
   // ---------- 게임 결과: 광고 보고 2배 받기 · 이어하기 (+ 10판마다 다이아) ----------
@@ -428,25 +463,28 @@
       const s = st();
       if (!s.welcomed) {
         busy = true; Hub.mutate((c) => { c.v3.welcomed = true; });
-        modal(`<h3>환영 선물</h3><span class="mn-tag">v0.4 상용화 검수판</span><img class="mn-art" src="${IMG}welcome.webp" alt=""><p>처음에는 <b>${OPEN.map(name).join(' · ')}</b>이 열려 있어요.<br>잠긴 게임 하나를 열 수 있는 <b>${I('ico_key')} 열쇠 1개</b>를 줄게요!</p>`,
-          [{ text: '받기', cls: 'pink', on: () => { busy = false; refreshHub(); check(); } }]);
+        artModal({ img: 'welcome', pink: true, ar: 720 / 1013, title: '', titleY: 0, cls: 'wel', box: [72.5, 11, 5.5, 11], buttons: [{ text: '받기', cls: 'fill-p', on: () => { busy = false; refreshHub(); check(); } }],
+          html: `<p>처음에는 <b>${OPEN.map(name).join(' · ')}</b>이 열려 있어요.<br>잠긴 게임 하나를 열 수 있는 <b>${I('ico_key')} 열쇠 1개</b>를 줄게요!</p>` });
         return;
       }
       if (s.att.last !== today()) {
         busy = true;
-        const n = s.att.count + 1, bonus = ATT_BONUS[n];
-        const next = Object.keys(ATT_BONUS).map(Number).find((d) => d > n);
-        // 도장 10칸: 지금 10일 묶음에서 지난 날은 찍힌 도장, 오늘 칸은 빈 도장이 두근두근
-        const base = Math.floor((n - 1) / 10) * 10;
-        const stamps = Array.from({ length: 10 }, (_, i) => { const d = base + i + 1; return `<span class="${d < n ? 'on' : d === n ? 'now' : ''}"><img src="${IMG}${d < n ? 'stamp_on' : 'stamp_off'}.webp" alt=""><i>${d < n ? '' : d}</i></span>`; }).join('');
-        modal(`<h3>출석 ${n}일째</h3><img class="mn-art" src="${IMG}attend.webp" alt="" style="max-height:min(120px,16vh)"><div class="mn-stamps">${stamps}</div>
-          <p>오늘의 선물: <b>${I('ico_gem')} 다이아 ${ATT_DAILY}개</b>${(s.bm && s.bm.pass > 0) ? `<br>월 다이아 패스: <b>${I('ico_gem')} +${OFFERS[1].daily}</b> (${s.bm.pass}일 남음)` : ''}</p>${bonus ? `<div class="mn-bonus"><img src="${IMG}${bonus.img}.webp" alt=""><b>${n}일 선물: ${bonus.text}</b></div>` : ''}${next ? `<p style="font-size:13px">${next}일째 선물: ${ATT_BONUS[next].text}</p>` : ''}`,
-          [{ text: '출석하기', cls: 'pink', on: () => {
-            let passGems = 0;
-            Hub.mutate((c) => { const v = c.v3; if (v.att.last === today()) return; v.att.last = today(); v.att.count = n; c.gems = (c.gems || 0) + ATT_DAILY + ((bonus && bonus.gems) || 0); v.tickets += (bonus && bonus.tickets) || 0;
-              const B = bmOf(v); if (B.pass > 0) { B.pass--; passGems = OFFERS[1].daily; c.gems += passGems; } });
-            pop(`${I('ico_gem')} +${ATT_DAILY + ((bonus && bonus.gems) || 0) + passGems}${bonus && bonus.tickets ? ` ${I('ico_key')} +1` : ''}`); busy = false; refreshHub();
-          } }], '누적 출석이에요 (빠진 날이 있어도 이어져요)');
+        // 1~9일차 다이아 2개, 10일차 열쇠 1개 (10일마다 되풀이). 빠진 날이 있어도 누적
+        const n = s.att.count + 1, isKey = n % 10 === 0, base = Math.floor((n - 1) / 10) * 10, who = document.documentElement.dataset.who === 'eungyeol' ? 'eungyeol' : 'eunyu';
+        const cells = Array.from({ length: 10 }, (_, i) => {
+          const d = base + i + 1, last = d % 10 === 0, got = d < n, now = d === n;
+          const bg = got ? 'done' : last ? 'd10' : now ? (who === 'eungyeol' ? 'today_blue' : 'today_pink') : 'normal';
+          return `<div class="mn-cell${got ? ' got' : ''}${now ? ' now' : ''}" style="background-image:url(${IMG}cell_${bg}.webp)"><i>${d}일차</i><img src="${IMG}${last ? 'ico_key' : 'ico_gem'}.webp" alt=""><b>${last ? '1개' : `${ATT_DAILY}개`}</b></div>`;
+        }).join('');
+        const pass = s.bm && s.bm.pass > 0;
+        const claim = () => {
+          let passGems = 0;
+          Hub.mutate((c) => { const v = c.v3; if (v.att.last === today()) return; v.att.last = today(); v.att.count = n; if (isKey) v.tickets += 1; else c.gems = (c.gems || 0) + ATT_DAILY;
+            const B = bmOf(v); if (B.pass > 0) { B.pass--; passGems = OFFERS[1].daily; c.gems += passGems; } });
+          pop(isKey ? `${I('ico_key')} +1${passGems ? ` ${I('ico_gem')} +${passGems}` : ''}` : `${I('ico_gem')} +${ATT_DAILY + passGems}`); busy = false; refreshHub();
+        };
+        artModal({ img: `attend_${who}`, ar: 720 / 1047, title: '출석 체크', titleY: 35.5, box: [44, 8.5, 9, 8.5], onX: () => { busy = false; }, xPos: [1, 1], buttons: [{ text: '출석하기', cls: 'pink', on: claim }],
+          html: `<div class="mn-cells">${cells}</div>${pass ? `<p>월 다이아 패스: ${I('ico_gem')} +${OFFERS[1].daily} (${s.bm.pass}일 남음)</p>` : ''}`, note: '누적 출석이에요 (빠진 날이 있어도 이어져요)' });
       }
     };
     new MutationObserver(check).observe(lobby, { attributes: true, attributeFilter: ['class'] });

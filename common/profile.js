@@ -193,6 +193,8 @@
   // 숨긴 옛 모습(hidden)은 같은 계열의 가장 새 모습으로 (이름·코인·진행도는 그대로)
   const lookInfo = (look) => (window.CHAR_LOOKS || []).find((l) => l.look === look);
   const lookBase = (look) => (lookInfo(look) || {}).base || (String(look).startsWith('eungyeol') ? 'eungyeol' : 'eunyu');
+  // 화면 색: 은유 = 분홍, 은결 = 파랑 (html data-who, common/popup.css 등이 씀). 마지막에 플레이한 캐릭터를 따름
+  const paintWho = () => { const c = window.Hub && Hub.active(); document.documentElement.dataset.who = c && lookBase(c.look) === 'eungyeol' ? 'eungyeol' : 'eunyu'; };
   const latestLook = (base) => {
     const shown = (window.CHAR_LOOKS || []).filter((l) => l.base === base && !l.hidden);
     return shown.length ? shown[shown.length - 1].look : base;
@@ -302,7 +304,7 @@
     // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611042123` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611052217` : null; },
     buyCostume(id, c = this.active()) {
       const it = COSTUMES.find((x) => x.id === id);
       if (!c || !it || this.ownsCostume(id, c)) return { ok: false };
@@ -408,7 +410,7 @@
     chars() { return data.chars; },
     get(id) { return find(id); },
     active() { return find(data.activeId); },
-    setActive(id) { if (find(id)) { data.activeId = id; save(); } },
+    setActive(id) { if (find(id)) { data.activeId = id; save(); paintWho(); } },
 
     canCreate() { return data.chars.length < data.slots; },
     nextSlotPrice() { return data.slots >= MAX_CHARS ? null : slotPrice(data.slots + 1); },
@@ -566,6 +568,7 @@
   };
   window.Hub = Hub;
   godBadge();
+  paintWho();
   // v0.3 상용화 검수 기능(잠금·체험·다이아·출석·가짜 광고)은 기본 주소(v0.3)에서만: 이 파일 옆 monet.js 를 불러옴
   if (Hub.ver === '0.4' && document.currentScript) {
     const s = document.createElement('script');

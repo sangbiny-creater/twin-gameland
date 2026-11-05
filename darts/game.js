@@ -11,7 +11,7 @@
 
 let W = 540, H = 960;
 const D = window.DartArt;
-const ASSET_V = '202611042123';
+const ASSET_V = '202611052217';
 const ROUNDS = 8, PER = 3;
 const AMP = 1.2; // 줄이 움직이는 범위 (더블 링 바깥 = 1, 조금 밖까지 나감)
 // 한 번 갔다 오는 시간(초), 모든 라운드 같음 (사용자 요청으로 맞춘 값)
@@ -277,6 +277,10 @@ function showResult() {
   $('resCoin').textContent = G.coins;
   $('resBestVal').textContent = `${fmt(Save.data.best || 0)}점`;
   $('resBest').classList.toggle('hidden', !G.newBest);
+  // 결과 창 캐릭터 (최고 기록 / 게임 끝)
+  const rp = document.querySelector('#result .panel'), who = myLook.startsWith('eungyeol') ? 'eungyeol' : 'eunyu', isBest = !$('resBest').classList.contains('hidden');
+  rp.querySelectorAll(':scope > .gp-scene').forEach((e) => e.remove());
+  $('resTitle').insertAdjacentHTML('afterend', `<div class="gp-scene"><img class="gp-char" src="../common/ui/popup/chars/${who}_${isBest ? 'best' : 'end'}.webp" alt=""></div>`);
   setState('result');
   buildSheet($('resSheet'));
   if (G.newBest) Audio.sfx('best');

@@ -194,10 +194,6 @@ window.I18N_DATA = {
 "잠김"
 ],
 [
-"한 번 열면 한 판만이 아니라 이 게임을 언제든지 계속 할 수 있어요! / 다이아로 연 횟수에 따라 값이 올라요: {}",
-"한 번 열면 이 게임을 계속 플레이할 수 있어요! / 다이아로 게임을 연 횟수에 따라 가격이 올라요: {}"
-],
-[
 "한 번 열면 한 판만이 아니라 이 게임을 언제든지 계속 할 수 있어요! / 다이아로 연 횟수에 따라 값이 올라요:",
 "한 번 열면 이 게임을 계속 플레이할 수 있어요! / 다이아로 게임을 연 횟수에 따라 가격이 올라요:"
 ],
@@ -375,6 +371,14 @@ window.I18N_DATA = {
 ]
 ],
 "en": [
+[
+"{}일차",
+"Day {0}"
+],
+[
+"다이아 {}개로 열기",
+"Unlock with {0} Diamonds"
+],
 [
 "{} 적용! 첫 화면의 {}이(가) 바뀌어요",
 "{0} applied! The {1} on the home screen has changed."
@@ -1360,10 +1364,6 @@ window.I18N_DATA = {
 "+{} · Pass {} days"
 ],
 [
-"{} 열쇠로 열기 ({}개 있음)",
-"{} Unlock with Key ({} owned)"
-],
-[
 "열쇠로 열기 ({}개 있음)",
 "Unlock with Key ({} owned)"
 ],
@@ -1376,8 +1376,8 @@ window.I18N_DATA = {
 "(Not enough)"
 ],
 [
-"다이아 {}개로 열기",
-"Unlock for {} Diamonds"
+"{} 다이아 {}개로 열기",
+"{} Unlock for {} Diamonds"
 ],
 [
 "▶ 체험해 보기",
@@ -1406,14 +1406,6 @@ window.I18N_DATA = {
 [
 "잠긴 게임이에요. 열쇠나 다이아로 열 수 있어요.",
 "This game is locked. Unlock it with a Key or Diamonds."
-],
-[
-"한 번 열면 한 판만이 아니라 이 게임을 언제든지 계속 할 수 있어요! / 다이아로 연 횟수에 따라 값이 올라요: {}",
-"Once unlocked, the game stays unlocked permanently! / The Diamond price increases based on how many games you've unlocked with Diamonds: {}"
-],
-[
-"한 번 열면 이 게임을 계속 플레이할 수 있어요! / 다이아로 게임을 연 횟수에 따라 가격이 올라요: {}",
-"Once unlocked, the game stays unlocked permanently! / The Diamond price increases based on how many games you've unlocked with Diamonds: {}"
 ],
 [
 "한 번 열면 한 판만이 아니라 이 게임을 언제든지 계속 할 수 있어요! / 다이아로 연 횟수에 따라 값이 올라요:",
@@ -1580,16 +1572,8 @@ window.I18N_DATA = {
 "Monthly Diamond Pass: {} +{} ({} days left)"
 ],
 [
-"{}일 선물: {}",
-"{} Day Reward: {}"
-],
-[
 "일 선물:",
 "Day Reward:"
-],
-[
-"{}일째 선물: {}",
-"{} Day Reward: {}"
 ],
 [
 "일째 선물:",
@@ -3544,6 +3528,38 @@ window.I18N_DATA = {
 "Tap/Space = Jump · Hold in midair = Hook · Release = Swing!"
 ],
 [
+"함께 떠날 캐릭터를 선택해 주세요!",
+"Choose your character!"
+],
+[
+"잠겨 있는 게임이에요!",
+"This Game Is Locked!"
+],
+[
+"이 게임을 열고 더 많은 즐거움을 만나 보세요!",
+"Unlock this game for more fun!"
+],
+[
+"{} 열쇠 1개로 열기",
+"{} Unlock with 1 Key"
+],
+[
+"한 번 열면 언제든지 계속 할 수 있어요!",
+"Once unlocked, you can play any time!"
+],
+[
+"출석 체크",
+"Daily Check-in"
+],
+[
+"최고 기록 달성!",
+"New Best Record!"
+],
+[
+"일시정지",
+"Paused"
+],
+[
 "v0.4 상용화 검수판",
 "v0.4 Release Review Build"
 ],
@@ -3726,10 +3742,6 @@ window.I18N_DATA = {
 [
 "사기",
 "Buy"
-],
-[
-"일시정지",
-"Paused"
 ],
 [
 "원",

@@ -11,13 +11,14 @@
         ② 큰 버튼  : '다음 스테이지'·'계속하기' 같은 가장 중요한 버튼 1개, 한 줄 가득 (높이 64 = ③의 1.1배)
         ③ 두 버튼  : 언제나 같은 폭 두 개 나란히 (다시하기·지도로 / 지도로·출발! / 닫기·확인)  (높이 58)
         → 버튼은 2개(③) · 3개(②+③ 또는 ①+③) · 4개(①①+③ 또는 ①+②+③) 어떤 경우도 같은 모양 */
-:root { --pp-w: 440px; --pp-k: .7333; }
+:root { --pp-w: 440px; --pp-k: .7333; --who: #E8457F; --who-d: #B92C62; --who-bg: #FFF1F6; }
+html[data-who=eungyeol] { --who: #2C84DC; --who-d: #1F62AE; --who-bg: #EEF6FF; } /* 은유 = 분홍, 은결 = 파랑 (common/profile.js paintWho, 그림 common/ui/popup/v4/) */
 .screen.dim > .panel, #ready > .panel, .modal > .panel, .modal > .mpanel {
   box-sizing: border-box !important; width: var(--pp-w) !important; min-width: 0 !important; max-width: calc(100% - 16px) !important;
   background: none !important; border-radius: 0 !important; box-shadow: none !important;
-  border: 0 solid transparent !important; border-image: url(ui/popup/panel.webp) 150 60 115 fill / calc(150px * var(--pp-k)) calc(60px * var(--pp-k)) calc(115px * var(--pp-k)) stretch !important;
+  border: 0 solid transparent !important; border-image: url(ui/popup/v4/panel_pink.webp) 130 fill / calc(130px * var(--pp-k)) stretch !important;
   min-height: 330px !important; /* 틀 위·아래 장식(그림 크기 그대로) + 가운데 민무늬 부분 */
-  padding: 22px calc(48px * var(--pp-k) + 16px) calc(70px * var(--pp-k) + 8px) !important;
+  padding: 22px 26px 26px !important;
   filter: drop-shadow(0 10px 22px rgba(0, 0, 0, .35)); color: #5A3B22;
   display: flex !important; flex-direction: column !important; align-items: center !important; gap: 8px !important;
 }
@@ -25,9 +26,9 @@
 .screen.dim > .panel > .p-title:first-child, .screen.dim > .panel > .title:first-child, .screen.dim > .panel > .r-title:first-child,
 .modal > .panel > .p-title:first-child, .modal > .mpanel > .m-title:first-child, #ready > .panel > .p-title:first-child {
   display: flex; align-items: center; justify-content: center; box-sizing: border-box; flex: none;
-  width: 340px !important; max-width: 100%; height: 87px !important; min-height: 0 !important; margin: -40px auto -4px !important; padding: 0 64px 12px !important;
-  background: url(ui/popup/ribbon.webp) center / 100% 100% no-repeat !important; border: 0 !important;
-  color: #fff !important; font-size: 26px !important; line-height: 1 !important; text-shadow: 0 2px 0 #C2406A, 0 0 3px #C2406A !important; white-space: nowrap; overflow: hidden;
+  width: 350px !important; max-width: 100%; height: 131px !important; min-height: 0 !important; margin: -78px auto -18px !important; padding: 8px 58px 0 !important;
+  background: url(ui/popup/v4/ribbon_pink.webp) center / 100% 100% no-repeat !important; border: 0 !important;
+  color: #fff !important; font-size: 26px !important; line-height: 1 !important; text-shadow: 0 2px 0 var(--who-d), 0 0 3px var(--who-d) !important; white-space: nowrap; overflow: hidden;
 }
 /* 버튼 줄 (popup.js 가 만듦) */
 .pp-acts { display: flex; flex-direction: column; gap: 10px; width: 100%; margin: auto 0; padding-top: 6px; flex: none; } /* 창이 내용보다 크면(일시정지) 버튼을 제목 아래 빈 곳 가운데에 */
@@ -40,30 +41,43 @@
   display: flex !important; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden;
   font-family: Jua, 'Apple SD Gothic Neo', system-ui, sans-serif !important; font-weight: normal !important; letter-spacing: 0 !important;
   background: none !important; box-shadow: none !important; border-radius: 0 !important; transform: none;
-  border: 0 solid transparent !important; border-image: url(ui/popup/btn_pink.webp) 0 45 fill / 0 calc(var(--h) * .5) stretch !important;
-  color: #fff !important; text-shadow: 0 2px 0 rgba(170, 40, 80, .55) !important; text-decoration: none !important;
+  border: 0 solid transparent !important; border-image: url(ui/popup/v4/btn_pink.webp) 0 58 fill / 0 calc(var(--h) * .5) stretch !important;
+  color: var(--who) !important; text-shadow: none !important; text-decoration: none !important;
 }
-/* 버튼 색 약속 (docs/spec/팝업_아이템_정리_v1.md): 분홍 = 시작·다시하기·계속하기 / 파랑 = XX판부터·다음 스테이지·나가기 / 민트 = 메인으로·게임 선택 / 보라 = 지도 보기 / 회색 = 못 누름 */
-.pp-acts button.pp-b.blue { border-image-source: url(ui/popup/btn_blue.webp) !important; text-shadow: 0 2px 0 rgba(30, 70, 140, .55) !important; }
-.pp-acts button.pp-b.mint { border-image-source: url(ui/popup/btn_mint.webp) !important; text-shadow: 0 2px 0 rgba(10, 110, 90, .55) !important; }
-.pp-acts button.pp-b.purple { border-image-source: url(ui/popup/btn_purple.webp) !important; text-shadow: 0 2px 0 rgba(80, 30, 140, .55) !important; }
+/* 버튼 (v0.4): 가장 큰 버튼 줄(②·시작하기)은 채운 버튼, 나머지는 흰 버튼 + 테두리. 색은 캐릭터 색(은유 분홍·은결 파랑) */
+.pp-main > button.pp-b { border-image-source: url(ui/popup/v4/fill_pink.webp) !important; color: #fff !important; text-shadow: 0 2px 0 var(--who-d) !important; }
+html[data-who=eungyeol] .pp-acts button.pp-b { border-image-source: url(ui/popup/v4/btn_blue.webp) !important; }
+html[data-who=eungyeol] .pp-main > button.pp-b { border-image-source: url(ui/popup/v4/fill_blue.webp) !important; }
+html[data-who=eungyeol] .screen.dim > .panel, html[data-who=eungyeol] #ready > .panel, html[data-who=eungyeol] .modal > .panel, html[data-who=eungyeol] .modal > .mpanel { border-image-source: url(ui/popup/v4/panel_blue.webp) !important; }
+html[data-who=eungyeol] .screen.dim > .panel > .p-title:first-child, html[data-who=eungyeol] .screen.dim > .panel > .title:first-child, html[data-who=eungyeol] .screen.dim > .panel > .r-title:first-child,
+html[data-who=eungyeol] .modal > .panel > .p-title:first-child, html[data-who=eungyeol] .modal > .mpanel > .m-title:first-child, html[data-who=eungyeol] #ready > .panel > .p-title:first-child { background-image: url(ui/popup/v4/ribbon_blue.webp) !important; }
+/* 오른쪽 위 X (닫기 버튼 대신) */
+.gp-x { position: absolute; right: -4px; top: -6px; z-index: 3; width: 46px; height: 46px; border: 0; padding: 0; background: url(ui/popup/v4/x_pink.webp) center / contain no-repeat; filter: drop-shadow(0 2px 3px rgba(0,0,0,.25)); cursor: pointer; }
+html[data-who=eungyeol] .gp-x { background-image: url(ui/popup/v4/x_blue.webp); }
+.gp-x:active { transform: scale(.92); }
+/* 결과 창 캐릭터 띠: 가로·세로 같은 모양, 높이가 모자라면 띠부터 낮아짐 */
+.gp-scene { position: relative; flex: none; width: 100%; aspect-ratio: 2.1 / 1; max-height: 24vh; }
+.gp-char { position: absolute; left: 50%; bottom: 0; height: 100%; width: 100%; object-fit: contain; object-position: 50% 100%; transform: translateX(-50%); }
+@media (orientation: landscape) { .gp-scene { max-height: 19vh; } }
+.gp-new { display: block; flex: none; font-size: 15px; letter-spacing: 1px; color: var(--who); margin-top: -2px; }
 .pp-acts button.pp-b:disabled, .pp-acts button.pp-b.off { border-image-source: url(ui/popup/btn_gray.webp) !important; color: #F4F4F6 !important; text-shadow: 0 2px 0 rgba(90, 90, 100, .45) !important; pointer-events: none; }
-/* 버튼 앞 흰 아이콘 (A09) */
-.pp-acts button.pp-b > i.gp-ico { flex: none; width: calc(var(--h) * .42); height: calc(var(--h) * .42); margin-right: 6px; background: center / contain no-repeat; }
+/* 버튼 앞 아이콘 (A09): 그림 모양에 글자색을 입힘 */
+.pp-acts button.pp-b > i.gp-ico { flex: none; width: calc(var(--h) * .42); height: calc(var(--h) * .42); margin-right: 6px; background: currentColor; -webkit-mask: var(--ico) center / contain no-repeat; mask: var(--ico) center / contain no-repeat; }
 .pp-acts button.pp-b:active { transform: translateY(2px); }
-.pp-main > button.pp-b { --h: 64px; font-size: 27px !important; }
+.pp-main > button.pp-b { --h: 62px; font-size: 26px !important; }
 .pp-pair > button.pp-b { --h: 58px; font-size: 23px !important; }
 .pp-acts button.pp-b.hidden { display: none !important; }
 /* 창 틀·리본·버튼 그림을 처음부터 받아 둠 (일시정지·결과 창을 처음 열 때 꾸밈이 늦게 붙지 않게) */
-body::after { content: url(ui/popup/panel.webp) url(ui/popup/ribbon.webp) url(ui/popup/btn_pink.webp) url(ui/popup/btn_blue.webp) url(ui/popup/btn_mint.webp) url(ui/popup/btn_purple.webp) url(ui/popup/btn_gray.webp) url(ui/popup/btn_ad_double.webp) url(ui/popup/btn_ad_continue.webp) url(ui/popup/btn_pause.webp); position: absolute; width: 0; height: 0; overflow: hidden; opacity: 0; pointer-events: none; }
+body::after { content: url(ui/popup/v4/panel_pink.webp) url(ui/popup/v4/panel_blue.webp) url(ui/popup/v4/ribbon_pink.webp) url(ui/popup/v4/ribbon_blue.webp) url(ui/popup/v4/btn_pink.webp) url(ui/popup/v4/btn_blue.webp) url(ui/popup/v4/fill_pink.webp) url(ui/popup/btn_purple.webp) url(ui/popup/btn_gray.webp) url(ui/popup/btn_ad_double.webp) url(ui/popup/btn_ad_continue.webp) url(ui/popup/btn_pause.webp); position: absolute; width: 0; height: 0; overflow: hidden; opacity: 0; pointer-events: none; }
 /* ① 광고 줄: 노랑(2배 받기)·초록(이어하기) 버튼, 오른쪽 끝에 빨간 '광고 재생' 배지(그림 btn_ad_* A05), 왼쪽에 두 줄 글자 */
-.pp-acts button.pp-adb { --h: 56px; position: relative; box-sizing: border-box; height: var(--h); margin: 0; flex: 1 1 0; min-width: 0;
-  border: 0 solid transparent; border-image: url(ui/popup/btn_ad_double.webp) 0 135 0 50 fill / 0 calc(var(--h) * 1.262) 0 calc(var(--h) * .467) stretch;
-  background: none; padding: 0 calc(var(--h) * 1.2) 4px calc(var(--h) * .36); display: flex; align-items: center; justify-content: center; text-align: center;
-  font-family: Jua, 'Apple SD Gothic Neo', system-ui, sans-serif; color: #fff; text-shadow: 0 2px 0 rgba(70, 30, 140, .6); cursor: pointer; overflow: hidden; }
-.pp-acts button.pp-adb { text-shadow: 0 2px 0 rgba(170, 90, 10, .6); }
-.pp-acts button.pp-adb.cont { border-image-source: url(ui/popup/btn_ad_continue.webp); text-shadow: 0 2px 0 rgba(10, 110, 90, .6); }
-.pp-acts button.pp-adb > img { display: none; } /* 광고 표시는 버튼 그림의 빨간 배지 */
+/* ① 광고 줄 (v0.4): 다른 버튼과 같은 흰 버튼 + 재생 아이콘 */
+.pp-acts button.pp-adb { --h: 54px; position: relative; box-sizing: border-box; height: var(--h); margin: 0; flex: 1 1 0; min-width: 0;
+  border: 0 solid transparent; border-image: url(ui/popup/v4/btn_pink.webp) 0 58 fill / 0 calc(var(--h) * .5) stretch;
+  background: none; padding: 0 calc(var(--h) * .3) 3px; display: flex; align-items: center; justify-content: center; gap: 6px; text-align: center;
+  font-family: Jua, 'Apple SD Gothic Neo', system-ui, sans-serif; color: var(--who); text-shadow: none; cursor: pointer; overflow: hidden; }
+html[data-who=eungyeol] .pp-acts button.pp-adb { border-image-source: url(ui/popup/v4/btn_blue.webp); }
+.pp-acts button.pp-adb::before { content: ''; flex: none; width: 20px; height: 20px; background: currentColor; -webkit-mask: url(ui/popup/ico_play.webp) center / contain no-repeat; mask: url(ui/popup/ico_play.webp) center / contain no-repeat; }
+.pp-acts button.pp-adb > img { display: none; }
 .pp-acts button.pp-adb > span { display: flex; flex-direction: column; align-items: center; line-height: 1.05; white-space: nowrap; min-width: 0; }
 .pp-acts button.pp-adb small { font-size: 13px; opacity: .92; }
 .pp-acts button.pp-adb small:empty { display: none; }
@@ -75,7 +89,7 @@ body::after { content: url(ui/popup/panel.webp) url(ui/popup/ribbon.webp) url(ui
 .screen.dim > .panel .earn { color: #E0761A !important; text-shadow: none !important; }
 .screen.dim > .panel .earn small { color: #8A6E58 !important; opacity: 1 !important; }
 .screen.dim > .panel .earn .reward { color: #8A5A30 !important; background: #FFF0DA !important; }
-.screen.dim > .panel .r-why { color: #D24C73 !important; }
+.screen.dim > .panel .r-why { color: var(--who) !important; }
 .screen.dim > .panel .r-score { color: #F2A93B !important; }
 .screen.dim > .panel .r-score small { color: #C77A1A !important; text-shadow: none !important; }
 /* 리본 제목은 기울이지 않음 (예전 제목 글자는 -3도 기울어져 있었음) */

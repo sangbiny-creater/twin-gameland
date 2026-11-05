@@ -19,6 +19,8 @@ OUT = f'{ROOT}/common/i18n_data.js'
 
 # 조사가 붙는 문장: 코드 모양(앞뒤 {} 포함) → 영어 완성 문장
 WHOLE = {
+    '{}일차': 'Day {0}',
+    '다이아 {}개로 열기': 'Unlock with {0} Diamonds',
     '{} 적용! 첫 화면의 {}이(가) 바뀌어요': '{0} applied! The {1} on the home screen has changed.',
     '{}(으)로 바꿨어요!': 'Changed to {0}!',
     '{}에게 {}을(를) 사서 입힐까요? / {} {} 코인': 'Buy {1} for {0}? / {2} {3} Coins',
@@ -48,6 +50,15 @@ WHOLE = {
 }
 # 문서 뒤에 새로 생긴 글 (2026-11-04 작업)
 EXTRA = {
+    '캐릭터 선택': 'Select Character',
+    '함께 떠날 캐릭터를 선택해 주세요!': 'Choose your character!',
+    '잠겨 있는 게임이에요!': 'This Game Is Locked!',
+    '이 게임을 열고 더 많은 즐거움을 만나 보세요!': 'Unlock this game for more fun!',
+    '열쇠 1개로 열기': 'Unlock with 1 Key',
+    '한 번 열면 언제든지 계속 할 수 있어요!': 'Once unlocked, you can play any time!',
+    '출석 체크': 'Daily Check-in',
+    '최고 기록 달성!': 'New Best Record!',
+    '일시정지': 'Paused',
     'v0.4 상용화 검수판': 'v0.4 Release Review Build',
     'v0.3 (어린이 캐릭터)로 가요!': 'Go to v0.3 (kid characters)!',
     'v0.4 (최신 버전)으로 가요!': 'Go to v0.4 (latest version)!',

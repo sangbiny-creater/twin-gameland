@@ -290,5 +290,6 @@ def games():
     bg.resize((48, 48), Image.LANCZOS).save(f'{ROOT}/favicon.ico', sizes=[(16, 16), (32, 32), (48, 48)])
 
 
-STEPS = {'chars': chars, 'intro': intro, 'games': games}
-for k in (sys.argv[1:] or STEPS): STEPS[k]()
+if __name__ == '__main__':
+    STEPS = {'chars': chars, 'intro': intro, 'games': games}
+    for k in (sys.argv[1:] or STEPS): STEPS[k]()

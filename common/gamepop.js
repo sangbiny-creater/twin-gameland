@@ -34,19 +34,13 @@
   const charImg = (mood) => `${IMG}chars/${who()}_${mood}.webp`;
   const scene = (mood, over = '') => `<div class="gp-scene"><img class="gp-char" src="${charImg(mood)}" alt="">${over}</div>`;
   const blip = (f) => { if (window.UI && UI.blip) UI.blip(f); };
-  for (const m of ['start', 'great', 'sad']) new Image().src = charImg(m);
+  for (const m of ['best', 'clear', 'end', 'sad']) new Image().src = charImg(m); // 결과 창 캐릭터 (tools/adult2_assets.py)
 
   const css = document.createElement('style');
   css.textContent = `
-.gp-scene{position:relative;flex:none;width:100%;aspect-ratio:2/1;max-height:30vh;border-radius:18px;overflow:hidden;background:url(${IMG}scene.webp) center/cover no-repeat;box-shadow:inset 0 0 0 3px rgba(255,255,255,.7)}
-.gp-char{position:absolute;left:50%;bottom:0;height:100%;transform:translateX(-50%);filter:drop-shadow(0 4px 6px rgba(0,0,0,.2))}
-.gp-title{position:absolute;left:50%;top:6%;width:72%;transform:translateX(-50%);filter:drop-shadow(0 3px 4px rgba(0,0,0,.25));animation:gpPop .5s ease-out}
-@keyframes gpPop{0%{transform:translateX(-50%) scale(.3);opacity:0}70%{transform:translateX(-50%) scale(1.08)}100%{transform:translateX(-50%) scale(1);opacity:1}}
-.gp-x{position:absolute;right:calc(48px * var(--pp-k, .7333) - 14px);top:4px;width:46px;height:46px;border:0;padding:0;background:url(${IMG}btn_close.webp) center/contain no-repeat;filter:drop-shadow(0 2px 3px rgba(0,0,0,.25));cursor:pointer;z-index:2}
-.gp-x:active{transform:scale(.92)}
 .gp-items{display:flex;gap:12px;width:100%;justify-content:center;flex:none}
-.gp-slot{position:relative;flex:0 1 104px;aspect-ratio:1;border:0;padding:0;background:url(${IMG}slot.webp) center/100% 100% no-repeat;cursor:pointer;font-family:Jua,system-ui,sans-serif;color:#6B4A30}
-.gp-slot.on{background-image:url(${IMG}slot_on.webp)}
+.gp-slot{position:relative;flex:0 1 112px;aspect-ratio:1;border:2px solid var(--who-bg);border-radius:18px;padding:0;background:#fff;box-shadow:0 3px 8px rgba(120,80,100,.14);cursor:pointer;font-family:Jua,system-ui,sans-serif;color:#6B4A30}
+.gp-slot.on{border-color:var(--who);box-shadow:0 0 0 2px var(--who)}
 .gp-slot img.ic{position:absolute;left:50%;top:44%;width:52%;height:52%;object-fit:contain;transform:translate(-50%,-50%)}
 .gp-slot .nm{position:absolute;left:0;right:0;bottom:7%;font-size:15px;text-align:center}
 .gp-slot .n{position:absolute;right:-6px;bottom:-8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:url(${IMG}badge.webp) center/contain no-repeat;color:#fff;font-size:15px}
@@ -83,7 +77,7 @@ html[lang=en] .pp-acts button.pp-b{padding-left:14px!important;padding-right:14p
     const label = LABEL[b.id] && (window.I18N && I18N.tr ? I18N.tr(LABEL[b.id]) : LABEL[b.id]);
     if (label && b.textContent.trim() !== label && !b.dataset.gpKeep) b.textContent = LABEL[b.id];
     const ic = ICO[b.id];
-    if (ic && !b.querySelector('i.gp-ico')) { const i = document.createElement('i'); i.className = 'gp-ico'; i.style.backgroundImage = `url(${IMG}ico_${ic}.webp)`; b.prepend(i); }
+    if (ic && !b.querySelector('i.gp-ico')) { const i = document.createElement('i'); i.className = 'gp-ico'; i.style.setProperty('--ico', `url(${IMG}ico_${ic}.webp)`); b.prepend(i); }
   }
   const dressAll = () => Object.keys(ICO).forEach((id) => dress($(id)));
 
@@ -98,7 +92,7 @@ html[lang=en] .pp-acts button.pp-b{padding-left:14px!important;padding-right:14p
     const root = $('root') || document.body;
     const wrap = document.createElement('div'); wrap.id = 'gpStart'; wrap.className = 'screen dim gp-start';
     const name = (HUB && HUB.GAMES[g] && HUB.GAMES[g].name) || '';
-    wrap.innerHTML = `<div class="panel"><div class="p-title">${name}</div><button class="gp-x" aria-label="닫기"></button>${scene('start')}
+    wrap.innerHTML = `<div class="panel"><div class="p-title">${name}</div><button class="gp-x" aria-label="닫기"></button>
       <div class="gp-items"></div><div class="gp-tip">아이템을 누르면 이번 판에 써요</div>
       <button id="gpGo" class="btn">시작하기</button>${o.from > 1 ? `<button id="gpFrom" class="btn">${o.from}판부터 시작</button>` : ''}</div>`;
     root.appendChild(wrap);
@@ -176,15 +170,17 @@ html[lang=en] .pp-acts button.pp-b{padding-left:14px!important;padding-right:14p
     if (STAGE[game]) { decorateStageResult(); return; }
     if (!ENDLESS.includes(game)) return;
     const best = !!(last && last.res && last.res.newBest);
-    const key = best ? 'great' : 'sad';
+    const key = best ? 'best' : 'end';
     let sc = panel.querySelector(':scope > .gp-scene');
     if (!sc || sc.dataset.mood !== key) {
       if (sc) sc.remove();
       const t = panel.querySelector(':scope > .p-title, :scope > .title, :scope > .r-title');
-      if (t) t.textContent = best ? '최고 기록!' : '게임 끝';
-      const d = document.createElement('div'); d.innerHTML = scene(key, best ? `<img class="gp-title" src="${IMG}title_best.webp" alt="NEW BEST!">` : '');
+      if (t) t.textContent = best ? '최고 기록 달성!' : '게임 끝';
+      const old = panel.querySelector(':scope > .gp-new'); if (old) old.remove();
+      const d = document.createElement('div'); d.innerHTML = scene(key);
       sc = d.firstChild; sc.dataset.mood = key;
       if (t) t.after(sc); else panel.prepend(sc);
+      if (best) { const n = document.createElement('span'); n.className = 'gp-new'; n.textContent = 'NEW BEST!'; sc.before(n); }
     }
   }
   // ---------- 스테이지형 시작 팝업 (#ready 를 새 배치로) ----------
@@ -201,8 +197,8 @@ html[lang=en] .pp-acts button.pp-b{padding-left:14px!important;padding-right:14p
     const txt = panel.querySelector(':scope > .p-text'), leg = $('legend');
     const box = document.createElement('div');
     if (game === 'mole') { box.className = 'gp-info'; if (txt) box.appendChild(txt); if (leg) box.appendChild(leg); }
-    else { box.innerHTML = scene('start'); if (txt) txt.remove(); }
-    (t || panel.firstChild).after(box.firstChild && game !== 'mole' ? box.firstChild : box);
+    else if (txt) txt.remove();
+    if (game === 'mole') (t || panel.firstChild).after(box);
     const items = document.createElement('div'); items.className = 'gp-items'; items.id = 'gpStageItems';
     const row = panel.querySelector(':scope > .row') || $('btnGo');
     panel.insertBefore(items, row);
@@ -235,12 +231,12 @@ html[lang=en] .pp-acts button.pp-b{padding-left:14px!important;padding-right:14p
     const panel = document.querySelector('#result:not(.hidden) .panel'); if (!panel) return;
     const ok = !panel.classList.contains('fail');
     const st = ok ? [...panel.querySelectorAll('.r-stars span')].filter((x) => !x.classList.contains('off')).length : 0;
-    const key = !ok ? 'sad' : st >= 3 ? 'great' : st === 2 ? 'good' : 'smile';
+    const key = ok ? 'clear' : 'sad';
     let sc = panel.querySelector(':scope > .gp-scene');
     if (!sc || sc.dataset.mood !== key) {
       if (sc) sc.remove();
       const d = document.createElement('div');
-      d.innerHTML = scene(key, `<img class="gp-title" src="${IMG}title_${ok ? 'clear' : 'fail'}.webp" alt="${ok ? 'CLEAR!' : 'FAIL'}">`);
+      d.innerHTML = scene(key);
       sc = d.firstChild; sc.dataset.mood = key;
       const after = panel.querySelector(':scope > .r-stars') || panel.querySelector(':scope > .r-title');
       after.after(sc);
@@ -257,14 +253,7 @@ html[lang=en] .pp-acts button.pp-b{padding-left:14px!important;padding-right:14p
     ($('root') || document.body).appendChild(el);
     el.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); el.remove(); fn(); }, { once: true });
   }
-  function decoratePause() {
-    const panel = document.querySelector('#pause:not(.hidden) .panel');
-    if (!panel || panel.querySelector(':scope > .gp-scene')) return;
-    const r = $('root'); if (r && r.offsetWidth > r.offsetHeight) return; // 가로 화면은 높이가 모자라서 그림 없이 (QA2 9)
-    const t = panel.querySelector(':scope > .p-title'); if (t) t.textContent = '일시정지';
-    const d = document.createElement('div'); d.innerHTML = scene('start');
-    if (t) t.after(d.firstChild); else panel.prepend(d.firstChild);
-  }
+  function decoratePause() { const t = document.querySelector('#pause:not(.hidden) .panel > .p-title'); if (t) t.textContent = '일시정지'; }
 
   function boot() {
     dressAll();
