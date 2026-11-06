@@ -98,7 +98,10 @@ def home():
     # 첫 화면 왼쪽 아래: 기본 그림(A00·B00)의 가슴 위 — 얼굴이 크게 보이게
     for who, l, top in [('eunyu', 'A', .35), ('eungyeol', 'B', .33)]:
         p = tight(key(f'{ROOT}/character/adult/common_{who}/{l}00.png'))
-        p = tight(p.crop((0, 0, p.width, round(p.height * top)))); p = scaled(p, 620 / p.height); save(p, f'hub/park/home/{who}.webp'); print(who, p.size)
+        p = tight(p.crop((0, 0, p.width, round(p.height * top)))); p = scaled(p, 620 / p.height)
+        if who == 'eungyeol':  # 손이 오른쪽으로 오게 뒤집고, 머리 꼭대기·턱 높이를 은유와 맞춤 (윗머리 끝 y 30 ↔ 18)
+            p = p.transpose(Image.FLIP_LEFT_RIGHT); c = Image.new('RGBA', p.size); c.alpha_composite(p, (0, 12)); p = c
+        save(p, f'hub/park/home/{who}.webp'); print(who, p.size)
 
 
 if __name__ == '__main__':
