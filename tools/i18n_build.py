@@ -146,6 +146,7 @@ def main():
         if rec != cur and [cur, rec] not in ko: ko.append([cur, rec])
     for k, e in EXTRA.items():
         for full in sorted(fulls.get(k, {k})): add(en, full, adapt_en(full, k, e) or e, seen_en)
+    ko = [p for p in ko if p[0] != '어려움']  # 지도 쉬움/어려움 버튼은 한국어판에서 한글로 (2026-11-07 시안)
     js = ('// 자동 생성: python3 tools/i18n_build.py (기준 docs/Twin_Gameland_KO_EN_Localization_5th_Final_Review_for_Claude.md) — 손으로 고치지 말고 표·tools/i18n_build.py 를 고치기\n'
           'window.I18N_DATA = ' + json.dumps({'ko': ko, 'en': en}, ensure_ascii=False, indent=0) + ';\n')
     open(OUT, 'w', encoding='utf-8').write(js)

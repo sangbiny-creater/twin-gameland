@@ -104,6 +104,23 @@ def home():
         save(p, f'hub/park/home/{who}.webp'); print(who, p.size)
 
 
+def map4():
+    # 스테이지 지도 재료 (12_지도_재료) + 두더지 배경 → hub/ui/map/v4/, hub/ui/map/mole/
+    P = f'{SRC}/map/parts'; ims = [key(f'{P}/P0{i}.png') for i in range(1, 6)]
+    bbs = [im.getchannel('A').point(lambda v: 255 if v > 24 else 0).getbbox() for im in ims]
+    box = (min(b[0] for b in bbs), min(b[1] for b in bbs), max(b[2] for b in bbs), max(b[3] for b in bbs))
+    for im, n in zip(ims, ['tent_red', 'tent_blue', 'tent_yellow', 'tent_now', 'tent_lock']):
+        c = im.crop(box); save(scaled(c, 360 / c.width), f'hub/ui/map/v4/{n}.webp')
+    print('tent box', box, (box[2] - box[0]) / (box[3] - box[1]))
+    for f, n, w in [('P06', 'pin_eunyu', 200), ('P07', 'pin_eungyeol', 200), ('P08', 'back_pink', 120), ('P09', 'back_blue', 120), ('P10', 'flag', 90), ('P11', 'name_pink', 460), ('P12', 'name_blue', 460)]:
+        p = tight(key(f'{P}/{f}.png', soft=False)); save(scaled(p, w / p.width), f'hub/ui/map/v4/{n}.webp')
+    import glob
+    for g in ('mole', 'shisen', 'memory'):
+        for f in sorted(glob.glob(f'{SRC}/map/{g}/B*.png')):
+            n = int(os.path.basename(f)[1:3]); os.makedirs(f'{ROOT}/hub/ui/map/{g}', exist_ok=True)
+            Image.open(f).convert('RGB').resize((1024, 1536), Image.LANCZOS).save(f'{ROOT}/hub/ui/map/{g}/w{n}.webp', 'WEBP', quality=82, method=6)
+
+
 if __name__ == '__main__':
-    STEPS = dict(ui=ui, select=select, monet=monet, result=result, stairs=stairs, fx=fx, coaster=coaster, home=home)
+    STEPS = dict(ui=ui, select=select, monet=monet, result=result, stairs=stairs, fx=fx, coaster=coaster, home=home, map4=map4)
     for k in (sys.argv[1:] or STEPS): STEPS[k]()
