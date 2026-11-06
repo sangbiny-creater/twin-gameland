@@ -125,6 +125,11 @@ def plates():
     # 받침·디딤돌 (17_지도_받침) → 코드가 배경 위에 올림. 받침이 없는 배경(B05·B07)
     p = tight(key(f'{SRC}/map/parts/Q01.png')); save(scaled(p, 300 / p.width), 'hub/ui/map/v4/plate.webp'); print('plate', p.size)
     q = tight(key(f'{SRC}/map/parts/Q02.png')); save(scaled(q, 150 / q.width), 'hub/ui/map/v4/stone.webp')
+    import glob
+    for g in ('shisen', 'memory'):  # 받침 구간이 빈 배경 (19·20번 글)
+        os.makedirs(f'{ROOT}/hub/ui/map/{g}', exist_ok=True)
+        for f in sorted(glob.glob(f'{SRC}/map2/{g}/B*.png')):
+            n = int(os.path.basename(f)[1:3]); Image.open(f).convert('RGB').resize((1024, 1536), Image.LANCZOS).save(f'{ROOT}/hub/ui/map/{g}/w{n}.webp', 'WEBP', quality=82, method=6)
     for n in (5, 7):
         Image.open(f'{SRC}/map/mole/B0{n}.png').convert('RGB').resize((1024, 1536), Image.LANCZOS).save(f'{ROOT}/hub/ui/map/mole/w{n}.webp', 'WEBP', quality=82, method=6)
 
