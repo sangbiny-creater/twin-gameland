@@ -121,6 +121,14 @@ def map4():
             Image.open(f).convert('RGB').resize((1024, 1536), Image.LANCZOS).save(f'{ROOT}/hub/ui/map/{g}/w{n}.webp', 'WEBP', quality=82, method=6)
 
 
+def plates():
+    # 받침·디딤돌 (17_지도_받침) → 코드가 배경 위에 올림. 받침이 없는 배경(B05·B07)
+    p = tight(key(f'{SRC}/map/parts/Q01.png')); save(scaled(p, 300 / p.width), 'hub/ui/map/v4/plate.webp'); print('plate', p.size)
+    q = tight(key(f'{SRC}/map/parts/Q02.png')); save(scaled(q, 150 / q.width), 'hub/ui/map/v4/stone.webp')
+    for n in (5, 7):
+        Image.open(f'{SRC}/map/mole/B0{n}.png').convert('RGB').resize((1024, 1536), Image.LANCZOS).save(f'{ROOT}/hub/ui/map/mole/w{n}.webp', 'WEBP', quality=82, method=6)
+
+
 if __name__ == '__main__':
-    STEPS = dict(ui=ui, select=select, monet=monet, result=result, stairs=stairs, fx=fx, coaster=coaster, home=home, map4=map4)
+    STEPS = dict(ui=ui, select=select, monet=monet, result=result, stairs=stairs, fx=fx, coaster=coaster, home=home, map4=map4, plates=plates)
     for k in (sys.argv[1:] or STEPS): STEPS[k]()
