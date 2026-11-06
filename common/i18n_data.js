@@ -372,6 +372,10 @@ window.I18N_DATA = {
 ],
 "en": [
 [
+"+{} 획득",
+"+{0} Earned"
+],
+[
 "{}일차",
 "Day {0}"
 ],
@@ -1438,10 +1442,6 @@ window.I18N_DATA = {
 [
 "첫 클리어!",
 "First Clear!"
-],
-[
-"{} +{} 다이아 획득!{}",
-"{} +{} Diamonds! {}"
 ],
 [
 "+{} 다이아 획득!",
@@ -3526,6 +3526,10 @@ window.I18N_DATA = {
 [
 "탭/스페이스 = 점프 · 공중에서 꾹 = 훅 · 손 떼면 슝~",
 "Tap/Space = Jump · Hold in midair = Hook · Release = Swing!"
+],
+[
+"광고 보고",
+"Watch Ad"
 ],
 [
 "함께 떠날 캐릭터를 선택해 주세요!",

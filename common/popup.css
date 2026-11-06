@@ -18,7 +18,7 @@ html[data-who=eungyeol] { --who: #2C84DC; --who-d: #1F62AE; --who-bg: #EEF6FF; }
   background: none !important; border-radius: 0 !important; box-shadow: none !important;
   border: 0 solid transparent !important; border-image: url(ui/popup/v4/panel_pink.webp) 130 fill / calc(130px * var(--pp-k)) stretch !important;
   min-height: 330px !important; /* 틀 위·아래 장식(그림 크기 그대로) + 가운데 민무늬 부분 */
-  padding: 22px 26px 26px !important;
+  padding: 22px 26px 22px !important;
   filter: drop-shadow(0 10px 22px rgba(0, 0, 0, .35)); color: #5A3B22;
   display: flex !important; flex-direction: column !important; align-items: center !important; gap: 8px !important;
 }
@@ -26,17 +26,19 @@ html[data-who=eungyeol] { --who: #2C84DC; --who-d: #1F62AE; --who-bg: #EEF6FF; }
 .screen.dim > .panel > .p-title:first-child, .screen.dim > .panel > .title:first-child, .screen.dim > .panel > .r-title:first-child,
 .modal > .panel > .p-title:first-child, .modal > .mpanel > .m-title:first-child, #ready > .panel > .p-title:first-child {
   display: flex; align-items: center; justify-content: center; box-sizing: border-box; flex: none;
-  width: 350px !important; max-width: 100%; height: 131px !important; min-height: 0 !important; margin: -78px auto -18px !important; padding: 8px 58px 0 !important;
+  width: 350px !important; max-width: 100%; height: 131px !important; min-height: 0 !important; margin: -78px auto -2px !important; padding: 8px 58px 0 !important;
   background: url(ui/popup/v4/ribbon_pink.webp) center / 100% 100% no-repeat !important; border: 0 !important;
   color: #fff !important; font-size: 26px !important; line-height: 1 !important; text-shadow: 0 2px 0 var(--who-d), 0 0 3px var(--who-d) !important; white-space: nowrap; overflow: hidden;
 }
 /* 버튼 줄 (popup.js 가 만듦) */
-.pp-acts { display: flex; flex-direction: column; gap: 10px; width: 100%; margin: auto 0; padding-top: 6px; flex: none; } /* 창이 내용보다 크면(일시정지) 버튼을 제목 아래 빈 곳 가운데에 */
+.pp-acts { display: flex; flex-direction: column; gap: 10px; width: 100%; margin: auto 0 0; padding-top: 6px; flex: none; }
+/* 내용은 리본과 버튼 사이 상하 가운데 (모든 팝업) */
+.screen.dim > .panel > .p-title:first-child + *:not(.gp-x), .screen.dim > .panel > .r-title:first-child + *, .screen.dim > .panel > .title:first-child + *, .screen.dim > .panel > .gp-x + *, #ready > .panel > .p-title:first-child + *:not(.gp-x), .modal > .panel > .p-title:first-child + *:not(.gp-x), .modal > .panel > .gp-x + * { margin-top: auto !important; } /* 창이 내용보다 크면(일시정지) 버튼을 제목 아래 빈 곳 가운데에 */
 .pp-row { display: flex; gap: 12px; width: 100%; }
 .pp-row:empty, .pp-gone { display: none !important; }
 .pp-row > * { flex: 1 1 0; min-width: 0; }
 .pp-acts button.pp-b {
-  box-sizing: border-box !important; width: auto !important; margin: 0 !important; padding: 0 calc(var(--h) * .5) 4px !important;
+  box-sizing: border-box !important; width: auto !important; margin: 0 !important; padding: .14em calc(var(--h) * .5) 0 !important; line-height: 1 !important; /* Jua 글자는 글줄 가운데보다 .07em 위에 그려져서 내려 맞춤 */
   height: var(--h) !important; min-height: 0 !important; max-height: none !important; flex: 1 1 0 !important;
   display: flex !important; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden;
   font-family: Jua, 'Apple SD Gothic Neo', system-ui, sans-serif !important; font-weight: normal !important; letter-spacing: 0 !important;
@@ -76,12 +78,11 @@ body::after { content: url(ui/popup/v4/panel_pink.webp) url(ui/popup/v4/panel_bl
   background: none; padding: 0 calc(var(--h) * .3) 3px; display: flex; align-items: center; justify-content: center; gap: 6px; text-align: center;
   font-family: Jua, 'Apple SD Gothic Neo', system-ui, sans-serif; color: var(--who); text-shadow: none; cursor: pointer; overflow: hidden; }
 html[data-who=eungyeol] .pp-acts button.pp-adb { border-image-source: url(ui/popup/v4/btn_blue.webp); }
-.pp-acts button.pp-adb::before { content: ''; flex: none; width: 20px; height: 20px; background: currentColor; -webkit-mask: url(ui/popup/ico_play.webp) center / contain no-repeat; mask: url(ui/popup/ico_play.webp) center / contain no-repeat; }
-.pp-acts button.pp-adb > img { display: none; }
-.pp-acts button.pp-adb > span { display: flex; flex-direction: column; align-items: center; line-height: 1.05; white-space: nowrap; min-width: 0; }
-.pp-acts button.pp-adb small { font-size: 13px; opacity: .92; }
+.pp-acts button.pp-adb > img { flex: none; width: 34px; height: 34px; object-fit: contain; } /* 광고 그림 (TV) */
+.pp-acts button.pp-adb > span { display: flex; flex-direction: column; align-items: center; line-height: 1.05; white-space: nowrap; min-width: 0; padding-top: .14em; }
+.pp-acts button.pp-adb small { font-size: 12px; opacity: .92; margin-bottom: 1px; }
 .pp-acts button.pp-adb small:empty { display: none; }
-.pp-acts button.pp-adb b { font-weight: normal; font-size: 21px; }
+.pp-acts button.pp-adb b { font-weight: normal; font-size: 20px; }
 .pp-acts button.pp-adb:disabled { filter: grayscale(1) brightness(1.05); opacity: .75; }
 .pp-acts button.pp-adb:active { transform: translateY(2px); }
 /* 창 바탕이 밝은 크림색으로 바뀌어서, 예전 어두운 창에 맞춘 밝은 글자(흰색·연노랑)를 진한 색으로 */

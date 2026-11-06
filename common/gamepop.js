@@ -39,17 +39,17 @@
   const css = document.createElement('style');
   css.textContent = `
 .gp-items{display:flex;gap:12px;width:100%;justify-content:center;flex:none}
-.gp-slot{position:relative;flex:0 1 112px;aspect-ratio:1;border:2px solid var(--who-bg);border-radius:18px;padding:0;background:#fff;box-shadow:0 3px 8px rgba(120,80,100,.14);cursor:pointer;font-family:Jua,system-ui,sans-serif;color:#6B4A30}
+.gp-slot{position:relative;flex:1 1 0;max-width:124px;min-width:0;min-height:118px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:2px solid var(--who-bg);border-radius:18px;padding:8px 3px;background:#fff;box-shadow:0 3px 8px rgba(120,80,100,.14);cursor:pointer;font-family:Jua,system-ui,sans-serif;color:#6B4A30}
 .gp-slot.on{border-color:var(--who);box-shadow:0 0 0 2px var(--who)}
-.gp-slot img.ic{position:absolute;left:50%;top:44%;width:52%;height:52%;object-fit:contain;transform:translate(-50%,-50%)}
-.gp-slot .nm{position:absolute;left:0;right:0;bottom:7%;font-size:15px;text-align:center}
-.gp-slot .n{position:absolute;right:-6px;bottom:-8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:url(${IMG}badge.webp) center/contain no-repeat;color:#fff;font-size:15px}
+.gp-slot img.ic{flex:none;width:54px;height:50px;object-fit:contain}
+.gp-slot .nm{font-size:15px;line-height:1;text-align:center;white-space:nowrap}
+.gp-slot .n{position:absolute;right:4px;top:4px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:url(${IMG}badge.webp) center/contain no-repeat;color:#fff;font-size:15px}
 .gp-slot.none{filter:saturate(.35)}.gp-slot.none .n{display:none}
-.gp-slot .buy{position:absolute;left:50%;bottom:-11px;transform:translateX(-50%);display:flex;align-items:center;gap:2px;background:#FFF4D2;border:2px solid #F5C860;border-radius:12px;padding:0 6px;font-size:13px;color:#6A3A00;white-space:nowrap;filter:none}
+.gp-slot .buy{display:flex;align-items:center;gap:2px;background:#FFF4D2;border:2px solid #F5C860;border-radius:12px;padding:0 6px;font-size:13px;color:#6A3A00;white-space:nowrap;filter:none}
 .gp-slot .buy img{width:14px;height:14px}
 .gp-slot.off{opacity:.45;pointer-events:none}.gp-slot.off .buy{display:none}
 .gp-tip{font-size:14px;color:#8A6E58;text-align:center;flex:none}
-html[lang=en] .gp-slot .nm{font-size:12px;letter-spacing:-.2px;white-space:nowrap}html[lang=en] .gp-tip{font-size:13px}
+html[lang=en] .gp-slot .nm{font-size:15px;line-height:1;text-align:center;white-space:nowrap}
 html[lang=en] .pp-acts button.pp-b{padding-left:14px!important;padding-right:14px!important}
 .gp-ask{z-index:60}.gp-ask > .panel{min-height:0!important}
 .gp-buy{display:flex;align-items:center;gap:12px;flex:none;font-size:18px;line-height:1.5;color:#5A3B22}
@@ -128,7 +128,7 @@ html[lang=en] .pp-acts button.pp-b{padding-left:14px!important;padding-right:14p
     return wrap;
   }
   function close() { const w = $('gpStart'); if (w) w.remove(); }
-  // 안 가진 아이템: 코인으로 사기 (아이템샵과 같은 값)
+  // 안 가진 아이템: 코인으로 구매 (아이템샵과 같은 값)
   function buy(g, id, def, done) {
     if (!HUB || !def) return;
     const c = HUB.active(), name = ITEMS[id][0];
@@ -137,7 +137,7 @@ html[lang=en] .pp-acts button.pp-b{padding-left:14px!important;padding-right:14p
       ask('아이템 구매', `<img class="gp-buy-ic" src="${itemSrc(id)}" alt=""><div class="gp-buy-t"><b>${name}</b> ${def.price} 코인<br>코인이 <b>${def.price - ((c && c.coins) || 0)}개</b> 모자라요.<br>게임을 해서 코인을 모아요!</div>`, '확인', () => {});
       return;
     }
-    ask('아이템 구매', `<img class="gp-buy-ic" src="${itemSrc(id)}" alt=""><div class="gp-buy-t"><b>${name}</b> 1개를 살까요?<br><img src="${BASE}common/ui/coin.webp" alt="" class="gp-coin">${def.price} 코인 (지금 ${c.coins})</div>`, '사기', () => {
+    ask('아이템 구매', `<img class="gp-buy-ic" src="${itemSrc(id)}" alt=""><div class="gp-buy-t"><b>${name}</b> 1개를 살까요?<br><img src="${BASE}common/ui/coin.webp" alt="" class="gp-coin">${def.price} 코인 (지금 ${c.coins})</div>`, '구매', () => {
       const r = HUB.buyBoost(g, id);
       if (r.ok) { blip(1046); HUB.setUsing(g, id, false); toast(`${name}을(를) 샀어요!`); done(); }
     });

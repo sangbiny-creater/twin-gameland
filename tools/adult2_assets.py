@@ -16,10 +16,28 @@ SRC = f'{ROOT}/character/adult2'
 UI = 'common/ui/popup/v4'
 
 
+def plain_bottom(im, R=112):
+    """창 틀 아래쪽 양 귀퉁이를 장식 없는 둥근 모서리로 다시 그림 (옆 테두리의 색 띠를 안쪽 깊이에 따라 그대로 씀)"""
+    a = np.array(im).astype(np.float32); H, W = a.shape[:2]
+    mid = a[H // 2]; x0 = int(np.where(mid[:, 3] > 128)[0][0]); x1 = int(np.where(mid[:, 3] > 128)[0][-1])
+    col = a[:, W // 2]; y1 = int(np.where(col[:, 3] > 128)[0][-1])
+    lo = max(0, x0 - 3); band = a[H // 2, lo:x0 + 120].copy()  # 깊이별 색 (왼쪽 가장자리에서 안쪽으로)
+    B = 165  # 다시 그리는 칸
+    for y in range(y1 - B, H):
+        for x in list(range(0, x0 + B)) + list(range(x1 - B, W)):
+            ex = x0 + R - x if x < W / 2 else x - (x1 - R); ey = y - (y1 - R)
+            if ex > 0 and ey > 0: d = R - (ex * ex + ey * ey) ** .5
+            else: d = min(x - x0, x1 - x, y1 - y)
+            i = d + (x0 - lo)
+            a[y, x] = (0, 0, 0, 0) if d < -1.5 else band[int(np.clip(i, 0, len(band) - 1))]
+    return Image.fromarray(a.astype(np.uint8))
+
+
 def ui():
     for f, n, w in [('K01', 'panel_pink', 600), ('K02', 'panel_blue', 600), ('K03', 'ribbon_pink', 680), ('K04', 'ribbon_blue', 680),
                     ('K05', 'btn_pink', 420), ('K06', 'btn_blue', 420), ('K07', 'fill_pink', 420), ('K08', 'fill_blue', 420), ('K09', 'x_pink', 120), ('K10', 'x_blue', 120)]:
         p = tight(key(f'{SRC}/ui/{f}.png', soft=False)); p = scaled(p, w / p.width)
+        if n.startswith('panel'): p = plain_bottom(p)  # 버튼이 가리는 아래 귀퉁이 별·하트 없앰
         save(p, f'{UI}/{n}.webp'); print(n, p.size)
 
 

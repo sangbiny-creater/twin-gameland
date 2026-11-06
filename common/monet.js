@@ -80,7 +80,7 @@
 .mn-panel p{margin:6px 0 10px;font-size:15px;line-height:1.45;color:#6B4A30}
 .mn-ic{width:1.35em;height:1.35em;object-fit:contain;vertical-align:-.32em}
 .mn-have{display:flex;justify-content:center;gap:14px;font-size:15px;margin:2px 0 8px}
-.mn-btn{position:relative;display:flex;align-items:center;justify-content:center;gap:4px;width:100%;height:44px;min-height:0;white-space:nowrap;margin:8px 0 0;border:0 solid transparent;border-image:url(${P4}btn_pink.webp) 0 58 fill / 0 22px stretch;background:none;padding:6px 18px 9px;font:inherit;font-size:17px;line-height:1.15;color:var(--who);cursor:pointer}
+.mn-btn{position:relative;display:flex;align-items:center;justify-content:center;gap:4px;width:100%;height:44px;min-height:0;white-space:nowrap;margin:8px 0 0;border:0 solid transparent;border-image:url(${P4}btn_pink.webp) 0 58 fill / 0 22px stretch;background:none;padding:.14em 18px 0;font:inherit;font-size:17px;line-height:1;color:var(--who);cursor:pointer}
 .mn-btn.pink{border-image-source:url(${P4}fill_pink.webp);color:#fff;text-shadow:0 2px 0 var(--who-d)}
 .mn-btn.fill-b.fill-b.fill-b{border-image-source:url(${P4}fill_blue.webp);color:#fff;text-shadow:0 2px 0 #1F62AE}
 .mn-btn.fill-p.fill-p.fill-p{border-image-source:url(${P4}fill_pink.webp);color:#fff;text-shadow:0 2px 0 #B92C62}
@@ -93,11 +93,11 @@ html[data-who=eungyeol] .mn-panel h3{background-image:url(${P4}ribbon_blue.webp)
 .mn-art-c{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35em}
 .mn-art-c p{margin:0;font-size:.86em;line-height:1.35;color:#6B4A30}
 .mn-art-c .mn-have{margin:0;font-size:1.05em;gap:1.4em}
-.mn-art-c .mn-btns{width:100%}.mn-art-c .mn-btn{height:2.7em;margin:.35em 0 0;font-size:1.05em;padding:.2em 1em .35em}
+.mn-art-c .mn-btns{width:100%}.mn-art-c .mn-btn{height:2.7em;margin:.35em 0 0;font-size:1.05em;padding:.14em 1em 0}
 .mn-art-c .mn-note{margin:0;font-size:.66em;line-height:1.3}
 .mn-art-x{position:absolute;z-index:2;width:2.7em;height:2.7em;border:0;padding:0;background:url(${P4}x_pink.webp) center/contain no-repeat;cursor:pointer}
 html[data-who=eungyeol] .mn-art-x{background-image:url(${P4}x_blue.webp)}
-.mn-art-box.wel .mn-art-c{gap:.1em}.mn-art-box.wel p{font-size:.76em;line-height:1.3}.mn-art-box.wel .mn-btn{height:2.3em;margin-top:.2em;font-size:1em}
+.mn-art-box.wel .mn-art-c{gap:.1em}.mn-art-box.wel p{font-size:.76em;line-height:1.3}.mn-art-box.wel .mn-btn{height:2.3em;margin:.2em auto 0;width:72%;font-size:1em}
 .mn-art-box.pk{--who:#E8457F;--who-d:#B92C62}.mn-art-box.pk .mn-art-x{background-image:url(${P4}x_pink.webp)}
 .mn-cells{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.3em;width:100%}
 .mn-cell{position:relative;aspect-ratio:160/170;background:center/100% 100% no-repeat;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;font-size:.72em;line-height:1;padding-bottom:.25em;color:#6B4A30}
@@ -129,6 +129,8 @@ html[data-who=eungyeol] .mn-art-x{background-image:url(${P4}x_blue.webp)}
 .mn-bonus{display:flex;align-items:center;justify-content:center;gap:6px}.mn-bonus img{height:44px}
 .mn-ad{position:fixed;inset:0;z-index:9500;background:#111;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Jua,system-ui,sans-serif;text-align:center;gap:12px}
 .mn-ad img{width:84px}.mn-ad b{font-size:64px}.mn-ad span{font-size:16px;opacity:.85;padding:0 24px}
+#mnEarnRow{display:flex;justify-content:center;gap:10px;width:100%;flex:none}#mnEarnRow>*{flex:1 1 0;min-width:0;text-align:center}
+.mn-big{display:flex;align-items:center;justify-content:center;gap:4px;font-size:21px;line-height:1.2}.mn-bigic{width:24px;height:24px;object-fit:contain;flex:none}
 .mn-gemline{color:#3D8BFF;font-size:20px;line-height:1.25;text-align:center;font-family:Jua,system-ui,sans-serif}.mn-gemline .mn-ic{width:1.1em;height:1.1em}.mn-gemline small{display:block;font-size:13px;color:#8A6E58}
 .mn-block{position:fixed;inset:0;z-index:9500;background:transparent}
 .mn-trial{position:fixed;left:50%;top:calc(8px + env(safe-area-inset-top));transform:translateX(-50%);z-index:8000;display:flex;align-items:center;gap:4px;background:rgba(43,58,103,.85);color:#fff;font-family:Jua,system-ui,sans-serif;font-size:15px;border-radius:12px;padding:3px 12px 3px 6px;pointer-events:none}
@@ -295,13 +297,24 @@ html[data-who=eungyeol] .mn-art-x{background-image:url(${P4}x_blue.webp)}
     if (!earn) { if (tries < 15) setTimeout(() => gemLine(n, got, tries + 1), 300); return; }
     let el = document.getElementById('mnGems');
     if (!el) { el = document.createElement('div'); el.id = 'mnGems'; el.className = 'mn-gemline'; }
-    earn.after(el);
+    // 코인·다이아를 좌우로 나란히 (다이아를 못 받으면 코인만 가운데, 그 아래 다음 다이아 안내)
+    let row = document.getElementById('mnEarnRow');
+    if (!row) { row = document.createElement('div'); row.id = 'mnEarnRow'; earn.before(row); row.appendChild(earn); }
+    if (n > 0) row.appendChild(el); else row.after(el);
     const left = GEM_EVERY - ((st().plays || 0) % GEM_EVERY);
-    el.innerHTML = n > 0 ? `${I('ico_gem')} +${n} 다이아 획득!<small>${got.map(([k, why]) => `${esc(short(why))} +${k}`).join(' · ')}</small>`
+    el.innerHTML = n > 0 ? `<span class="mn-big">${I('ico_gem', 'mn-bigic')}+${n} 획득</span><small>${got.map(([k, why]) => `${esc(short(why))} +${k}`).join(' · ')}</small>`
       : `<small>${I('ico_gem')} 다음 다이아까지 ${left}판</small>`;
     el.dataset.n = n;
     const panel = earn.closest('.panel'); if (panel && window.PopupUI) PopupUI.fit(panel);
   }
+  // 결과 창 코인 글: 게임마다 '+N 코인 획득!' 으로 넣음 → 코인 그림 + '+N 획득' + 작은 설명으로 바꿈
+  function coinLine() {
+    const earn = document.getElementById('resEarn'); if (!earn || earn.querySelector('.mn-big')) return;
+    const n = earn.firstChild && earn.firstChild.nodeType === 3 && earn.firstChild.nodeValue.match(/^\s*\+([\d,]+)/); if (!n) return;
+    earn.firstChild.remove();
+    earn.insertAdjacentHTML('afterbegin', `<span class="mn-big"><img class="mn-bigic" src="${ROOT}common/ui/coin.webp" alt="">+${n[1]} 획득</span>`);
+  }
+  { const e = document.getElementById('resEarn'); if (e) new MutationObserver(coinLine).observe(e, { childList: true }); }
   // 게임 성과 다이아 (BM B안): 처음 한 번만. 돌려줌: [[다이아, 이유] …]
   function playGems(game, r) {
     const GM = G[game], out = [];
@@ -341,10 +354,9 @@ html[data-who=eungyeol] .mn-art-x{background-image:url(${P4}x_blue.webp)}
       b.addEventListener('click', (e) => { e.stopPropagation(); if (b.disabled) return; b.disabled = true; fn(b); }); row.appendChild(b); return b; // 누르면 바로 못 누름
     };
     const say = (b, t) => { b.querySelector('small').textContent = ''; b.querySelector('b').textContent = t; };
-    // 버튼 오른쪽 빨간 배지가 '광고'를 뜻해서 글자는 짧게 (위 작은 글자 = 더 받는 코인)
     // 2배 받기 = 이번 판에 받은 코인과 다이아를 한 번 더 (위 작은 글자에 둘 다 보여 줌)
     const what = [earned > 0 ? `+${earned} 코인` : '', gems > 0 ? `💎+${gems}` : ''].filter(Boolean).join(' · ');
-    const dbl = add(what, '2배 받기', 'dbl', 'ico_x2', (b) => fakeAd(() => {
+    const dbl = add('광고 보고', '2배 받기', 'dbl', 'ico_ad', (b) => fakeAd(() => {
       Hub.addCoins(earned); if (gems > 0) addGems(gems);
       say(b, '받았어요!'); pop(`${I('ico_x2')} ${what}`); refreshHub();
       const gl = document.getElementById('mnGems'); if (gl && gems > 0) gl.insertAdjacentHTML('beforeend', `<small>2배 받기 +${gems}</small>`);
@@ -357,7 +369,7 @@ html[data-who=eungyeol] .mn-art-x{background-image:url(${P4}x_blue.webp)}
       const go = (b) => { if (GC) GC.go(); else say(b, '연결 예정이에요'); };
       let cb;
       if (cont() > 0) cb = add(`이어하기권 ${cont()}장`, '이어하기', 'cont', 'ico_continue', (b) => { Hub.mutate((c) => { c.v3.conts--; }); go(b); });
-      else cb = add('', '이어하기', 'cont', 'ico_continue', (b) => fakeAd(() => go(b)));
+      else cb = add('광고 보고', '이어하기', 'cont', 'ico_ad', (b) => fakeAd(() => go(b)));
       if (GC && !GC.can()) cb.disabled = true;
     }
     if (window.PopupUI) PopupUI.fit(panel);
