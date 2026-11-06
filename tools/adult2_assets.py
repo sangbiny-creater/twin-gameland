@@ -94,6 +94,13 @@ def coaster():
         p = Image.fromarray(a); save(p, f'hub/park/coaster/{who}.webp'); print(who, p.size)
 
 
+def home():
+    # 첫 화면 왼쪽 아래: 기본 그림(A00·B00)의 가슴 위 — 얼굴이 크게 보이게
+    for who, l, top in [('eunyu', 'A', .35), ('eungyeol', 'B', .33)]:
+        p = tight(key(f'{ROOT}/character/adult/common_{who}/{l}00.png'))
+        p = tight(p.crop((0, 0, p.width, round(p.height * top)))); p = scaled(p, 620 / p.height); save(p, f'hub/park/home/{who}.webp'); print(who, p.size)
+
+
 if __name__ == '__main__':
-    STEPS = dict(ui=ui, select=select, monet=monet, result=result, stairs=stairs, fx=fx, coaster=coaster)
+    STEPS = dict(ui=ui, select=select, monet=monet, result=result, stairs=stairs, fx=fx, coaster=coaster, home=home)
     for k in (sys.argv[1:] or STEPS): STEPS[k]()
