@@ -13,7 +13,6 @@
 let W = 540, H = 960;
 const WORLDS = ['하늘도시', '숲속 나무마을', '겨울왕국', '석양의 항구', '벚꽃마을', '구름왕국', '바닷속도시', '마법숲', '별빛우주', '황금성'];
 const { PER_WORLD, STAGES, PTS } = window.MoleLevels;
-const SKIN_BG = { forest: 1, sunset: 1, winter: 2, night: 3, space: 4 }; // 공통 배경 스킨 → 사천성 배경 그림 (나머지는 skins.js로 그림)
 const START_HEARTS = 2, MAX_HEARTS = 3;
 const HEART_GAP = 15;      // 하트 두더지는 앞 하트 두더지 뒤로 최소 15초 지나야 다시 나옴
 const HEART_CHANCE = 0.12; // 그 뒤 새 두더지가 나올 때마다 이 확률로 하트 두더지 (→ 평균 약 20초에 한 번)
@@ -21,7 +20,7 @@ const HEART_STAY = 0.6;    // 하트 두더지가 다 올라와 머무는 시간
 const HEART_FULL_PTS = 300; // 하트가 꽉 찼을 때 하트 두더지를 잡으면 받는 점수
 const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611071003';
+const ASSET_V = '202611071600';
 const asset = (p) => `assets/${p}.webp?v=${ASSET_V}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -65,9 +64,8 @@ if (HAS_HEART_ART) { SPR.heart = img(asset('sprites/heart')); SPR.heart_hit = im
 const MOLE_AR = 432 / 456, MOLE_FOOT = 0.956;
 const HOLE = { ar: 164 / 401, cx: 0.503, cy: 0.475, ry: 0.267 };
 const HAMMER = { ar: 294 / 284, head: [0.25, 0.24], end: [0.93, 0.94] };
-const BG = { port: img(asset('bg/port')), land: img(asset('bg/land')), skin: [] };
+const BG = { port: img(asset('bg/port')), land: img(asset('bg/land')) };
 const BG_GRASS = { port: 0.38, land: 0.48 }; // 배경 그림에서 울타리 아래 잔디가 시작하는 높이
-for (let i = 0; i < 5; i++) BG.skin.push(img(`../shisen/assets/bg/bg_${i}.webp?v=${ASSET_V}`));
 // 함정 캐릭터 얼굴: 내 캐릭터 + (5월드부터) 쌍둥이 다른 한 명
 const myLook = (() => { const c = HUB && HUB.active(); return (c && c.look) || 'eunyu'; })();
 const myBase = (() => { const l = (window.CHAR_LOOKS || []).find((x) => x.look === myLook); return (l && l.base) || (myLook.startsWith('eungyeol') ? 'eungyeol' : 'eunyu'); })();
@@ -158,7 +156,7 @@ const G = {
   state: 'ready', si: 0, holes: [], fx: [], t: 0, time: 0, limit: 0, countT: 0,
   score: 0, coins: 0, combo: 0, maxCombo: 0, caught: 0, spawnT: 0, dblT: 0, comboX2: false,
   hearts: START_HEARTS, heartT: 0, dead: false,
-  skin: 'default', tickT: 0, pausedFrom: 'play',
+  tickT: 0, pausedFrom: 'play',
 };
 
 // ---------- holes ----------
@@ -240,7 +238,6 @@ function startStage(si) {
   G.hearts = START_HEARTS; G.maxH = MAX_HEARTS; G.heartT = 0; G.dead = false; renderHearts();
   for (const h of G.holes) { h.m = null; h.cool = 0; }
   if (HUB) HUB.starterKit('mole');
-  G.skin = HUB ? HUB.equippedSkin('mole') : 'default';
   const boosts = HUB ? HUB.takeBoosts('mole') : [];
   if (boosts.includes('combo')) G.comboX2 = true;
   if (boosts.includes('life')) { G.hearts = 3; G.maxH = 4; renderHearts(); } // 하트 아이템: 4칸에 3개로 시작 (기본 3칸에 2개)
@@ -478,16 +475,6 @@ function drawBg() {
     const bw = im.naturalWidth * sc; bh = im.naturalHeight * sc; top = Math.min(0, grassY - gl * bh);
     ctx.drawImage(im, (W - bw) / 2, top, bw, bh);
   } else { ctx.fillStyle = '#BCDA52'; ctx.fillRect(0, 0, W, H); }
-  // 배경 스킨: 울타리 위 하늘만 바꿈
-  const drawn = SKIN_BG[G.skin] == null && G.skin && G.skin !== 'default' && window.Skins && window.Skins.has(G.skin);
-  const sk = SKIN_BG[G.skin] != null ? BG.skin[SKIN_BG[G.skin]] : null;
-  if (drawn || ok(sk)) {
-    const skyH = top + (gl - 0.075) * bh;
-    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, skyH); ctx.clip();
-    if (drawn) window.Skins.draw(ctx, G.skin, W, skyH, 0, 0, G.t);
-    else { const s = Math.max(W / sk.naturalWidth, skyH / sk.naturalHeight), bw = sk.naturalWidth * s, bh2 = sk.naturalHeight * s; ctx.drawImage(sk, (W - bw) / 2, skyH - bh2, bw, bh2); }
-    ctx.restore();
-  }
 }
 // 구멍 뒤쪽 (어두운 안쪽 + 흙 테두리 전체)
 function drawHoleBack(h) {

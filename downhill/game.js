@@ -24,11 +24,7 @@ const STAGES = [
   { name: '눈 마을', at: 900, sky: ['#8FC6F0', '#D5E9F8', '#FFF4E8'], far: '#C3D4EA', mid: '#A2B6D2', snow: ['#ECEFF5', '#FFFFFF'], deco: ['tree', 'house', 'snowman', 'house'], village: true },
   { name: '오로라 설원', at: 1200, sky: ['#0E1A4A', '#24306E', '#4B4E94'], far: '#4A5AA0', mid: '#2C3A78', snow: ['#BCC8EE', '#E6ECFF'], deco: ['tree', 'ice', 'tree'], aurora: true, night: true },
 ];
-// 아이템샵 스킨 → 하늘 색 (원래 그림이 없는 스킨은 common/skins.js가 하늘을 그림)
-const SKIN_SKY = {
-  winter: STAGES[0], forest: STAGES[1],
-  sunset: { sky: ['#F48C5C', '#FFC48A', '#FFE9C9'], far: '#E6A27D', mid: '#C27C63' },
-};
+const OUTFIT_SPEED = window.Hub && Hub.active() ? Hub.outfitSpeed('downhill') : 1; // 겨울옷을 입으면 천천히
 // 장애물: w = 막는 칸 수, s = 그림 폭(칸), flat = 바닥에 붙은 것
 const OBS = {
   tree: { w: 1, s: 1.05 }, rock: { w: 1, s: 1.05 }, snowman: { w: 1, s: 0.85 }, ice: { w: 1, s: 1.0 },
@@ -65,7 +61,7 @@ const $ = (id) => document.getElementById(id);
 const rng = (seed) => { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let x = s; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; };
 
 // ---------- sprites ----------
-const ASSET_V = '202611071003';
+const ASSET_V = '202611071600';
 const SP = { img: new Image(), f: null, ready: false };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -284,7 +280,6 @@ function resetRun() {
   G.d0 = 0; G.stageIdx = 0; G.prevStage = 0; G.stageFade = 1; G.newBest = false; G.shake = 0; G.overT = 0; G.nextBonus = 100;
   while (G.nextDeco < CFG.spawnAhead) { spawnDeco(G.nextDeco); G.nextDeco += 3.2; }
   // 아이템샵: 적용한 배경 스킨 + '사용중' 부스트 (메인 화면에서 들어왔을 때만)
-  G.skin = HUB ? HUB.equippedSkin('downhill') : 'default';
   const boosts = HUB ? HUB.takeBoosts('downhill') : [];
   G.maxHearts = CFG.heartsMax; G.slowT = 0;
   if (boosts.includes('life')) { G.hearts = 3; G.maxHearts = 4; }
@@ -360,7 +355,7 @@ function step(dt) {
   // 속도: 100m마다 +1m/s, 부스터 중엔 1.6배
   const base = Math.min(CFG.vMax, CFG.v0 + G.d / 100);
   if (G.slowT > 0) G.slowT = Math.max(0, G.slowT - dt);
-  G.v = lerp(G.v, base * (G.boostT > 0 ? 1.6 : 1) * (G.slowT > 0 ? 0.7 : 1), Math.min(1, dt * 3));
+  G.v = lerp(G.v, base * (G.boostT > 0 ? 1.6 : 1) * (G.slowT > 0 ? 0.7 : 1) * OUTFIT_SPEED, Math.min(1, dt * 3));
   G.d += G.v * dt;
   // 좌우 이동 (부드럽게)
   const dx = G.lane - G.px;
@@ -600,13 +595,6 @@ function stageSky(i) {
   return (skyCache[ck] = c);
 }
 function drawSky() {
-  const sk = G.skin && G.skin !== 'default' ? G.skin : null;
-  if (sk && window.Skins && window.Skins.has(sk)) {
-    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, HY() + 2); ctx.clip();
-    window.Skins.draw(ctx, sk, W, HY() + 2, G.d * 6, 0, G.t);
-    ctx.restore(); return;
-  }
-  if (sk && SKIN_SKY[sk]) { ctx.drawImage(skyLayer('skin_' + sk, SKIN_SKY[sk]), 0, 0); return; }
   if (G.stageFade < 1) { ctx.drawImage(stageSky(G.prevStage), 0, 0); ctx.globalAlpha = G.stageFade; }
   ctx.drawImage(stageSky(G.stageIdx), 0, 0);
   ctx.globalAlpha = 1;

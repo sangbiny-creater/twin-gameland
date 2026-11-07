@@ -16,7 +16,7 @@
 let W = 540, H = 960;
 const L = window.BakeryLevels, A = window.BakeryArt;
 const { PTS, JUDGE } = L;
-const ASSET_V = '202611071003';
+const ASSET_V = '202611071600';
 const MAX_HEARTS = 3;
 const START_HEARTS = 2;
 const HEART_GAP = 50; // 하트 아이템 사이 최소 시간(초) — 2026-10-27 반으로 줄임(25→50초)
@@ -151,7 +151,8 @@ const beltH = () => 40 * LAY.s;
 const xAt = (t) => LAY.nozX + (L.dist(t) - L.dist(G.clock)) * LAY.s;
 // 판정 글자: 짤주머니 오른쪽 (주머니에 가리지 않게)
 const judgeX = () => LAY.nozX + 150 * LAY.s;
-const timeScale = () => (G.slowT > 0 ? 0.7 : 1);
+const OUTFIT_SPEED = HUB ? HUB.outfitSpeed('bakery') : 1; // 베이커리 옷을 입으면 천천히
+const timeScale = () => (G.slowT > 0 ? 0.7 : 1) * OUTFIT_SPEED;
 // 지금 이 순간의 게임 시계 (화면 그리기 사이에 누른 것도 정확하게)
 const nowClock = () => G.clock + (G.state === 'play' ? Math.min(0.05, (performance.now() - G.frameAt) / 1000) * timeScale() : 0);
 const guideNow = () => L.params(G.clock).guide;

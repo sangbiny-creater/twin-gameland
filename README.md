@@ -74,7 +74,6 @@ python3 -m http.server 8080 --bind 0.0.0.0
 | `common/items/` | 아이템(부스트) 아이콘 `<id>.webp` (메인 화면·아이템샵·메모리 게임) |
 | `common/ui/` | 공용 코인 아이콘 |
 | `common/worlds/` | 징검다리 10개 월드 배경 `w1~w10.webp` (지도·스카이훅·사천성) |
-| `common/skins.js` | 그림이 없는 배경 스킨(야경 도시·우주·사막·놀이공원)을 코드로 그림 |
 | `shop/` | 아이템 샵 (`assets/games`, `assets/skins`, `assets/ui`) |
 | `skyhook/` · `helicopter/` · `stairs/` · `shisen/` · `downhill/` · `memory/` | 게임마다 `index.html`, `game.js`, `style.css`, `assets/` |
 | `<게임>/assets/` | `sprites/`(그림 묶음 webp+json) · `bg/`(배경) · `ui/`(버튼·로고·키아트) · `chars/`(캐릭터별 결과 그림) · `cards/`(메모리 카드) |
@@ -101,8 +100,8 @@ python3 -m http.server 8080 --bind 0.0.0.0
 3. 게임 시작 시 `Hub.active().look`으로 캐릭터(`eunyu`/`eungyeol`)를 정하고,
    끝나면 `Hub.record('<게임id>', { dist, coins, ... })`를 불러 기록·코인을 저장해요.
 4. 메인 화면 게임 목록에 카드를 추가해요 (`hub/hub.js`의 `GAME_CARDS`에 한 줄).
-   아이템샵에도 넣으려면 `common/profile.js`의 `BOOSTS`와 `shop/shop.js`의 `GAMES`에 추가하고,
-   게임 시작 때 `Hub.equippedSkin('<게임id>')` / `Hub.takeBoosts('<게임id>')`로 스킨·부스트를 적용해요.
+   아이템을 쓰려면 `common/profile.js`의 `BOOSTS`에 추가하고,
+   게임 시작 때 `Hub.takeBoosts('<게임id>')`로 아이템을 적용해요.
 5. 고친 파일이 폰에서 바로 반영되도록 `python3 tools/bump_version.py`로 모든 `?v=` 캐시 버전을 한 번에 올려요.
 
 각 게임 폴더는 메인 화면 없이 단독으로 열어도 동작해요(기록은 그 게임 안에만 저장).

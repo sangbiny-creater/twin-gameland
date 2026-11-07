@@ -238,10 +238,6 @@ window.I18N_DATA = {
 "코인이 {}개 부족해요. 게임을 해서 모아요!"
 ],
 [
-"{} 적용! 모든 게임에 바뀌어요",
-"{} 적용 완료! 모든 게임에 반영돼요"
-],
-[
 "적용! 모든 게임에 바뀌어요",
 "적용 완료! 모든 게임에 반영돼요"
 ],
@@ -367,6 +363,34 @@ window.I18N_DATA = {
 ]
 ],
 "en": [
+[
+"광고를 보고 다이아 {}개 · 오늘 {}번 남음",
+"Watch an ad for {0} Diamonds · {1} left today"
+],
+[
+"다이아가 {}개 모자라요!",
+"You need {0} more Diamonds!"
+],
+[
+"{}을(를) 입었어요!",
+"You put on {0}!"
+],
+[
+"{}을(를) 입었어요! (게임 안 그림은 아직 기본 옷이에요)",
+"You put on {0}! (In-game art still shows the default outfit.)"
+],
+[
+"지금 {}장 있어요",
+"You have {0}"
+],
+[
+"{}일 남음",
+"{0} days left"
+],
+[
+"다이아 {}",
+"{0} Diamonds"
+],
 [
 "+{} 획득",
 "+{0} Earned"
@@ -1236,6 +1260,10 @@ window.I18N_DATA = {
 "{} Diamonds {}"
 ],
 [
+"{}다이아 {}",
+"{} Diamonds {}"
+],
+[
 "다이아",
 "Diamonds"
 ],
@@ -1254,10 +1282,6 @@ window.I18N_DATA = {
 [
 "보유 중",
 "Owned"
-],
-[
-"{}일 남음",
-"{} days remaining"
 ],
 [
 "일 남음",
@@ -2080,20 +2104,8 @@ window.I18N_DATA = {
 "Change all game backgrounds / to {}? / {} {} Coins"
 ],
 [
-"{} 적용! 모든 게임 배경이 바뀌어요",
-"{} Applied! All game backgrounds have changed."
-],
-[
 "적용! 모든 게임 배경이 바뀌어요",
 "Applied! All game backgrounds have changed."
-],
-[
-"{} 적용! 모든 게임에 바뀌어요",
-"{} Applied to all games!"
-],
-[
-"{} 적용 완료! 모든 게임에 반영돼요",
-"{} Applied to all games!"
 ],
 [
 "적용! 모든 게임에 바뀌어요",
@@ -2138,10 +2150,6 @@ window.I18N_DATA = {
 [
 "부스트 구매",
 "Buy Boost"
-],
-[
-"{} — {} / 1개를 살까요? {} {} 코인",
-"{} — {} / Buy 1? {} {} Coins"
 ],
 [
 "— {} / 1개를 살까요? {} {} 코인",
@@ -2226,10 +2234,6 @@ window.I18N_DATA = {
 [
 "에게 {}을(를) 사서 입힐까요? / {} {} 코인",
 "Buy {} and equip it on the character? / {} {} Coins"
-],
-[
-"{} 구매 완료! 바로 입었어요",
-"{} Purchased and equipped!"
 ],
 [
 "구매 완료! 바로 입었어요",
@@ -3522,6 +3526,130 @@ window.I18N_DATA = {
 [
 "탭/스페이스 = 점프 · 공중에서 꾹 = 훅 · 손 떼면 슝~",
 "Tap/Space = Jump · Hold in midair = Hook · Release = Swing!"
+],
+[
+"상점",
+"Shop"
+],
+[
+"꾸미기",
+"Decorate"
+],
+[
+"다이아 구매",
+"Diamonds"
+],
+[
+"출석 보상",
+"Attendance Reward"
+],
+[
+"오늘의 무료 다이아",
+"Free Diamonds"
+],
+[
+"광고 보기",
+"Watch Ad"
+],
+[
+"오늘도 놀러와 줘서 고마워요!",
+"Thanks for visiting today!"
+],
+[
+"첫 화면에서 출석해요!",
+"Check in on the home screen!"
+],
+[
+"옷을 갈아입어요",
+"Change your outfit"
+],
+[
+"다이아 충전소",
+"Diamond Store"
+],
+[
+"다이아로 놀이공원을 더 멋지게 꾸며 보세요!",
+"Make your park even better with Diamonds!"
+],
+[
+"앱에서는 여기서 구글 결제 창이 떠요 (값은 임시). 지금은 진짜 결제가 없어요.",
+"In the app, Google Play payment opens here (prices are temporary). No real payment right now."
+],
+[
+"구매함",
+"Purchased"
+],
+[
+"착용하기",
+"Wear"
+],
+[
+"옷 구매",
+"Buy Outfit"
+],
+[
+"게임랜드 유니폼",
+"Gameland Uniform"
+],
+[
+"데이트룩",
+"Date Look"
+],
+[
+"캐주얼룩",
+"Casual Look"
+],
+[
+"학교풍룩",
+"School Look"
+],
+[
+"여행룩",
+"Travel Look"
+],
+[
+"토끼 잠옷",
+"Bunny Pajamas"
+],
+[
+"겨울옷",
+"Winter Outfit"
+],
+[
+"베이커리 옷",
+"Bakery Outfit"
+],
+[
+"스트리머 룩",
+"Streamer Look"
+],
+[
+"데일리룩",
+"Daily Look"
+],
+[
+"캠퍼스룩",
+"Campus Look"
+],
+[
+"운동복",
+"Sportswear"
+],
+[
+"홈웨어",
+"Homewear"
+],
+[
+"다운힐 러너가 천천히 가요",
+"Downhill Runner goes slower"
+],
+[
+"달콤 베이커리가 천천히 가요",
+"Sweet Bakery goes slower"
+],
+[
+"쿠폰 입력하기",
+"Enter Coupon"
 ],
 [
 "광고 보고",

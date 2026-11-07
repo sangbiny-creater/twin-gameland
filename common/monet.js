@@ -187,7 +187,7 @@ html[data-who=eungyeol] .mn-art-x{background-image:url(${P4}x_blue.webp)}
   // 게임 열림 축하 (U10): 가운데 팡!
   function fx() { const f = document.createElement('img'); f.className = 'mn-fx'; f.src = IMG + 'unlocked_fx.webp'; f.alt = ''; document.body.appendChild(f); setTimeout(() => f.remove(), 1800); }
   const haveLine = () => `<div class="mn-have"><span>${I('ico_key')} 열쇠 <b>${st().tickets}</b></span><span>${I('ico_gem')} 다이아 <b>${Hub.gems()}</b></span></div>`;
-  const refreshHub = () => { const el = document.getElementById('meGems'); if (el) el.textContent = Hub.gems(); decorateRides(); };
+  const refreshHub = () => { const el = document.getElementById('meGems'); if (el) el.textContent = Hub.gems(); decorateRides(); if (window.Monet.onChange) Monet.onChange(); };
 
   // 가짜 광고: AD_SEC초 세고 done()
   function fakeAd(done) {
@@ -201,6 +201,10 @@ html[data-who=eungyeol] .mn-art-x{background-image:url(${P4}x_blue.webp)}
 
   // 다이아 상점 (가짜 결제): 광고 보고 다이아 · 다이아 4종(원화, 첫 결제 2배) · 묶음 상품 3개 · 이어하기권(다이아로)
   const adLeft = () => { const a = bm().ad; return a.day === today() ? AD_GEMS_DAY - a.n : AD_GEMS_DAY; };
+  // 광고 보고 다이아 (하루 3번): 다이아 상점·아이템샵 '오늘의 무료 다이아'
+  function watchAd(after) {
+    fakeAd(() => { Hub.mutate((c) => { const a = bmOf(c.v3 || (c.v3 = fresh())).ad; if (a.day !== today()) { a.day = today(); a.n = 0; } a.n++; c.gems = (c.gems || 0) + AD_GEMS; }); pop(`${I('ico_gem')} +${AD_GEMS}`); refreshHub(); if (after) after(); });
+  }
   function gemShop(after) {
     const B = bm(), first = !B.paid, lockedLeft = Object.keys(G).filter((g) => !isOpen(g) && g !== 'skyhook').length;
     const offer = (o) => {
@@ -219,12 +223,13 @@ html[data-who=eungyeol] .mn-art-x{background-image:url(${P4}x_blue.webp)}
     const reopen = () => gemShop(after);
     m.querySelectorAll('.mn-pack').forEach((b) => b.addEventListener('click', (e) => {
       e.stopPropagation(); if (b.disabled) return; if (window.UI) UI.blip(); m.remove();
-      if (b.dataset.ad) { fakeAd(() => { Hub.mutate((c) => { const a = bmOf(c.v3 || (c.v3 = fresh())).ad; if (a.day !== today()) { a.day = today(); a.n = 0; } a.n++; c.gems = (c.gems || 0) + AD_GEMS; }); pop(`${I('ico_gem')} +${AD_GEMS}`); refreshHub(); reopen(); }); return; }
+      if (b.dataset.ad) { watchAd(reopen); return; }
       if (b.dataset.i === 'cont') { buyConts(reopen); return; }
       if (b.dataset.o) { fakePay(OFFERS.find((o) => o.id === b.dataset.o), reopen); return; }
       fakePay(PACKS[+b.dataset.i], reopen);
     }));
   }
+  Object.assign(window.Monet, { PACKS, OFFERS, CONT_PACK, AD_GEMS, ATT_DAILY, won, adLeft, bm, today, watchAd, buyConts: (a) => buyConts(a), fakePay: (p, a) => fakePay(p, a) }); // 아이템샵 다이아 구매 탭·무료 다이아 칸이 씀
   // 이어하기권: 다이아 30개로
   function buyConts(after) {
     if (Hub.gems() < CONT_PACK.gems) { pop('다이아가 모자라요'); if (after) after(); return; }
@@ -502,5 +507,6 @@ html[data-who=eungyeol] .mn-art-x{background-image:url(${P4}x_blue.webp)}
     new MutationObserver(check).observe(lobby, { attributes: true, attributeFilter: ['class'] });
     setTimeout(check, 600);
   }
+  window.dispatchEvent(new Event('monet-ready')); // 아이템샵이 기다림
   }
 })();

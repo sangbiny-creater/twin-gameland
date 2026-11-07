@@ -55,19 +55,6 @@
   };
 
   // ---------- 아이템샵 카탈로그 ----------
-  // 배경 스킨: 한 번 사서 '적용'하면 모든 게임 배경이 함께 바뀐다 (게임마다 자기 그림으로 그림)
-  const SKINS = [
-    { id: 'default', name: '기본 하늘', price: 0 },
-    { id: 'forest', name: '숲 속 마을', price: 200 },
-    { id: 'park', name: '놀이공원', price: 300 },
-    { id: 'winter', name: '겨울 왕국', price: 300 },
-    { id: 'sunset', name: '석양의 항구', price: 300 },
-    { id: 'night', name: '야경 도시', price: 300 },
-    { id: 'space', name: '우주 여행', price: 300 },
-    { id: 'desert', name: '사막 오아시스', price: 300 },
-  ];
-  // 예전(게임별) 스킨 id → 공통 id
-  const OLD_SKIN = { autumn: 'forest', moon: 'space' };
   // 게임 부스트: 1개씩 사서 모아 두고, '사용중'으로 켜 둔 것만 게임을 시작할 때 1개씩 쓰임
   // 아이템 (팝업 v2, docs/spec/팝업_아이템_정리_v1.md): 아이템샵에서 파는 것은 이 8개뿐, 수량은 모든 게임이 같이 씀(sh.boosts._all)
   //  하트 = 하트 3칸·2개 대신 4칸·3개로 시작 / 보호막 = 처음 한 번 안 다침 / 슬로우 = 처음 20초 천천히 (무제한형·두더지는 시작 팝업에서 체크)
@@ -103,24 +90,27 @@
   for (const g of Object.keys(BOOSTS)) if (typeof BOOSTS[g][0] === 'string') BOOSTS[g] = BOOSTS[g].map((id) => ({ id, ...ITEMS[id], shared: true }));
 
 
-  // ---------- 캐릭터 꾸미기 (코스튬) ----------
-  // 캐릭터(프로필)마다 산 옷을 따로 저장. 입은 옷은 모든 게임 플레이·메뉴 화면에 보임
-  // 그림: common/costumes/<eunyu|eungyeol>_<id>.webp (달리기: _run0, _run1)
-  const COSTUMES = [
-    { id: 'hanbok', name: '한복', price: 300, desc: '고운 한복을 입었어요!' },
-    { id: 'raincoat', name: '우비', price: 300, desc: '비 오는 날에도 신나게!' },
-    { id: 'pajamas', name: '잠옷', price: 300, desc: '포근포근 곰돌이 잠옷이에요' },
-    { id: 'roman', name: '로마병사', price: 300, desc: '용감한 고대 로마 병사!' },
-    { id: 'tracksuit', name: '츄리닝', price: 300, desc: '편하게 달리기 좋은 츄리닝' },
-    { id: 'dino', name: '공룡 옷', price: 300, desc: '귀여운 공룡이 되었어요!' },
-    { id: 'school', name: '교복', price: 300, desc: '단정한 교복 차림!' },
-    { id: 'swimsuit', name: '수영복', price: 300, desc: '물놀이 준비 완료!' },
-    { id: 'wizard', name: '마법사 옷', price: 300, desc: '반짝반짝 마법 지팡이!' },
-    { id: 'santa', name: '산타클로스', price: 300, desc: '선물을 나눠 주는 산타!' },
-    { id: 'baseball', name: '야구복', price: 300, desc: '홈런을 노리는 야구 선수!' },
-    { id: 'suit', name: '정장', price: 300, desc: '멋쟁이 정장 차림!' },
-    { id: 'detective', name: '탐정 옷', price: 300, desc: '돋보기로 수수께끼 해결!' },
-  ];
+  // ---------- 옷장 (v0.4) ----------
+  // 캐릭터마다 다이아로 사서(c.outfits) 입음(c.outfit, 없으면 기본 옷). 예전 어린이 옷(c.costumes·c.costume)은 v0.3 보관판 것이라 건드리지 않음
+  // 그림: shop/assets/closet/<eunyu|eungyeol>_<id>.webp 전신 · item_<…>.webp 옷 칸 · hub/park/home/<…>_<id>.webp 첫 화면 상반신 (tools/closet_assets.py)
+  // sheet: 게임 안 포즈 묶음이 있는 옷 (common/chars/<look>_<id>) / slow: 입으면 그 게임이 OUTFIT_SLOW 배로 천천히 / 값은 🟡 임시
+  const OUTFIT_PRICE = 100, OUTFIT_SLOW = 0.85;
+  const OUTFITS = {
+    eunyu: [
+      { id: 'uniform', name: '게임랜드 유니폼', price: OUTFIT_PRICE, sheet: true }, { id: 'date', name: '데이트룩', price: OUTFIT_PRICE },
+      { id: 'casual', name: '캐주얼룩', price: OUTFIT_PRICE }, { id: 'school', name: '학교풍룩', price: OUTFIT_PRICE },
+      { id: 'travel', name: '여행룩', price: OUTFIT_PRICE }, { id: 'pajamas', name: '토끼 잠옷', price: OUTFIT_PRICE },
+      { id: 'winter', name: '겨울옷', price: 150, slow: 'downhill', note: '다운힐 러너가 천천히 가요' },
+      { id: 'baker', name: '베이커리 옷', price: 150, slow: 'bakery', note: '달콤 베이커리가 천천히 가요' },
+    ],
+    eungyeol: [
+      { id: 'streamer', name: '스트리머 룩', price: OUTFIT_PRICE, sheet: true }, { id: 'daily', name: '데일리룩', price: OUTFIT_PRICE },
+      { id: 'campus', name: '캠퍼스룩', price: OUTFIT_PRICE }, { id: 'sport', name: '운동복', price: OUTFIT_PRICE },
+      { id: 'travel', name: '여행룩', price: OUTFIT_PRICE }, { id: 'home', name: '홈웨어', price: OUTFIT_PRICE },
+      { id: 'winter', name: '겨울옷', price: 150, slow: 'downhill', note: '다운힐 러너가 천천히 가요' },
+      { id: 'baker', name: '베이커리 옷', price: 150, slow: 'bakery', note: '달콤 베이커리가 천천히 가요' },
+    ],
+  };
   // ---------- 쿠폰 ----------
   // 띄어쓰기·대소문자 상관없이 입력. once: 캐릭터마다 한 번만
   // ---------- 놀이공원 꾸미기 (v0.3 첫 화면) ----------
@@ -260,14 +250,6 @@
   function shopOf(c) {
     if (!c.shop) c.shop = { skins: {}, equipped: {}, boosts: {}, using: {} };
     const sh = c.shop;
-    if (!Array.isArray(sh.skinAll)) { // 게임별로 샀던 스킨을 공통 스킨으로 옮기기
-      const own = new Set();
-      for (const g in sh.skins || {}) for (const id of sh.skins[g] || []) own.add(OLD_SKIN[id] || id);
-      sh.skinAll = [...own].filter((id) => SKINS.some((k) => k.id === id));
-      const eq = sh.equipped || {};
-      const pick = [eq.skyhook, eq.stairs, eq.helicopter, eq.shisen].map((id) => OLD_SKIN[id] || id).find((id) => id && id !== 'default' && sh.skinAll.includes(id));
-      sh.skinOn = pick || 'default';
-    }
     return sh;
   }
 
@@ -296,23 +278,34 @@
   };
 
   const Hub = {
-    GAMES, WORLDS, FREE_SLOTS, MAX_CHARS, SKINS, BOOSTS, ITEMS, COSTUMES,
+    GAMES, WORLDS, FREE_SLOTS, MAX_CHARS, BOOSTS, ITEMS,
 
-    // ----- 캐릭터 꾸미기 -----
-    ownsCostume(id, c = this.active()) { return !!(c && (c.costumes || []).includes(id)); },
-    costume(c = this.active()) { return (c && c.costume) || null; }, // 입은 옷 id (없으면 기본 옷)
-    // 게임·메뉴에서 쓸 그림 경로 (기본 옷이면 null). base: 페이지 위치에 따라 '../' 등
+    // ----- 옷장 -----
+    costume(c = this.active()) { return (c && c.costume) || null; }, // 예전 어린이 옷 (게임의 예전 코드가 물어봄)
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611071003` : null; },
-    buyCostume(id, c = this.active()) {
-      const it = COSTUMES.find((x) => x.id === id);
-      if (!c || !it || this.ownsCostume(id, c)) return { ok: false };
-      if (c.coins < it.price) return { ok: false, why: 'coins' };
-      c.coins -= it.price; c.costumes = [...(c.costumes || []), id]; c.costume = id; // 사면 바로 입음
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611071600` : null; },
+    outfits(c = this.active()) { return c ? OUTFITS[lookBase(c.look)] : []; },
+    outfit(c = this.active()) { return (c && c.outfit) || null; }, // 입은 옷 id (없으면 기본 옷)
+    ownsOutfit(id, c = this.active()) { return !id || !!(c && (c.outfits || []).includes(id)); },
+    buyOutfit(id, c = this.active()) {
+      const it = this.outfits(c).find((x) => x.id === id);
+      if (!c || !it || this.ownsOutfit(id, c)) return { ok: false };
+      if ((c.gems || 0) < it.price) return { ok: false, why: 'gems' };
+      c.gems -= it.price; c.outfits = [...(c.outfits || []), id]; c.outfit = id; // 사면 바로 입음
       save(); return { ok: true };
     },
-    wearCostume(id, c = this.active()) { if (!c) return; if (id && !this.ownsCostume(id, c)) return; c.costume = id || null; save(); },
+    wearOutfit(id, c = this.active()) { if (c && this.ownsOutfit(id, c)) { c.outfit = id || null; save(); } },
+    // 그 모습의 캐릭터가 입은 옷에 게임 안 포즈 묶음이 있으면 옷 id (common/charv2.js 가 묶음을 겹쳐 씀)
+    outfitSheet(look) {
+      const a = this.active(), c = a && a.look === look ? a : this.chars().find((x) => x.look === look);
+      const it = c && this.outfits(c).find((x) => x.id === c.outfit);
+      return it && it.sheet ? it.id : null;
+    },
+    // 입은 옷의 게임 효과: 속도 배율 (겨울옷 = 다운힐, 베이커리 옷 = 달콤 베이커리)
+    outfitSpeed(game, c = this.active()) { const it = c && this.outfits(c).find((x) => x.id === c.outfit); return it && it.slow === game ? OUTFIT_SLOW : 1; },
+    // 첫 화면·지도 구석의 내 캐릭터 그림
+    homeImg(c = this.active()) { const who = lookBase(c.look) === 'eungyeol' ? 'eungyeol' : 'eunyu', id = this.outfit(c); return `hub/park/home/${who}${id ? '_' + id : ''}.webp`; },
     // 쿠폰: { ok, msg }
     redeem(code, c = this.active()) {
       const key = String(code || '').toLowerCase().replace(/\s+/g, '');
@@ -338,19 +331,6 @@
     },
 
     // ----- 아이템샵 -----
-    // 배경 스킨은 모든 게임 공통 (game 인자는 예전 코드 호환용이라 무시)
-    ownsSkin(id, c = this.active()) { return id === 'default' || !!(c && shopOf(c).skinAll.includes(id)); },
-    equippedSkin(game, c = this.active()) { return (c && shopOf(c).skinOn) || 'default'; },
-    buySkin(id, c = this.active()) {
-      const sk = SKINS.find((s) => s.id === id);
-      if (!c || !sk || this.ownsSkin(id, c)) return { ok: false, why: 'owned' };
-      if (c.coins < sk.price) return { ok: false, why: 'coins' };
-      c.coins -= sk.price;
-      const sh = shopOf(c); sh.skinAll.push(id);
-      sh.skinOn = id; // 사면 바로 적용
-      save(); return { ok: true };
-    },
-    equipSkin(id, c = this.active()) { if (c && this.ownsSkin(id, c)) { shopOf(c).skinOn = id; save(); } },
     boostCount(game, id, c = this.active()) { const k = bk(game, id); return (c && shopOf(c).boosts[k] && shopOf(c).boosts[k][id]) || 0; },
     isUsing(game, id, c = this.active()) { return !!(c && shopOf(c).using[game] && shopOf(c).using[game][id]); },
     buyBoost(game, id, c = this.active()) {

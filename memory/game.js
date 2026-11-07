@@ -12,12 +12,11 @@ const WORLDS = ['하늘도시', '숲속 나무마을', '겨울왕국', '석양�
 const { PER_WORLD, STAGES } = window.MemoryLevels; // 스테이지 i: { pairs, cards, scenes(추억 카드 쌍), preview(초), s(제한 초) }
 const FRONTS = Array.from({ length: 18 }, (_, k) => `f${String(k).padStart(2, '0')}`); // 설명 자료의 카드 그림 18종
 const SCENES = Array.from({ length: 36 }, (_, k) => `s${String(k).padStart(2, '0')}`); // 은유·은결 일상 그림 (추억 카드)
-const SKIN_BG = { forest: 1, sunset: 1, winter: 2, night: 3, space: 4 }; // 공통 배경 스킨 → 사천성 배경 그림 (나머지는 skins.js로 그림)
 const MISS_SHOW = 0.75;  // 틀린 두 장을 보여 주는 시간 (초)
 const MISS_TIME = 0.2;   // 틀리면 줄어드는 시간 (초)
 const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611071003';
+const ASSET_V = '202611071600';
 const cardSrc = (n) => `assets/cards/${n}.webp?v=${ASSET_V}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -40,9 +39,8 @@ const mmss = (t) => { t = Math.max(0, Math.ceil(t)); return `${String(Math.floor
 function shuffleArr(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 // ---------- images ----------
-const BG = { port: new Image(), land: new Image(), skin: [] };
+const BG = { port: new Image(), land: new Image() };
 BG.port.src = `assets/bg/port.webp?v=${ASSET_V}`; BG.land.src = `assets/bg/land.webp?v=${ASSET_V}`;
-for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `../shisen/assets/bg/bg_${i}.webp?v=202611071003`; BG.skin.push(im); }
 const BACK = `assets/cards/back.webp?v=${ASSET_V}`;
 // 그림을 미리 받아 둠 (첫 판부터 뒤집을 때 바로 보이게)
 [BACK, ...FRONTS.map(cardSrc)].forEach((s) => { const im = new Image(); im.src = s; });
@@ -115,7 +113,7 @@ let scale = 1, dpr = 1;
 const G = {
   state: 'ready', si: 0, cards: [], open: [], busy: 0, time: 0, limit: 0, elapsed: 0, memoT: 0,
   coins: 0, combo: 0, maxCombo: 0, tries: 0, left: 0, comboX2: false, peekT: 0, hintT: 0,
-  fx: [], t: 0, skin: 'default', tickT: 0, pausedFrom: 'play',
+  fx: [], t: 0, tickT: 0, pausedFrom: 'play',
 };
 
 // ---------- board ----------
@@ -179,7 +177,6 @@ function startStage(si) {
   G.open = []; G.busy = 0; G.fx = []; G.t = 0; G.comboX2 = false; G.peekT = 0; G.hintT = 0;
   if (HUB) HUB.starterKit('memory');
   takeRound('memory', ['hint', 'time', 'find', 'bomb']);
-  G.skin = HUB ? HUB.equippedSkin('memory') : 'default';
   const boosts = HUB ? HUB.takeBoosts('memory') : [];
   if (boosts.includes('combo')) G.comboX2 = true;
   if (boosts.length) toast('부스트: ' + boosts.map((b) => HUB.boostName('memory', b)).join(' · '));
@@ -398,10 +395,8 @@ function step(dt) {
 // ---------- render (배경 + 효과) ----------
 function drawBg() {
   bg.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
-  const drawn = SKIN_BG[G.skin] == null && G.skin && G.skin !== 'default' && window.Skins && window.Skins.has(G.skin);
-  const img = SKIN_BG[G.skin] != null ? BG.skin[SKIN_BG[G.skin]] : (W > H ? BG.land : BG.port);
-  if (drawn) window.Skins.draw(bg, G.skin, W, H, 0, 0, G.t);
-  else if (img && img.complete && img.naturalWidth) {
+  const img = W > H ? BG.land : BG.port;
+  if (img && img.complete && img.naturalWidth) {
     const s = Math.max(W / img.naturalWidth, H / img.naturalHeight);
     const bw = img.naturalWidth * s, bh = img.naturalHeight * s;
     bg.drawImage(img, (W - bw) / 2, (H - bh) * 0.6, bw, bh);

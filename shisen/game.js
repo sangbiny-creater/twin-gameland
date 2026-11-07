@@ -26,7 +26,6 @@ function tilePool(si) {
   const themed = w >= 4 ? Array.from({ length: 14 }, (_, k) => `w${w + 1}_${k}`).filter((n) => !(w === 4 && (n === 'w5_2' || n === 'w5_3'))) : [];
   return ['t_eunyu', 't_eungyeol', ...shuffleArr(themed), ...shuffleArr(BASE_TILES.concat(EXTRA_TILES))];
 }
-const SKIN_BG = { forest: 1, sunset: 1, winter: 2, night: 3, space: 4 }; // 공통 배경 스킨 → assets/bg/bg_*.webp (나머지는 skins.js로 그림)
 const COMBO_WINDOW = 4;  // 초: 이 안에 다음 짝을 없애면 콤보
 const label = (i) => `${isHard(i) ? '어려움 ' : ''}${worldOf(i) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[worldOf(i)]} ${(i % PER_WORLD) + 1}`;
@@ -56,8 +55,8 @@ const mmss = (t) => { t = Math.max(0, Math.ceil(t)); return `${String(Math.floor
 function shuffleArr(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 // ---------- sprites ----------
-const ASSET_V = '202611071003';
-const SP = { img: new Image(), f: null, ready: false, bg: [] };
+const ASSET_V = '202611071600';
+const SP = { img: new Image(), f: null, ready: false };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => { SP.f = j; SP.img.onload = () => { SP.ready = true; }; SP.img.src = `assets/sprites/sprites.webp?v=${ASSET_V}`; });
 const EXTRA_V = '20261027a';
 SP.ex = { img: new Image(), f: null, ready: false };
@@ -68,7 +67,6 @@ function frameOf(name) {
   if (SP.ex.ready && SP.ex.f[name]) return [SP.ex.img, ...SP.ex.f[name]];
   return null;
 }
-for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=${ASSET_V}`; SP.bg.push(im); }
 // 월드 배경 (메인 화면 지도와 같은 그림)
 SP.world = WORLDS.map((_, w) => { const im = new Image(); im.src = `../common/worlds/w${w + 1}.webp?v=${ASSET_V}`; return im; });
 function spr(name, x, y, w, h, alpha = 1) {
@@ -211,7 +209,7 @@ const G = {
   state: 'ready', si: 0, cols: 4, rows: 6, b: null, sel: null, time: 0, limit: 0, elapsed: 0,
   coins: 0, combo: 0, maxCombo: 0, lastMatchT: -99, left: 0,
   items: { hint: 3, shuffle: 2, time: 1, bomb: 0 }, hint: null, hintT: 0, hintBig: false, findT: 0, comboX2: false,
-  lines: [], fx: [], texts: [], removing: [], t: 0, skin: 'default', shake: 0, tickT: 0,
+  lines: [], fx: [], texts: [], removing: [], t: 0, shake: 0, tickT: 0,
 };
 
 // 판 G.b = { C, R, f: [f1, f2, f3] }: f[z-1][y][x] = z층 그림 (없으면 -1). Coordinates are in the board's own orientation.
@@ -273,7 +271,6 @@ function startStage(si) {
   if (HUB) HUB.starterKit('shisen');
   takeRound('shisen', ['hint', 'time', 'shuffle', 'bomb']);
   G.lines = []; G.fx = []; G.texts = []; G.removing = []; G.sel = null; G.t = 0;
-  G.skin = HUB ? HUB.equippedSkin('shisen') : 'default';
   const boosts = HUB ? HUB.takeBoosts('shisen') : [];
   if (boosts.includes('find')) G.findT = 20;
   if (boosts.includes('combo')) G.comboX2 = true;
@@ -476,10 +473,8 @@ function pathPts(path, za, zb) {
 
 // ---------- render ----------
 function drawBg() {
-  const drawn = SKIN_BG[G.skin] == null && G.skin && G.skin !== 'default' && window.Skins && window.Skins.has(G.skin);
-  const img = SKIN_BG[G.skin] != null ? SP.bg[SKIN_BG[G.skin]] : SP.world[worldOf(G.si)];
-  if (drawn) window.Skins.draw(ctx, G.skin, W, H, 0, 0, G.t);
-  else if (img && img.complete && img.naturalWidth) {
+  const img = SP.world[worldOf(G.si)];
+  if (img && img.complete && img.naturalWidth) {
     const s = Math.max(W / img.naturalWidth, H / img.naturalHeight);
     const bw = img.naturalWidth * s, bh = img.naturalHeight * s;
     ctx.drawImage(img, (W - bw) / 2, (H - bh) / 2, bw, bh);

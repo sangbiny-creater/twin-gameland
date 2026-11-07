@@ -126,7 +126,7 @@ const THEMES = {
 };
 // 월드 그림 (메인 화면 지도와 같은 그림)
 const WORLD_IMG = {};
-for (const th of Object.values(THEMES)) if (th.img && !WORLD_IMG[th.img]) { const im = new Image(); im.src = `../common/worlds/w${th.img}.webp?v=202611071003`; WORLD_IMG[th.img] = im; }
+for (const th of Object.values(THEMES)) if (th.img && !WORLD_IMG[th.img]) { const im = new Image(); im.src = `../common/worlds/w${th.img}.webp?v=202611071600`; WORLD_IMG[th.img] = im; }
 
 // ---------- save ----------
 const Save = {
@@ -692,10 +692,10 @@ function drawKid(g, who, pose, t, opt = {}) {
 // ---------- character sprites (은유 / 은결 sheet, assets/sprites/kids.webp) ----------
 // Frames were cut from the character sprite sheet; the vector drawKid() above is only a fallback.
 const Sprites = { img: new Image(), frames: null, scale: 3, ready: false };
-fetch('assets/sprites/kids.json?v=202611071003').then((r) => r.json()).then((j) => {
+fetch('assets/sprites/kids.json?v=202611071600').then((r) => r.json()).then((j) => {
   Sprites.frames = j.frames; Sprites.scale = j.scale;
   Sprites.img.onload = () => { Sprites.ready = true; };
-  Sprites.img.src = 'assets/sprites/kids.webp?v=202611071003';
+  Sprites.img.src = 'assets/sprites/kids.webp?v=202611071600';
 }).catch(() => { /* opened from file:// — keep vector fallback */ });
 const SPRITE_SIZE = 1.55; // sheet pixel -> game pixel
 function drawKidSprite(g, who, pose, t) {
@@ -756,7 +756,6 @@ function startStage(si) {
   G.t = 0; G.coins = 0; G.stars = 0; G.combo = 0; G.comboT = 0; G.hp = 3; G.fx = []; G.texts = [];
   G.endT = 0; G.cleared = false; G.speedMul = 1; G.magnetT = 0;
   // 아이템샵: 적용한 배경 스킨 + '사용중' 부스트 (메인 화면에서 들어왔을 때만)
-  G.skin = HUB ? HUB.equippedSkin('skyhook') : 'default';
   G.hpMax = 3; G.shield = false; G.x2T = 0;
   const boosts = HUB ? HUB.takeBoosts('skyhook') : [];
   if (boosts.includes('life')) { G.hpMax = 4; G.hp = 4; }
@@ -764,17 +763,13 @@ function startStage(si) {
   if (boosts.includes('magnet')) G.magnetT = 20;
   if (boosts.includes('x2')) G.x2T = 30;
   if (boosts.length) popText('부스트: ' + boosts.map((b) => HUB.boostName('skyhook', b)).join(' · '), G.p.x + 60, G.p.y - 120, '#3D8BFF', 24);
-  if (!THEMES[skinTheme() || STAGES[si].theme].img) getBG(skinTheme() || STAGES[si].theme);
+  if (!THEMES[STAGES[si].theme].img) getBG(STAGES[si].theme);
   setState('play');
   renderHearts();
-  $('hudProgFace').style.backgroundImage = `url(${(window.Costume && Costume.src) || `../common/faces/${Save.data.char}_base.webp?v=202611071003`})`;
+  $('hudProgFace').style.backgroundImage = `url(${(window.Costume && Costume.src) || `../common/faces/${Save.data.char}_base.webp?v=202611071600`})`;
   Audio.startBgm();
 }
 
-// 스킨 → 이 게임에 원래 있는 테마로 그릴 수 있으면 그 테마, 아니면 공용 스킨 렌더러(common/skins.js)
-const SKIN_THEME = { forest: 'forest', winter: 'winter', sunset: 'sunset' };
-function skinTheme() { return SKIN_THEME[G.skin] || null; }
-function skinDrawn() { return G.skin && G.skin !== 'default' && !skinTheme() && window.Skins && window.Skins.has(G.skin); }
 
 // ---------- physics ----------
 function runSpeedNow() {
@@ -1267,13 +1262,10 @@ function render() {
     return;
   }
   const L = G.level, p = G.p;
-  const bgKey = skinTheme() || st.theme, bgTh = THEMES[bgKey];
-  if (skinDrawn()) window.Skins.draw(ctx, G.skin, W, H, G.cam.x, -G.cam.y, G.t);
-  else {
-    drawSky(bgTh);
-    if (!bgTh.img) { const bg = getBG(bgKey); drawLayer(bg.far, 0.15, 0); drawLayer(bg.mid, 0.4, 60); }
-  }
-  if (!skinDrawn() && (bgTh.bubbles || bgTh.fireflies || bgTh.stars)) {
+  const bgKey = st.theme, bgTh = THEMES[bgKey];
+  drawSky(bgTh);
+  if (!bgTh.img) { const bg = getBG(bgKey); drawLayer(bg.far, 0.15, 0); drawLayer(bg.mid, 0.4, 60); }
+  if ((bgTh.bubbles || bgTh.fireflies || bgTh.stars)) {
     for (let i = 0; i < 36; i++) {
       const px = ((i * 113 - G.cam.x * 0.3 + Math.sin(G.t * 0.7 + i) * 18) % W + W) % W;
       const py = bgTh.bubbles ? H - ((i * 71 + G.t * (24 + (i % 5) * 9)) % (H + 40)) : (i * 61 + Math.sin(G.t + i) * 14) % H;
@@ -1285,7 +1277,7 @@ function render() {
     }
     ctx.globalAlpha = 1;
   }
-  if (bgTh.snow && !skinDrawn()) {
+  if (bgTh.snow) {
     ctx.fillStyle = 'rgba(255,255,255,.9)';
     for (let i = 0; i < 40; i++) {
       const sx = ((i * 97 - G.cam.x * 0.6 + Math.sin(G.t + i) * 20) % W + W) % W;
@@ -1516,7 +1508,7 @@ function goHome() {
 function showReady(si) {
   G.si = si;
   $('readyTitle').textContent = `${STAGES[si].label} ${STAGES[si].name}`;
-  $('readyFace').src = (window.Costume && Costume.src) || `../common/faces/${Save.data.char}_base.webp?v=202611071003`;
+  $('readyFace').src = (window.Costume && Costume.src) || `../common/faces/${Save.data.char}_base.webp?v=202611071600`;
   $('readyFace').classList.toggle('cos', !!(window.Costume && Costume.src));
   setState('ready');
 }

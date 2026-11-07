@@ -48,12 +48,12 @@ const $ = (id) => document.getElementById(id);
 
 // ---------- sprites (asset.PNG cut into assets/sprites/sprites.webp + sprites.json) ----------
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
-fetch('assets/sprites/sprites.json?v=202611071003').then((r) => r.json()).then((j) => {
+fetch('assets/sprites/sprites.json?v=202611071600').then((r) => r.json()).then((j) => {
   SP.f = j;
   SP.img.onload = () => { SP.ready = true; };
-  SP.img.src = 'assets/sprites/sprites.webp?v=202611071003';
+  SP.img.src = 'assets/sprites/sprites.webp?v=202611071600';
 });
-for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=202611071003`; SP.bg.push(im); }
+for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=202611071600`; SP.bg.push(im); }
 // draw sprite centered at (x,y) with its width scaled to w (height keeps aspect)
 function spr(g, name, x, y, w, rot = 0, alpha = 1) {
   if (!SP.ready || !SP.f[name]) return;
@@ -187,8 +187,6 @@ const G = {
 };
 const input = { down: false, pressed: false }; // pressed: a tap shorter than one frame still counts
 
-// 아이템샵 스킨 → 이 게임에 있는 배경 그림 번호 (없는 스킨은 common/skins.js가 그림)
-const SKIN_THEME = { forest: 1, park: 2, winter: 3, sunset: 4 };
 // 'N판부터 시작': 판 = 배경 구간 500m (CFG.themeEvery)
 const zoneOf = (m) => Math.floor(m / CFG.themeEvery) + 1;
 function themeAt(m) { return Math.floor(m / CFG.themeEvery) % THEMES.length; }
@@ -209,7 +207,6 @@ function resetRun() {
   // 첫 장식은 캐릭터(왼쪽, 별 구름을 탄 자리) 오른쪽 멀리서 시작 — 시작 화면에서 캐릭터 구름과 장식 구름이 겹쳐 보이지 않게 (QA02)
   for (let i = 0; i < 4; i++) G.deco.push(makeDeco(i === 0 ? W * 0.5 + rand(0, W * 0.2) : lastDecoX() + DECO_GAP + rand(0, W * 0.3)));
   // 아이템샵: 적용한 배경 스킨 + '사용중' 부스트 (메인 화면에서 들어왔을 때만)
-  G.skin = HUB ? HUB.equippedSkin('helicopter') : 'default';
   G.x2T = 0;
   const boosts = HUB ? HUB.takeBoosts('helicopter') : [];
   G.hpMax = CFG.hpMax; G.slowT = 0;
@@ -536,14 +533,9 @@ function render() {
     drawSkyTheme(THEMES[0], 1);
     return;
   }
-  // 배경 스킨을 적용했으면 그 배경으로 고정 (파이프는 거리에 따라 그대로 바뀜)
-  const skinTh = SKIN_THEME[G.skin] != null ? THEMES[SKIN_THEME[G.skin]] : null;
-  const drawn = !skinTh && G.skin !== 'default' && window.Skins && window.Skins.has(G.skin);
-  if (drawn) window.Skins.draw(ctx, G.skin, W, H, G.dist, 0, G.t);
-  else if (skinTh) drawSkyTheme(skinTh, 1);
-  else if (G.themeFade < 1) { drawSkyTheme(THEMES[G.prevTheme], 1); drawSkyTheme(th, G.themeFade); }
+  if (G.themeFade < 1) { drawSkyTheme(THEMES[G.prevTheme], 1); drawSkyTheme(th, G.themeFade); }
   else drawSkyTheme(th, 1);
-  if ((skinTh || th).snow && !drawn) {
+  if (th.snow) {
     ctx.fillStyle = 'rgba(255,255,255,.9)';
     for (let i = 0; i < 40; i++) {
       const sx = ((i * 97 - G.dist * 0.5 + Math.sin(G.t + i) * 20) % W + W) % W;

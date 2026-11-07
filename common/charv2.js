@@ -11,15 +11,25 @@
   const BODY_H = 393 / 512, FOOT = 488 / 512;
   const base = (document.currentScript && document.currentScript.src.replace(/common\/charv2\.js.*$/, '')) || '../';
   const atlas = {};
+  // 입은 옷에 게임 안 포즈 묶음(common/chars/<look>_<옷>)이 있으면 그 포즈는 묶음에서, 나머지는 기본 묶음에서
+  function open(file, t) {
+    return fetch(`${base}common/chars/${file}.json?v=202611071600`).then((r) => r.json()).then((j) => new Promise((done, fail) => {
+      t.f = j.frames; t.img.onload = () => { const on = () => { t.ok = true; done(); }; if (t.img.decode) t.img.decode().then(on, on); else on(); }; // 미리 풀어 둠: 처음 그릴 때 화면이 잠깐 멈추지 않게
+      t.img.onerror = fail; t.img.src = `${base}common/chars/${file}.webp?v=202611071600`;
+    }));
+  }
   function load(look) {
     if (!LOOKS[look] || atlas[look]) return;
-    const a = atlas[look] = { img: new Image(), f: null, ok: false };
-    fetch(`${base}common/chars/${look}.json?v=202611071003`).then((r) => r.json()).then((j) => {
-      a.f = j.frames; a.img.onload = () => { const on = () => { a.ok = true; }; if (a.img.decode) a.img.decode().then(on, on); else on(); }; // 미리 풀어 둠: 처음 그릴 때 화면이 잠깐 멈추지 않게
-      a.img.src = `${base}common/chars/${look}.webp?v=202611071003`;
-    }).catch(() => { /* 그림이 없으면 기본 그림으로 */ });
+    const a = atlas[look] = { img: new Image(), f: null, ok: false, over: null };
+    const wear = window.Hub && Hub.outfitSheet ? Hub.outfitSheet(look) : null, base0 = { img: a.img, f: null, ok: false };
+    const over = wear ? open(`${look}_${wear}`, a.over = { img: new Image(), f: null, ok: false }).catch(() => { /* 옷 묶음이 없으면 기본 옷으로 */ }) : null;
+    open(look, base0).then(() => over).then(() => { a.f = base0.f; a.ok = true; }).catch(() => { /* 그림이 없으면 기본 그림으로 */ });
   }
-  const get = (look, name) => { const a = atlas[look]; return a && a.ok && a.f[name] ? [a, a.f[name]] : null; };
+  const get = (look, name) => {
+    const a = atlas[look]; if (!a || !a.ok) return null;
+    if (a.over && a.over.ok && a.over.f[name]) return [a.over, a.over.f[name]];
+    return a.f[name] ? [a, a.f[name]] : null;
+  };
   const CharV2 = {
     LOOKS,
     is: (look) => !!LOOKS[look],
