@@ -25,11 +25,12 @@ a { color: inherit; text-decoration: none; }
 .cl { position: fixed; inset: 0; z-index: 30; overflow: hidden; background: var(--who-bg); }
 .cl-room { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .cl-body { position: absolute; left: 0; right: 122px; bottom: 0; top: 74px; width: calc(100% - 122px); height: calc(100% - 74px); object-fit: contain; object-position: 50% 100%; filter: drop-shadow(0 6px 10px rgba(60,40,70,.25)); }
+.cl-body.small { transform: scale(.9); transform-origin: 50% 100%; }
 .cl-title { position: absolute; left: calc(64px + env(safe-area-inset-left)); top: calc(12px + env(safe-area-inset-top)); display: flex; align-items: center; gap: 6px; height: 42px; padding: 0 16px 0 10px; border-radius: 16px; background: rgba(255,255,255,.92); white-space: nowrap; box-shadow: 0 2px 6px rgba(24,40,62,.18); }
 .cl-title img { width: 32px; height: auto; }
 .cl-title b { font-weight: normal; font-size: 24px; color: #1E3A8A; }
 .cl-gem { position: absolute; right: calc(8px + env(safe-area-inset-right)); top: calc(16px + env(safe-area-inset-top)); z-index: 2; width: 110px; }
-.cl-who { position: absolute; left: calc(8px + env(safe-area-inset-left)); top: calc(70px + env(safe-area-inset-top)); display: flex; flex-direction: column; gap: 8px; z-index: 2; }
+.cl-who { position: absolute; left: calc(8px + env(safe-area-inset-left)); bottom: calc(10px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 8px; z-index: 2; }
 .cl-char { width: 68px; border-radius: 14px; overflow: hidden; background: #fff; border: 3px solid #fff; box-shadow: 0 3px 8px rgba(24,40,62,.25); opacity: .85; }
 .cl-char img { width: 100%; height: 56px; object-fit: cover; object-position: 50% 15%; }
 .cl-char span { display: block; font-size: 14px; line-height: 22px; color: #fff; text-align: center; background: #E8457F; white-space: nowrap; overflow: hidden; }

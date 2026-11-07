@@ -20,7 +20,7 @@ const HEART_STAY = 0.6;    // 하트 두더지가 다 올라와 머무는 시간
 const HEART_FULL_PTS = 300; // 하트가 꽉 찼을 때 하트 두더지를 잡으면 받는 점수
 const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611071627';
+const ASSET_V = '202611072252';
 const asset = (p) => `assets/${p}.webp?v=${ASSET_V}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -77,7 +77,8 @@ const RING = { eunyu: '#FF8FB1', eungyeol: '#5FA8FF' };
 //  (tools/mole_assets.py 가 mole/assets/chars/<look>(_hit).webp 를 만듦 — 새 캐릭터 그림을 넣으면 여기에 추가)
 const MOLE_CHARS = ['eunyu', 'eungyeol'];
 const TRAP_SPR = {};
-for (const lk of MOLE_CHARS) TRAP_SPR[lk] = { base: img(asset(`chars/${lk}`)), hit: img(asset(`chars/${lk}_hit`)) };
+const trapFile = (lk) => `chars/${lk}${window.Hub ? Hub.outfitTag(lk) : ''}`; // 입은 옷 그대로
+for (const lk of MOLE_CHARS) TRAP_SPR[lk] = { base: img(asset(trapFile(lk))), hit: img(asset(`${trapFile(lk)}_hit`)) };
 // 그 캐릭터 그림이 없으면(은유 v2·v3 등) 같은 계열(은유/은결) 그림으로
 const sprLook = (lk) => (TRAP_SPR[lk] ? lk : (((window.CHAR_LOOKS || []).find((x) => x.look === lk) || {}).base || (lk.startsWith('eungyeol') ? 'eungyeol' : 'eunyu')));
 
@@ -259,7 +260,7 @@ function showReady(si) {
   let html = kinds.filter((k) => k[3]).map(([id, nm, p]) => `<div class="lg"><img src="${asset('sprites/' + id)}" alt=""><span>${nm}</span><b>${p}</b></div>`).join('');
   if (st.trap > 0) {
     const faces = st.both ? [myLook, twinLook] : [myLook];
-    html += `<div class="lg no">${faces.map((lk) => (TRAP_SPR[sprLook(lk)] ? `<i class="spr" style="background-image:url(${asset('chars/' + sprLook(lk))})"></i>` : `<i style="background-image:url(../common/faces/${lk}_base.webp?v=${ASSET_V})"></i>`)).join('')}<span>누르면 안 돼요!</span><b>${HEART_TAG}-1</b></div>`;
+    html += `<div class="lg no">${faces.map((lk) => (TRAP_SPR[sprLook(lk)] ? `<i class="spr" style="background-image:url(${asset(trapFile(sprLook(lk)))})"></i>` : `<i style="background-image:url(../common/faces/${lk}_base.webp?v=${ASSET_V})"></i>`)).join('')}<span>누르면 안 돼요!</span><b>${HEART_TAG}-1</b></div>`;
   }
   html += `<div class="lg yes${HAS_HEART_ART ? '' : ' tmp'}"><img src="${asset(HAS_HEART_ART ? 'sprites/heart' : 'sprites/normal')}" alt="">${HAS_HEART_ART ? '' : '<i class="hat"></i>'}<span>하트 두더지</span><b>${HEART_TAG}+1</b></div>`;
   $('legend').innerHTML = html;
@@ -500,7 +501,10 @@ function drawMole(h) {
   ctx.beginPath(); ctx.rect(x - g.hw, g.clipY - s * 3, g.hw * 2, s * 3); ctx.clip();
   if (m.type === 'trap' && TRAP_SPR[sprLook(m.who)]) {
     const im = TRAP_SPR[sprLook(m.who)][m.ph === 'ouch' ? 'hit' : 'base'];
-    if (ok(im)) ctx.drawImage(im, x - g.dw / 2 + sh, g.foot + (1 - m.u) * g.dh * 0.95 - g.dh * MOLE_FOOT, g.dw, g.dh);
+    if (ok(im)) { // 기본 그림 456x432. 모자 쓴 옷은 그림이 더 커서 그만큼 위·옆으로 넘침
+      const dw = g.dw * im.naturalWidth / 456, dh = g.dh * im.naturalHeight / 432;
+      ctx.drawImage(im, x - dw / 2 + sh, g.foot + (1 - m.u) * g.dh * 0.95 - g.dh * MOLE_FOOT - (dh - g.dh), dw, dh);
+    }
   } else if (m.type === 'trap') {
     const r = g.dw * 0.44, cy = g.clipY + r * 1.1 - (r * 2.35) * m.u;
     const f = FACE[m.who] || FACE[myLook], im = m.ph === 'ouch' ? f.sad : f.base;

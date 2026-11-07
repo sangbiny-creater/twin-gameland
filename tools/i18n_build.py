@@ -23,7 +23,6 @@ WHOLE = {
     '{}일': 'Day {0}',
     '다이아가 {}개 모자라요!': 'You need {0} more Diamonds!',
     '{}을(를) 입었어요!': 'You put on {0}!',
-    '{}을(를) 입었어요! (게임 안 그림은 아직 기본 옷이에요)': 'You put on {0}! (In-game art still shows the default outfit.)',
     '지금 {}장 있어요': 'You have {0}',
     '{}일 남음': '{0} days left',
     '다이아 {}': '{0} Diamonds',

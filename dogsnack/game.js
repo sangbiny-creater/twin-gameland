@@ -14,7 +14,7 @@
 let W = 540, H = 960;
 const L = window.SnackLevels, D = window.DogArt;
 const { PTS, JUDGE, LANES } = L;
-const ASSET_V = '202611071627';
+const ASSET_V = '202611072252';
 const MAX_HEARTS = 3;
 const START_HEARTS = 2;
 const HEART_GAP = 50; // 하트 아이템 사이 최소 시간(초) — 2026-10-28 달콤 베이커리와 같게(25→50초)
@@ -549,7 +549,7 @@ function drawDogs() {
 //  그림을 아직 못 받았으면 공통 캐릭터 그림(CharV2)
 const TWIN_ART = { body: 440, foot: 3 }; // 기본 그림의 몸 높이(px), 그림 아래 끝이 발보다 내려간 만큼(px)
 const TWIN_IMG = {};
-for (const nm of ['eunyu', 'eungyeol']) for (const p of ['idle', 'throw', 'happy', 'sad']) { const im = new Image(); im.src = `assets/chars/${nm}_${p}.webp?v=${ASSET_V}`; TWIN_IMG[`${nm}_${p}`] = im; }
+for (const nm of ['eunyu', 'eungyeol']) for (const p of ['idle', 'throw', 'happy', 'sad']) { const im = new Image(); im.src = `assets/chars/${nm}${window.Hub ? Hub.outfitTag(nm) : ''}_${p}.webp?v=${ASSET_V}`; TWIN_IMG[`${nm}_${p}`] = im; }
 function drawTwins() {
   const CV = window.CharV2;
   const wide = wideLayout(), x0 = LAY.cx - LAY.lw * 1.5, x1 = LAY.cx + LAY.lw * 1.5;
@@ -568,7 +568,7 @@ function drawTwins() {
       const bob = pose === 'happy' ? -Math.abs(Math.sin(G.t * 10)) * 8 : pose === 'throw' ? -4 : Math.sin(G.t * 3 + k) * 2;
       const flip = (nm === 'eunyu') !== (k === 0); // 왼쪽 자리는 오른쪽을, 오른쪽 자리는 왼쪽을 보게
       ctx.save(); ctx.translate(x, y + bob); if (flip) ctx.scale(-1, 1);
-      ctx.drawImage(im, -w / 2, TWIN_ART.foot * sc - ih, w, ih); ctx.restore();
+      ctx.drawImage(im, -w / 2, TWIN_ART.foot * sc - ih, w, ih); ctx.restore(); // 모자 쓴 옷은 그림이 위로 더 커서 발 기준으로 그림
       return;
     }
     if (!CV || !CV.ready(lk)) return;

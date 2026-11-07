@@ -97,14 +97,14 @@
   const OUTFIT_PRICE = 100, OUTFIT_SLOW = 0.85;
   const OUTFITS = {
     eunyu: [
-      { id: 'uniform', name: '게임랜드 유니폼', price: OUTFIT_PRICE, sheet: true }, { id: 'date', name: '데이트룩', price: OUTFIT_PRICE },
+      { id: 'uniform', name: '게임랜드 유니폼', price: OUTFIT_PRICE }, { id: 'date', name: '데이트룩', price: OUTFIT_PRICE },
       { id: 'casual', name: '캐주얼룩', price: OUTFIT_PRICE }, { id: 'school', name: '학교풍룩', price: OUTFIT_PRICE },
       { id: 'travel', name: '여행룩', price: OUTFIT_PRICE }, { id: 'pajamas', name: '토끼 잠옷', price: OUTFIT_PRICE },
       { id: 'winter', name: '겨울옷', price: 150, slow: 'downhill', note: '다운힐 러너가 천천히 가요' },
       { id: 'baker', name: '베이커리 옷', price: 150, slow: 'bakery', note: '달콤 베이커리가 천천히 가요' },
     ],
     eungyeol: [
-      { id: 'streamer', name: '스트리머 룩', price: OUTFIT_PRICE, sheet: true }, { id: 'daily', name: '데일리룩', price: OUTFIT_PRICE },
+      { id: 'streamer', name: '스트리머 룩', price: OUTFIT_PRICE }, { id: 'daily', name: '데일리룩', price: OUTFIT_PRICE },
       { id: 'campus', name: '캠퍼스룩', price: OUTFIT_PRICE }, { id: 'sport', name: '운동복', price: OUTFIT_PRICE },
       { id: 'travel', name: '여행룩', price: OUTFIT_PRICE }, { id: 'home', name: '홈웨어', price: OUTFIT_PRICE },
       { id: 'winter', name: '겨울옷', price: 150, slow: 'downhill', note: '다운힐 러너가 천천히 가요' },
@@ -285,7 +285,7 @@
     costume(c = this.active()) { return (c && c.costume) || null; }, // 예전 어린이 옷 (게임의 예전 코드가 물어봄)
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611071627` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611072252` : null; },
     outfits(c = this.active()) { return c ? OUTFITS[lookBase(c.look)] : []; },
     outfit(c = this.active()) { return (c && c.outfit) || null; }, // 입은 옷 id (없으면 기본 옷)
     ownsOutfit(id, c = this.active()) { return !id || !!(c && (c.outfits || []).includes(id)); },
@@ -301,7 +301,12 @@
     outfitSheet(look) {
       const a = this.active(), c = a && a.look === look ? a : this.chars().find((x) => x.look === look);
       const it = c && this.outfits(c).find((x) => x.id === c.outfit);
-      return it && it.sheet ? it.id : null;
+      return it ? it.id : null;
+    },
+    // 다트·멍멍이·두더지 그림 이름에 붙일 옷: 'eunyu' → '_uniform' (기본 옷이면 '')
+    outfitTag(who) {
+      const a = this.active(), c = a && lookBase(a.look) === who ? a : this.chars().find((x) => lookBase(x.look) === who), id = c && c.outfit;
+      return id ? `_${id}` : '';
     },
     // 입은 옷의 게임 효과: 속도 배율 (겨울옷 = 다운힐, 베이커리 옷 = 달콤 베이커리)
     outfitSpeed(game, c = this.active()) { const it = c && this.outfits(c).find((x) => x.id === c.outfit); return it && it.slow === game ? OUTFIT_SLOW : 1; },

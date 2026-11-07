@@ -5,13 +5,13 @@
 //  · 점수: 진짜 다트판처럼 1~20 칸, 트리플(3배)·더블(2배) 링, 가운데 불 D-BULL·바깥 불 S-BULL 모두 50점, 판 밖 0점 (art.js score)
 //  · 게임 중 점수 표시는 영어만: 50 D-BULL · 50 S-BULL · 60 TRIPLE · 40 DOUBLE · 0 OUT
 //  · 줄 속도: 모든 라운드 같음 (0.9초에 한 번 왕복)
-//  · 은유·은결: 아래 가운데 내 캐릭터 뒷모습이 던지기 버튼, 쌍둥이는 옆에서 응원 (잘 맞히면 기뻐하고, 밖으로 나가면 아쉬워함)
+//  · 은유·은결: 아래 가운데 내 캐릭터 뒷모습이 던지기 버튼
 //  · 위: 총점(크게) · 라운드(작게) · 이번 라운드 다트 3개 점수 칸 (다트 3개는 분홍·노랑·파랑). 다트 한 발씩 전체 점수는 결과 창에서
 // 폰 세로: 논리 폭 540 / 폰 가로·태블릿 가로·PC: 논리 높이 540
 
 let W = 540, H = 960;
 const D = window.DartArt;
-const ASSET_V = '202611071627';
+const ASSET_V = '202611072252';
 const ROUNDS = 8, PER = 3;
 const AMP = 1.2; // 줄이 움직이는 범위 (더블 링 바깥 = 1, 조금 밖까지 나감)
 // 한 번 갔다 오는 시간(초), 모든 라운드 같음 (사용자 요청으로 맞춘 값)
@@ -41,8 +41,7 @@ const myLook = (() => {
   if (window.CharV2 && window.CharV2.is(lk)) return lk;
   return lk.startsWith('eungyeol') ? 'eungyeol3' : 'eunyu3';
 })();
-const twinLook = myLook.startsWith('eungyeol') ? 'eunyu3' : 'eungyeol3';
-if (window.CharV2) { window.CharV2.load(myLook); window.CharV2.load(twinLook); }
+if (window.CharV2) window.CharV2.load(myLook);
 
 // ---------- audio (효과음만) ----------
 const Audio = {
@@ -85,10 +84,10 @@ const Audio = {
 // GPT 그림 (tools/darts_assets.py): 캐릭터 뒷모습 버튼 · 게이지 막대 틀 · 점 · 과녁 표시
 const IMG = (() => {
   const im = (n) => { const x = new Image(); x.src = `assets/${n}.webp?v=${ASSET_V}`; return x; };
-  const who = myLook.startsWith('eungyeol') ? 'eungyeol' : 'eunyu';
+  const who = myLook.startsWith('eungyeol') ? 'eungyeol' : 'eunyu', tag = window.Hub ? Hub.outfitTag(who) : '';
   return {
     btn: [0, 1, 2].map((i) => im(`btn/${who}_${i}`)), // 가운데 버튼: 이번 다트 색의 뒷모습
-    ch: Object.fromEntries(['ready', 'aim', 'throw'].map((k) => [k, im(`chars/${who}_${k}`)])), // 왼쪽 아래 상체
+    ch: Object.fromEntries(['ready', 'aim', 'throw'].map((k) => [k, im(`chars/${who}${tag}_${k}`)])), // 왼쪽 아래 상체 (입은 옷 그대로)
     bar: im('bar'), dot: [0, 1, 2].map((i) => im(`dot_${i}`)), reticle: [0, 1, 2].map((i) => im(`reticle_${i}`)),
   };
 })();
@@ -104,15 +103,15 @@ let scale = 1, dpr = 1;
 const G = {
   state: 'ready', phase: 'x', t: 0, pt: 0, round: 1, dart: 0, ax: 0, ay: 0, sx0: 0, sy0: 0, shake: 0,
   darts: [], rounds: [], score: 0, coins: 0, bulls: 0, td: 0, fx: [], hi: null, hiT: 0,
-  pose: ['idle', 'idle'], poseT: [0, 0], say: ['', ''], sayT: [0, 0], pausedFrom: 'play', newBest: false,
+  pose: ['idle'], poseT: [0], pausedFrom: 'play', newBest: false,
 };
 // 한 라운드 다트 3개는 색이 모두 다름 (분홍 · 노랑 · 파랑) — 위 점수 칸 3개도 같은 색
 const DART_COLS = ['#FF5A8C', '#FFB21E', '#2F9AE8'];
 // 화면 (세로): 위 총점·라운드·이번 라운드 점수 칸 3개 → 다트판 → 좌우 게이지 막대 → 내 캐릭터 뒷모습(= 던지기 버튼)
-//      (가로): 가운데 세로로 다트판 → 게이지 → 캐릭터 버튼, 왼쪽에 총점·점수 칸, 오른쪽에 응원하는 쌍둥이
-// LAY: 판 가운데 cx·cy, 더블 링 반지름 s, 게이지 막대 가운데 gx·gy·반폭 gw, 캐릭터 자리 ch[[x, 발 y, 키]] (0 = 나(뒷모습 버튼), 1 = 쌍둥이), 던지는 손 hand
+//      (가로): 가운데 세로로 다트판 → 게이지 → 캐릭터 버튼, 왼쪽에 총점·점수 칸
+// LAY: 판 가운데 cx·cy, 더블 링 반지름 s, 게이지 막대 가운데 gx·gy·반폭 gw, 던지는 손 hand
 const BAR_H = 64; // 게이지 막대 틀 높이 (안쪽 색 칸 높이 = 44%)
-const LAY = { cx: 270, cy: 300, s: 170, gx: 270, gy: 640, gw: 200, btn: [270, 860, 150], ch: [[270, 900, 200], [470, 900, 120]], hand: [300, 700], me: [0, 900, 200] };
+const LAY = { cx: 270, cy: 300, s: 170, gx: 270, gy: 640, gw: 200, btn: [270, 860, 150], hand: [300, 700], me: [0, 900, 200] };
 const rim = () => LAY.s * D.R.rim;
 function layout() {
   const sv = (k) => parseFloat(getComputedStyle(root).getPropertyValue('--safe-' + k)) || 0;
@@ -128,7 +127,6 @@ function layout() {
   LAY.cx = W / 2; LAY.cy = headTop + HEAD_H + extra * 0.45 + rim();
   LAY.gy = LAY.cy + rim() + 8 + BAR_H / 2; LAY.gx = W / 2; LAY.gw = 220;
   LAY.btn = [W / 2, LAY.gy + BAR_H / 2 + 10 + bd / 2 + extra * 0.1, bd];
-  LAY.ch = [[W / 2, LAY.btn[1] + bd / 2, bd], [W - 66, LAY.btn[1] + bd / 2 + 6, Math.min(120, bd * 0.8)]];
   Object.assign(head.style, { left: '70px', top: headTop + 'px', width: (W - 140) + 'px' });
   LAY.me = [-6, H - sb, Math.min(W * 0.42, avail - (LAY.gy + BAR_H / 2 + 8 - st))]; // 왼쪽 아래 상체: x, 아래 끝, 크기
   LAY.hand = [LAY.me[0] + LAY.me[2] * 0.9, LAY.me[1] - LAY.me[2] * 0.78]; // 상체 그림 속 던지는 손
@@ -177,7 +175,6 @@ function startRun() {
   $('hudBest').textContent = fmt(Save.data.best || 0);
   setState('play');
   newDart();
-  say(1, pick(['가운데를 노려 봐!', '할 수 있어!', '힘내!']), 1.6);
 }
 function newDart() { G.phase = 'x'; G.pt = 0; setPose(0, 'idle', 0); renderHead(); }
 // 꾹 누르기: 가로 위치를 정하고 과녁 표시가 위·아래로 움직이기 시작 → 손 떼기: 그 높이로 던지기
@@ -213,18 +210,12 @@ function land() {
   G.shake = r.ring === 'miss' ? 0 : 0.16; buzz(r.ring === 'miss' ? 0 : 30);
   G.fx.push({ kind: 'ring', x: px, y: py, r0: 6, r1: r.ring === 'bull' ? 90 : 55, c: col, t: 0, life: 0.35 });
   if (r.ring === 'miss') {
-    Audio.sfx('miss'); setPose(0, 'hit', 0.9); setPose(1, 'idle', 0);
-    say(1, pick(['아깝다!', '괜찮아!', '다음엔 들어갈 거야!']), 1.2);
+    Audio.sfx('miss'); setPose(0, 'hit', 0.9);
   } else {
     Audio.sfx('thunk');
     const big = r.ring === 'bull' || r.pts >= 40, mid = r.ring === 'outer' || r.mult >= 2 || r.pts >= 20;
     later(() => Audio.sfx(r.ring === 'bull' ? 'bull' : big ? 'great' : mid ? 'good' : 'ui'), 80);
-    setPose(0, big || mid ? 'cheer' : 'idle', 1); setPose(1, big ? 'cheer' : mid ? 'happy' : 'idle', 1);
-    if (r.ring === 'bull') say(1, pick(['불이다! 최고야!', '한가운데! 대단해!']), 1.4);
-    else if (r.ring === 'triple') say(1, pick(['트리플! 세 배야!', '와! 세 배!']), 1.3);
-    else if (r.ring === 'double') say(1, pick(['더블! 두 배!', '두 배 점수야!']), 1.3);
-    else if (r.ring === 'outer') say(1, pick(['불이야! 50점!', '바깥 불도 50점!']), 1.3);
-    else if (r.pts >= 15) say(1, pick(['좋아!', '잘했어!']), 1);
+    setPose(0, big || mid ? 'cheer' : 'idle', 1);
     burst(px, py, big ? 12 : mid ? 8 : 4, r.ring === 'bull' ? '#FF5A7A' : '#FFD34D');
   }
   const name = `${r.pts}`, tag = r.ring === 'single' ? '' : RING_TXT[r.ring]; // 글자(D-BULL·TRIPLE…)는 숫자의 0.6배 크기로 옆에
@@ -239,7 +230,7 @@ function endRound() {
   Audio.sfx('round');
   if (sum >= 100 && !GOD()) G.coins += 5; // 한 라운드 100점 넘으면 +5
   G.fx.push({ kind: 'banner', text: `${G.round}라운드 ${sum}점!`, sub: sum >= 100 ? '100점 넘었어요! 코인 +5' : sum >= 60 ? '아주 잘했어요!' : sum >= 30 ? '좋아요!' : '다음 라운드 힘내요!', t: 0, life: 1.5 });
-  if (sum >= 60) { setPose(0, 'cheer', 1.4); setPose(1, 'cheer', 1.4); }
+  if (sum >= 60) { setPose(0, 'cheer', 1.4); }
   later(() => {
     G.darts = [];
     if (G.round >= ROUNDS) { finish(); return; }
@@ -254,8 +245,7 @@ function endRound() {
 function finish() {
   setState('done');
   Audio.sfx('over');
-  setPose(0, 'cheer', 9); setPose(1, 'cheer', 9);
-  say(1, `${fmt(G.score)}점! 멋져!`, 2);
+  setPose(0, 'cheer', 9);
   later(showResult, 1300);
 }
 function showResult() {
@@ -303,7 +293,6 @@ function runTimers() { // 게임 시간으로 흐르는 타이머 (일시정지�
   }
 }
 function setPose(k, p, t) { G.pose[k] = p; G.poseT[k] = t; }
-function say(k, txt, t) { G.say[k] = txt; G.sayT[k] = t; }
 function burst(x, y, n, col) {
   for (let i = 0; i < n; i++) {
     const an = rnd(0, Math.PI * 2), sp = rnd(120, 240);
@@ -317,10 +306,7 @@ function step(dt) {
   G.fx = G.fx.filter((f) => f.t < f.life);
   if (G.state === 'pause') return;
   G.t += dt;
-  for (let k = 0; k < 2; k++) {
-    if (G.poseT[k] > 0) { G.poseT[k] -= dt; if (G.poseT[k] <= 0) G.pose[k] = 'idle'; }
-    if (G.sayT[k] > 0) G.sayT[k] -= dt;
-  }
+  if (G.poseT[0] > 0) { G.poseT[0] -= dt; if (G.poseT[0] <= 0) G.pose[0] = 'idle'; }
   if (G.hiT > 0) G.hiT -= dt;
   if (G.shake > 0) G.shake = Math.max(0, G.shake - dt);
   runTimers();
@@ -342,7 +328,6 @@ function render() {
   if (play) drawAim();
   drawMe();
   drawThrower();
-  drawTwin();
   if (G.phase === 'fly' && play) drawFlying();
   drawFx();
 }
@@ -450,25 +435,6 @@ function drawThrower() {
     ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.stroke();
     ctx.fillStyle = '#fff'; ctx.fillText(txt, x, py + 1); ctx.restore();
   }
-}
-// 쌍둥이: 옆에서 응원하고 말풍선으로 반응
-function drawTwin() {
-  const CV = window.CharV2; if (!CV || !CV.ready(twinLook)) return;
-  const [x, y, h] = LAY.ch[1];
-  const want = G.pose[1], use = CV.has(twinLook, want) ? want : 'idle';
-  const bob = use === 'cheer' ? -Math.abs(Math.sin(G.t * 10)) * 8 : use === 'happy' ? -Math.abs(Math.sin(G.t * 7)) * 4 : Math.sin(G.t * 3 + 1) * 2;
-  ctx.save(); ctx.translate(x, y + bob); CV.draw(ctx, twinLook, use, { h, flip: true }); ctx.restore();
-  if (G.sayT[1] > 0 && G.say[1]) bubble(x, y - h * 1.08, G.say[1], 1);
-}
-function bubble(x, y, txt, k) {
-  ctx.save(); ctx.font = '20px Jua, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  const w = ctx.measureText(txt).width + 24, h = 36;
-  const bx = clamp(x, w / 2 + 6, W - w / 2 - 6), by = Math.max(h / 2 + 4, y - h / 2);
-  ctx.fillStyle = '#fff'; ctx.strokeStyle = k ? '#2F9AE8' : '#FF5A8C'; ctx.lineWidth = 3;
-  ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(bx - w / 2, by - h / 2, w, h, 16); else ctx.rect(bx - w / 2, by - h / 2, w, h);
-  ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(x - 7, by + h / 2 - 1); ctx.lineTo(x, by + h / 2 + 10); ctx.lineTo(x + 7, by + h / 2 - 1); ctx.fill();
-  ctx.fillStyle = '#2A2348'; ctx.fillText(txt, bx, by + 1); ctx.restore();
 }
 function drawFx() {
   for (const f of G.fx) {
