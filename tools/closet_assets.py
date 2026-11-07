@@ -27,18 +27,22 @@ Q = dict(quality=84, alpha_quality=90, method=6)
 def closet():
     D = f'{SRC}/closet'
     for who, n in [('eunyu', 'R01'), ('eungyeol', 'R02')]:
-        save(Image.open(f'{D}/{n}.png').convert('RGB').resize((900, 1350), Image.LANCZOS), f'shop/assets/closet/room_{who}.webp', quality=82, method=6)
-    h = tight(key(f'{D}/R03.png', soft=False)); save(scaled(h, 120 / h.width), 'shop/assets/closet/hanger.webp')
+        save(Image.open(f'{D}/{n}.png').convert('RGB').resize((900, 1350), Image.LANCZOS), f'closet/assets/room_{who}.webp', quality=82, method=6)
+    h = tight(key(f'{D}/R03.png', soft=False)); save(scaled(h, 120 / h.width), 'closet/assets/hanger.webp')
     save(Image.open(f'{D}/S01.png').convert('RGB'), 'shop/assets/v4/top.webp', quality=82, method=6)
     for who, L in OUTFITS.items():
         ims = {oid: key(f'{D}/C{n:02d}.png') for oid, n in L.items()}
         # 모든 옷이 같은 틀: 자세가 같으니 옷을 바꿔도 사람이 움직이지 않게
         bbs = [im.getchannel('A').point(lambda v: 255 if v > 24 else 0).getbbox() for im in ims.values()]
         box = (min(b[0] for b in bbs) - 6, min(b[1] for b in bbs) - 6, max(b[2] for b in bbs) + 6, max(b[3] for b in bbs) + 6)
+        # 얼굴 가운데가 그림 가운데에 오게 좌우를 맞춤 (팔을 뻗어서 옷 전체의 가운데와 다름) → 화면에서 얼굴이 칸 가운데
+        a = np.asarray(ims[None].getchannel('A')) > 128; top = box[1] + 6; h = box[3] - box[1]
+        fx = round(np.mean([np.where(r)[0].mean() for r in a[top + round(h * .04):top + round(h * .11)]]))
+        half = max(fx - box[0], box[2] - fx); box = (fx - half, box[1], fx + half, box[3])
         for oid, im in ims.items():
             c = im.crop(box); c = scaled(c, 1100 / c.height)
-            save(c, f'shop/assets/closet/{who}_{oid or "base"}.webp', **Q)
-            save(Image.open(f'{D}/D{L[oid]:02d}.png').convert('RGB').resize((260, 260), Image.LANCZOS), f'shop/assets/closet/item_{who}_{oid or "base"}.webp', quality=80, method=6)
+            save(c, f'closet/assets/{who}_{oid or "base"}.webp', **Q)
+            save(Image.open(f'{D}/D{L[oid]:02d}.png').convert('RGB').resize((260, 260), Image.LANCZOS), f'closet/assets/item_{who}_{oid or "base"}.webp', quality=80, method=6)
             if oid:  # 첫 화면·지도 구석 캐릭터: 허리 위 (기본 옷 그림 Z01·Z02 와 같은 크기)
                 H = Image.open(f'{ROOT}/hub/park/home/{who}.webp').size
                 top = c.crop((0, 0, c.width, round(c.height * .47)))

@@ -364,8 +364,12 @@ window.I18N_DATA = {
 ],
 "en": [
 [
-"광고를 보고 다이아 {}개 · 오늘 {}번 남음",
-"Watch an ad for {0} Diamonds · {1} left today"
+"광고보고 다이아 {}개 ({}/{})",
+"Watch ad: {0} Diamonds ({1}/{2})"
+],
+[
+"{}일",
+"Day {0}"
 ],
 [
 "다이아가 {}개 모자라요!",
@@ -3548,28 +3552,8 @@ window.I18N_DATA = {
 "Free Diamonds"
 ],
 [
-"광고 보기",
+"광고보기",
 "Watch Ad"
-],
-[
-"오늘도 놀러와 줘서 고마워요!",
-"Thanks for visiting today!"
-],
-[
-"첫 화면에서 출석해요!",
-"Check in on the home screen!"
-],
-[
-"옷을 갈아입어요",
-"Change your outfit"
-],
-[
-"다이아 충전소",
-"Diamond Store"
-],
-[
-"다이아로 놀이공원을 더 멋지게 꾸며 보세요!",
-"Make your park even better with Diamonds!"
 ],
 [
 "앱에서는 여기서 구글 결제 창이 떠요 (값은 임시). 지금은 진짜 결제가 없어요.",

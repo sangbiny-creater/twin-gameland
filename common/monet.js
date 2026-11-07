@@ -229,7 +229,7 @@ html[data-who=eungyeol] .mn-art-x{background-image:url(${P4}x_blue.webp)}
       fakePay(PACKS[+b.dataset.i], reopen);
     }));
   }
-  Object.assign(window.Monet, { PACKS, OFFERS, CONT_PACK, AD_GEMS, ATT_DAILY, won, adLeft, bm, today, watchAd, buyConts: (a) => buyConts(a), fakePay: (p, a) => fakePay(p, a) }); // 아이템샵 다이아 구매 탭·무료 다이아 칸이 씀
+  Object.assign(window.Monet, { PACKS, OFFERS, CONT_PACK, AD_GEMS, AD_GEMS_DAY, won, adLeft, bm, today, watchAd, buyConts: (a) => buyConts(a), fakePay: (p, a) => fakePay(p, a) }); // 아이템샵 다이아 구매 탭·무료 다이아 칸이 씀
   // 이어하기권: 다이아 30개로
   function buyConts(after) {
     if (Hub.gems() < CONT_PACK.gems) { pop('다이아가 모자라요'); if (after) after(); return; }

@@ -92,7 +92,7 @@
 
   // ---------- 옷장 (v0.4) ----------
   // 캐릭터마다 다이아로 사서(c.outfits) 입음(c.outfit, 없으면 기본 옷). 예전 어린이 옷(c.costumes·c.costume)은 v0.3 보관판 것이라 건드리지 않음
-  // 그림: shop/assets/closet/<eunyu|eungyeol>_<id>.webp 전신 · item_<…>.webp 옷 칸 · hub/park/home/<…>_<id>.webp 첫 화면 상반신 (tools/closet_assets.py)
+  // 그림: closet/assets/<eunyu|eungyeol>_<id>.webp 전신 · item_<…>.webp 옷 칸 · hub/park/home/<…>_<id>.webp 첫 화면 상반신 (tools/closet_assets.py)
   // sheet: 게임 안 포즈 묶음이 있는 옷 (common/chars/<look>_<id>) / slow: 입으면 그 게임이 OUTFIT_SLOW 배로 천천히 / 값은 🟡 임시
   const OUTFIT_PRICE = 100, OUTFIT_SLOW = 0.85;
   const OUTFITS = {
@@ -284,7 +284,7 @@
     costume(c = this.active()) { return (c && c.costume) || null; }, // 예전 어린이 옷 (게임의 예전 코드가 물어봄)
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611071600` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611071624` : null; },
     outfits(c = this.active()) { return c ? OUTFITS[lookBase(c.look)] : []; },
     outfit(c = this.active()) { return (c && c.outfit) || null; }, // 입은 옷 id (없으면 기본 옷)
     ownsOutfit(id, c = this.active()) { return !id || !!(c && (c.outfits || []).includes(id)); },

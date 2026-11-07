@@ -19,7 +19,8 @@ OUT = f'{ROOT}/common/i18n_data.js'
 
 # 조사가 붙는 문장: 코드 모양(앞뒤 {} 포함) → 영어 완성 문장
 WHOLE = {
-    '광고를 보고 다이아 {}개 · 오늘 {}번 남음': 'Watch an ad for {0} Diamonds · {1} left today',
+    '광고보고 다이아 {}개 ({}/{})': 'Watch ad: {0} Diamonds ({1}/{2})',
+    '{}일': 'Day {0}',
     '다이아가 {}개 모자라요!': 'You need {0} more Diamonds!',
     '{}을(를) 입었어요!': 'You put on {0}!',
     '{}을(를) 입었어요! (게임 안 그림은 아직 기본 옷이에요)': 'You put on {0}! (In-game art still shows the default outfit.)',
@@ -59,9 +60,9 @@ WHOLE = {
 # 문서 뒤에 새로 생긴 글 (2026-11-04 작업)
 EXTRA = {
     # 옷장·아이템샵 새 구성 (2026-11-07, Claude 번역 — 사용자 확인 필요)
-    '상점': 'Shop', '꾸미기': 'Decorate', '다이아 구매': 'Diamonds', '출석 보상': 'Attendance Reward', '오늘의 무료 다이아': 'Free Diamonds', '광고 보기': 'Watch Ad', '내일 또': 'Tomorrow',
-    '오늘도 놀러와 줘서 고마워요!': 'Thanks for visiting today!', '첫 화면에서 출석해요!': 'Check in on the home screen!', '옷을 갈아입어요': 'Change your outfit', '놀이공원 꾸미기': 'Park Decorations',
-    '다이아 충전소': 'Diamond Store', '다이아로 놀이공원을 더 멋지게 꾸며 보세요!': 'Make your park even better with Diamonds!', '앱에서는 여기서 구글 결제 창이 떠요 (값은 임시). 지금은 진짜 결제가 없어요.': 'In the app, Google Play payment opens here (prices are temporary). No real payment right now.',
+    '상점': 'Shop', '꾸미기': 'Decorate', '다이아 구매': 'Diamonds', '출석 보상': 'Attendance Reward', '오늘의 무료 다이아': 'Free Diamonds', '광고보기': 'Watch Ad',
+    '놀이공원 꾸미기': 'Park Decorations',
+    '앱에서는 여기서 구글 결제 창이 떠요 (값은 임시). 지금은 진짜 결제가 없어요.': 'In the app, Google Play payment opens here (prices are temporary). No real payment right now.',
     '첫 구매 2배': 'First Purchase ×2', '인기': 'Popular', '구매함': 'Purchased', '가지고 있어요': 'Owned', '착용 중': 'Wearing', '착용하기': 'Wear', '기본 옷': 'Default Outfit', '옷 구매': 'Buy Outfit',
     '게임랜드 유니폼': 'Gameland Uniform', '데이트룩': 'Date Look', '캐주얼룩': 'Casual Look', '학교풍룩': 'School Look', '여행룩': 'Travel Look', '토끼 잠옷': 'Bunny Pajamas', '겨울옷': 'Winter Outfit', '베이커리 옷': 'Bakery Outfit',
     '스트리머 룩': 'Streamer Look', '데일리룩': 'Daily Look', '캠퍼스룩': 'Campus Look', '운동복': 'Sportswear', '홈웨어': 'Homewear',

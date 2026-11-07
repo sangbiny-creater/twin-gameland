@@ -1,10 +1,10 @@
 'use strict';
 // 트윈 게임랜드 아이템샵 (v0.4 새 구성)
-//  · 위: 상점 그림 + 코인·다이아 + 출석 보상·오늘의 무료 다이아
-//  · 탭: 꾸미기(옷장·놀이공원 꾸미기) / 아이템(코인, 모든 게임 공통 수량) / 다이아 구매(common/monet.js 결제 흐름을 그대로 씀)
-//  · 옷장: 왼쪽 은유·은결, 가운데 전신(방 배경), 오른쪽 옷 칸. 옷을 누르면 미리 보고, 아래 버튼으로 입거나 다이아로 삼
+//  · 위: 상점 그림 + 코인·다이아 + 출석 보상·광고보기
+//  · 탭: 꾸미기(놀이공원 꾸미기) / 아이템(코인, 모든 게임 공통 수량) / 다이아 구매(common/monet.js 결제 흐름을 그대로 씀)
+//  · 옷장은 별도 화면 (closet/)
 const $ = (id) => document.getElementById(id);
-const V = '?v=202611071600'; // bump when images change so phones don't show old cached ones
+const V = '?v=202611071624'; // bump when images change so phones don't show old cached ones
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 
 const q = new URLSearchParams(location.search);
@@ -12,7 +12,6 @@ const COIN = `assets/ui/coin.webp${V}`, GEM = `../hub/park/ui/gem.webp${V}`, MON
 const coinImg = `<img src="${COIN}" alt="" style="width:20px;height:20px;display:inline-block;vertical-align:-4px">`;
 const gemImg = `<img src="${GEM}" alt="" style="width:20px;height:20px;display:inline-block;vertical-align:-4px">`;
 const M = () => window.Monet; // 보관판(v0.1·v0.2)에는 없음 → 다이아 구매 탭·위 카드를 뺌
-const whoOf = (c) => (Hub.lookBase(c.look) === 'eungyeol' ? 'eungyeol' : 'eunyu');
 
 // ---------- sound / toast / confirm ----------
 const { blip, toast } = window.UI; // common/ui.js
@@ -35,19 +34,15 @@ function lack(price) {
 function renderHeader(bump) {
   const c = Hub.active();
   $('myCoins').textContent = c.coins.toLocaleString(); $('myGems').textContent = Hub.gems(c).toLocaleString();
-  $('clGems').textContent = Hub.gems(c).toLocaleString();
   if (bump) { const p = document.querySelector('.sh-money'); p.classList.remove('bump'); void p.offsetWidth; p.classList.add('bump'); }
   if (!M() || !M().today) return;
   $('topCards').classList.remove('hidden');
-  // 출석: 10일마다 되풀이 (첫 화면 출석 창과 같은 숫자)
-  const att = M().st().att || { count: 0, last: '' }, done = att.last === M().today(), n = att.count % 10 || (att.count ? 10 : 0);
-  $('attMsg').textContent = done ? '오늘도 놀러와 줘서 고마워요!' : '첫 화면에서 출석해요!';
-  $('attDots').innerHTML = Array.from({ length: 10 }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('');
-  const left = M().adLeft();
-  $('adMsg').textContent = `광고를 보고 다이아 ${M().AD_GEMS}개 · 오늘 ${left}번 남음`;
-  $('adBtn').disabled = left <= 0; $('adBtn').textContent = left > 0 ? '광고 보기' : '내일 또';
+  $('attDays').textContent = `${(M().st().att || { count: 0 }).count}일`; // 누적 출석
+  const left = M().adLeft(), max = M().AD_GEMS_DAY;
+  $('adMsg').textContent = `광고보고 다이아 ${M().AD_GEMS}개 (${max - left}/${max})`;
+  $('adCard').disabled = left <= 0;
 }
-$('adBtn').onclick = () => { blip(); M().watchAd(); };
+$('adCard').onclick = () => { blip(); M().watchAd(); };
 
 // ---------- 탭 ----------
 let tab = 'deco';
@@ -57,8 +52,7 @@ function showTab(t) {
   for (const k of ['deco', 'item', 'gem']) $(`tab-${k}`).classList.toggle('hidden', k !== t);
 }
 document.querySelectorAll('.sh-tabs [data-tab]').forEach((b) => { b.onclick = () => { blip(); showTab(b.dataset.tab); }; });
-const openGemTab = () => { if (!M() || !M().today) return; blip(); closeCloset(true); showTab('gem'); document.querySelector('.sh-tabs').scrollIntoView({ block: 'start', behavior: 'smooth' }); };
-$('gemPill').onclick = openGemTab; $('clGem').onclick = openGemTab;
+$('gemPill').onclick = () => { if (!M() || !M().today) return; blip(); showTab('gem'); document.querySelector('.sh-tabs').scrollIntoView({ block: 'start', behavior: 'smooth' }); };
 
 // ---------- 아이템: 8개를 한 화면에 — 아이콘·이름·가격, 오른쪽 위에 가진 수량 (수량은 모든 게임이 같이 씀) ----------
 //  누르면 구매 창에서 어떤 게임에 쓰는지 알려 줌. 하트 그림은 하트 통일 규칙대로 common/ui/heart.webp
@@ -104,69 +98,6 @@ function renderGems() {
   box.appendChild(row('cont', 'pack_continue', CONT_PACK.name, `지금 ${st().conts || 0}장 있어요`, `<img src="${GEM}" alt="">${CONT_PACK.gems}`, () => M().buyConts()));
   box.appendChild(row('', pass.img, pass.name, B.pass > 0 ? `${B.pass}일 남음` : pass.desc, won(pass.won), () => M().fakePay(pass)));
   box.appendChild(row('', noAds.img, noAds.name, B.noAds ? '가지고 있어요' : noAds.desc, B.noAds ? '구매함' : won(noAds.won), () => M().fakePay(noAds), B.noAds));
-}
-
-// ---------- 옷장 ----------
-const closetImg = (who, id) => `assets/closet/${who}_${id || 'base'}.webp${V}`;
-const itemImg = (who, id) => `assets/closet/item_${who}_${id || 'base'}.webp${V}`;
-const BASE_OUTFIT = { id: null, name: '기본 옷', price: 0 };
-let clSel = null, clFromHome = false; // 지금 미리 보는 옷 (null = 기본 옷)
-function openCloset(fromHome) {
-  clFromHome = !!fromHome; clSel = Hub.outfit();
-  $('closet').classList.remove('hidden'); document.body.style.overflow = 'hidden';
-  renderCloset();
-}
-function closeCloset(stay) {
-  $('closet').classList.add('hidden'); document.body.style.overflow = '';
-  if (clFromHome && !stay) { location.href = '../index.html#lobby'; return; }
-  clFromHome = false; renderHeader(); renderEntry();
-}
-$('clBack').onclick = () => { blip(500); closeCloset(); };
-$('btnCloset').onclick = () => { blip(); openCloset(); };
-function renderCloset() {
-  const c = Hub.active(), who = whoOf(c), list = [BASE_OUTFIT, ...Hub.outfits(c)];
-  $('clGems').textContent = Hub.gems(c).toLocaleString();
-  $('clRoom').src = `assets/closet/room_${who}.webp${V}`;
-  $('clBody').src = closetImg(who, clSel);
-  // 왼쪽: 내 캐릭터 (은유·은결은 코인·다이아·옷이 따로)
-  const whoBox = $('clWho'); whoBox.innerHTML = '';
-  for (const ch of Hub.chars()) {
-    const b = document.createElement('button'); b.className = `cl-char ${whoOf(ch)}` + (ch.id === c.id ? ' on' : '');
-    b.innerHTML = `<img src="../common/faces/${ch.look}_base.webp${V}" alt=""><span></span>`;
-    b.querySelector('span').textContent = ch.name;
-    b.onclick = () => { if (ch.id === c.id) return; blip(); Hub.setActive(ch.id); clSel = Hub.outfit(); renderHeader(); renderAll(); renderCloset(); };
-    whoBox.appendChild(b);
-  }
-  // 오른쪽: 옷 칸
-  const box = $('clList'), keep = box.scrollTop; box.innerHTML = '';
-  for (const it of list) {
-    const own = Hub.ownsOutfit(it.id, c), worn = Hub.outfit(c) === it.id, sel = clSel === it.id;
-    const d = document.createElement('div'); d.className = 'cl-card' + (sel ? ' sel' : '') + (worn ? ' worn' : '');
-    d.innerHTML = `${worn ? '<span class="cl-tag">착용 중</span>' : ''}<img src="${itemImg(who, it.id)}" alt=""><b></b>${it.note ? '<small></small>' : ''}`
-      + (worn ? '' : own ? '<button class="cl-btn wear">착용하기</button>' : `<button class="cl-btn buy${Hub.gems(c) < it.price ? ' poor' : ''}"><img src="${GEM}" alt="">${it.price}</button>`);
-    d.querySelector('b').textContent = it.name;
-    if (it.note) d.querySelector('small').textContent = it.note;
-    d.onclick = () => { if (clSel !== it.id) { blip(); clSel = it.id; renderCloset(); } };
-    const btn = d.querySelector('.cl-btn');
-    if (btn) btn.onclick = (e) => { e.stopPropagation(); clSel = it.id; own ? wear(it) : buy(it); };
-    box.appendChild(d);
-  }
-  box.scrollTop = keep; // 옷을 눌러도 목록이 맨 위로 튀지 않게
-}
-const noSheet = (it) => (it.id && !it.sheet ? ' (게임 안 그림은 아직 기본 옷이에요)' : '');
-function wear(it) { Hub.wearOutfit(it.id); ching(); toast(`${it.name}을(를) 입었어요!${noSheet(it)}`); renderCloset(); renderEntry(); }
-function buy(it) {
-  const c = Hub.active();
-  renderCloset();
-  if (Hub.gems(c) < it.price) { blip(300); toast(`다이아가 ${it.price - Hub.gems(c)}개 모자라요!`); return; }
-  confirmBox('옷 구매', `<img class="mthumb" src="${itemImg(whoOf(c), it.id)}" style="width:110px" alt=""><b>${it.name}</b>을(를) 살까요?<br>${gemImg} 다이아 ${it.price}개`, '구매', () => {
-    if (Hub.buyOutfit(it.id).ok) { ching(); toast(`${it.name}을(를) 입었어요!${noSheet(it)}`); renderHeader(true); renderCloset(); renderEntry(); }
-  });
-}
-function renderEntry() {
-  const chars = Hub.chars(), a = chars[0], b = chars.find((x) => x.look !== (a && a.look));
-  $('closetFace1').src = a ? `../common/faces/${a.look}_base.webp${V}` : '';
-  $('closetFace2').src = b ? `../common/faces/${b.look}_base.webp${V}` : ''; $('closetFace2').style.display = b ? '' : 'none';
 }
 
 // ---------- 쿠폰 ----------
@@ -225,7 +156,7 @@ function renderPark() {
 function statueHow(img, name) {
   blip(); confirmBox('동상 바꾸기', `<img class="mthumb" src="${img}" alt=""><b>${name}</b><br>동상은 첫 화면에서 바꿔요!<br>첫 화면의 동상을 누르면 가진 동상 중에서 골라 놓을 수 있어요.`, '확인', () => {}, false);
 }
-function renderAll() { renderItems(); renderGems(); renderEntry(); renderPark(); }
+function renderAll() { renderItems(); renderGems(); renderPark(); }
 
 // ---------- start ----------
 function start() {
@@ -234,9 +165,7 @@ function start() {
   // common/monet.js 는 common/profile.js 가 따로 불러서 늦게 준비될 수 있음 (보관판에는 없음)
   const monet = () => { Monet.onChange = () => { renderHeader(true); renderAll(); }; renderHeader(); renderAll(); }; // 결제·광고·이어하기권 뒤 숫자 다시 그리기
   if (window.Monet && Monet.today) monet(); else window.addEventListener('monet-ready', monet);
-  renderHeader(); renderAll(); showTab('deco');
-  // 첫 화면의 '옷장'으로 들어오면 (?dress=1) 옷장을 바로 엶
-  if (q.get('dress')) openCloset(true);
+  renderHeader(); renderAll(); showTab(q.get('tab') || 'deco'); // ?tab=gem: 옷장의 + 버튼
   // 첫 화면의 동상·분수·대문 고르기에서 '아이템샵'으로 오면 (#park) 놀이공원 꾸미기 칸으로
   if (location.hash === '#park') setTimeout(() => { const el = $('park'); if (!el.classList.contains('hidden')) el.scrollIntoView({ block: 'start' }); }, 120);
 }
