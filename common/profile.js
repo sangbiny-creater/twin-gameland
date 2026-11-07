@@ -277,6 +277,7 @@
     return Math.max(vv ? vv.height : 0, window.innerHeight, p ? p.offsetHeight : 0);
   };
 
+  const whoFile = (c) => (lookBase(c.look) === 'eungyeol' ? 'eungyeol' : 'eunyu');
   const Hub = {
     GAMES, WORLDS, FREE_SLOTS, MAX_CHARS, BOOSTS, ITEMS,
 
@@ -284,7 +285,7 @@
     costume(c = this.active()) { return (c && c.costume) || null; }, // 예전 어린이 옷 (게임의 예전 코드가 물어봄)
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611071624` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611071627` : null; },
     outfits(c = this.active()) { return c ? OUTFITS[lookBase(c.look)] : []; },
     outfit(c = this.active()) { return (c && c.outfit) || null; }, // 입은 옷 id (없으면 기본 옷)
     ownsOutfit(id, c = this.active()) { return !id || !!(c && (c.outfits || []).includes(id)); },
@@ -304,8 +305,9 @@
     },
     // 입은 옷의 게임 효과: 속도 배율 (겨울옷 = 다운힐, 베이커리 옷 = 달콤 베이커리)
     outfitSpeed(game, c = this.active()) { const it = c && this.outfits(c).find((x) => x.id === c.outfit); return it && it.slow === game ? OUTFIT_SLOW : 1; },
-    // 첫 화면·지도 구석의 내 캐릭터 그림
-    homeImg(c = this.active()) { const who = lookBase(c.look) === 'eungyeol' ? 'eungyeol' : 'eunyu', id = this.outfit(c); return `hub/park/home/${who}${id ? '_' + id : ''}.webp`; },
+    // 첫 화면·지도 구석의 내 캐릭터 그림 / 지도 위치 표식 (입은 옷 그대로)
+    homeImg(c = this.active()) { const id = this.outfit(c); return `hub/park/home/${whoFile(c)}${id ? '_' + id : ''}.webp`; },
+    pinImg(c = this.active()) { const id = this.outfit(c); return `hub/ui/map/v4/pin_${whoFile(c)}${id ? '_' + id : ''}.webp`; },
     // 쿠폰: { ok, msg }
     redeem(code, c = this.active()) {
       const key = String(code || '').toLowerCase().replace(/\s+/g, '');

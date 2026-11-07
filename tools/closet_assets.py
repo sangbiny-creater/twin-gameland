@@ -4,12 +4,12 @@
   python3 tools/closet_assets.py sheets     # 게임 안 옷 묶음 (common/chars/<look>_<옷>.webp/.json)
 요청 글: making_GPT/성인캐릭터_교체2/ (21~27번)
   · 새 옷 시트가 오면 SHEETS 에 폴더를 넣고 profile.js OUTFITS 의 그 옷에 sheet: true
-  · 받은 시트 차례: G1 서기·기쁨 / G2 점프·실수 / G3 구름 상체 / G4·G5 다운힐 뒷모습 / G6 계단 SD
-    (계단 SD 둘째 장이 없으면 다친·기쁨 포즈는 첫 장 컷으로 대신함)
+  · 시트 차례(26번 글): G1 서기·기쁨 / G3 구름 상체 / G4·G5 다운힐 뒷모습 / G6·G7 계단 SD / G8 다트 / G9 멍멍이 / G10 두더지
+    (G2 점프·실수는 없어도 됨. G7 이 없으면 다친·기쁨 포즈는 G6 컷으로 대신함)
 """
 import json, os, sys, unicodedata
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import adult_assets as A
 from adult_assets import ROOT, key, cuts, tight, scaled, save, ground_frame
@@ -22,6 +22,33 @@ OUTFITS = {
 SHEETS = [('eunyu', 'uniform', '은유_uniform게임랜드유니폼(C02)'), ('eungyeol', 'streamer', '은결_streamer스트리머룩(C09)')]
 STAIRS_K = {'eunyu': 1.0, 'eungyeol': 1.04}  # tools/adult2_assets.py stairs() 와 같음
 Q = dict(quality=84, alpha_quality=90, method=6)
+
+
+# 얼굴 맞추기: 전신 그림(C)의 두 눈 가운데·눈 사이 ↔ 기본 옷 첫 화면 그림(Z01·Z02)·위치 표식의 두 눈 가운데·눈 사이 (그림에서 잰 값)
+EYES = {'eunyu': ((497, 190), 78), 'eungyeol': ((503, 153), 65)}
+HOME_EYES = {'eunyu': ((288, 197), 87), 'eungyeol': ((341, 186), 85)}
+HOME_PAD = 90  # 왼쪽으로 뻗은 팔이 잘리지 않게 왼쪽을 넓힘 (첫 화면 그림은 오른쪽 끝 기준이라 얼굴 자리는 그대로, 지도는 hub.js 가 밀어 줌)
+PIN_EYES = {'eunyu': ((97, 88), 39), 'eungyeol': ((98, 88), 36)}
+PIN_CIRCLE = (100, 95, 83); PIN_BG = {'eunyu': (251, 214, 229, 255), 'eungyeol': (190, 228, 249, 255)}
+
+
+def placed(im, who, target, size):
+    """전신 그림을 얼굴이 target(두 눈 가운데, 눈 사이)에 맞게 키워 size 캔버스에 놓음"""
+    (ex, ey), ed = EYES[who]; (tx, ty), td = target; k = td / ed
+    p = scaled(im, k); c = Image.new('RGBA', size); c.paste(p, (round(tx - ex * k), round(ty - ey * k)), p)
+    return c
+
+
+def home_pin(who, oid, im):
+    W, H = Image.open(f'{ROOT}/hub/park/home/{who}.webp').size; (tx, ty), td = HOME_EYES[who]
+    save(placed(im, who, ((tx + HOME_PAD, ty), td), (W + HOME_PAD, H)), f'hub/park/home/{who}_{oid}.webp', **Q)
+    # 위치 표식: 원 안만 새 옷으로 (틀은 기본 표식 그대로)
+    pin = Image.open(f'{ROOT}/hub/ui/map/v4/pin_{who}.webp').convert('RGBA'); K = 4; cx, cy, r = PIN_CIRCLE
+    (tx, ty), td = PIN_EYES[who]; big = (pin.width * K, pin.height * K)
+    disc = Image.new('RGBA', big, PIN_BG[who]); disc.alpha_composite(placed(im, who, ((tx * K, ty * K), td * K), big))
+    mask = Image.new('L', big); ImageDraw.Draw(mask).ellipse([(cx - r) * K, (cy - r) * K, (cx + r) * K, (cy + r) * K], fill=255)
+    pin.paste(disc.resize(pin.size, Image.LANCZOS), (0, 0), mask.resize(pin.size, Image.LANCZOS))
+    save(pin, f'hub/ui/map/v4/pin_{who}_{oid}.webp', **Q)
 
 
 def closet():
@@ -43,12 +70,7 @@ def closet():
             c = im.crop(box); c = scaled(c, 1100 / c.height)
             save(c, f'closet/assets/{who}_{oid or "base"}.webp', **Q)
             save(Image.open(f'{D}/D{L[oid]:02d}.png').convert('RGB').resize((260, 260), Image.LANCZOS), f'closet/assets/item_{who}_{oid or "base"}.webp', quality=80, method=6)
-            if oid:  # 첫 화면·지도 구석 캐릭터: 허리 위 (기본 옷 그림 Z01·Z02 와 같은 크기)
-                H = Image.open(f'{ROOT}/hub/park/home/{who}.webp').size
-                top = c.crop((0, 0, c.width, round(c.height * .47)))
-                top = scaled(top, min(H[0] / top.width, H[1] / top.height))
-                can = Image.new('RGBA', H); can.alpha_composite(top, ((H[0] - top.width) // 2, H[1] - top.height))
-                save(can, f'hub/park/home/{who}_{oid}.webp', **Q)
+            if oid: home_pin(who, oid, im)
         print(who, box, len(ims))
 
 
@@ -64,7 +86,10 @@ def sheet_frames(who, D):
     a = cuts(g(1), 4); s = 393 * k / a[0].height
     for n, c in zip(['idle_0', 'idle_1', 'happy', 'cheer'], a): frames[n] = ground_frame(c, s)
     frames['idle'] = frames['idle_0']; frames['ready'] = frames['idle_0']
-    for n, c in zip(['jump_up', 'hit', 'dizzy', 'dead'], cuts(g(2), 4)): frames[n] = ground_frame(c, s)
+    if os.path.exists(f'{D}/G2.png'):
+        for n, c in zip(['jump_up', 'hit', 'dizzy', 'dead'], cuts(g(2), 4)): frames[n] = ground_frame(c, s)
+    else:  # G2 는 베이커리 실수 순간에만 잠깐 보여서 받지 않음 → 서 있는 포즈로 (기본 옷으로 튀지 않게)
+        for n in ['jump_up', 'hit', 'dizzy', 'dead']: frames[n] = frames['idle_1']
     # 구름 탑승 (tools/adult_assets.py build_look 와 같은 방법)
     base = f'{ROOT}/character/{A.LOOK[who]}_v4/base/{A.LOOK[who]}_base_ride_cloud'
     body = Image.open(f'{base}_body.png').convert('RGBA'); W, H = body.size
