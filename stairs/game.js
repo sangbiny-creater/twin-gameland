@@ -47,7 +47,7 @@ const rand = (a, b) => a + (b - a) * Math.random();
 const $ = (id) => document.getElementById(id);
 
 // ---------- sprites ----------
-const ASSET_V = '202611070945'; // 캐시 버전 (tools/bump_version.py가 올림)
+const ASSET_V = '202611071003'; // 캐시 버전 (tools/bump_version.py가 올림)
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -87,7 +87,7 @@ const Audio = {
       this.applyMute();
       if (this.bgmOn && !this.timer) { this.bgmOn = false; this.startBgm(); }
     }
-    if (this.ctx.state === 'suspended') this.ctx.resume();
+    if (this.ctx.state !== 'running') this.ctx.resume();
   },
   applyMute() { if (this.master) this.master.gain.value = Save.data.sound ? 1 : 0; },
   tone(freq, dur, type = 'sine', vol = 0.5, slide = 0, when = 0, dest) {
@@ -142,6 +142,7 @@ const Audio = {
     if (!this.ctx || !this.bgmOn) return;
     const stepDur = 60 / 150 / 2;
     const mf = (n) => 440 * Math.pow(2, (n - 69) / 12);
+    if (this.nextNote < this.ctx.currentTime - 0.1) this.nextNote = this.ctx.currentTime + 0.05; // 오래 멈췄다 돌아오면 밀린 음은 건너뜀
     while (this.nextNote < this.ctx.currentTime + 0.15) {
       const when = this.nextNote - this.ctx.currentTime;
       const m = this.melody[this.step % 32];
@@ -686,7 +687,7 @@ function showResult() {
 }
 let pausedFrom = 'play';
 function pauseGame() { if (G.state === 'play' || G.state === 'ready') { pausedFrom = G.state; setState('pause'); Audio.stopBgm(); } }
-function resumeGame() { if (G.state === 'pause') { setState(pausedFrom); Audio.startBgm(); last = performance.now(); } }
+function resumeGame() { if (G.state === 'pause') { Audio.unlock(); setState(pausedFrom); Audio.startBgm(); last = performance.now(); } }
 function goHome() { Audio.stopBgm(); if (HUB) location.href = '../index.html#lobby'; else setState('home'); }
 
 // ---------- input ----------
@@ -773,6 +774,7 @@ if (window.visualViewport) window.visualViewport.addEventListener('resize', resi
 let last = performance.now(), acc = 0;
 const DT = 1 / 120;
 function frame(now) {
+  requestAnimationFrame(frame); // 맨 앞에서 예약: 한 프레임에 오류가 나도 게임이 멈추지 않게
   let dt = (now - last) / 1000; last = now;
   if (dt > 0.05) dt = 0.05;
   if (['ready', 'play', 'fall'].includes(G.state)) {
@@ -781,7 +783,6 @@ function frame(now) {
     updateHud();
   } else acc = 0;
   render();
-  requestAnimationFrame(frame);
 }
 resize();
 if (HUB) {

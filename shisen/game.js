@@ -56,7 +56,7 @@ const mmss = (t) => { t = Math.max(0, Math.ceil(t)); return `${String(Math.floor
 function shuffleArr(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 // ---------- sprites ----------
-const ASSET_V = '202611070945';
+const ASSET_V = '202611071003';
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => { SP.f = j; SP.img.onload = () => { SP.ready = true; }; SP.img.src = `assets/sprites/sprites.webp?v=${ASSET_V}`; });
 const EXTRA_V = '20261027a';
@@ -116,6 +116,14 @@ function upperSprite(name, z) {
   } catch (e) { /* 그림을 읽을 수 없으면 그대로 */ }
   return (UP_SPR[key] = cv);
 }
+// 시작 창이 떠 있는 동안 위층 타일 그림을 조금씩 미리 만듦 (판 첫 화면에서 한꺼번에 만들면 잠깐 멈춤)
+let warmId = 0;
+function warmUpper(si) {
+  const st = STAGES[si], id = ++warmId, todo = [];
+  for (const name of tilePool(si).slice(0, st.t)) { if (st.n2) todo.push([name, 2]); if (st.n3) todo.push([name, 3]); }
+  const one = () => { if (id !== warmId || !todo.length) return; if (!SP.ready) { setTimeout(one, 200); return; } const [n, z] = todo.pop(); upperSprite(n, z); setTimeout(one, 0); };
+  one();
+}
 // z: 그 타일의 층 (2·3층이면 바탕을 층 색으로)
 function drawTile(name, x, y, w, h, alpha = 1, z = 1) {
   const up = z > 1 && upperSprite(name, z);
@@ -150,7 +158,7 @@ const Audio = {
       this.applyMute();
       if (this.bgmOn && !this.timer) { this.bgmOn = false; this.startBgm(); }
     }
-    if (this.ctx.state === 'suspended') this.ctx.resume();
+    if (this.ctx.state !== 'running') this.ctx.resume();
   },
   applyMute() { if (this.master) this.master.gain.value = Save.data.sound ? 1 : 0; },
   tone(f, d, type = 'sine', v = 0.4, slide = 0, when = 0, dest) {
@@ -184,6 +192,7 @@ const Audio = {
     this.timer = setInterval(() => {
       if (!this.ctx || !this.bgmOn) return;
       const sd = 60 / 104 / 2, mf = (n) => 440 * Math.pow(2, (n - 69) / 12);
+      if (this.next < this.ctx.currentTime - 0.1) this.next = this.ctx.currentTime + 0.05; // 오래 멈췄다 돌아오면 밀린 음은 건너뜀
       while (this.next < this.ctx.currentTime + 0.2) {
         const w = this.next - this.ctx.currentTime, m = this.mel[this.step % 32];
         if (m) this.tone(mf(m), sd * 1.6, 'triangle', 0.3, 0, w, this.bgm);
@@ -281,7 +290,7 @@ function showReady(si) {
   const st = STAGES[si];
   const up = st.n3 ? ` (2층 ${st.n2}개 · 3층 ${st.n3}개)` : st.n2 ? ` (2층 ${st.n2}개)` : '';
   $('readyInfo').textContent = `${st.c}×${st.r} 판${up} · 타일 ${st.tiles}개 · 그림 ${st.t}종 · 제한 시간 ${mmss(st.s)}`;
-  G.cols = 0; setState('ready');
+  G.cols = 0; setState('ready'); warmUpper(si);
 }
 
 function select(x, y) {
@@ -625,7 +634,11 @@ function setState(s) {
   $('hud').classList.toggle('hidden', !['play', 'pause', 'done'].includes(s));
 }
 function pauseGame() { if (G.state === 'play') { setState('pause'); Audio.stopBgm(); } }
-function resumeGame() { if (G.state === 'pause') { setState('play'); Audio.startBgm(); last = performance.now(); } }
+function resumeGame() {
+  if (G.state !== 'pause') return;
+  Audio.unlock(); setState('play'); Audio.startBgm(); last = performance.now();
+  if (G.left > 0 && !anyPair()) { reshuffle(); Audio.sfx('shuffle'); toast('이을 수 있는 짝이 없어서 섞었어요!'); } // 멈춘 사이에 섞기가 지나갔으면 지금
+}
 // 광고 보고 이어하기 (common/monet.js): 시간 +30초로 그 판을 이어서, 화면을 한 번 터치하면 다시 시작. 한 판에 한 번
 window.GameContinue = {
   can: () => !G.contUsed,
@@ -714,11 +727,11 @@ if (window.visualViewport) window.visualViewport.addEventListener('resize', resi
 // ---------- loop ----------
 let last = performance.now();
 function frame(now) {
+  requestAnimationFrame(frame); // 맨 앞에서 예약: 한 프레임에 오류가 나도 게임이 멈추지 않게
   let dt = (now - last) / 1000; last = now; if (dt > 0.05) dt = 0.05; if (dt < 0) dt = 0;
   step(dt);
   if (G.state === 'play' || G.state === 'done' || G.state === 'pause') updateHud();
   render();
-  requestAnimationFrame(frame);
 }
 resize();
 {

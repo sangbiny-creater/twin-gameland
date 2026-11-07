@@ -21,7 +21,7 @@ const HEART_STAY = 0.6;    // 하트 두더지가 다 올라와 머무는 시간
 const HEART_FULL_PTS = 300; // 하트가 꽉 찼을 때 하트 두더지를 잡으면 받는 점수
 const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611070945';
+const ASSET_V = '202611071003';
 const asset = (p) => `assets/${p}.webp?v=${ASSET_V}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -96,7 +96,7 @@ const Audio = {
       this.applyMute();
       if (this.bgmOn && !this.timer) { this.bgmOn = false; this.startBgm(); }
     }
-    if (this.ctx.state === 'suspended') this.ctx.resume();
+    if (this.ctx.state !== 'running') this.ctx.resume();
   },
   applyMute() { if (this.master) this.master.gain.value = Save.data.sound ? 1 : 0; },
   tone(f, d, type = 'sine', v = 0.4, slide = 0, when = 0, dest) {
@@ -136,6 +136,7 @@ const Audio = {
     this.timer = setInterval(() => {
       if (!this.ctx || !this.bgmOn) return;
       const sd = 60 / 132 / 2, mf = (n) => 440 * Math.pow(2, (n - 69) / 12);
+      if (this.next < this.ctx.currentTime - 0.1) this.next = this.ctx.currentTime + 0.05; // 오래 멈췄다 돌아오면 밀린 음은 건너뜀
       while (this.next < this.ctx.currentTime + 0.2) {
         const w = this.next - this.ctx.currentTime, m = this.mel[this.step % 32];
         if (m) this.tone(mf(m), sd * 1.2, 'triangle', 0.26, 0, w, this.bgm);
@@ -659,7 +660,7 @@ function setState(s) {
   lastKey = '';
 }
 function pauseGame() { if (G.state === 'play' || G.state === 'count') { G.pausedFrom = G.state; setState('pause'); Audio.stopBgm(); } }
-function resumeGame() { if (G.state === 'pause') { setState(G.pausedFrom); Audio.startBgm(); last = performance.now(); } }
+function resumeGame() { if (G.state === 'pause') { Audio.unlock(); setState(G.pausedFrom); Audio.startBgm(); last = performance.now(); } }
 // 광고 보고 이어하기 (common/monet.js): 하트 1개(+시간이 끝났으면 15초)로 그 판을 이어서, 화면을 한 번 터치하면 다시 시작. 한 판에 한 번
 window.GameContinue = {
   can: () => !G.contUsed,
@@ -729,11 +730,11 @@ if (window.visualViewport) window.visualViewport.addEventListener('resize', resi
 // ---------- loop ----------
 let last = performance.now();
 function frame(now) {
+  requestAnimationFrame(frame); // 맨 앞에서 예약: 한 프레임에 오류가 나도 게임이 멈추지 않게
   let dt = (now - last) / 1000; last = now; if (dt > 0.05) dt = 0.05; if (dt < 0) dt = 0;
   step(dt);
   if (['count', 'play', 'done', 'pause'].includes(G.state)) updateHud();
   render();
-  requestAnimationFrame(frame);
 }
 resize();
 {

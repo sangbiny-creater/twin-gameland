@@ -48,12 +48,12 @@ const $ = (id) => document.getElementById(id);
 
 // ---------- sprites (asset.PNG cut into assets/sprites/sprites.webp + sprites.json) ----------
 const SP = { img: new Image(), f: null, ready: false, bg: [] };
-fetch('assets/sprites/sprites.json?v=202611070945').then((r) => r.json()).then((j) => {
+fetch('assets/sprites/sprites.json?v=202611071003').then((r) => r.json()).then((j) => {
   SP.f = j;
   SP.img.onload = () => { SP.ready = true; };
-  SP.img.src = 'assets/sprites/sprites.webp?v=202611070945';
+  SP.img.src = 'assets/sprites/sprites.webp?v=202611071003';
 });
-for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=202611070945`; SP.bg.push(im); }
+for (let i = 0; i < 5; i++) { const im = new Image(); im.src = `assets/bg/bg_${i}.webp?v=202611071003`; SP.bg.push(im); }
 // draw sprite centered at (x,y) with its width scaled to w (height keeps aspect)
 function spr(g, name, x, y, w, rot = 0, alpha = 1) {
   if (!SP.ready || !SP.f[name]) return;
@@ -110,7 +110,7 @@ const Audio = {
       // BGM was requested before the first tap (e.g. opened from the hub): start it now
       if (this.bgmOn && !this.timer) { this.bgmOn = false; this.startBgm(); }
     }
-    if (this.ctx.state === 'suspended') this.ctx.resume();
+    if (this.ctx.state !== 'running') this.ctx.resume();
   },
   applyMute() { if (this.master) this.master.gain.value = Save.data.sound ? 1 : 0; },
   tone(freq, dur, type = 'sine', vol = 0.5, slide = 0, when = 0, dest) {
@@ -160,6 +160,7 @@ const Audio = {
     if (!this.ctx || !this.bgmOn) return;
     const stepDur = 60 / 140 / 2;
     const mf = (n) => 440 * Math.pow(2, (n - 69) / 12);
+    if (this.nextNote < this.ctx.currentTime - 0.1) this.nextNote = this.ctx.currentTime + 0.05; // 오래 멈췄다 돌아오면 밀린 음은 건너뜀
     while (this.nextNote < this.ctx.currentTime + 0.15) {
       const when = this.nextNote - this.ctx.currentTime;
       const m = this.melody[this.step % 32];
@@ -717,7 +718,7 @@ function showResult() {
 }
 let pausedFrom = 'play';
 function pauseGame() { if (G.state === 'play' || G.state === 'ready') { pausedFrom = G.state; setState('pause'); Audio.stopBgm(); } }
-function resumeGame() { if (G.state === 'pause') { setState(pausedFrom); Audio.startBgm(); last = performance.now(); } }
+function resumeGame() { if (G.state === 'pause') { Audio.unlock(); input.down = false; setState(pausedFrom); Audio.startBgm(); last = performance.now(); } }
 function goHome() {
   Audio.stopBgm();
   if (HUB) location.href = '../index.html#lobby'; else setState('home');
@@ -797,6 +798,7 @@ if (window.visualViewport) window.visualViewport.addEventListener('resize', resi
 let last = performance.now(), acc = 0;
 const DT = 1 / 120;
 function frame(now) {
+  requestAnimationFrame(frame); // 맨 앞에서 예약: 한 프레임에 오류가 나도 게임이 멈추지 않게
   let dt = (now - last) / 1000; last = now;
   if (dt > 0.05) dt = 0.05;
   if (G.state === 'ready' || G.state === 'play' || G.state === 'crash') {
@@ -805,7 +807,6 @@ function frame(now) {
     updateHud();
   } else acc = 0;
   render();
-  requestAnimationFrame(frame);
 }
 resize();
 if (HUB) {

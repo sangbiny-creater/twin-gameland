@@ -65,7 +65,7 @@ const $ = (id) => document.getElementById(id);
 const rng = (seed) => { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let x = s; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; };
 
 // ---------- sprites ----------
-const ASSET_V = '202611070945';
+const ASSET_V = '202611071003';
 const SP = { img: new Image(), f: null, ready: false };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -117,7 +117,7 @@ const Audio = {
       this.applyMute();
       if (this.bgmOn && !this.timer) { this.bgmOn = false; this.startBgm(); }
     }
-    if (this.ctx.state === 'suspended') this.ctx.resume();
+    if (this.ctx.state !== 'running') this.ctx.resume();
   },
   applyMute() { if (this.master) this.master.gain.value = Save.data.sound ? 1 : 0; },
   tone(freq, dur, type = 'sine', vol = 0.5, slide = 0, when = 0, dest) {
@@ -173,6 +173,7 @@ const Audio = {
     if (!this.ctx || !this.bgmOn) return;
     const stepDur = 60 / 160 / 2;
     const mf = (n) => 440 * Math.pow(2, (n - 69) / 12);
+    if (this.nextNote < this.ctx.currentTime - 0.1) this.nextNote = this.ctx.currentTime + 0.05; // 오래 멈췄다 돌아오면 밀린 음은 건너뜀
     while (this.nextNote < this.ctx.currentTime + 0.15) {
       const when = this.nextNote - this.ctx.currentTime;
       const m = this.melody[this.step % 32];
@@ -934,7 +935,7 @@ function showResult() {
 }
 let pausedFrom = 'play';
 function pauseGame() { if (G.state === 'play' || G.state === 'ready') { pausedFrom = G.state; setState('pause'); Audio.stopBgm(); } }
-function resumeGame() { if (G.state === 'pause') { setState(pausedFrom); Audio.startBgm(); last = performance.now(); } }
+function resumeGame() { if (G.state === 'pause') { Audio.unlock(); setState(pausedFrom); Audio.startBgm(); last = performance.now(); } }
 function goHome() { Audio.stopBgm(); if (HUB) location.href = '../index.html#lobby'; else setState('home'); }
 
 // ---------- input ----------
@@ -1019,6 +1020,7 @@ if (window.visualViewport) window.visualViewport.addEventListener('resize', resi
 let last = performance.now(), acc = 0;
 const DT = 1 / 120;
 function frame(now) {
+  requestAnimationFrame(frame); // 맨 앞에서 예약: 한 프레임에 오류가 나도 게임이 멈추지 않게
   let dt = (now - last) / 1000; last = now;
   if (dt > 0.05) dt = 0.05;
   if (['ready', 'play', 'over'].includes(G.state)) {
@@ -1027,7 +1029,6 @@ function frame(now) {
     updateHud();
   } else { acc = 0; updateFx(dt); }
   render();
-  requestAnimationFrame(frame);
 }
 resize();
 if (HUB) { if (new URLSearchParams(location.search).get('go') === '1') askStart(); startRun(); } else setState('home'); // 인트로 START: 시작 팝업(아이템 고르기) — 먼저 띄워 뒤에 깔리는 판이 아이템을 쓰지 않게

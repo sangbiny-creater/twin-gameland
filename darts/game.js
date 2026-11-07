@@ -11,7 +11,7 @@
 
 let W = 540, H = 960;
 const D = window.DartArt;
-const ASSET_V = '202611070945';
+const ASSET_V = '202611071003';
 const ROUNDS = 8, PER = 3;
 const AMP = 1.2; // 줄이 움직이는 범위 (더블 링 바깥 = 1, 조금 밖까지 나감)
 // 한 번 갔다 오는 시간(초), 모든 라운드 같음 (사용자 요청으로 맞춘 값)
@@ -55,7 +55,7 @@ const Audio = {
       const b = this.ctx.createBuffer(1, 1, 22050), s = this.ctx.createBufferSource(); s.buffer = b; s.connect(this.master); s.start(0);
       this.master.gain.value = Save.data.sound ? 1 : 0;
     }
-    if (this.ctx.state === 'suspended') this.ctx.resume();
+    if (this.ctx.state !== 'running') this.ctx.resume();
   },
   tone(f, d, type = 'sine', v = 0.4, slide = 0, when = 0) {
     if (!this.ctx || !Save.data.sound) return;
@@ -536,7 +536,7 @@ function pauseGame() {
     setState('pause');
   }
 }
-function resumeGame() { if (G.state === 'pause') { setState(G.pausedFrom); last = performance.now(); } }
+function resumeGame() { if (G.state === 'pause') { Audio.unlock(); setState(G.pausedFrom); last = performance.now(); } }
 function goHome() { clearTimers(); if (HUB) location.href = '../index.html#lobby'; else showReady(); }
 
 // ---------- input: 화면 아무 곳이나 톡 (버튼 포함) ----------
@@ -590,11 +590,11 @@ if (window.visualViewport) window.visualViewport.addEventListener('resize', resi
 // ---------- loop ----------
 let last = performance.now();
 function frame(now) {
+  requestAnimationFrame(frame); // 맨 앞에서 예약: 한 프레임에 오류가 나도 게임이 멈추지 않게
   let dt = (now - last) / 1000; last = now; if (dt > 0.05) dt = 0.05; if (dt < 0) dt = 0;
   step(dt);
   if (['play', 'pause', 'done'].includes(G.state)) updateHud();
   render();
-  requestAnimationFrame(frame);
 }
 resize();
 showReady();

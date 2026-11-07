@@ -253,7 +253,12 @@ html[lang=en] .pp-acts button.pp-b{padding-left:14px!important;padding-right:14p
     ($('root') || document.body).appendChild(el);
     el.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); el.remove(); fn(); }, { once: true });
   }
-  function decoratePause() { const t = document.querySelector('#pause:not(.hidden) .panel > .p-title'); if (t) t.textContent = '일시정지'; }
+  // (글자를 쓰면 아래 감시자가 또 불리므로, 이미 같은 글자면 건드리지 않음 — 안 그러면 끝없이 돌아 화면이 얼어붙음)
+  function decoratePause() {
+    const t = document.querySelector('#pause:not(.hidden) .panel > .p-title'); if (!t) return;
+    const label = window.I18N && I18N.tr ? I18N.tr('일시정지') : '일시정지';
+    if (t.textContent.trim() !== label) t.textContent = '일시정지';
+  }
 
   function boot() {
     dressAll();

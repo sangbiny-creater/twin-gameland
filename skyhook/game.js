@@ -126,7 +126,7 @@ const THEMES = {
 };
 // 월드 그림 (메인 화면 지도와 같은 그림)
 const WORLD_IMG = {};
-for (const th of Object.values(THEMES)) if (th.img && !WORLD_IMG[th.img]) { const im = new Image(); im.src = `../common/worlds/w${th.img}.webp?v=202611070945`; WORLD_IMG[th.img] = im; }
+for (const th of Object.values(THEMES)) if (th.img && !WORLD_IMG[th.img]) { const im = new Image(); im.src = `../common/worlds/w${th.img}.webp?v=202611071003`; WORLD_IMG[th.img] = im; }
 
 // ---------- save ----------
 const Save = {
@@ -172,7 +172,7 @@ const Audio = {
       const b = this.ctx.createBuffer(1, 1, 22050); const s = this.ctx.createBufferSource(); s.buffer = b; s.connect(this.master); s.start(0);
       this.applyMute();
     }
-    if (this.ctx.state === 'suspended') this.ctx.resume();
+    if (this.ctx.state !== 'running') this.ctx.resume();
   },
   applyMute() { if (this.master) this.master.gain.value = Save.data.sound ? 1 : 0; },
   tone(freq, dur, type = 'sine', vol = 0.5, slide = 0, when = 0, dest) {
@@ -227,6 +227,7 @@ const Audio = {
   schedule() {
     if (!this.ctx || !this.bgmOn) return;
     const stepDur = 60 / 132 / 2;
+    if (this.nextNote < this.ctx.currentTime - 0.1) this.nextNote = this.ctx.currentTime + 0.05; // 오래 멈췄다 돌아오면 밀린 음은 건너뜀
     while (this.nextNote < this.ctx.currentTime + 0.15) {
       const when = this.nextNote - this.ctx.currentTime;
       const m = this.melody[this.step % 32];
@@ -691,10 +692,10 @@ function drawKid(g, who, pose, t, opt = {}) {
 // ---------- character sprites (은유 / 은결 sheet, assets/sprites/kids.webp) ----------
 // Frames were cut from the character sprite sheet; the vector drawKid() above is only a fallback.
 const Sprites = { img: new Image(), frames: null, scale: 3, ready: false };
-fetch('assets/sprites/kids.json?v=202611070945').then((r) => r.json()).then((j) => {
+fetch('assets/sprites/kids.json?v=202611071003').then((r) => r.json()).then((j) => {
   Sprites.frames = j.frames; Sprites.scale = j.scale;
   Sprites.img.onload = () => { Sprites.ready = true; };
-  Sprites.img.src = 'assets/sprites/kids.webp?v=202611070945';
+  Sprites.img.src = 'assets/sprites/kids.webp?v=202611071003';
 }).catch(() => { /* opened from file:// — keep vector fallback */ });
 const SPRITE_SIZE = 1.55; // sheet pixel -> game pixel
 function drawKidSprite(g, who, pose, t) {
@@ -766,7 +767,7 @@ function startStage(si) {
   if (!THEMES[skinTheme() || STAGES[si].theme].img) getBG(skinTheme() || STAGES[si].theme);
   setState('play');
   renderHearts();
-  $('hudProgFace').style.backgroundImage = `url(${(window.Costume && Costume.src) || `../common/faces/${Save.data.char}_base.webp?v=202611070945`})`;
+  $('hudProgFace').style.backgroundImage = `url(${(window.Costume && Costume.src) || `../common/faces/${Save.data.char}_base.webp?v=202611071003`})`;
   Audio.startBgm();
 }
 
@@ -1515,7 +1516,7 @@ function goHome() {
 function showReady(si) {
   G.si = si;
   $('readyTitle').textContent = `${STAGES[si].label} ${STAGES[si].name}`;
-  $('readyFace').src = (window.Costume && Costume.src) || `../common/faces/${Save.data.char}_base.webp?v=202611070945`;
+  $('readyFace').src = (window.Costume && Costume.src) || `../common/faces/${Save.data.char}_base.webp?v=202611071003`;
   $('readyFace').classList.toggle('cos', !!(window.Costume && Costume.src));
   setState('ready');
 }
@@ -1607,6 +1608,7 @@ if (window.visualViewport) window.visualViewport.addEventListener('resize', resi
 let last = performance.now(), acc = 0;
 const DT = 1 / 120;
 function frame(now) {
+  requestAnimationFrame(frame); // 맨 앞에서 예약: 한 프레임에 오류가 나도 게임이 멈추지 않게
   let dt = (now - last) / 1000; last = now;
   if (dt > 0.05) dt = 0.05;
   if (G.state === 'play') {
@@ -1616,7 +1618,6 @@ function frame(now) {
     updateHud();
   } else acc = 0;
   render();
-  requestAnimationFrame(frame);
 }
 resize();
 if (HUB) {

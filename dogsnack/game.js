@@ -14,7 +14,7 @@
 let W = 540, H = 960;
 const L = window.SnackLevels, D = window.DogArt;
 const { PTS, JUDGE, LANES } = L;
-const ASSET_V = '202611070945';
+const ASSET_V = '202611071003';
 const MAX_HEARTS = 3;
 const START_HEARTS = 2;
 const HEART_GAP = 50; // 하트 아이템 사이 최소 시간(초) — 2026-10-28 달콤 베이커리와 같게(25→50초)
@@ -67,7 +67,7 @@ const Audio = {
       const b = this.ctx.createBuffer(1, 1, 22050), s = this.ctx.createBufferSource(); s.buffer = b; s.connect(this.master); s.start(0);
       this.applyMute();
     }
-    if (this.ctx.state === 'suspended') this.ctx.resume();
+    if (this.ctx.state !== 'running') this.ctx.resume();
   },
   applyMute() { if (this.master) this.master.gain.value = Save.data.sound ? 1 : 0; },
   tone(f, d, type = 'sine', v = 0.4, slide = 0, when = 0) {
@@ -683,7 +683,7 @@ function pauseGame() {
     G.pausedFrom = G.state; setState('pause');
   }
 }
-function resumeGame() { if (G.state === 'pause') { setState(G.pausedFrom); last = performance.now(); } }
+function resumeGame() { if (G.state === 'pause') { Audio.unlock(); setState(G.pausedFrom); last = performance.now(); } }
 function goHome() { clearTimers(); if (HUB) location.href = '../index.html#lobby'; else showReady(); }
 
 // ---------- input: 손가락마다 줄을 기억 (두 줄 같이 누르기 가능) ----------
@@ -762,11 +762,11 @@ if (window.visualViewport) window.visualViewport.addEventListener('resize', resi
 // ---------- loop ----------
 let last = performance.now();
 function frame(now) {
+  requestAnimationFrame(frame); // 맨 앞에서 예약: 한 프레임에 오류가 나도 게임이 멈추지 않게
   let dt = (now - last) / 1000; last = now; if (dt > 0.05) dt = 0.05; if (dt < 0) dt = 0;
   step(dt);
   if (['count', 'play', 'done', 'pause'].includes(G.state)) updateHud();
   render();
-  requestAnimationFrame(frame);
 }
 resize();
 showReady();
