@@ -30,6 +30,9 @@
     bakery: { name: '달콤 베이커리', path: 'bakery/index.html' }, // 끝없이 이어지는 게임, 기록(best) = 최고 점수
     dogsnack: { name: '멍멍이 간식 타임', path: 'dogsnack/index.html' }, // 3줄 버튼 리듬 게임 (베이커리와 같은 규칙·같은 기록 방식). 예전 이름 caketap(케이크 탭탭)
     darts: { name: '다트 게임', path: 'darts/index.html' }, // 카운트업 8라운드 × 3발, 기록(best) = 최고 점수
+    // 선물가게 정리 (Water Sort 방식): 10개 월드 × 10판 + 어려움 100판 (사천성과 같은 규칙). 월드는 이 게임만의 선물가게 거리
+    giftsort: { name: '선물가게 정리', path: 'giftsort/index.html', stages: 100, perWorld: 10, hard: true,
+      worlds: ['장난감 거리', '꽃집 정원', '사탕 과자점', '바닷가 기념품점', '눈꽃 선물마을', '숲속 나무공방', '별빛 야시장', '구름 풍선가게', '리본 공장', '황금 선물궁전'] },
   };
 
   const COIN_RULES = {
@@ -52,6 +55,8 @@
     dogsnack: (r) => Math.floor(r.dist / 1000) * 5,
     // 100점마다 +10 (24발 합계 점수)
     darts: (r) => Math.floor(r.dist / 100) * 10,
+    // 사천성과 같은 징검다리 규칙
+    giftsort: (r, first) => (r.cleared ? 20 + Math.round(r.stage * 1.5) + r.stars * 5 + (first ? 30 : 0) : 0),
   };
 
   // ---------- 아이템샵 카탈로그 ----------
@@ -64,7 +69,7 @@
     life: { name: '하트', price: 300, games: ['downhill', 'bakery', 'stairs', 'helicopter', 'dogsnack', 'mole'], desc: '하트 4칸에 3개로 시작해요' },
     shield: { name: '보호막', price: 200, games: ['downhill', 'bakery', 'stairs', 'helicopter', 'dogsnack'], desc: '처음 한 번은 다쳐도 괜찮아요' },
     slow: { name: '슬로우', price: 200, games: ['downhill', 'bakery', 'stairs', 'helicopter', 'dogsnack'], desc: '처음 20초 동안 천천히 움직여요' },
-    hint: { name: '힌트', price: 60, games: ['shisen', 'memory'], desc: '짝 하나를 알려 줘요', manual: true },
+    hint: { name: '힌트', price: 60, games: ['shisen', 'memory', 'giftsort'], desc: '짝 하나를 알려 줘요', manual: true },
     time: { name: '시간 추가', price: 80, games: ['shisen', 'memory'], desc: '제한 시간 +10초', manual: true },
     shuffle: { name: '섞기', price: 80, games: ['shisen'], desc: '타일 자리를 섞어요', manual: true },
     bomb: { name: '폭탄', price: 150, games: ['shisen', 'memory'], desc: '짝 하나를 바로 이어 줘요', manual: true },
@@ -86,6 +91,7 @@
     mole: ['life'],
     bakery: ['life', 'shield', 'slow'],
     dogsnack: ['life', 'shield', 'slow'],
+    giftsort: ['hint'], // 되돌리기·카트 추가는 판마다 무료라 팔지 않음
   };
   for (const g of Object.keys(BOOSTS)) if (typeof BOOSTS[g][0] === 'string') BOOSTS[g] = BOOSTS[g].map((id) => ({ id, ...ITEMS[id], shared: true }));
 
@@ -297,7 +303,7 @@
     costume(c = this.active()) { return (c && c.costume) || null; }, // 예전 어린이 옷 (게임의 예전 코드가 물어봄)
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611081324` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611081637` : null; },
     outfits(c = this.active()) { return c ? OUTFITS[lookBase(c.look)].filter((x) => !x.hidden || (c.outfits || []).includes(x.id)) : []; },
     outfit(c = this.active()) { return (c && c.outfit) || null; }, // 입은 옷 id (없으면 기본 옷)
     ownsOutfit(id, c = this.active()) { return !id || !!(c && (c.outfits || []).includes(id)); },

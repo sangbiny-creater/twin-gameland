@@ -372,6 +372,22 @@ window.I18N_DATA = {
 "Day {0}"
 ],
 [
+"선물 {}종류 · 카트 {}대{}",
+"{0} gift types · {1} carts{2}"
+],
+[
+"카트를 {}대 더 완성하면 리본이 풀려요!",
+"Complete {0} more cart to untie the ribbon!"
+],
+[
+"{}대",
+"{0}"
+],
+[
+"🎁 보상 아이템: 💡 힌트 +{}",
+"🎁 Reward: 💡 Hint +{0}"
+],
+[
 "다이아가 {}개 모자라요!",
 "You need {0} more Diamonds!"
 ],
@@ -770,10 +786,6 @@ window.I18N_DATA = {
 [
 "메모리 게임",
 "Memory Match"
-],
-[
-"징검다리 {} / {} · {}번 도전 / 모은 코인 {}",
-"Stages {} / {} · {} Attempts / Coins Collected {}"
 ],
 [
 "징검다리 {} / {} · {}번 도전 / 모은 코인",
@@ -3164,10 +3176,6 @@ window.I18N_DATA = {
 "Time's Up! Stage Clear!"
 ],
 [
-"별 3개! 클리어!",
-"3 Stars! Clear!"
-],
-[
 "타임 업!",
 "Time's Up!"
 ],
@@ -3526,6 +3534,134 @@ window.I18N_DATA = {
 [
 "탭/스페이스 = 점프 · 공중에서 꾹 = 훅 · 손 떼면 슝~",
 "Tap/Space = Jump · Hold in midair = Hook · Release = Swing!"
+],
+[
+"선물가게 정리",
+"Gift Sort"
+],
+[
+"장난감 거리",
+"Toy Street"
+],
+[
+"꽃집 정원",
+"Flower Shop Garden"
+],
+[
+"사탕 과자점",
+"Candy Shop"
+],
+[
+"바닷가 기념품점",
+"Seaside Souvenirs"
+],
+[
+"눈꽃 선물마을",
+"Snowflake Gift Village"
+],
+[
+"숲속 나무공방",
+"Forest Workshop"
+],
+[
+"별빛 야시장",
+"Starlight Night Market"
+],
+[
+"구름 풍선가게",
+"Cloud Balloon Shop"
+],
+[
+"리본 공장",
+"Ribbon Factory"
+],
+[
+"황금 선물궁전",
+"Golden Gift Palace"
+],
+[
+"깜짝 상자",
+"Mystery Box"
+],
+[
+"리본 카트",
+"Ribbon Cart"
+],
+[
+"황금 선물",
+"Golden Gift"
+],
+[
+"더 옮길 수 없어요! 되돌리기나 처음부터를 눌러요",
+"No more moves! Tap Undo or Restart."
+],
+[
+"리본이 풀렸어요! 이제 이 카트도 쓸 수 있어요",
+"The ribbon is untied! You can use this cart now."
+],
+[
+"되돌릴 게 없어요",
+"Nothing to undo"
+],
+[
+"되돌리기를 다 썼어요. 처음부터 해 볼까요?",
+"No undos left. Try restarting?"
+],
+[
+"힌트가 없어요. 시작할 때 힌트 아이템을 고를 수 있어요",
+"No hints left. You can pick a Hint item before you start."
+],
+[
+"이대로는 풀기 어려워요. 되돌리기를 해 봐요!",
+"This one looks stuck. Try Undo!"
+],
+[
+"카트 추가는 한 판에 한 번이에요",
+"You can add a cart once per stage."
+],
+[
+"남은 카트",
+"Carts left"
+],
+[
+"되돌리기",
+"Undo"
+],
+[
+"카트 추가",
+"Add Cart"
+],
+[
+"처음부터",
+"Restart"
+],
+[
+"같은 선물끼리 카트에 4개씩 모아요!",
+"Sort 4 matching gifts into each cart!"
+],
+[
+"📦 옮긴 횟수",
+"📦 Moves"
+],
+[
+"🛒 완성한 카트",
+"🛒 Carts done"
+],
+[
+"카트를 눌러 선물을 들고, 같은 선물 위나 빈 카트를 눌러 옮겨요!",
+"Tap a cart to pick up a gift, then tap a matching gift or an empty cart!"
+],
+[
+"물음표 상자는 맨 위가 되면 무슨 선물인지 보여요!",
+"A ? box shows its gift when it reaches the top!"
+],
+[
+"리본 카트는 다른 카트를 하나 완성하면 풀려요!",
+"Complete one cart to untie the ribbon cart!"
+],
+[
+"별 3개! 클리어!",
+"3 Stars! Clear!"
 ],
 [
 "구글로 로그인",

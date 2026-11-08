@@ -30,7 +30,7 @@ const games = (k) => ({
 });
 // v0.3 상용화 검수(common/monet.js): 환영 선물·출석 창이 화면을 가리지 않게 이미 받은 상태로, 게임은 모두 열어 둠
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
-const v3 = () => ({ tickets: 0, unlocked: ['skyhook', 'helicopter', 'stairs', 'shisen', 'downhill', 'memory', 'mole', 'bakery', 'dogsnack', 'darts'], dUnlocks: 0, plays: 5, att: { count: 3, last: today() }, welcomed: true });
+const v3 = () => ({ tickets: 0, unlocked: ['skyhook', 'helicopter', 'stairs', 'shisen', 'downhill', 'memory', 'mole', 'bakery', 'dogsnack', 'darts', 'giftsort'], dUnlocks: 0, plays: 5, att: { count: 3, last: today() }, welcomed: true });
 const hist = [{ game: 'shisen', at: 1761300000000, stage: 24, cleared: true, dist: 0, earned: 80, stars: 3 }];
 const seed = (active) => ({
   v: 1, slots: 4, nextId: 5, activeId: active, settings: { sound: true },
@@ -77,7 +77,7 @@ add('hub-empty-pp', 'index.html', { vp: 'pp', empty: true, wait: 1500 });
 add('v01-return-pp', 'memory/index.html?stage=1', { vp: 'pp', js: "sessionStorage.setItem('twin_ver','0.1'); goMap()", wait2: 2500 });
 add('v02-return-pp', 'memory/index.html?stage=1', { vp: 'pp', js: 'goMap()', wait2: 2500 });
 add('v01-stagego-pp', 'v0.1/#map-skyhook', { vp: 'pp', js: "document.querySelector('.stone.next').click(); setTimeout(() => document.getElementById('btnPlayStage').click(), 300)", wait2: 2500 });
-for (const g of ['skyhook?stage=3', 'helicopter', 'stairs', 'shisen?stage=5', 'downhill', 'memory?stage=1', 'mole?stage=1', 'bakery', 'dogsnack', 'darts']) {
+for (const g of ['skyhook?stage=3', 'helicopter', 'stairs', 'shisen?stage=5', 'downhill', 'memory?stage=1', 'mole?stage=1', 'bakery', 'dogsnack', 'darts', 'giftsort?stage=1']) {
   const id = g.split('?')[0];
   add(`game-${id}-pp`, `${id}/index.html${g.includes('?') ? g.slice(g.indexOf('?')) : ''}`, { vp: 'pp', wait: 2500 });
 }
@@ -118,7 +118,7 @@ for (const vp of ['pp', 'tb']) {
   add(`coupon-dayplus-${vp}`, 'shop/index.html', { vp, js: COUPON('dayplus'), wait2: 3500, after: STATE });
 }
 
-for (const g of ['shisen', 'memory', 'mole', 'bakery', 'dogsnack', 'darts']) add(`pop-ready-${g}-pp`, `${g}/index.html${['shisen', 'memory', 'mole'].includes(g) ? '?stage=0' : ''}`, { vp: 'pp', wait: 2800 });
+for (const g of ['shisen', 'memory', 'mole', 'bakery', 'dogsnack', 'darts', 'giftsort']) add(`pop-ready-${g}-pp`, `${g}/index.html${['shisen', 'memory', 'mole', 'giftsort'].includes(g) ? '?stage=0' : ''}`, { vp: 'pp', wait: 2800 });
 // 첫 화면 놀이기구 4개 좌우 끝 (놀이공원 좌표 0~540, 그림의 보이는 부분 + 이름표)
 add('ride-edges-pp', 'index.html#lobby', { vp: 'pp', js: `(() => { const w = document.getElementById('pkWorld').getBoundingClientRect(), k = w.width / 540, B = { helicopter: [22, 439], bakery: [30, 430], stairs: [29, 430], mole: [30, 431] }, o = {};
   for (const id of Object.keys(B)) { const r = document.querySelector('.pk-ride[data-id=' + id + ']'), a = r.getBoundingClientRect(), n = r.querySelector('.name').getBoundingClientRect();
@@ -133,9 +133,16 @@ for (const g of ['shisen', 'memory']) add(`stage-items-${g}-pp`, `${g}/index.htm
   Hub.mutate((c) => { c.shop.boosts['${g}'].hint = 9; }); startStage(0); G.state = 'play'; clearStage(); await sl(2600); document.getElementById('btnNext').click(); await sl(500);
   return { first: a, afterTap: b, hintHidden: hidden, nextStage: slots() }; })()` });
 // QA2 12: 게임 중 위쪽 표시 (시작 팝업 닫고 게임 화면 그대로)
-for (const g of ['helicopter', 'stairs', 'downhill', 'shisen', 'memory', 'mole', 'bakery', 'dogsnack', 'darts']) for (const vp of ['pp', 'pl']) add(`hudplay-${g}-${vp}`, `${g}/index.html${['shisen', 'memory', 'mole'].includes(g) ? '?stage=12' : ''}`, { vp, wait: 2800,
+for (const g of ['helicopter', 'stairs', 'downhill', 'shisen', 'memory', 'mole', 'bakery', 'dogsnack', 'darts', 'giftsort']) for (const vp of ['pp', 'pl']) add(`hudplay-${g}-${vp}`, `${g}/index.html${['shisen', 'memory', 'mole', 'giftsort'].includes(g) ? '?stage=12' : ''}`, { vp, wait: 2800,
   js: `(() => { document.querySelectorAll('#gpStart,.mn-modal').forEach((e) => e.remove()); document.querySelectorAll('.screen.dim,#ready,#home').forEach((e) => e.classList.add('hidden')); document.getElementById('hud').classList.remove('hidden');
     const r = document.getElementById('root').getBoundingClientRect(); return [...document.querySelectorAll('#hud .hp')].filter((e) => e.offsetParent).map((e) => { const b = e.getBoundingClientRect(); return [e.textContent.trim(), Math.round(b.height / r.height * (r.height > r.width ? 960 : 540))]; }); })()`, wait2: 300 });
+// 선물가게 정리: 판 시작 화면(쉬운 판·카트 많은 판), 고르기·옮기기, 지도, 첫 화면 놀이기구
+for (const vp of ['pp', 'pl', 'tb']) for (const st of [0, 12, 199]) add(`giftsort-play${st}-${vp}`, `giftsort/index.html?stage=${st}`, { vp, wait: 2500, js: `(() => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(${st}); })()`, wait2: 1200 });
+add('giftsort-sel-pp', 'giftsort/index.html?stage=12', { vp: 'pp', wait: 2500, js: `(() => { startStage(12); const g = __giftsort; const m = g.hintMove(); g.tap(m[0]); return m; })()`, wait2: 600 });
+add('giftsort-hint-pp', 'giftsort/index.html?stage=150', { vp: 'pp', wait: 2500, js: `(() => { startStage(150); __giftsort.useHint(); })()`, wait2: 800 });
+add('giftsort-clear-pp', 'giftsort/index.html?stage=0', { vp: 'pp', wait: 2500, js: `(async () => { startStage(0); const g = __giftsort, sl = (t) => new Promise((r) => setTimeout(r, t)); for (let k = 0; k < 40 && g.G.state === 'play'; k++) { const m = g.hintMove(); if (!m) break; g.G.hint = 9; g.tap(m[0]); g.tap(m[1]); await sl(700); } return g.G.moves; })()`, wait2: 3000 });
+for (const vp of ['pp', 'tb']) add(`giftsort-map-${vp}`, 'index.html#map-giftsort', { vp, wait: 2500 });
+add('giftsort-intro-pp', 'index.html#lobby', { vp: 'pp', wait: 2500, js: "showTitle(GAME_CARDS.find((g) => g.id === 'giftsort'))", wait2: 800 });
 add('hub-map-hard-pp', 'index.html#map-shisen', { vp: 'pp', js: `document.querySelector('#mapMode [data-mode=hard]').click()`, wait2: 500 });
 // 놀이기구 자리를 바꾼 첫 화면 (배경 받침과 안 맞는지 보기): 장식·게임을 섞어서
 add('hub-lobby-swap-pp', 'index.html#lobby', { vp: 'pp', js: `(() => { const o = parkOrder.slice(); [o[0], o[3]] = [o[3], o[0]]; [o[1], o[6]] = [o[6], o[1]]; [o[2], o[4]] = [o[4], o[2]]; o[5] = null; Hub.setPark(o); location.reload(); })()`, wait2: 3500 });
@@ -250,7 +257,7 @@ const send = (method, params = {}, sessionId) => new Promise((res, rej) => {
 });
 const PRE = (data, empty) => `(() => {
   let s = 12345; Math.random = () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-  try { if (!sessionStorage.getItem('__seeded')) { localStorage.clear(); ${empty ? '' : `localStorage.setItem('twin_gameland_v1', ${JSON.stringify(JSON.stringify(data))});`} localStorage.setItem('twin_tip_closed', '1'); sessionStorage.setItem('__seeded', '1'); } } catch (e) {}
+  try { if (!sessionStorage.getItem('__seeded')) { localStorage.clear(); ${empty ? '' : `localStorage.setItem('twin_gameland_v1', ${JSON.stringify(JSON.stringify(data))});`} localStorage.setItem('twin_tip_closed', '1'); ${empty ? '' : `localStorage.setItem('twin_auth_v1', '{"mode":"guest","uid":"local-test","at":1}');`} sessionStorage.setItem('__seeded', '1'); } } catch (e) {}
 })();`;
 
 const report = {};
