@@ -12,13 +12,13 @@ const WORLDS = ['하늘도시', '숲속 나무마을', '겨울왕국', '석양�
 const { PER_WORLD, STAGES, HARD } = window.MemoryLevels; // 스테이지 i: { pairs, cards, scenes(추억 카드 쌍), preview(초), s(제한 초) } — 100 부터는 어려움
 const isHard = (i) => i >= HARD;
 const worldOf = (i) => Math.floor((i % HARD) / PER_WORLD); // 어려움도 같은 월드 이름
-const FRONTS = Array.from({ length: 18 }, (_, k) => `f${String(k).padStart(2, '0')}`); // 설명 자료의 카드 그림 18종
-const SCENES = Array.from({ length: 36 }, (_, k) => `s${String(k).padStart(2, '0')}`); // 은유·은결 일상 그림 (추억 카드)
+// 카드 그림 목록은 common/game_images.js (백오피스 '게임 그림'에서 넣고 빼기): 그림 카드 18종 · 추억 카드(은유·은결 일상) 36종
+const FRONTS = () => GameImages.list('memory', 'fronts'), SCENES = () => GameImages.list('memory', 'scenes');
 const MISS_SHOW = 0.75;  // 틀린 두 장을 보여 주는 시간 (초)
 const MISS_TIME = 0.2;   // 틀리면 줄어드는 시간 (초)
 const label = (i) => `${isHard(i) ? '어려움 ' : ''}${worldOf(i) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[worldOf(i)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611081709';
+const ASSET_V = '202611081818';
 const cardSrc = (n) => `assets/cards/${n}.webp?v=${ASSET_V}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -51,7 +51,7 @@ const BG = { port: new Image(), land: new Image() };
 BG.port.src = `assets/bg/port.webp?v=${ASSET_V}`; BG.land.src = `assets/bg/land.webp?v=${ASSET_V}`;
 const BACK = `assets/cards/back.webp?v=${ASSET_V}`;
 // 그림을 미리 받아 둠 (첫 판부터 뒤집을 때 바로 보이게)
-[BACK, ...FRONTS.map(cardSrc)].forEach((s) => { const im = new Image(); im.src = s; });
+[BACK, ...FRONTS().map(cardSrc)].forEach((s) => { const im = new Image(); im.src = s; });
 
 // ---------- audio ----------
 const Audio = {
@@ -128,7 +128,7 @@ const G = {
 // 카드 한 장: { el, type(그림 이름), up(앞면), got(획득) }
 function buildBoard(si) {
   const st = STAGES[si];
-  const pics = [...shuffleArr(SCENES.slice()).slice(0, st.scenes), ...shuffleArr(FRONTS.slice()).slice(0, st.pairs - st.scenes)];
+  const pics = [...shuffleArr(SCENES()).slice(0, st.scenes), ...shuffleArr(FRONTS()).slice(0, st.pairs - st.scenes)];
   const deck = shuffleArr([...pics, ...pics]);
   boardEl.innerHTML = '';
   G.cards = deck.map((type, k) => {

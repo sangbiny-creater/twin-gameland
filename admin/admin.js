@@ -71,7 +71,7 @@ $('btnLogin').onclick = () => fb && fb.auth.signInWithPopup(new firebase.auth.Go
 $('btnLogout').onclick = () => fb && fb.auth.signOut();
 
 // ---------- 탭 ----------
-const TABS = [['dash', '대시보드'], ['users', '사용자'], ['games', '게임별 통계'], ['rank', '주간·월간 순위'], ['shop', '캐릭터샵·아이템샵'], ['pay', '결제 내역'], ['terms', '약관·개인정보'], ['guild', 'Group Tour (길드)'], ['ops', '운영 (공지·점검·쿠폰)'], ['balance', '난이도·보상 기준'], ['setup', '출시 준비']];
+const TABS = [['dash', '대시보드'], ['users', '사용자'], ['games', '게임별 통계'], ['rank', '주간·월간 순위'], ['shop', '캐릭터샵·아이템샵'], ['pay', '결제 내역'], ['terms', '약관·개인정보'], ['guild', 'Group Tour (길드)'], ['ops', '운영 (공지·점검·쿠폰)'], ['images', '게임 그림 (사천성·메모리)'], ['balance', '난이도·보상 기준'], ['setup', '출시 준비']];
 let tab = (location.hash || '#dash').slice(1);
 function renderTabs() {
   $('tabs').innerHTML = TABS.map(([k, n]) => `<button data-t="${k}" class="${k === tab ? 'on' : ''}">${n}</button>`).join('');
@@ -249,6 +249,47 @@ const VIEWS = {
         <div class="row" style="margin-top:10px"><input id="cc" placeholder="쿠폰 번호 (영어·숫자)"><input id="cg" class="num" type="number" placeholder="다이아"><input id="ck" class="num" type="number" placeholder="코인"><input id="cu" type="date"><button class="btn" id="cAdd">쿠폰 만들기</button></div></div>`;
     $('oSave').onclick = async () => { const d = { notice: $('on').value.trim(), maintenance: $('om').checked, maintenanceMsg: $('omm').value, updatedAt: Date.now() }; if (await saveDoc('config', 'ops', d, false)) DB.config.ops = d; };
     $('cAdd').onclick = async () => { const id = $('cc').value.trim().toUpperCase().replace(/\s/g, ''); if (!/^[A-Z0-9]{4,20}$/.test(id)) { toast('쿠폰 번호는 영어·숫자 4~20자'); return; } const c = { gems: +$('cg').value || 0, coins: +$('ck').value || 0, once: true, until: $('cu').value, createdAt: Date.now() }; if (await saveDoc('coupons', id, c, false)) { DB.coupons.push({ id, ...c }); VIEWS.ops(m); } };
+  },
+  // 사천성·메모리 그림 넣고 빼기 (common/game_images.js 의 묶음). 삭제는 없음 · 묶음마다 개수가 맞아야 저장 → config/images
+  async images(m) {
+    const GI = window.GameImages, saved = DB.config.images || {};
+    const draft = {}; // { game: { pool: Set } }
+    const reset = (src) => { for (const [g, pools] of Object.entries(GI.POOLS)) { draft[g] = {}; for (const [k, p] of Object.entries(pools)) { const l = src && src[g] && src[g][k]; draft[g][k] = new Set(GI.valid(p, l) ? l : p.def); } } };
+    reset(saved);
+    // 사천성 그림 묶음 (자르기 자리)
+    const SP = '../shisen/assets/sprites/', atlas = {};
+    await Promise.all(['sprites', 'extra'].map(async (n) => { const f = await (await fetch(`${SP}${n}.json`)).json(); const im = new Image(); im.src = `${SP}${n}.webp`; await im.decode().catch(() => {}); for (const k of Object.keys(f)) atlas[k] = [im, ...f[k]]; }));
+    const GN = { shisen: '사천성', memory: '메모리' };
+    const thumb = (g, n) => (g === 'memory' ? `<img src="../memory/assets/cards/${n}.webp" alt="">` : `<canvas data-n="${n}" width="72" height="72"></canvas>`);
+    const draw = () => {
+      let bad = [];
+      m.innerHTML = `<div class="row gi-bar"><h2>게임 그림 (사천성·메모리)</h2><span class="note gi-st" id="giSt"></span>
+        <button class="btn gray" id="giBack">저장된 대로</button><button class="btn gray" id="giDef">기본값</button><button class="btn" id="giSave">저장</button></div>
+        <p class="note">그림을 누르면 넣기 ↔ 빼기가 바뀌어요. 뺀 그림은 흐리게 남아 있어서 언제든 다시 넣을 수 있어요 (삭제는 없어요 — 아주 지우거나 새 그림을 넣을 때는 Claude에게 말해 주세요).<br>
+        묶음마다 그림 개수가 정해져 있어서, <b>모든 묶음의 개수가 맞아야 저장</b>돼요. 하나를 빼면 다른 하나를 넣어 주세요. 저장하면 다음 접속부터 게임에 나와요.</p>
+        ${Object.entries(GI.POOLS).map(([g, pools]) => `<h3 class="gi-g">${GN[g]}</h3>${Object.entries(pools).map(([k, p]) => {
+          const on = draft[g][k], n = on.size, ok = n === p.need; if (!ok) bad.push(`${GN[g]} ${p.name.split(' (')[0]} ${n}/${p.need}`);
+          return `<div class="panel gi-pool"><div class="gi-h"><b>${H(p.name)}</b><span class="gi-n ${ok ? 'ok' : 'no'}">${n} / ${p.need}개${ok ? '' : n > p.need ? ` · ${n - p.need}개 빼야 해요` : ` · ${p.need - n}개 더 넣어야 해요`}</span></div>
+            <div class="gi-grid">${p.all.map((id) => `<button class="gi-it ${on.has(id) ? '' : 'off'}" data-g="${g}" data-k="${k}" data-id="${id}" title="${id}">${thumb(g, id)}<small>${on.has(id) ? id : '빠짐'}</small></button>`).join('')}</div></div>`;
+        }).join('')}`).join('')}`;
+      m.querySelectorAll('canvas[data-n]').forEach((c) => { const a = atlas[c.dataset.n]; if (!a) return; const [im, x, y, w, h] = a, s = Math.min(72 / w, 72 / h); c.getContext('2d').drawImage(im, x, y, w, h, (72 - w * s) / 2, (72 - h * s) / 2, w * s, h * s); });
+      const changed = JSON.stringify(pack()) !== JSON.stringify(packFrom(saved));
+      $('giSt').textContent = bad.length ? `개수가 안 맞아요: ${bad.join(', ')}` : changed ? '바꾼 것이 있어요 — 저장을 눌러 주세요' : '저장된 상태예요';
+      $('giSt').classList.toggle('bad', !!bad.length);
+      $('giSave').disabled = !!bad.length || !changed;
+      m.querySelector('.gi-bar').onclick = null;
+      m.onclick = async (e) => {
+        const it = e.target.closest('.gi-it');
+        if (it) { const set = draft[it.dataset.g][it.dataset.k]; set.has(it.dataset.id) ? set.delete(it.dataset.id) : set.add(it.dataset.id); draw(); return; }
+        if (e.target.id === 'giBack') { reset(saved); draw(); }
+        if (e.target.id === 'giDef') { reset(null); draw(); }
+        if (e.target.id === 'giSave' && !e.target.disabled) { const data = { ...pack(), updatedAt: Date.now() }; /* config 는 누구나 읽을 수 있어서 관리자 이메일은 넣지 않음 */ if (await saveDoc('config', 'images', data, false)) { DB.config.images = data; Object.assign(saved, data); draw(); } }
+      };
+    };
+    // 저장 형식: { shisen: { common: [...], w5: [...] }, memory: { fronts, scenes } } — 묶음 안 순서는 all 순서
+    const pack = () => Object.fromEntries(Object.entries(GI.POOLS).map(([g, pools]) => [g, Object.fromEntries(Object.entries(pools).map(([k, p]) => [k, p.all.filter((id) => draft[g][k].has(id))]))]));
+    const packFrom = (src) => Object.fromEntries(Object.entries(GI.POOLS).map(([g, pools]) => [g, Object.fromEntries(Object.entries(pools).map(([k, p]) => { const l = src && src[g] && src[g][k]; return [k, p.all.filter((id) => (GI.valid(p, l) ? l : p.def).includes(id))]; }))]));
+    draw();
   },
   // 게임 난이도·보상 기준: admin/balance/ (tools/balance_doc.mjs 가 게임 코드에서 만든 문서 · Word · PDF)
   async balance(m) {

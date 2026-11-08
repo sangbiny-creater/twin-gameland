@@ -7,15 +7,8 @@
 // 폰: 세로 화면 (가로로 들면 화면을 돌려서 세로 유지) / PC: 창 전체를 쓰는 가로 화면 (보드도 가로로 눕힘)
 
 let W = 540, H = 960;
-const BASE_TILES = ['strawberry', 'banana', 'grape', 'cherry', 'orange', 'peach', 'watermelon', 'carrot', 'corn', 'mushroom',
-  'clover', 'flower', 'star', 'heart', 'leaf', 'snowflake', 'sun', 'cloud', 'moon', 'cat', 'dog', 'paw'].map((n) => 't_' + n);
-// 다른 게임(메모리·두더지·베이커리·하늘타기·다운힐·계단·멍멍이 간식)에서 가져온 아이콘 타일 41종 → assets/sprites/extra.webp
-//  (헬리콥터 타일 x_mem_heli 는 그림 묶음에 남아 있지만 안 씀 — Sky Rider 로 이름이 바뀌어 헬리콥터 그림이 안 나오게, QA 21)
-//  (tools/shisen_extra_tiles.py 로 만듦). 기본 그림과 섞여서 판마다 무작위로 뽑힘
-const EXTRA_TILES = ['mem_raincoat', 'mem_hug', 'mem_book', 'mem_explorer', 'mem_pinkhat', 'mem_bluehat', 'mem_pom', 'mem_dogs', 'mem_cake',
-  'mole', 'mole_fast', 'mole_tough', 'hammer', 'cupcake', 'muffin', 'burnt', 'eclair', 'roll', 'piping',
-  'windmill', 'airship', 'seagull', 'bolt', 'magnet', 'flag', 'penguin', 'snowman', 'pines', 'log', 'fence', 'gift', 'mystery', 'alarm',
-  'bone', 'bone_gold', 'choco', 'onion', 'sausage', 'shihtzu', 'poodle', 'pomdog'].map((n) => 'x_' + n);
+// 판에 나오는 그림 목록은 common/game_images.js (백오피스 '게임 그림'에서 넣고 빼기, 개수는 정해져 있음)
+//  공통 그림 63종(기본 22 + 다른 게임 아이콘 41, assets/sprites/extra.webp — tools/shisen_extra_tiles.py) · 5~10월드 전용 그림
 // 10개 월드 × 10판 = 100판. 월드 5~10은 그 월드 전용 그림 타일(14종)을 먼저 쓰고, 은유·은결 얼굴 타일은 항상 들어감
 const WORLDS = ['하늘도시', '숲속 나무마을', '겨울왕국', '석양의 항구', '벚꽃마을', '구름왕국', '바닷속도시', '마법숲', '별빛우주', '황금성'];
 const { PER_WORLD, STAGES, HARD } = window.ShisenLevels; // 스테이지 i: { mode, c, r(1층 크기), n2·n3(2·3층 타일 수), tiles, t(그림 종류), s(제한 초) }
@@ -23,8 +16,8 @@ const isHard = (i) => i >= HARD;
 const worldOf = (i) => Math.floor((i % HARD) / PER_WORLD); // 어려움도 같은 월드 그림·배경
 function tilePool(si) {
   const w = worldOf(si);
-  const themed = w >= 4 ? Array.from({ length: 14 }, (_, k) => `w${w + 1}_${k}`).filter((n) => !(w === 4 && (n === 'w5_2' || n === 'w5_3'))) : [];
-  return ['t_eunyu', 't_eungyeol', ...shuffleArr(themed), ...shuffleArr(BASE_TILES.concat(EXTRA_TILES))];
+  const themed = w >= 4 ? GameImages.list('shisen', `w${w + 1}`) : [];
+  return ['t_eunyu', 't_eungyeol', ...shuffleArr(themed), ...shuffleArr(GameImages.list('shisen', 'common'))];
 }
 const COMBO_WINDOW = 4;  // 초: 이 안에 다음 짝을 없애면 콤보
 const label = (i) => `${isHard(i) ? '어려움 ' : ''}${worldOf(i) + 1}-${(i % PER_WORLD) + 1}`;
@@ -55,7 +48,7 @@ const mmss = (t) => { t = Math.max(0, Math.ceil(t)); return `${String(Math.floor
 function shuffleArr(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 // ---------- sprites ----------
-const ASSET_V = '202611081709';
+const ASSET_V = '202611081818';
 const SP = { img: new Image(), f: null, ready: false };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => { SP.f = j; SP.img.onload = () => { SP.ready = true; }; SP.img.src = `assets/sprites/sprites.webp?v=${ASSET_V}`; });
 const EXTRA_V = '20261027a';

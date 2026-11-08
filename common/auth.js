@@ -75,8 +75,9 @@
   }
   async function loadConfig() {
     try {
-      const [cat, ops] = await Promise.all(['catalog', 'ops'].map((k) => fb.db.collection('config').doc(k).get()));
+      const [cat, ops, img] = await Promise.all(['catalog', 'ops', 'images'].map((k) => fb.db.collection('config').doc(k).get()));
       if (cat.exists) write(CATKEY, cat.data()); // 다음 화면부터 적용 (common/profile.js applyCatalog)
+      if (img.exists) write('twin_images_v1', img.data()); else localStorage.removeItem('twin_images_v1'); // 사천성·메모리 그림 목록 (common/game_images.js)
       const o = ops.exists ? ops.data() : {};
       if (o.maintenance && !isAdmin()) block(o.maintenanceMsg || '지금은 점검 중이에요. 잠시 뒤에 다시 와 주세요!');
       else if (o.notice && isHub && sessionStorage.getItem('twin_notice') !== o.notice) { sessionStorage.setItem('twin_notice', o.notice); toast(o.notice, 4000); }
