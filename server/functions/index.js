@@ -47,7 +47,9 @@ exports.verifyCode = onCall(OPT, async (req) => {
     const me = req.auth && req.auth.token.firebase.sign_in_provider === 'anonymous' ? req.auth.uid : null; // 게스트 → 같은 계정에 이메일을 붙임
     user = me ? await admin.auth().updateUser(me, { email, emailVerified: true }) : await admin.auth().createUser({ email, emailVerified: true });
   } else if (!user.emailVerified) await admin.auth().updateUser(user.uid, { emailVerified: true });
-  await db.collection('users').doc(user.uid).set({ provider: 'email', email, over14: req.data.over14 !== false, lastAt: Date.now() }, { merge: true });
+  if (purpose === 'signup' && !req.data.agreedAt) throw new HttpsError('failed-precondition', '약관 동의가 필요해요');
+  const agree = purpose === 'signup' ? { agreedAt: req.data.agreedAt, agreeVer: String(req.data.agreeVer || '') } : {};
+  await db.collection('users').doc(user.uid).set({ provider: 'email', email, over14: req.data.over14 !== false, lastAt: Date.now(), ...agree }, { merge: true });
   return { token: await admin.auth().createCustomToken(user.uid) };
 });
 

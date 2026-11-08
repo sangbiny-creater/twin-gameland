@@ -137,6 +137,15 @@ def plates():
         Image.open(f'{SRC}/map/mole/B0{n}.png').convert('RGB').resize((1024, 1536), Image.LANCZOS).save(f'{ROOT}/hub/ui/map/mole/w{n}.webp', 'WEBP', quality=82, method=6)
 
 
+def login():
+    # 로그인·계정 창 (28_로그인_계정) → hub/login/ (common/auth.js 가 씀)
+    P = f'{SRC}/login'
+    for f, n in [('L01', 'welcome'), ('L02', 'link'), ('L04', 'repair')]:
+        p = tight(key(f'{P}/{f}.png')); save(scaled(p, 720 / p.width), f'hub/login/{n}.webp'); print(n, p.size)
+    for p, n in zip(cuts(key(f'{P}/L03.png'), 6, rows=2), ['birth', 'mail', 'lock', 'key', 'ticket', 'card']):
+        save(scaled(p, 160 / max(p.size)), f'hub/login/i_{n}.webp'); print(n, p.size)
+
+
 if __name__ == '__main__':
-    STEPS = dict(ui=ui, select=select, monet=monet, result=result, stairs=stairs, fx=fx, coaster=coaster, home=home, map4=map4, plates=plates)
+    STEPS = dict(login=login, ui=ui, select=select, monet=monet, result=result, stairs=stairs, fx=fx, coaster=coaster, home=home, map4=map4, plates=plates)
     for k in (sys.argv[1:] or STEPS): STEPS[k]()

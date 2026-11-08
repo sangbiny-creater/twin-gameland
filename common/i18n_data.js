@@ -3524,6 +3524,94 @@ window.I18N_DATA = {
 "Tap/Space = Jump · Hold in midair = Hook · Release = Swing!"
 ],
 [
+"구글로 로그인",
+"Log in with Google"
+],
+[
+"이메일로 로그인",
+"Log in with email"
+],
+[
+"가입하기",
+"Sign up"
+],
+[
+"비밀번호 재설정",
+"Reset Password"
+],
+[
+"처음 오셨네요! 가입 절차를 먼저 할게요.",
+"Welcome! Let's sign you up first."
+],
+[
+"가입 완료! 구글 계정으로 로그인했어요.",
+"Signed up! Logged in with Google."
+],
+[
+"년",
+"Year"
+],
+[
+"월",
+"Month"
+],
+[
+"일",
+"Day"
+],
+[
+"년·월·일을 모두 골라 주세요",
+"Please choose year, month and day"
+],
+[
+"약관 동의",
+"Agreements"
+],
+[
+"전체 동의",
+"Agree to all"
+],
+[
+"[필수]",
+"[Required]"
+],
+[
+"개인정보 수집·이용 동의",
+"Consent to collect and use personal data"
+],
+[
+"보기",
+"View"
+],
+[
+"모으는 것: 이메일 주소 하나\n쓰는 곳: 계정 만들기, 게임 기록·구매 내역 보관\n보관 기간: 계정을 지울 때까지 (생년월일은 저장하지 않아요)",
+"We collect: your email address only\nUsed for: creating your account, keeping game records and purchases\nKept until: you delete your account (we never store your birth date)"
+],
+[
+"필수 항목에 모두 동의해 주세요",
+"Please agree to all required items"
+],
+[
+"어떤 계정으로 가입할까요?",
+"Which account would you like to sign up with?"
+],
+[
+"구글로 가입하기",
+"Sign up with Google"
+],
+[
+"이메일로 가입하기",
+"Sign up with email"
+],
+[
+"비밀번호 재설정은 준비 중이에요.\n메일 보내는 서버를 올리면 열려요.",
+"Password reset is coming soon."
+],
+[
+"이메일 가입은 준비 중이에요.\n지금은 구글로 가입하거나 게스트로 입장해 주세요!",
+"Email sign-up is coming soon.\nPlease sign up with Google or play as a guest for now!"
+],
+[
 "이메일 가입은 준비 중이에요.\n지금은 구글로 시작하거나 게스트로 입장해 주세요!",
 "Email sign-up is coming soon.\nPlease continue with Google or play as a guest!"
 ],
@@ -3666,10 +3754,6 @@ window.I18N_DATA = {
 [
 "비밀번호를 잊었어요 (재설정)",
 "Forgot password (Reset)"
-],
-[
-"비밀번호 재설정",
-"Reset Password"
 ],
 [
 "이메일 또는 비밀번호가 맞지 않아요",
