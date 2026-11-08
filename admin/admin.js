@@ -71,7 +71,7 @@ $('btnLogin').onclick = () => fb && fb.auth.signInWithPopup(new firebase.auth.Go
 $('btnLogout').onclick = () => fb && fb.auth.signOut();
 
 // ---------- 탭 ----------
-const TABS = [['dash', '대시보드'], ['users', '사용자'], ['games', '게임별 통계'], ['rank', '주간·월간 순위'], ['shop', '캐릭터샵·아이템샵'], ['pay', '결제 내역'], ['terms', '약관·개인정보'], ['guild', 'Group Tour (길드)'], ['ops', '운영 (공지·점검·쿠폰)'], ['setup', '출시 준비']];
+const TABS = [['dash', '대시보드'], ['users', '사용자'], ['games', '게임별 통계'], ['rank', '주간·월간 순위'], ['shop', '캐릭터샵·아이템샵'], ['pay', '결제 내역'], ['terms', '약관·개인정보'], ['guild', 'Group Tour (길드)'], ['ops', '운영 (공지·점검·쿠폰)'], ['balance', '난이도·보상 기준'], ['setup', '출시 준비']];
 let tab = (location.hash || '#dash').slice(1);
 function renderTabs() {
   $('tabs').innerHTML = TABS.map(([k, n]) => `<button data-t="${k}" class="${k === tab ? 'on' : ''}">${n}</button>`).join('');
@@ -233,6 +233,17 @@ const VIEWS = {
         <div class="row" style="margin-top:10px"><input id="cc" placeholder="쿠폰 번호 (영어·숫자)"><input id="cg" class="num" type="number" placeholder="다이아"><input id="ck" class="num" type="number" placeholder="코인"><input id="cu" type="date"><button class="btn" id="cAdd">쿠폰 만들기</button></div></div>`;
     $('oSave').onclick = async () => { const d = { notice: $('on').value.trim(), maintenance: $('om').checked, maintenanceMsg: $('omm').value, updatedAt: Date.now() }; if (await saveDoc('config', 'ops', d, false)) DB.config.ops = d; };
     $('cAdd').onclick = async () => { const id = $('cc').value.trim().toUpperCase().replace(/\s/g, ''); if (!/^[A-Z0-9]{4,20}$/.test(id)) { toast('쿠폰 번호는 영어·숫자 4~20자'); return; } const c = { gems: +$('cg').value || 0, coins: +$('ck').value || 0, once: true, until: $('cu').value, createdAt: Date.now() }; if (await saveDoc('coupons', id, c, false)) { DB.coupons.push({ id, ...c }); VIEWS.ops(m); } };
+  },
+  // 게임 난이도·보상 기준: admin/balance/ (tools/balance_doc.mjs 가 게임 코드에서 만든 문서 · Word · PDF)
+  async balance(m) {
+    m.innerHTML = `<div class="row bd-bar"><h2>게임 난이도·보상 기준</h2><span class="note" id="bdDate"></span>
+      <a class="btn" href="balance/balance.docx?v=${Date.now()}" download="게임_난이도_보상_기준.docx">Word</a>
+      <a class="btn ghost" href="balance/balance.pdf?v=${Date.now()}" download="게임_난이도_보상_기준.pdf">PDF</a></div>
+      <div class="panel" id="bdDoc"><p class="note">불러오는 중...</p></div>`;
+    try {
+      const d = await (await fetch('balance/balance.json?v=' + Date.now())).json();
+      $('bdDate').textContent = `기준일 ${d.date}`; $('bdDoc').innerHTML = BalanceDoc.html(d);
+    } catch (e) { $('bdDoc').innerHTML = `<p class="note">문서를 불러오지 못했어요: ${H(e.message)}</p>`; }
   },
   setup(m) {
     const ok = !!window.FIREBASE_CONFIG;
