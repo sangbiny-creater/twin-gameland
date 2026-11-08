@@ -2,7 +2,7 @@
 // 옷장 (첫 화면에서 들어오는 별도 화면, 뒤로 가면 첫 화면으로)
 //  왼쪽 은유·은결, 가운데 전신(방 배경), 오른쪽 옷 칸. 옷을 누르면 미리 보고, 아래 버튼으로 입거나 다이아로 삼
 const $ = (id) => document.getElementById(id);
-const V = '?v=202611072252'; // bump when images change so phones don't show old cached ones
+const V = '?v=202611080945'; // bump when images change so phones don't show old cached ones
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 
 const GEM = `../hub/park/ui/gem.webp${V}`;
@@ -31,15 +31,16 @@ function render() {
     b.onclick = () => { if (ch.id === c.id) return; blip(); Hub.setActive(ch.id); sel = Hub.outfit(); render(); };
     whoBox.appendChild(b);
   }
+  // 고른 옷의 게임 효과 (겨울옷·베이커리 옷): 캐릭터 화면 오른쪽 아래
+  const pick = all.find((x) => x.id === sel); $('clNote').textContent = (pick && pick.note) || ''; $('clNote').classList.toggle('hidden', !(pick && pick.note));
   // 오른쪽: 옷 칸
   const box = $('clList'), keep = box.scrollTop; box.innerHTML = '';
   for (const it of list) {
     const own = Hub.ownsOutfit(it.id, c), worn = Hub.outfit(c) === it.id;
     const d = document.createElement('div'); d.className = 'cl-card' + (sel === it.id ? ' sel' : '') + (worn ? ' worn' : '');
-    d.innerHTML = `${worn ? '<span class="cl-tag">착용 중</span>' : ''}<img src="${itemImg(who, it.id)}" alt=""><b></b>${it.note ? '<small></small>' : ''}`
+    d.innerHTML = `${worn ? '<span class="cl-tag">착용 중</span>' : ''}<img src="${itemImg(who, it.id)}" alt=""><b></b>`
       + (worn ? '' : own ? '<button class="cl-btn wear">착용하기</button>' : `<button class="cl-btn buy${Hub.gems(c) < it.price ? ' poor' : ''}"><img src="${GEM}" alt="">${it.price}</button>`);
     d.querySelector('b').textContent = it.name;
-    if (it.note) d.querySelector('small').textContent = it.note;
     d.onclick = () => {
       if (sel !== it.id) { blip(); sel = it.id; render(); } else if (worn) { blip(); location.href = '../index.html#lobby'; } // 입고 있는 옷을 한 번 더 누르면 첫 화면으로
     };

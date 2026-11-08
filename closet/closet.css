@@ -25,7 +25,8 @@ a { color: inherit; text-decoration: none; }
 .cl { position: fixed; inset: 0; z-index: 30; overflow: hidden; background: var(--who-bg); }
 .cl-room { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .cl-body { position: absolute; left: 0; right: 122px; bottom: 0; top: 74px; width: calc(100% - 122px); height: calc(100% - 74px); object-fit: contain; object-position: 50% 100%; filter: drop-shadow(0 6px 10px rgba(60,40,70,.25)); }
-.cl-body.small { transform: scale(.9); transform-origin: 50% 100%; }
+.cl-body.small { transform: scale(.9); transform-origin: 50% 50%; } /* 은유는 90%, 위아래는 은결과 가운데 맞춤 */
+.cl-note { position: absolute; right: calc(130px + env(safe-area-inset-right)); bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 2; max-width: 46%; padding: 4px 10px; border-radius: 10px; background: rgba(255,255,255,.92); border: 2px solid var(--who); font-size: 11px; line-height: 13px; color: var(--who-d); word-break: keep-all; box-shadow: 0 2px 6px rgba(24,40,62,.18); }
 .cl-title { position: absolute; left: calc(64px + env(safe-area-inset-left)); top: calc(12px + env(safe-area-inset-top)); display: flex; align-items: center; gap: 6px; height: 42px; padding: 0 16px 0 10px; border-radius: 16px; background: rgba(255,255,255,.92); white-space: nowrap; box-shadow: 0 2px 6px rgba(24,40,62,.18); }
 .cl-title img { width: 32px; height: auto; }
 .cl-title b { font-weight: normal; font-size: 24px; color: #1E3A8A; }
@@ -68,9 +69,11 @@ a { color: inherit; text-decoration: none; }
 /* 넓은 화면 (폰 가로·태블릿) */
 @media (orientation: landscape) {
   .cl-body { right: 248px; width: calc(100% - 248px); top: 8px; height: calc(100% - 8px); }
+  .cl-note { right: calc(256px + env(safe-area-inset-right)); }
   .cl-list { width: 234px; display: grid; grid-template-columns: 1fr 1fr; align-content: start; }
 }
 @media (min-width: 900px) and (min-height: 700px) {
   .cl-body { right: 300px; width: calc(100% - 300px); }
   .cl-list { width: 288px; }
+  .cl-note { right: calc(310px + env(safe-area-inset-right)); }
 }
