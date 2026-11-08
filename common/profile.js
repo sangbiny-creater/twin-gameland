@@ -74,6 +74,8 @@
     shuffle: { name: '섞기', price: 80, games: ['shisen'], desc: '타일 자리를 섞어요', manual: true },
     bomb: { name: '폭탄', price: 150, games: ['shisen', 'memory'], desc: '짝 하나를 바로 이어 줘요', manual: true },
     find: { name: '모두 보기', price: 120, games: ['memory'], desc: '모든 카드를 잠깐 보여 줘요', manual: true },
+    undo: { name: '되돌리기', price: 60, games: ['giftsort'], desc: '이번 판 되돌리기 +5번', manual: true },
+    addcart: { name: '카트 추가', price: 100, games: ['giftsort'], desc: '선물 1개를 놓을 수 있는 작은 카트를 놓아요', manual: true },
   };
   const ITEM_IDS = Object.keys(ITEMS);
   const BOOSTS = {
@@ -91,7 +93,7 @@
     mole: ['life'],
     bakery: ['life', 'shield', 'slow'],
     dogsnack: ['life', 'shield', 'slow'],
-    giftsort: ['hint'], // 되돌리기·카트 추가는 판마다 무료라 팔지 않음
+    giftsort: ['hint', 'undo', 'addcart'],
   };
   for (const g of Object.keys(BOOSTS)) if (typeof BOOSTS[g][0] === 'string') BOOSTS[g] = BOOSTS[g].map((id) => ({ id, ...ITEMS[id], shared: true }));
 
@@ -303,7 +305,7 @@
     costume(c = this.active()) { return (c && c.costume) || null; }, // 예전 어린이 옷 (게임의 예전 코드가 물어봄)
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611081637` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611081709` : null; },
     outfits(c = this.active()) { return c ? OUTFITS[lookBase(c.look)].filter((x) => !x.hidden || (c.outfits || []).includes(x.id)) : []; },
     outfit(c = this.active()) { return (c && c.outfit) || null; }, // 입은 옷 id (없으면 기본 옷)
     ownsOutfit(id, c = this.active()) { return !id || !!(c && (c.outfits || []).includes(id)); },
@@ -398,7 +400,7 @@
     },
     // 캐릭터마다 한 번만 주는 기본 아이템
     starterKit(game, c = this.active()) {
-      const KITS = { shisen: { hint: 3, shuffle: 2, time: 1 }, memory: { hint: 3, find: 1, time: 1 }, mole: { time: 1, double: 1, rainbow: 1 } };
+      const KITS = { shisen: { hint: 3, shuffle: 2, time: 1 }, memory: { hint: 3, find: 1, time: 1 }, mole: { time: 1, double: 1, rainbow: 1 }, giftsort: { hint: 2, undo: 2, addcart: 1 } };
       if (!c || !KITS[game]) return false;
       const sh = shopOf(c); sh.starter = sh.starter || {};
       if (sh.starter[game]) return false;

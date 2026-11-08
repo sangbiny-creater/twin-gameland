@@ -14,11 +14,11 @@ const { PER_WORLD, STAGES, HARD, CAP } = window.GiftLevels;
 const isHard = (i) => i >= HARD;
 const worldOf = (i) => Math.floor((i % HARD) / PER_WORLD);
 const GIFTS = ['rabbit', 'star', 'heart', 'clover', 'bear', 'car', 'candy', 'cloud', 'flower', 'moon', 'puppy', 'snow']; // levels.js 의 a~l
-const UNDO_FREE = 3, HINT_FREE = 1, ADD_FREE = 1; // 판마다 무료 (힌트는 시작 팝업에서 고르면 1개 더)
+const UNDO_FREE = 3, HINT_FREE = 1, UNDO_ITEM = 5; // 판마다 무료 되돌리기·힌트. 시작 팝업에서 고른 아이템: 되돌리기 +5번, 힌트 +1, 카트 추가 1번 (아이템샵에서 삼)
 const CART_COIN = 3, GOLD_COIN = 10;              // 카트 완성 코인 / 황금 선물 카트 완성 코인
 const label = (i) => `${isHard(i) ? '어려움 ' : ''}${worldOf(i) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[worldOf(i)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611081637';
+const ASSET_V = '202611081709';
 const giftSrc = (n) => `assets/gifts/${n}.webp?v=${ASSET_V}`;
 // 별: 옮긴 횟수가 par 에 가까울수록 (컴퓨터 풀이도 가장 짧은 풀이는 아니라서 넉넉하게)
 const starLimits = (par) => [par + 2 + Math.floor(par * 0.1), Math.ceil(par * 1.5) + 4];
@@ -31,7 +31,7 @@ const Save = {
 };
 Save.load();
 const HUB = window.Hub && window.Hub.active() ? window.Hub : null;
-if (HUB) Save.data.sound = HUB.settings.sound;
+if (HUB) { Save.data.sound = HUB.settings.sound; HUB.starterKit('giftsort'); } // 처음 한 번 기본 아이템 (시작 팝업에 바로 보이게)
 const unlocked = (i) => {
   if (HUB) return HUB.stageUnlocked('giftsort', i);
   const C = Save.data.cleared;
@@ -121,6 +121,8 @@ const Audio = {
 
 // ---------- 규칙 (tools/giftsort_levels.mjs 와 같음) ----------
 // 카트: { b: [선물 번호, 아래→위], h: [숨김 여부] }. 리본 카트는 G.lock (풀리기 전엔 넣고 뺄 수 없음)
+// 카트: { b, h, cap } — cap 은 보통 4, '카트 추가'로 놓은 작은 카트는 1 (끝날 때 비어 있어야 함)
+const capOf = (c) => c.cap || CAP;
 const isFull = (c) => c.b.length === CAP && c.b.every((x) => x === c.b[0]);
 // 맨 위에 붙어 있는 같은 상자 수 (숨긴 상자에서 멈춤 — 깜짝 상자는 보이기 전엔 같이 안 움직임)
 function topRun(c) { const b = c.b; let n = 1; while (n < b.length && b[b.length - 1 - n] === b[b.length - 1] && !c.h[b.length - 1 - n]) n++; return n; }
@@ -128,7 +130,7 @@ const locked = (i) => i === G.lock && G.done < G.need;
 function canMove(a, b) {
   if (a === b) return false;
   const A = G.carts[a], B = G.carts[b];
-  if (!A.b.length || isFull(A) || B.b.length >= CAP || locked(a) || locked(b)) return false;
+  if (!A.b.length || isFull(A) || B.b.length >= capOf(B) || locked(a) || locked(b)) return false;
   return !B.b.length || B.b[B.b.length - 1] === A.b[A.b.length - 1];
 }
 const anyMove = () => G.carts.some((_, a) => G.carts.some((__, b) => canMove(a, b) && !(G.carts[b].b.length === 0 && topRun(G.carts[a]) === G.carts[a].b.length)));
@@ -136,18 +138,18 @@ const solvedAll = () => G.carts.every((c) => !c.b.length || isFull(c));
 
 // 힌트용 풀이 (판 만들 때와 같은 깊이 우선, 숨긴 상자도 아는 상태로). 첫 수 [a, b] 를 돌려줌
 function hintMove() {
-  const S0 = { c: G.carts.map((c) => c.b.slice()), done: G.done };
+  const S0 = { c: G.carts.map((c) => c.b.slice()), done: G.done }, caps = G.carts.map(capOf);
   const full = (t) => t.length === CAP && t.every((x) => x === t[0]);
   const run = (t) => { let n = 1; while (n < t.length && t[t.length - 1 - n] === t[t.length - 1]) n++; return n; };
   const lk = (s, i) => i === G.lock && s.done < G.need;
   const ok = (s, a, b) => {
     const A = s.c[a], B = s.c[b];
-    if (a === b || !A.length || full(A) || B.length >= CAP || lk(s, a) || lk(s, b)) return false;
+    if (a === b || !A.length || full(A) || B.length >= caps[b] || lk(s, a) || lk(s, b)) return false;
     if (B.length && B[B.length - 1] !== A[A.length - 1]) return false;
     return !(!B.length && run(A) === A.length);
   };
-  const mv = (s, a, b) => { const c = s.c.map((t) => t.slice()), n = Math.min(run(c[a]), CAP - c[b].length); for (let i = 0; i < n; i++) c[b].push(c[a].pop()); return { c, done: c.filter(full).length }; };
-  const key = (s) => (s.done >= G.need ? 'o|' : 'c|') + s.c.map((t, i) => (lk(s, i) ? '#' : '') + t.join('.')).sort().join(',');
+  const mv = (s, a, b) => { const c = s.c.map((t) => t.slice()), n = Math.min(run(c[a]), caps[b] - c[b].length); for (let i = 0; i < n; i++) c[b].push(c[a].pop()); return { c, done: c.filter(full).length }; };
+  const key = (s) => (s.done >= G.need ? 'o|' : 'c|') + s.c.map((t, i) => (lk(s, i) ? '#' : '') + caps[i] + ':' + t.join('.')).sort().join(',');
   const seen = new Set([key(S0)]); let nodes = 0;
   function dfs(s) {
     if (s.c.every((t) => !t.length || full(t))) return true;
@@ -182,19 +184,20 @@ function buildBoard(si) {
   boardEl.innerHTML = ''; G.els = [];
   layoutBoard(); render(true);
 }
-// 카트 그림(cart.webp 300x924) 안 상자 자리: 아래 선반 높이, 상자 한 칸 높이, 상자 폭 (카트 폭·높이 비율)
-const CART_AR = 300 / 924, SHELF = 0.778, PITCH = 0.158, BOX_W = 0.66, BOX_AR = 232 / 240;
+// 카트 그림(cart.webp 300x924) 안 상자 자리: 아래 선반 높이, 상자 한 칸 높이 (카트 높이 비율), 상자 폭 (카트 폭 비율)
+//  상자가 잘 보이게 상자를 카트 폭의 80% 로 크게 하고, 카트 그림은 위아래로 늘려서(높이 = 폭 × CH_K) 상자 4개가 들어가게
+//  1칸 카트(cart_one.webp 300x487): 위 손잡이~첫 칸 + 선반·바퀴, 선반 높이 281/487
+const CH_K = 3.9, SHELF = 0.778, PITCH = 0.158, BOX_W = 0.8, BOX_AR = 232 / 240, ONE_H = 487 / 924, ONE_SHELF = 281 / 487;
 function boardArea() {
   const v = (k) => parseFloat(getComputedStyle(root).getPropertyValue('--safe-' + k)) || 0;
-  if (wideLayout()) return { x: 112 + v('l'), y: 70 + v('t'), w: W - 112 - 196 - v('l') - v('r'), h: H - 70 - 18 - v('t') - v('b') };
-  const top = heroBox().y + heroBox().h + 4;
-  return { x: 10, y: top, w: W - 20, h: H - top - 140 - v('b') };
+  if (wideLayout()) return { x: 112 + v('l'), y: 64 + v('t'), w: W - 112 - 16 - v('l') - v('r'), h: H - 64 - 12 - v('t') - v('b') };
+  return { x: 8, y: 112 + v('t'), w: W - 16, h: H - 112 - 150 - v('t') - v('b') };
 }
-// 캐릭터 자리: 세로 = 위 줄 아래 왼쪽, 가로 = 오른쪽 아래
+// 캐릭터 자리: 왼쪽 아래, 배경 바로 위 층 (카트·버튼이 겹치면 캐릭터가 뒤로)
 function heroBox() {
   const v = (k) => parseFloat(getComputedStyle(root).getPropertyValue('--safe-' + k)) || 0;
-  if (wideLayout()) { const h = Math.min(330, H - 120); return { x: W - 190 - v('r'), y: H - h - v('b'), w: h * 460 / 600, h }; }
-  const h = clamp(H * 0.2, 170, 250); return { x: 8, y: 104 + v('t'), w: h * 460 / 600, h };
+  if (wideLayout()) { const h = Math.min(330, H * 0.62); return { x: 4 + v('l'), y: H - h - v('b'), w: h * 460 / 600, h }; }
+  const h = clamp(H * 0.25, 220, 300); return { x: -6, y: H - h - 96 - v('b'), w: h * 460 / 600, h };
 }
 function layoutBoard() {
   const n = G.carts.length; if (!n) return;
@@ -202,24 +205,34 @@ function layoutBoard() {
   for (let r = 1; r <= 3; r++) {
     const c = Math.ceil(n / r); if (r > 1 && c * (r - 1) >= n) continue;
     // 줄마다: 카트 높이 + 들린 상자 자리(0.2) + 줄 사이 틈
-    const cw = Math.min(a.w / (c + (c - 1) * 0.28), a.h / ((r * 1.24 - 0.04) / CART_AR));
+    const cw = Math.min(a.w / (c + (c - 1) * 0.3), a.h / ((r * 1.18 - 0.02) * CH_K));
     if (!best || cw > best.cw + 0.5) best = { r, c, cw };
   }
-  const cw = Math.min(best.cw, wideLayout() ? 110 : 130), ch = cw / CART_AR, gx = cw * 0.28, rowH = ch * 1.24;
-  const { r, c } = best, th = r * rowH - ch * 0.24 + ch * 0.2;
-  const oy = a.y + (a.h - th) / 2 + ch * 0.2;
+  const cw = Math.min(best.cw, wideLayout() ? 120 : 140), ch = cw * CH_K, gx = cw * 0.3, rowH = ch * 1.18;
+  const { r, c } = best, th = r * rowH - ch * 0.18 + ch * 0.16;
+  const oy = a.y + (a.h - th) / 2 + ch * 0.16;
   G.geo = { cw, ch, pos: [] };
   for (let k = 0; k < n; k++) {
     const row = Math.floor(k / c), inRow = row === r - 1 ? n - row * c : c, col = k - row * c;
     const tw = inRow * cw + (inRow - 1) * gx, ox = a.x + (a.w - tw) / 2;
     G.geo.pos.push([ox + col * (cw + gx), oy + row * rowH]);
   }
+  // 카트 자리 아래 옅은 받침 (상자가 배경과 섞이지 않게). 카트 층(#board) 맨 아래에 두어 캐릭터보다 위
+  let pn = $('boardPanel'); if (!pn) { pn = document.createElement('div'); pn.id = 'boardPanel'; boardEl.prepend(pn); }
+  const xs = G.geo.pos.map((p) => p[0]), ys = G.geo.pos.map((p) => p[1]), pad = cw * 0.28;
+  const x0 = Math.min(...xs) - pad, y0 = Math.min(...ys) - ch * 0.17, x1 = Math.max(...xs) + cw + pad, y1 = Math.max(...ys) + ch + pad * 0.5;
+  Object.assign(pn.style, { left: x0 + 'px', top: y0 + 'px', width: x1 - x0 + 'px', height: y1 - y0 + 'px' });
   placeHero();
 }
 function placeHero() {
   const b = heroBox(); hero.style.left = b.x + 'px'; hero.style.top = b.y + 'px'; hero.style.width = b.w + 'px'; hero.style.height = b.h + 'px';
 }
-const boxGeo = (i) => { const { cw, ch } = G.geo, bw = cw * BOX_W, bh = bw * BOX_AR; return { x: (cw - bw) / 2, y: ch * SHELF - bh - i * ch * PITCH, w: bw, h: bh }; };
+// 상자 자리 (카트 칸 안 좌표). 1칸 카트는 카트 칸 아래쪽에 짧은 그림을 붙여 놓음
+const cartTop = (c) => (capOf(c) < CAP ? G.geo.ch * (1 - ONE_H) : 0);
+const boxGeo = (i, c) => {
+  const { cw, ch } = G.geo, bw = cw * BOX_W, bh = bw * BOX_AR, shelf = c && capOf(c) < CAP ? cartTop(c) + ch * ONE_H * ONE_SHELF : ch * SHELF;
+  return { x: (cw - bw) / 2, y: shelf - bh - i * ch * PITCH, w: bw, h: bh };
+};
 function giftImg(c, k) { return c.h[k] ? 'mystery' : c.b[k] === G.gold ? 'gold' : GIFTS[c.b[k]]; }
 // 카트들을 다시 그림 (상자 수가 적어 매번 새로 그려도 가벼움)
 function render(deal = false) {
@@ -235,12 +248,13 @@ function render(deal = false) {
     el.className = 'cart' + (deal ? ' deal' : '') + (i === G.sel ? ' sel' : '') + (full ? ' full' : '');
     if (deal) el.style.animationDelay = `${i * 0.04}s`;
     const run = i === G.sel ? topRun(c) : 0;
-    let html = `<img class="frame" src="assets/ui/${lk ? 'cart_lock' : 'cart'}.webp?v=${ASSET_V}" alt="">`;
+    const one = capOf(c) < CAP, ft = cartTop(c);
+    let html = `<img class="frame" src="assets/ui/${lk ? 'cart_lock' : one ? 'cart_one' : 'cart'}.webp?v=${ASSET_V}" alt="" style="top:${ft}px;height:${ch - ft}px">`;
     c.b.forEach((_, k) => {
-      const g = boxGeo(k), lift = k >= c.b.length - run;
+      const g = boxGeo(k, c), lift = k >= c.b.length - run;
       html += `<div class="box${lift ? ' lift' : ''}" data-k="${k}" style="left:${g.x}px;top:${g.y}px;width:${g.w}px;z-index:${k + 1}"><img src="${giftSrc(giftImg(c, k))}" alt=""></div>`;
     });
-    if (full) { const tw = cw * 1.05; html += `<img class="topper" src="assets/ui/topper.webp?v=${ASSET_V}" alt="" style="width:${tw}px;top:${ch * 0.778 - 4 * ch * PITCH - cw * BOX_W * BOX_AR - tw * 0.55}px;z-index:9">`; }
+    if (full) { const tw = cw * 1.05; html += `<img class="topper" src="assets/ui/topper.webp?v=${ASSET_V}" alt="" style="width:${tw}px;top:${boxGeo(CAP - 1, c).y - tw * 0.5}px;z-index:9">`; }
     if (lk) html += `<span class="need" style="top:${ch * 0.42}px">🎀 ${G.need - G.done}</span>`;
     el.innerHTML = html;
   });
@@ -251,8 +265,9 @@ function startStage(si) {
   G.si = si; const st = STAGES[si];
   clearTimers();
   G.moves = 0; G.hist = []; G.coins = 0; G.coinBase = 0; G.fx = []; G.t = 0; G.idleT = 0; G.busy = 0;
-  takeRound('giftsort', ['hint']);
-  G.undo = UNDO_FREE; G.hint = HINT_FREE + ((G.round && G.round.hint) || 0); G.add = ADD_FREE;
+  takeRound('giftsort', ['hint', 'undo', 'addcart']);
+  const R = G.round || {};
+  G.undo = UNDO_FREE + (R.undo ? UNDO_ITEM : 0); G.hint = HINT_FREE + (R.hint || 0); G.add = R.addcart || 0;
   $('hudStage').textContent = isHard(si) ? label(si) : `스테이지 ${label(si)}`;
   G.lim = starLimits(st.par);
   buildBoard(si);
@@ -310,10 +325,10 @@ function tap(i) {
   if (c.b.length && !isFull(c)) { G.sel = i; Audio.sfx('pick'); render(); return; }
   bad(i);
 }
-const snap = () => ({ carts: G.carts.map((c) => ({ b: c.b.slice(), h: c.h.slice() })), moves: G.moves, coins: G.coins, done: G.done });
+const snap = () => ({ carts: G.carts.map((c) => ({ b: c.b.slice(), h: c.h.slice(), cap: c.cap })), moves: G.moves, coins: G.coins, done: G.done });
 function move(a, b) {
   G.hist.push(snap());
-  const A = G.carts[a], B = G.carts[b], n = Math.min(topRun(A), CAP - B.b.length);
+  const A = G.carts[a], B = G.carts[b], n = Math.min(topRun(A), capOf(B) - B.b.length);
   // 옮기는 상자가 날아가는 모습: 들린 자리 → 새 자리
   const from = [], pb = G.geo.pos[b];
   for (let k = 0; k < n; k++) {
@@ -327,7 +342,7 @@ function move(a, b) {
   const landed = from.map((f) => G.els[b].querySelector(`.box[data-k="${f.dst}"]`)).filter(Boolean);
   landed.forEach((e) => { e.style.visibility = 'hidden'; });
   from.forEach((f, k) => {
-    const g = boxGeo(f.dst), tx = pb[0] + g.x, ty = pb[1] + g.y, fl = document.createElement('div');
+    const g = boxGeo(f.dst, B), tx = pb[0] + g.x, ty = pb[1] + g.y, fl = document.createElement('div');
     fl.className = 'flyer'; fl.style.width = g.w + 'px'; fl.style.left = f.x + 'px'; fl.style.top = f.y + 'px'; fl.style.zIndex = 30 + k;
     fl.innerHTML = `<img src="${giftSrc(f.img)}" alt="">`; root.appendChild(fl);
     const top = Math.min(f.y, ty) - G.geo.ch * 0.15;
@@ -355,7 +370,7 @@ function afterMove(a, b) {
     if (G.lock >= 0 && !G.unlockedShown && G.done >= G.need) unlock();
   } else render();
   if (solvedAll()) { later(clearStage, 600); return; }
-  if (!anyMove()) { setPose('think'); toast('더 옮길 수 없어요! 되돌리기나 처음부터를 눌러요'); }
+  if (!anyMove()) { setPose('think'); toast('더 옮길 수 없어요! 되돌리기나 다시하기를 눌러요'); }
   renderItems();
 }
 function reveal(i, k) {
@@ -388,9 +403,10 @@ function takeRound(game, ids) {
 function useUndo() {
   if (G.state !== 'play' || G.busy) return;
   if (!G.hist.length) { toast('되돌릴 게 없어요'); return; }
-  if (G.undo <= 0) { toast('되돌리기를 다 썼어요. 처음부터 해 볼까요?'); Audio.sfx('bad'); return; }
-  const s = G.hist.pop(), extra = G.carts.length - s.carts.length;
-  G.carts = s.carts; for (let k = 0; k < extra; k++) G.carts.push({ b: [], h: [] }); // 카트 추가로 늘린 카트는 그대로
+  if (G.undo <= 0) { toast('되돌리기를 다 썼어요. 일시정지에서 다시하기를 해 볼까요?'); Audio.sfx('bad'); return; }
+  const s = G.hist.pop();
+  const added = G.carts.slice(s.carts.length).map((c) => ({ b: [], h: [], cap: c.cap }));
+  G.carts = s.carts.concat(added); // 카트 추가로 늘린 카트는 그대로 (비운 채로)
   G.moves = s.moves; G.coins = s.coins; G.done = s.done; G.sel = -1; G.undo--;
   Audio.sfx('undo'); clearHint(); render(); renderItems(); setPose('idle');
 }
@@ -408,18 +424,10 @@ function useHint() {
 }
 function useAdd() {
   if (G.state !== 'play' || G.busy) return;
-  if (G.add <= 0) { toast('카트 추가는 한 판에 한 번이에요'); Audio.sfx('bad'); return; }
-  G.add--; G.carts.push({ b: [], h: [] }); G.sel = -1;
+  if (G.add <= 0) { toast('카트 추가 아이템이 없어요. 시작할 때 고를 수 있어요'); Audio.sfx('bad'); return; }
+  G.add--; G.carts.push({ b: [], h: [], cap: 1 }); G.sel = -1;
   Audio.sfx('add'); layoutBoard(); render(); renderItems();
   const el = G.els[G.els.length - 1]; el.classList.add('deal');
-}
-function resetStage() { if (G.state !== 'play' || G.busy) return; Audio.sfx('undo'); const keep = G.round; startStageKeep(keep); }
-// 처음부터: 아이템은 다시 꺼내지 않고 이번 판 남은 수 그대로
-function startStageKeep(keep) {
-  const hint = G.hint, add = G.add, undo = G.undo;
-  clearTimers(); G.moves = 0; G.hist = []; G.coins = 0; G.fx = []; G.busy = 0; G.round = keep;
-  buildBoard(G.si); G.hint = hint; G.add = add; G.undo = Math.max(undo, UNDO_FREE);
-  setPose('idle'); renderItems();
 }
 
 // ---------- end ----------
@@ -476,13 +484,6 @@ function drawBg() {
   const g = bg.createLinearGradient(0, 0, 0, H);
   g.addColorStop(0, 'rgba(90,40,60,.22)'); g.addColorStop(0.3, 'rgba(90,40,60,0)'); g.addColorStop(1, 'rgba(90,40,60,.18)');
   bg.fillStyle = g; bg.fillRect(0, 0, W, H);
-  // 카트 자리 아래 옅은 받침 (상자가 배경과 섞이지 않게)
-  if (G.carts.length && G.geo) {
-    const xs = G.geo.pos.map((p) => p[0]), ys = G.geo.pos.map((p) => p[1]), { cw, ch } = G.geo, pad = cw * 0.25;
-    const x0 = Math.min(...xs) - pad, y0 = Math.min(...ys) - ch * 0.22, x1 = Math.max(...xs) + cw + pad, y1 = Math.max(...ys) + ch + pad * 0.6;
-    bg.fillStyle = 'rgba(255,250,244,.42)'; bg.strokeStyle = 'rgba(255,255,255,.8)'; bg.lineWidth = 3;
-    bg.beginPath(); bg.roundRect(x0, y0, x1 - x0, y1 - y0, 24); bg.fill(); bg.stroke();
-  }
 }
 const okImg = (im) => im && im.complete && im.naturalWidth > 0;
 function drawFx() {
@@ -547,7 +548,7 @@ document.addEventListener('gesturestart', (e) => e.preventDefault());
 document.addEventListener('dblclick', (e) => e.preventDefault());
 window.addEventListener('keydown', (e) => {
   Audio.unlock();
-  if (e.code === 'KeyZ' || e.code === 'KeyU') useUndo(); else if (e.code === 'KeyH') useHint(); else if (e.code === 'KeyA') useAdd(); else if (e.code === 'KeyR') resetStage();
+  if (e.code === 'KeyZ' || e.code === 'KeyU') useUndo(); else if (e.code === 'KeyH') useHint(); else if (e.code === 'KeyA') useAdd();
   else if (e.code === 'Escape' || e.code === 'KeyP') { if (G.state === 'play') pauseGame(); else if (G.state === 'pause') resumeGame(); }
   else if ((e.code === 'Enter' || e.code === 'Space') && G.state === 'ready') { e.preventDefault(); $('btnGo').click(); }
 });
@@ -562,7 +563,6 @@ click('btnNext', () => showReady(Math.min(STAGES.length - 1, G.si + 1)));
 $('btnUndo').addEventListener('click', () => { Audio.unlock(); useUndo(); });
 $('btnHint').addEventListener('click', () => { Audio.unlock(); useHint(); });
 $('btnAdd').addEventListener('click', () => { Audio.unlock(); useAdd(); });
-$('btnReset').addEventListener('click', () => { Audio.unlock(); resetStage(); });
 
 // ---------- layout ----------
 function wideLayout() { return W > H; }

@@ -101,6 +101,10 @@ def play():
     for im, name in [(k1, 'cart'), (k2, 'cart_lock')]:
         c = im.crop(bb); A.save(A.scaled(c, 300 / c.width), f'giftsort/assets/ui/{name}.webp')
     A.save(A.scaled(A.tight(A.key(src('play/K03'), soft=False)), 0.3), 'giftsort/assets/ui/topper.webp')
+    # 1칸 카트 (카트 추가 아이템): 빈 카트의 손잡이~첫 칸 + 아래 선반·바퀴를 이어 붙임 (300x924 기준 135~281 = 한 칸, 718~ = 선반)
+    full = Image.open(f'{OUT}/ui/cart.webp').convert('RGBA'); top, bot = full.crop((0, 0, 300, 281)), full.crop((0, 718, 300, 924))
+    one = Image.new('RGBA', (300, 281 + 206)); one.alpha_composite(top, (0, 0)); one.alpha_composite(bot, (0, 281))
+    A.save(one, 'giftsort/assets/ui/cart_one.webp')
     # 선물 상자 12종 + 특수 4개: 같은 폭(240)으로
     boxes = grid(src('play/S01'), 2, 2) + grid(src('play/S02'), 2, 2) + grid(src('play/S03'), 2, 2)
     sp = grid(src('play/S04'), 2, 2)

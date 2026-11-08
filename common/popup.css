@@ -31,6 +31,9 @@ html[data-who=eungyeol] { --who: #2C84DC; --who-d: #1F62AE; --who-bg: #EEF6FF; }
   background: url(ui/popup/v4/ribbon_pink.webp) center / 100% 100% no-repeat !important; border: 0 !important;
   color: #fff !important; font-size: 26px !important; line-height: 1 !important; text-shadow: 0 2px 0 var(--who-d), 0 0 3px var(--who-d) !important; white-space: nowrap; overflow: hidden;
 }
+/* 제목과 버튼만 있는 창(일시정지 등)은 빈 공간 없이 내용 높이만큼 (2026-11-08 사용자 요청) */
+#pause > .panel, .screen.dim > .panel:has(> .p-title:first-child + .pp-acts), .modal > .panel:has(> .p-title:first-child + .pp-acts) { min-height: 0 !important; }
+#pause > .panel > .pp-acts, .screen.dim > .panel > .p-title:first-child + .pp-acts, .modal > .panel > .p-title:first-child + .pp-acts { margin-top: 6px !important; }
 /* 버튼 줄 (popup.js 가 만듦) */
 .pp-acts { display: flex; flex-direction: column; gap: 10px; width: 100%; margin: auto 0 0; padding-top: 6px; flex: none; }
 /* 내용은 리본과 버튼 사이 상하 가운데 (모든 팝업) */

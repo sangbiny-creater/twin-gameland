@@ -3592,8 +3592,8 @@ window.I18N_DATA = {
 "Golden Gift"
 ],
 [
-"더 옮길 수 없어요! 되돌리기나 처음부터를 눌러요",
-"No more moves! Tap Undo or Restart."
+"더 옮길 수 없어요! 되돌리기나 다시하기를 눌러요",
+"No more moves! Tap Undo, or Retry from the pause menu."
 ],
 [
 "리본이 풀렸어요! 이제 이 카트도 쓸 수 있어요",
@@ -3604,8 +3604,8 @@ window.I18N_DATA = {
 "Nothing to undo"
 ],
 [
-"되돌리기를 다 썼어요. 처음부터 해 볼까요?",
-"No undos left. Try restarting?"
+"되돌리기를 다 썼어요. 일시정지에서 다시하기를 해 볼까요?",
+"No undos left. Retry from the pause menu?"
 ],
 [
 "힌트가 없어요. 시작할 때 힌트 아이템을 고를 수 있어요",
@@ -3616,8 +3616,16 @@ window.I18N_DATA = {
 "This one looks stuck. Try Undo!"
 ],
 [
-"카트 추가는 한 판에 한 번이에요",
-"You can add a cart once per stage."
+"카트 추가 아이템이 없어요. 시작할 때 고를 수 있어요",
+"No Add Cart items. You can pick one before you start."
+],
+[
+"이번 판 되돌리기 +5번",
+"+5 Undos this stage"
+],
+[
+"선물 1개를 놓을 수 있는 작은 카트를 놓아요",
+"Adds a small cart that holds 1 gift"
 ],
 [
 "남은 카트",
@@ -3630,10 +3638,6 @@ window.I18N_DATA = {
 [
 "카트 추가",
 "Add Cart"
-],
-[
-"처음부터",
-"Restart"
 ],
 [
 "같은 선물끼리 카트에 4개씩 모아요!",
