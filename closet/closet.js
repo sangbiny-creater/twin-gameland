@@ -2,7 +2,7 @@
 // 옷장 (첫 화면에서 들어오는 별도 화면, 뒤로 가면 첫 화면으로)
 //  왼쪽 은유·은결, 가운데 전신(방 배경), 오른쪽 옷 칸. 옷을 누르면 미리 보고, 아래 버튼으로 입거나 다이아로 삼
 const $ = (id) => document.getElementById(id);
-const V = '?v=202611081018'; // bump when images change so phones don't show old cached ones
+const V = '?v=202611081033'; // bump when images change so phones don't show old cached ones
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 
 const GEM = `../hub/park/ui/gem.webp${V}`;

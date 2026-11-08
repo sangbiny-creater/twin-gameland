@@ -110,36 +110,45 @@
   }
 
   // ---------- 화면 (로그인 창 · 계정 창 · 계정연동 안내) ----------
+  // 모양: 게임 공통 팝업 재료(common/ui/popup/v4 — 창 틀·리본·버튼, 은유 분홍·은결 파랑)를 그대로 씀. 로그인 첫 화면 뒤는 캐릭터 고르기 배경
+  const P4 = ROOT + 'common/ui/popup/v4/';
   const css = `
-  .au-wrap{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px;background:linear-gradient(#FFE3EE,#FFF4E6);font-family:Jua,'Apple SD Gothic Neo',sans-serif;color:#3B2A44}
+  .au-wrap{position:fixed;inset:0;z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;padding:16px 0;background:#BFE4FA url(${ROOT}hub/select/bg.webp) center/cover no-repeat;font-family:Jua,'Apple SD Gothic Neo',sans-serif;color:#5A3B22;overflow:auto}
   .au-wrap.dim{background:rgba(24,40,62,.55)}
-  .au-box{width:100%;max-width:400px;max-height:100%;overflow:auto;background:#fff;border-radius:28px;padding:26px 22px 22px;text-align:center;box-shadow:0 14px 34px rgba(60,30,60,.25);border:4px solid #FFB3CF;box-sizing:border-box}
-  html[data-who=eungyeol] .au-box{border-color:#A9D3FA}
-  .au-logo{width:200px;max-width:70%;margin:-4px auto 6px;display:block}
-  .au-h{font-size:24px;margin:4px 0 6px}
-  .au-p{font-size:15px;line-height:1.5;color:#6B5A6E;margin:0 0 14px;white-space:pre-line}
-  .au-b{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:54px;margin:10px 0 0;border-radius:18px;border:0;font-family:inherit;font-size:19px;cursor:pointer;box-sizing:border-box}
+  .au-logo{flex:none;width:210px;max-width:56%;margin-top:auto;filter:drop-shadow(0 4px 6px rgba(24,59,91,.35))}
+  @media (max-height:520px){.au-logo{display:none}}
+  .au-wrap.dim .au-logo{display:none}
+  .au-wrap.dim .au-box{margin-top:auto}
+  .au-box{box-sizing:border-box;flex:none;width:440px;max-width:calc(100% - 16px);margin:58px 0 auto;padding:22px 26px 24px;text-align:center;border:0 solid transparent;border-image:url(${P4}panel_pink.webp) 130 fill / calc(130px * .7333) stretch;filter:drop-shadow(0 10px 22px rgba(0,0,0,.35))}
+  html[data-who=eungyeol] .au-box{border-image-source:url(${P4}panel_blue.webp)}
+  .au-h{display:flex;align-items:center;justify-content:center;box-sizing:border-box;width:350px;max-width:100%;height:131px;margin:-80px auto -6px;padding:8px 58px 0;background:url(${P4}ribbon_pink.webp) center/100% 100% no-repeat;color:#fff;font-size:26px;line-height:1;text-shadow:0 2px 0 var(--who-d,#B92C62),0 0 3px var(--who-d,#B92C62);white-space:nowrap;overflow:hidden}
+  html[data-who=eungyeol] .au-h{background-image:url(${P4}ribbon_blue.webp)}
+  .au-p{font-size:16px;line-height:1.5;color:#6B4A3A;margin:0 0 12px;white-space:pre-line}
+  .au-b{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:58px;margin:10px 0 0;padding:.14em 20px 0;box-sizing:border-box;font-family:inherit;font-size:20px;line-height:1;cursor:pointer;background:none;white-space:nowrap;border:0 solid transparent;border-image:url(${P4}btn_pink.webp) 0 58 fill / 0 29px stretch;color:var(--who,#E8457F)}
   .au-b:active{transform:translateY(2px)}
-  .au-b.g{background:#fff;color:#3C4043;border:2px solid #DADCE0;height:60px;font-size:20px}
-  .au-b.g svg{width:24px;height:24px}
-  .au-b.e{background:var(--who,#FF5A8C);color:#fff}
-  .au-b.s{background:#F1F3F7;color:#5A6378}
-  .au-b.line{background:#fff;color:var(--who-d,#D23F75);border:2px solid var(--who,#FF5A8C)}
-  .au-in{width:100%;height:52px;border-radius:14px;border:2px solid #E3D6E4;padding:0 14px;font-size:20px;font-family:inherit;box-sizing:border-box;text-align:center;color:#3B2A44;background:#FFFBFD}
-  .au-in:focus{outline:none;border-color:var(--who,#FF5A8C)}
+  .au-b.e{height:64px;border-image-source:url(${P4}fill_pink.webp);color:#fff;text-shadow:0 2px 0 var(--who-d,#B92C62)}
+  html[data-who=eungyeol] .au-b{border-image-source:url(${P4}btn_blue.webp)}
+  html[data-who=eungyeol] .au-b.e{border-image-source:url(${P4}fill_blue.webp)}
+  .au-b.g{height:64px;padding-top:0;border:2px solid #DADCE0;border-image:none;border-radius:32px;background:#fff;color:#3C4043;font-size:20px;box-shadow:0 3px 0 #D5D9DE}
+  .au-b.g svg{width:26px;height:26px;flex:none}
+  .au-in{display:block;width:100%;min-width:0;max-width:100%;height:54px;margin:0;border-radius:16px;border:2px solid #EBD9C8;padding:0 14px;font-size:20px;font-family:inherit;box-sizing:border-box;text-align:center;color:#5A3B22;background:#fff;-webkit-appearance:none;appearance:none}
+  .au-in[type=date]{line-height:50px}
+  .au-in[type=date]::-webkit-date-and-time-value{text-align:center}
+  .au-in:focus{outline:none;border-color:var(--who,#E8457F)}
   .au-in.code{letter-spacing:10px;font-size:26px}
-  .au-err{min-height:20px;margin:8px 0 0;font-size:14px;color:#E0457B}
-  .au-small{display:block;margin:14px auto 0;font-size:14px;color:#8A7A8E;background:none;border:0;font-family:inherit;text-decoration:underline;cursor:pointer}
-  .au-terms{margin:14px 0 0;font-size:12px;line-height:1.5;color:#9A8C9C}
+  .au-err{min-height:20px;margin:6px 0 0;font-size:14px;line-height:1.4;color:#E0457B}
+  .au-small{display:block;margin:12px auto 0;font-size:15px;color:#8A6E58;background:none;border:0;font-family:inherit;text-decoration:underline;cursor:pointer}
+  .au-terms{margin:10px 0 0;font-size:12px;line-height:1.5;color:#9A8070}
   .au-terms a{color:inherit}
   .au-toast{position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:9500;max-width:calc(100% - 32px);padding:10px 18px;border-radius:16px;background:rgba(24,40,62,.92);color:#fff;font:16px Jua,sans-serif;text-align:center;white-space:pre-line}
-  .au-row{display:flex;gap:8px}.au-row .au-b{flex:1}`;
+  .au-row{display:flex;gap:12px}.au-row .au-b{flex:1 1 0;min-width:0}`;
   const G_ICON = '<svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
   let wrap = null;
   function mount(html, dim) {
     if (!document.getElementById('auCss')) { const s = document.createElement('style'); s.id = 'auCss'; s.textContent = css; document.head.appendChild(s); }
     if (!wrap) { wrap = document.createElement('div'); document.body.appendChild(wrap); }
-    wrap.className = 'au-wrap' + (dim ? ' dim' : ''); wrap.innerHTML = `<div class="au-box">${html}</div>`;
+    wrap.className = 'au-wrap' + (dim ? ' dim' : ''); wrap.innerHTML = `<img class="au-logo" src="${ROOT}hub/park/ui/logo.webp" alt=""><div class="au-box">${html}</div>`;
+    const h = wrap.querySelector('.au-h'); if (h && h.textContent.length > 8) h.style.fontSize = '21px'; // 긴 제목은 리본 안에 들어가게
     return wrap.querySelector('.au-box');
   }
   const close = () => { if (wrap) { wrap.remove(); wrap = null; } };
@@ -152,8 +161,7 @@
   // 첫 로그인 창
   function loginBox(opts = {}) {
     const link = st.mode === 'guest'; // 게스트가 계정 연동
-    const box = mount(`<img class="au-logo" src="${ROOT}hub/park/ui/logo.webp" alt="">
-      <div class="au-h">${t(link ? '계정 연동' : '은유와 은결')}</div>
+    const box = mount(`<div class="au-h">${t(link ? '계정 연동' : '은유와 은결')}</div>
       <p class="au-p">${t(link ? '지금까지 한 기록을 그대로 가지고 계정에 연결해요.' : '로그인하면 다른 기기에서도 이어서 할 수 있어요!')}</p>
       <button class="au-b g" data-a="google">${G_ICON}<span>${t('구글로 시작하기')}</span></button>
       <button class="au-b e" data-a="email">${t('이메일로 시작하기')}</button>
