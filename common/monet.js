@@ -35,6 +35,8 @@
     { id: 'gem_pass_30', won: 3900, name: '월 다이아 패스', desc: '바로 60개 + 30일 동안 매일 10개', img: 'pack_2', now: 60, daily: 10, days: 30 },
     { id: 'no_ads_reward', won: 5900, name: '광고 없이 보상', desc: '광고 보상을 광고 없이 바로 (계속)', img: 'ico_ad' },
   ];
+  // 백오피스에서 바꾼 결제 상품 값 (config/catalog.packs: { diamond_60: { won, gems } … }, common/auth.js 가 받아 둠)
+  try { const cat = JSON.parse(localStorage.getItem('twin_catalog_v1') || 'null'); if (cat && cat.packs) for (const p of [...PACKS, ...OFFERS]) Object.assign(p, cat.packs[p.id] || {}); } catch (e) { /* ignore */ }
   const CONT_PACK = { id: 'continue_10', conts: 10, gems: 30, name: '이어하기권 10장' }; // 다이아 30개로 삼: 게임이 끝났을 때 광고 없이 이어하기
   const won = (n) => n.toLocaleString() + '원';
   const NO_CONTINUE = ['darts']; // 실패 없이 끝나는 게임 (이어하기 자리 없음)
@@ -238,6 +240,7 @@ html[data-who=eungyeol] .mn-art-x{background-image:url(${P4}x_blue.webp)}
   }
   // 가짜 결제 창: 다이아 상품(첫 결제 2배) 또는 묶음 상품
   function fakePay(p, after) {
+    if (window.Auth && !Auth.canPay()) { Auth.needLink(); return; } // 게스트는 결제 절대 안 됨 (common/auth.js)
     const isPack = PACKS.includes(p), first = !bm().paid, gems = isPack ? (first ? p.gems * 2 : p.gems) : 0;
     const art = isPack ? `pack_${PACKS.indexOf(p) + 1}` : p.img;
     modal(`<h3>${isPack ? `다이아 ${gems}개` : p.name}</h3><span class="mn-tag">검수용 가짜 결제 · ${won(p.won)}</span><img class="mn-art" src="${IMG}${art}.webp" alt="" style="max-height:110px"><p>${isPack ? (first ? '첫 결제라서 2배로 받아요!<br>' : '') : p.desc + '<br>'}여기가 앱의 결제 창 자리예요.<br>확인을 누르면 바로 들어와요 (돈 안 나감).</p>`,
@@ -249,6 +252,7 @@ html[data-who=eungyeol] .mn-art-x{background-image:url(${P4}x_blue.webp)}
           else if (p.id === 'gem_pass_30') { B.pass += p.days; c.gems = (c.gems || 0) + p.now; }
           else if (p.id === 'no_ads_reward') B.noAds = true;
         });
+        if (window.Auth) Auth.logPay(p); // 결제 기록 (백오피스 결제 내역)
         pop(isPack ? `${I('ico_gem')} +${gems}` : p.id === 'gem_pass_30' ? `${I('ico_gem')} +${p.now} · 패스 ${p.days}일` : `${p.name}!`);
         if (p.id === 'unlock_all') fx();
         refreshHub(); if (after) after();

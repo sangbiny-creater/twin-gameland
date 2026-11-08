@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>계정 삭제 요청 · 은유와 은결</title>
+<style>body{margin:0;font:15px/1.75 -apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:#2E2438;background:#FBF7FA}main{max-width:760px;margin:0 auto;padding:24px 18px 60px}h1{font-size:22px;color:#E8457F}h2{font-size:17px;margin:26px 0 6px}#doc{white-space:pre-line}.upd{color:#7A6C80;font-size:13px}a{color:#E8457F}</style></head>
+<body><main><h1>계정 삭제 요청</h1><div id="doc">계정과 게임 기록을 지우고 싶으면 아래 방법으로 요청해 주세요.
+
+1. 게임 안: 설정 → 계정 → (로그인한 계정 확인)
+2. 아래 이메일로 &#x27;계정 삭제 요청&#x27;과 가입한 이메일 주소를 보내 주세요.
+   연락처: [연락받을 이메일]
+
+· 요청을 받으면 7일 안에 계정, 저장된 게임 기록, 이용 시간 기록을 지워요.
+· 결제 기록은 법에 따라 5년 동안 보관한 뒤 지워요.
+· 게스트는 서버에 이메일이 없어서, 앱(또는 브라우저 데이터)을 지우면 기록도 함께 사라져요.</div><p class="upd" id="upd"></p></main>
+<script src="../common/firebase_config.js"></script>
+<script>
+// 백오피스(약관·개인정보 탭)에서 고친 글이 있으면 그 글을 보여 줌 (Firestore config/terms, 누구나 읽기)
+(function () {
+  var c = window.FIREBASE_CONFIG; if (!c) return;
+  fetch('https://firestore.googleapis.com/v1/projects/' + c.projectId + '/databases/(default)/documents/config/terms').then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+    var f = j && j.fields && j.fields['delete']; if (!f || !f.stringValue) return;
+    document.getElementById('doc').textContent = f.stringValue;
+    var u = j.fields.updatedAt; if (u) document.getElementById('upd').textContent = '마지막 수정: ' + new Date(+(u.integerValue || u.doubleValue)).toLocaleDateString('ko-KR');
+  }).catch(function () {});
+})();
+</script></body></html>

@@ -132,6 +132,18 @@
     logo: { name: '로고', price: 30, items: ['기본 로고', '별 로고', '토끼 로고', '무지개 로고', '하트 로고', '꽃 로고'],
       ids: ['', 'star', 'rabbit', 'rainbow', 'heart', 'flower'], themes: ['기본', '별', '토끼', '무지개', '하트', '꽃'], free: [1], def: 1 },
   };
+  // 백오피스에서 바꾼 상점 값 (common/auth.js 가 서버 config/catalog 를 이 기기에 받아 둠 → 다음 화면부터 적용)
+  //  outfits: { eunyu: [{ id, name, price, note, hidden, body, item }] } — 없는 id 는 새 옷(옷장에만 보임, 게임 안 그림은 기본 옷)
+  //  boosts: { '<게임>.<id>': 값 } · park: { statue: 값 … }
+  try {
+    const cat = JSON.parse(localStorage.getItem('twin_catalog_v1') || 'null');
+    if (cat && cat.outfits) for (const w of Object.keys(OUTFITS)) for (const o of cat.outfits[w] || []) {
+      const it = OUTFITS[w].find((x) => x.id === o.id);
+      if (it) Object.assign(it, o); else if (o.id && o.body && o.item) OUTFITS[w].push({ price: OUTFIT_PRICE, ...o, custom: true });
+    }
+    if (cat && cat.park) for (const k of Object.keys(cat.park)) if (PARK_ITEMS[k] && cat.park[k] > 0) PARK_ITEMS[k].price = cat.park[k];
+    if (cat && cat.boosts) for (const [k, v] of Object.entries(cat.boosts)) { const [g, id] = k.split('.'), b = Array.isArray(BOOSTS[g]) && BOOSTS[g].find((x) => x && x.id === id); if (b && v > 0) b.price = v; }
+  } catch (e) { /* ignore */ }
   // 아이템샵·고르기 창에 보이는 순서: 기본 테마 먼저
   for (const K of Object.values(PARK_ITEMS)) K.order = K.items.map((_, k) => k + 1).sort((a, b) => (K.themes[b - 1] === '기본') - (K.themes[a - 1] === '기본') || a - b);
   const parkItemImg = (kind, n) => {
@@ -285,8 +297,8 @@
     costume(c = this.active()) { return (c && c.costume) || null; }, // 예전 어린이 옷 (게임의 예전 코드가 물어봄)
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611080945` : null; },
-    outfits(c = this.active()) { return c ? OUTFITS[lookBase(c.look)] : []; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611080955` : null; },
+    outfits(c = this.active()) { return c ? OUTFITS[lookBase(c.look)].filter((x) => !x.hidden || (c.outfits || []).includes(x.id)) : []; },
     outfit(c = this.active()) { return (c && c.outfit) || null; }, // 입은 옷 id (없으면 기본 옷)
     ownsOutfit(id, c = this.active()) { return !id || !!(c && (c.outfits || []).includes(id)); },
     buyOutfit(id, c = this.active()) {
@@ -301,18 +313,19 @@
     outfitSheet(look) {
       const a = this.active(), c = a && a.look === look ? a : this.chars().find((x) => x.look === look);
       const it = c && this.outfits(c).find((x) => x.id === c.outfit);
-      return it ? it.id : null;
+      return it && !it.custom ? it.id : null;
     },
     // 다트·멍멍이·두더지 그림 이름에 붙일 옷: 'eunyu' → '_uniform' (기본 옷이면 '')
     outfitTag(who) {
       const a = this.active(), c = a && lookBase(a.look) === who ? a : this.chars().find((x) => lookBase(x.look) === who), id = c && c.outfit;
-      return id ? `_${id}` : '';
+      return id && !(OUTFITS[who].find((x) => x.id === id) || {}).custom ? `_${id}` : '';
     },
     // 입은 옷의 게임 효과: 속도 배율 (겨울옷 = 다운힐, 베이커리 옷 = 달콤 베이커리)
     outfitSpeed(game, c = this.active()) { const it = c && this.outfits(c).find((x) => x.id === c.outfit); return it && it.slow === game ? OUTFIT_SLOW : 1; },
     // 첫 화면·지도 구석의 내 캐릭터 그림 / 지도 위치 표식 (입은 옷 그대로)
-    homeImg(c = this.active()) { const id = this.outfit(c); return `hub/park/home/${whoFile(c)}${id ? '_' + id : ''}.webp`; },
-    pinImg(c = this.active()) { const id = this.outfit(c); return `hub/ui/map/v4/pin_${whoFile(c)}${id ? '_' + id : ''}.webp`; },
+    homeImg(c = this.active()) { const id = this.builtinOutfit(c); return `hub/park/home/${whoFile(c)}${id ? '_' + id : ''}.webp`; },
+    builtinOutfit(c = this.active()) { const id = this.outfit(c), it = c && OUTFITS[lookBase(c.look)].find((x) => x.id === id); return it && !it.custom ? id : null; },
+    pinImg(c = this.active()) { const id = this.builtinOutfit(c); return `hub/ui/map/v4/pin_${whoFile(c)}${id ? '_' + id : ''}.webp`; },
     // 쿠폰: { ok, msg }
     redeem(code, c = this.active()) {
       const key = String(code || '').toLowerCase().replace(/\s+/g, '');
@@ -554,13 +567,14 @@
       return { earned, bonus, newBest, firstClear: first, coins: c.coins };
     },
   };
+  Object.assign(Hub, { OUTFITS, BOOSTS }); // 백오피스 상점 관리가 기본 값을 읽음
   window.Hub = Hub;
   godBadge();
   paintWho();
   // v0.3 상용화 검수 기능(잠금·체험·다이아·출석·가짜 광고)은 기본 주소(v0.3)에서만: 이 파일 옆 monet.js 를 불러옴
-  if (Hub.ver === '0.4' && document.currentScript) {
-    const s = document.createElement('script');
-    s.src = document.currentScript.src.replace(/profile\.js(\?.*)?$/, 'monet.js$1');
-    document.head.appendChild(s);
+  if (Hub.ver === '0.4' && document.currentScript && !/\/admin\//.test(location.pathname)) { // 백오피스는 상점 값만 읽음
+    const src = document.currentScript.src, add = (n, then) => { const s = document.createElement('script'); s.src = src.replace(/profile\.js(\?.*)?$/, n + '$1'); if (then) s.onload = then; document.head.appendChild(s); };
+    add('monet.js');
+    add('firebase_config.js', () => add('auth.js')); // 로그인·기록 보내기 (common/auth.js)
   }
 })();

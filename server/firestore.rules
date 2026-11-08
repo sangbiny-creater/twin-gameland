@@ -1,0 +1,32 @@
+rules_version = '2';
+// 트윈 게임랜드 Firestore 규칙: 내 것은 나만, 관리자(백오피스)는 모두. 관리자는 admins 모음
+service cloud.firestore {
+  match /databases/{db}/documents {
+    function signedIn() { return request.auth != null; }
+    // 관리자 = admins/{이메일} 문서가 있는 사람 (콘솔에서 직접 만듦, 공개 저장소에 이메일을 적지 않으려고)
+    function isAdmin() { return signedIn() && request.auth.token.email_verified == true && exists(/databases/$(db)/documents/admins/$(request.auth.token.email)); }
+    function mine(uid) { return signedIn() && request.auth.uid == uid; }
+
+    // 계정: 내 문서만 읽고 씀. 상태(status: 정지 등)·누적 시간 조작은 못 함 (누적 시간은 increment 만)
+    match /users/{uid} {
+      allow read: if mine(uid) || isAdmin();
+      allow create: if mine(uid) && request.resource.data.status == 'active';
+      allow update: if (mine(uid) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'memo', 'createdAt'])) || isAdmin();
+      allow delete: if isAdmin();
+    }
+    // 사용 시간 · 게임 기록: 내 이름으로 추가만, 읽기는 관리자
+    match /sessions/{id} { allow create: if signedIn() && request.resource.data.uid == request.auth.uid; allow read, delete: if isAdmin(); }
+    match /records/{id} { allow create: if signedIn() && request.resource.data.uid == request.auth.uid; allow read: if signedIn(); allow delete: if isAdmin(); }
+    // 결제: 지금은 가짜 결제 기록(status test)만 앱이 씀. 진짜 결제는 서버(verifyPurchase)가 씀
+    match /payments/{id} { allow create: if signedIn() && request.resource.data.uid == request.auth.uid && request.resource.data.status == 'test'; allow read: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid); allow update: if isAdmin(); }
+    // 상점 값 · 운영(공지·점검) · 약관: 누구나 읽고 관리자만 씀
+    match /config/{id} { allow read: if true; allow write: if isAdmin(); }
+    // 쿠폰 · 길드(Group Tour) · 순위 시즌
+    match /coupons/{id} { allow read: if signedIn(); allow write: if isAdmin(); }
+    match /guilds/{id} { allow read: if signedIn(); allow write: if isAdmin(); }
+    match /seasons/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /admins/{email} { allow read: if signedIn() && request.auth.token.email == email; allow write: if false; }
+    // 인증번호: 서버만
+    match /emailCodes/{id} { allow read, write: if false; }
+  }
+}

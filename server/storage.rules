@@ -1,0 +1,10 @@
+rules_version = '2';
+// 상점 그림: 누구나 보고, 관리자만 올림 (백오피스 상점 관리)
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /shop/{all=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.email_verified == true && firestore.exists(/databases/(default)/documents/admins/$(request.auth.token.email)) && request.resource.size < 3 * 1024 * 1024;
+    }
+  }
+}
