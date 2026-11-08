@@ -83,6 +83,20 @@ const hbars = (pairs, fmt = fmtN) => { const mx = Math.max(1, ...pairs.map((p) =
 const lastDays = (n) => [...Array(n)].map((_, i) => day(Date.now() - (n - 1 - i) * 864e5));
 const sum = (a, f) => a.reduce((s, x) => s + (f(x) || 0), 0);
 
+// 게임 안 쿠폰 (common/profile.js COUPONS): 보상 칸을 사람 말로
+const BUILTIN = (window.Hub && Hub.COUPONS) || {};
+function couponWhat(c) {
+  const out = [];
+  if (c.coins) out.push(`코인 ${fmtN(c.coins)}개`);
+  if (c.gems) out.push(`다이아 ${fmtN(c.gems)}개`);
+  if ('god' in c) out.push(c.god ? '무적 모드 켜기 (모든 게임, 끌 때까지)' : '무적 모드 끄기');
+  if ('openAll' in c) out.push(c.openAll ? '모든 게임·스테이지 자물쇠 열기' : '자물쇠 다시 닫기 (깬 판까지만 열림)');
+  if (c.ver !== undefined && c.go) out.push(`${c.ver ? 'v' + c.ver : 'v0.4 (최신)'}로 들어가기`);
+  if (c.resetV3) out.push('게임 잠금·열쇠·출석을 처음 상태로 (검수용)');
+  if (c.restart) out.push('모든 것을 처음 상태로 초기화 (캐릭터·코인·기록, 지우기 전 내용은 백업 1벌)');
+  if (c.dayPlus) out.push('하루가 지난 것으로 (다음 날 출석 창이 뜸)');
+  return out.join(' · ') || c.msg || '';
+}
 const VIEWS = {
   dash(m) {
     const today = day(Date.now()), d7 = Date.now() - 7 * 864e5, U = DB.users, S = DB.sessions;
@@ -228,7 +242,9 @@ const VIEWS = {
     m.innerHTML = `<h2>운영</h2><div class="panel form"><h3>공지 · 점검</h3><label>공지 (첫 화면에 한 번 떠요, 비우면 없음)</label><input id="on" value="${H(O.notice || '')}" style="width:100%">
         <label><input type="checkbox" id="om" ${O.maintenance ? 'checked' : ''} style="width:auto"> 점검 모드 (관리자 말고는 게임을 못 해요)</label><label>점검 안내 글</label><input id="omm" value="${H(O.maintenanceMsg || '지금은 점검 중이에요. 잠시 뒤에 다시 와 주세요!')}" style="width:100%">
         <div class="row" style="margin-top:10px"><button class="btn" id="oSave">저장</button></div></div>
-      <div class="panel"><h3>쿠폰</h3><p class="note">쿠폰 번호와 보상을 만들어 두는 곳이에요. (지금 게임 안 쿠폰 입력은 기존 쿠폰만 받아요 — 서버 쿠폰은 연결 후 열어요)</p>
+      <div class="panel"><h3>게임에 들어 있는 쿠폰 (${Object.keys(BUILTIN).length}개)</h3><p class="note">게임 코드(common/profile.js COUPONS)에 들어 있어서 지금 바로 쓸 수 있는 쿠폰이에요. 설정 → 쿠폰에 넣으면 돼요 (띄어쓰기·대소문자 상관없음). 여기서는 보기만 되고, 바꾸려면 코드를 고쳐야 해요.</p>
+        <table><thead><tr><th>쿠폰</th><th>하는 일</th><th>한 사람 한 번</th></tr></thead><tbody>${Object.entries(BUILTIN).map(([k, c]) => `<tr><td><b>${H(k)}</b></td><td>${H(couponWhat(c))}</td><td>${c.once ? '예' : '아니오 (몇 번이든)'}</td></tr>`).join('')}</tbody></table></div>
+      <div class="panel"><h3>서버 쿠폰</h3><p class="note">쿠폰 번호와 보상을 서버에 만들어 두는 곳이에요. (게임 안 쿠폰 입력은 아직 위의 게임 쿠폰만 받아요 — 서버 쿠폰은 연결 후 열어요)</p>
         <table><thead><tr><th>번호</th><th>보상</th><th>한 사람 한 번</th><th>끝나는 날</th></tr></thead><tbody>${DB.coupons.map((c) => `<tr><td>${H(c.id)}</td><td>${c.gems ? '다이아 ' + c.gems : ''} ${c.coins ? '코인 ' + c.coins : ''}</td><td>${c.once ? '예' : '아니오'}</td><td>${H(c.until || '-')}</td></tr>`).join('') || '<tr><td colspan="4">아직 없어요</td></tr>'}</tbody></table>
         <div class="row" style="margin-top:10px"><input id="cc" placeholder="쿠폰 번호 (영어·숫자)"><input id="cg" class="num" type="number" placeholder="다이아"><input id="ck" class="num" type="number" placeholder="코인"><input id="cu" type="date"><button class="btn" id="cAdd">쿠폰 만들기</button></div></div>`;
     $('oSave').onclick = async () => { const d = { notice: $('on').value.trim(), maintenance: $('om').checked, maintenanceMsg: $('omm').value, updatedAt: Date.now() }; if (await saveDoc('config', 'ops', d, false)) DB.config.ops = d; };

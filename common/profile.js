@@ -575,7 +575,7 @@
       return { earned, bonus, newBest, firstClear: first, coins: c.coins };
     },
   };
-  Object.assign(Hub, { OUTFITS, BOOSTS }); // 백오피스 상점 관리가 기본 값을 읽음
+  Object.assign(Hub, { OUTFITS, BOOSTS, COUPONS }); // 백오피스 상점 관리·쿠폰 목록이 기본 값을 읽음
   window.Hub = Hub;
   godBadge();
   paintWho();
