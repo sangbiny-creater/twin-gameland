@@ -49,10 +49,7 @@ def select():
             t = min(1, y / (h * .62)); sky.paste((round(92 + 150 * t), round(182 + 62 * t), round(246 + 8 * t), 255), (0, y, p.width, y + 1))
         sky.alpha_composite(p); sky.convert('RGB').resize(sz, Image.LANCZOS).save(f'{ROOT}/hub/select/{n}.webp', 'WEBP', quality=84, method=6)
     for f, n, w in [('Y03', 'card_eunyu', 480), ('Y04', 'card_eungyeol', 480), ('Y05', 'name_pink', 420), ('Y06', 'name_blue', 420), ('Y07', 'lang_pink', 420), ('Y08', 'lang_blue', 420)]:
-        p = tight(key(f'{SRC}/select/{f}.png')); p = scaled(p, w / p.width)
-        if n == 'card_eunyu':  # 은유 칸 높이를 은결 칸과 같게: 아래 흰 칸을 늘림 (캐릭터 크기는 그대로)
-            at = 700; a = np.array(p); p = Image.fromarray(np.concatenate([a[:at], np.repeat(a[at:at + 1], 43, 0), a[at:]]))
-        save(p, f'hub/select/{n}.webp'); print(n, p.size)
+        p = tight(key(f'{SRC}/select/{f}.png')); p = scaled(p, w / p.width); save(p, f'hub/select/{n}.webp'); print(n, p.size)
 
 
 def monet():
