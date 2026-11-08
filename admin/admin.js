@@ -24,7 +24,7 @@ const DB = { users: [], sessions: [], records: [], payments: [], config: {}, cou
 const isDemo = () => !window.FIREBASE_CONFIG;
 function demoData() {
   let s = 7; const r = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
-  const now = Date.now(), D = 864e5, games = ['shisen', 'memory', 'mole', 'giftsort', 'stairs', 'helicopter', 'downhill', 'bakery', 'dogsnack', 'darts'];
+  const now = Date.now(), D = 864e5, games = ['shisen', 'memory', 'mole', 'giftsort', 'burger', 'stairs', 'helicopter', 'downhill', 'bakery', 'dogsnack', 'darts'];
   for (let i = 0; i < 48; i++) {
     const p = r() < 0.45 ? 'guest' : r() < 0.6 ? 'google' : 'email', c = now - r() * 40 * D;
     DB.users.push({ id: 'demo' + i, provider: p, email: p === 'guest' ? '' : `user${i}@example.com`, createdAt: c, lastAt: c + r() * (now - c), status: i === 5 ? 'banned' : 'active', totalSec: 0, over14: true, name: r() < 0.5 ? '은유' : '은결' });

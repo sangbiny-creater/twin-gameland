@@ -6,7 +6,7 @@ import os, re, sys
 from html.parser import HTMLParser
 
 HANGUL = re.compile(r'[가-힣]')
-DIRS = ['index.html', 'hub', 'common', 'shop', 'downhill', 'bakery', 'stairs', 'helicopter', 'dogsnack', 'shisen', 'memory', 'mole', 'darts', 'giftsort', 'skyhook']
+DIRS = ['index.html', 'hub', 'common', 'shop', 'downhill', 'bakery', 'stairs', 'helicopter', 'dogsnack', 'shisen', 'memory', 'mole', 'darts', 'giftsort', 'burger', 'skyhook']
 SKIP_DIR = {'assets', 'chars', 'costumes', 'faces', 'items', 'ui', 'worlds', 'icons', 'cards', 'intro', 'park', 'select'}
 
 

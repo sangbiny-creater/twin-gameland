@@ -30,7 +30,7 @@ const games = (k) => ({
 });
 // v0.3 상용화 검수(common/monet.js): 환영 선물·출석 창이 화면을 가리지 않게 이미 받은 상태로, 게임은 모두 열어 둠
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
-const v3 = () => ({ tickets: 0, unlocked: ['skyhook', 'helicopter', 'stairs', 'shisen', 'downhill', 'memory', 'mole', 'bakery', 'dogsnack', 'darts', 'giftsort'], dUnlocks: 0, plays: 5, att: { count: 3, last: today() }, welcomed: true });
+const v3 = () => ({ tickets: 0, unlocked: ['skyhook', 'helicopter', 'stairs', 'shisen', 'downhill', 'memory', 'mole', 'bakery', 'dogsnack', 'darts', 'giftsort', 'burger'], dUnlocks: 0, plays: 5, att: { count: 3, last: today() }, welcomed: true });
 const hist = [{ game: 'shisen', at: 1761300000000, stage: 24, cleared: true, dist: 0, earned: 80, stars: 3 }];
 const seed = (active) => ({
   v: 1, slots: 4, nextId: 5, activeId: active, settings: { sound: true },
@@ -144,6 +144,29 @@ add('giftsort-add-pp', 'giftsort/index.html?stage=12', { vp: 'pp', wait: 2500, j
 add('giftsort-pause-pp', 'giftsort/index.html?stage=12', { vp: 'pp', wait: 2500, js: `(() => { startStage(12); pauseGame(); })()`, wait2: 600 });
 add('giftsort-clear-pp', 'giftsort/index.html?stage=0', { vp: 'pp', wait: 2500, js: `(async () => { startStage(0); const g = __giftsort, sl = (t) => new Promise((r) => setTimeout(r, t)); for (let k = 0; k < 40 && g.G.state === 'play'; k++) { const m = g.hintMove(); if (!m) break; g.G.hint = 9; g.tap(m[0]); g.tap(m[1]); await sl(700); } return g.G.moves; })()`, wait2: 3000 });
 for (const vp of ['pp', 'tb']) add(`giftsort-map-${vp}`, 'index.html#map-giftsort', { vp, wait: 2500 });
+// 버거 러시 (가로 전용): 판 화면 · 손님·굽기·쌓기 흉내 · 주문 보기 · 세로 멈춤 안내 · 결과
+const BURGER_PLAY = (st) => `(async () => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(${st}); const b = __burger, sl = (t) => new Promise((r) => setTimeout(r, t));
+  for (let k = 0; k < 4; k++) b.spawnGuest(); await sl(500); b.tapBin('patty_raw'); b.tapBin('patty_raw'); b.tapBin('bun'); await sl(b.STAGES[${st}].cook * 1000 + 300); b.tapGrill(0);
+  for (const x of b.STAGES[${st}].ing) b.tapBin(x); for (const x of b.STAGES[${st}].sides.slice(0, 2)) b.tapBin(x); if (b.G.trays[1]) { b.G.cur = 1; b.tapBin('bun'); b.tapBin(b.STAGES[${st}].ing[0]); b.G.cur = 0; }
+  b.G.guests.forEach((g, i) => { g.t = g.wait * [0.1, 0.55, 0.8, 0.3][i % 4]; }); })()`;
+for (const vp of ['pl', 'tb', 'pc']) for (const st of [0, 45, 99, 199]) add(`burger-play${st}-${vp}`, `burger/index.html?stage=${st}`, { vp, wait: 2500, js: BURGER_PLAY(st), wait2: 6000 });
+add('burger-ready-pl', 'burger/index.html?stage=0', { vp: 'pl', wait: 2800 });
+add('burger-ready-pp', 'burger/index.html?stage=0', { vp: 'pp', wait: 2800 });
+add('burger-recipe-pl', 'burger/index.html?stage=150', { vp: 'pl', wait: 2500, js: `(() => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(150); __burger.spawnGuest(); __burger.openRecipe(__burger.G.guests[0]); })()`, wait2: 800 });
+add('burger-guide-pl', 'burger/index.html?stage=0', { vp: 'pl', wait: 2500, js: `(() => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(0); __burger.spawnGuest(); })()`, wait2: 900 });
+add('burger-pause-pl', 'burger/index.html?stage=12', { vp: 'pl', wait: 2500, js: `(() => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(12); pauseGame(); })()`, wait2: 600 });
+add('burger-clear-pl', 'burger/index.html?stage=0', { vp: 'pl', wait: 2500, js: `(() => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(0); __burger.G.served = 4; __burger.G.spawned = 4; __burger.endStage(true); })()`, wait2: 2500 });
+add('burger-fail-pl', 'burger/index.html?stage=0', { vp: 'pl', wait: 2500, js: `(() => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(0); __burger.G.hearts = 0; __burger.endStage(false); })()`, wait2: 2500 });
+add('burger-portrait-pp', 'burger/index.html?stage=12', { vp: 'pp', wait: 2500, js: `(() => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(12); return { state: __burger.G.state }; })()`, wait2: 600 });
+// 로봇이 '다음에 누를 곳'(1-1 안내와 같은 계산)을 0.35초마다 눌러 판을 끝까지 함 → 결과 창이 나오는지
+const BURGER_BOT = (st) => `(async () => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(${st}); const b = __burger, sl = (t) => new Promise((r) => setTimeout(r, t));
+  for (let k = 0; k < 2000 && ['play', 'done'].includes(b.G.state); k++) { await sl(120); if (b.G.state !== 'play') continue; const a = b.nextAction(); if (!a) continue;
+    if (a.bin) b.tapBin(a.bin); else if (a.grill != null) b.tapGrill(a.grill); else if (a.trash) b.tapTrash(); }
+  })(), 'started'`;
+const BURGER_BOT_END = `({ state: __burger.G.state, served: __burger.G.served, missed: __burger.G.missed, hearts: __burger.G.hearts, title: document.getElementById('resTitle').textContent })`;
+for (const [st, t] of [[0, 70000], [30, 150000], [120, 150000]]) add(`burger-bot${st}-pl`, `burger/index.html?stage=${st}`, { vp: 'pl', wait: 2500, js: BURGER_BOT(st), wait2: t, after: BURGER_BOT_END });
+for (const vp of ['pp', 'pl', 'tb']) add(`burger-map-${vp}`, 'index.html#map-burger', { vp, wait: 2500 });
+for (const vp of ['pp', 'pl']) add(`burger-intro-${vp}`, 'index.html#lobby', { vp, wait: 2500, js: "showTitle(GAME_CARDS.find((g) => g.id === 'burger'))", wait2: 900 });
 add('giftsort-intro-pp', 'index.html#lobby', { vp: 'pp', wait: 2500, js: "showTitle(GAME_CARDS.find((g) => g.id === 'giftsort'))", wait2: 800 });
 for (const g of ['shisen', 'memory', 'mole', 'stairs', 'downhill', 'bakery', 'dogsnack', 'darts', 'helicopter']) add(`pause-${g}-pp`, `${g}/index.html${['shisen', 'memory', 'mole'].includes(g) ? '?stage=0' : ''}`, { vp: 'pp', wait: 2500, js: `(() => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); document.querySelectorAll('.screen').forEach((e) => e.classList.add('hidden')); document.getElementById('pause').classList.remove('hidden'); })()`, wait2: 700 });
 add('hub-map-hard-pp', 'index.html#map-shisen', { vp: 'pp', js: `document.querySelector('#mapMode [data-mode=hard]').click()`, wait2: 500 });

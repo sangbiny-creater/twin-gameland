@@ -17,7 +17,7 @@
   const START_ITEMS = ['life', 'shield', 'slow'];
   // 스테이지형 게임의 시작 팝업 아이템 칸 (힌트·시간 추가·폭탄·모두 보기는 게임 화면 버튼으로 꺼내 씀, 하트는 시작할 때 체크)
   //  게임 화면 아래 아이템 버튼과 같은 순서·같은 그림 (2026-11-04). 처음엔 아무것도 안 고른 상태, 고르면 그 판에 1개 (판이 시작되면 쓴 것)
-  const STAGE = { shisen: ['hint', 'time', 'shuffle', 'bomb'], memory: ['hint', 'time', 'find', 'bomb'], mole: ['life'], giftsort: ['hint', 'undo', 'addcart'] };
+  const STAGE = { shisen: ['hint', 'time', 'shuffle', 'bomb'], memory: ['hint', 'time', 'find', 'bomb'], mole: ['life'], giftsort: ['hint', 'undo', 'addcart'], burger: ['life'] };
   const ITEM_NAME = { life: '하트', shield: '보호막', slow: '슬로우', hint: '힌트', time: '시간 추가', shuffle: '섞기', bomb: '폭탄', find: '모두 보기', undo: '되돌리기', addcart: '카트 추가' };
   const itemSrc = (id) => (id === 'life' ? BASE + 'common/ui/heart.webp' : `${BASE}common/items/${id}.webp`);
   // 버튼 앞 흰 아이콘 (A09)

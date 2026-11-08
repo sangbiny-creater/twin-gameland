@@ -520,6 +520,22 @@ window.I18N_DATA = {
 "Claim 2× +{0}"
 ],
 [
+"손님 {}명 · 재료 {}가지{}",
+"{0} guests · {1} ingredients{2}"
+],
+[
+"{}은(는) 이미 있어요",
+"{0} is already on the tray"
+],
+[
+"+{} 팁!",
+"+{0} Tip!"
+],
+[
+"{}명",
+"{0}"
+],
+[
 "은유와 은결",
 "Angela & Luke"
 ],
@@ -3534,6 +3550,206 @@ window.I18N_DATA = {
 [
 "탭/스페이스 = 점프 · 공중에서 꾹 = 훅 · 손 떼면 슝~",
 "Tap/Space = Jump · Hold in midair = Hook · Release = Swing!"
+],
+[
+"버거 러시",
+"Burger Rush"
+],
+[
+"햄버거 골목",
+"Burger Alley"
+],
+[
+"양상추 농장",
+"Lettuce Farm"
+],
+[
+"토마토 언덕",
+"Tomato Hill"
+],
+[
+"양파 들판",
+"Onion Fields"
+],
+[
+"베이컨 캠핑장",
+"Bacon Campground"
+],
+[
+"바닷가 버거 트럭",
+"Seaside Burger Truck"
+],
+[
+"감자튀김 성",
+"French Fry Castle"
+],
+[
+"탄산 분수 공원",
+"Fizzy Fountain Park"
+],
+[
+"별빛 드라이브",
+"Starlight Drive"
+],
+[
+"아이스크림 왕국",
+"Ice Cream Kingdom"
+],
+[
+"빵",
+"Bun"
+],
+[
+"아래 빵",
+"Bottom bun"
+],
+[
+"위 빵",
+"Top bun"
+],
+[
+"패티",
+"Patty"
+],
+[
+"생패티",
+"Raw patty"
+],
+[
+"치즈",
+"Cheese"
+],
+[
+"양상추",
+"Lettuce"
+],
+[
+"토마토",
+"Tomato"
+],
+[
+"양파",
+"Onion"
+],
+[
+"베이컨",
+"Bacon"
+],
+[
+"콜라",
+"Cola"
+],
+[
+"사이다",
+"Soda"
+],
+[
+"감자튀김",
+"Fries"
+],
+[
+"치킨너겟",
+"Nuggets"
+],
+[
+"아이스크림",
+"Ice cream"
+],
+[
+"생패티를 눌러 구워요! 초록이 되면 눌러서 쟁반에 올려요",
+"Tap a raw patty to cook it! When it turns green, tap it to put it on the tray."
+],
+[
+"음료도 주문해요! 말풍선을 잘 봐요",
+"Guests order drinks too! Check the speech bubble."
+],
+[
+"패티를 너무 오래 두면 타요! 빨개지기 전에 눌러요",
+"Patties burn if left too long! Tap before the bar turns red."
+],
+[
+"쟁반이 2개! 쟁반을 눌러 골라요",
+"Two trays! Tap a tray to choose it."
+],
+[
+"패티 2장 버거가 나와요! 말풍선을 눌러 보세요",
+"Double-patty burgers are here! Tap a bubble to check."
+],
+[
+"아이스크림이 새로 나왔어요!",
+"Ice cream is new on the menu!"
+],
+[
+"손님 말풍선을 누르면 재료를 크게 볼 수 있어요",
+"Tap a guest's bubble to see the ingredients up close."
+],
+[
+"버거가 완성됐어요. 주문과 다르면 쓰레기통을 눌러요",
+"The burger is done. If it doesn't match, tap the trash can."
+],
+[
+"더 쌓을 수 없어요",
+"Can't stack any more"
+],
+[
+"굽는 판이 꽉 찼어요",
+"The grill is full"
+],
+[
+"사이드는 3개까지예요",
+"Up to 3 sides"
+],
+[
+"아직 굽는 중이에요",
+"Still cooking"
+],
+[
+"탄 패티는 버렸어요",
+"Threw away the burnt patty"
+],
+[
+"주문과 달라요! 말풍선을 다시 봐요",
+"That's not the order! Check the bubble again."
+],
+[
+"사이드 메뉴도 담아요!",
+"Add the sides too!"
+],
+[
+"사이드가 달라요! 쓰레기통으로 비워요",
+"Wrong sides! Empty the tray with the trash can."
+],
+[
+"영업 끝! 클리어!",
+"Closing time! Clear!"
+],
+[
+"화난 손님이 너무 많았어요",
+"Too many guests left angry"
+],
+[
+"손님",
+"Guests"
+],
+[
+"주문 보기",
+"Order"
+],
+[
+"🍔 받은 손님",
+"🍔 Guests served"
+],
+[
+"💢 화나서 간 손님",
+"💢 Guests left angry"
+],
+[
+"폰을 가로로 돌려 주세요",
+"Please turn your phone sideways"
+],
+[
+"손님 주문대로 버거를 쌓아 내줘요! 손님이 화나서 떠나면 하트 -1",
+"Stack burgers just like the orders! If a guest leaves angry, you lose a heart."
 ],
 [
 "선물가게 정리",
