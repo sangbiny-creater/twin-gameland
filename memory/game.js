@@ -3,20 +3,22 @@
 //  · 처음에 모든 카드를 잠깐 보여 주고(미리 보기) 뒤집어 놓음 → 2장을 골라 뒤집어 같은 그림이면 획득, 다르면 다시 뒤집힘
 //  · 틀리면 제한 시간이 0.2초 줄어듦 (아무거나 마구 누르지 않게)
 //  · 제한 시간 안에 모든 짝을 찾으면 클리어 → 남은 시간으로 별 1~3개 (사천성과 같은 규칙)
-//  · 징검다리: 10개 월드 × 10판 = 100판 (1-1 ~ 10-10). 짝 수·추억 카드·미리 보기·시간 표는 levels.js
+//  · 징검다리: 쉬움 100판 + 어려움 100판 (1-1 ~ 10-10, 어려움 1-1 ~ 10-10). 짝 수·추억 카드·미리 보기·시간 표는 levels.js
 //  · 카드는 DOM(3D 뒤집기), 배경과 꽃가루 효과는 canvas
 // 폰 세로: 세로 배치 (논리 폭 540) / 폰 가로·태블릿 가로·PC: 가로 배치 (논리 높이 540) — 화면을 돌리지 않고 카드 줄 수를 바꿈
 
 let W = 540, H = 960;
 const WORLDS = ['하늘도시', '숲속 나무마을', '겨울왕국', '석양의 항구', '벚꽃마을', '구름왕국', '바닷속도시', '마법숲', '별빛우주', '황금성'];
-const { PER_WORLD, STAGES } = window.MemoryLevels; // 스테이지 i: { pairs, cards, scenes(추억 카드 쌍), preview(초), s(제한 초) }
+const { PER_WORLD, STAGES, HARD } = window.MemoryLevels; // 스테이지 i: { pairs, cards, scenes(추억 카드 쌍), preview(초), s(제한 초) } — 100 부터는 어려움
+const isHard = (i) => i >= HARD;
+const worldOf = (i) => Math.floor((i % HARD) / PER_WORLD); // 어려움도 같은 월드 이름
 const FRONTS = Array.from({ length: 18 }, (_, k) => `f${String(k).padStart(2, '0')}`); // 설명 자료의 카드 그림 18종
 const SCENES = Array.from({ length: 36 }, (_, k) => `s${String(k).padStart(2, '0')}`); // 은유·은결 일상 그림 (추억 카드)
 const MISS_SHOW = 0.75;  // 틀린 두 장을 보여 주는 시간 (초)
 const MISS_TIME = 0.2;   // 틀리면 줄어드는 시간 (초)
-const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
-const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611081217';
+const label = (i) => `${isHard(i) ? '어려움 ' : ''}${worldOf(i) + 1}-${(i % PER_WORLD) + 1}`;
+const stageName = (i) => `${WORLDS[worldOf(i)]} ${(i % PER_WORLD) + 1}`;
+const ASSET_V = '202611081324';
 const cardSrc = (n) => `assets/cards/${n}.webp?v=${ASSET_V}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -28,8 +30,14 @@ const Save = {
 Save.load();
 const HUB = window.Hub && window.Hub.active() ? window.Hub : null;
 if (HUB) Save.data.sound = HUB.settings.sound;
-const unlocked = (i) => (HUB ? HUB.stageUnlocked('memory', i) : i === 0 || !!Save.data.cleared[i - 1]);
-const nextStage = () => { if (HUB) return HUB.stageNext('memory'); for (let i = 0; i < STAGES.length; i++) if (!Save.data.cleared[i]) return i; return STAGES.length - 1; };
+// 어려움 판: 쉬움 같은 월드 마지막 판(N-10)과 어려움 앞 판을 깨면 열림 (profile.js 와 같은 규칙)
+const unlocked = (i) => {
+  if (HUB) return HUB.stageUnlocked('memory', i);
+  const C = Save.data.cleared;
+  if (isHard(i)) { const h = i - HARD; return !!C[Math.floor(h / PER_WORLD) * PER_WORLD + PER_WORLD - 1] && (h === 0 || !!C[i - 1]); }
+  return i === 0 || !!C[i - 1];
+};
+const nextStage = () => { if (HUB) return HUB.stageNext('memory'); for (let i = 0; i < HARD; i++) if (!Save.data.cleared[i]) return i; return HARD - 1; };
 const GOD = () => !!(window.Hub && window.Hub.god); // 무적 쿠폰 (테스트용)
 
 // ---------- utils ----------
@@ -180,7 +188,7 @@ function startStage(si) {
   const boosts = HUB ? HUB.takeBoosts('memory') : [];
   if (boosts.includes('combo')) G.comboX2 = true;
   if (boosts.length) toast('부스트: ' + boosts.map((b) => HUB.boostName('memory', b)).join(' · '));
-  $('hudStage').textContent = `스테이지 ${label(si)}`;
+  $('hudStage').textContent = isHard(si) ? label(si) : `스테이지 ${label(si)}`;
   buildBoard(si);
   renderItems(); renderBuffs();
   // 미리 보기: 카드가 깔리고 나면 모두 앞면으로 → 시간이 지나면 뒤집고 시작
@@ -364,7 +372,7 @@ function showResult(ok, st, earn, reward = []) {
     $('resEarn').innerHTML = `+${earn.earned} 코인 획득!` + (earn.bonus ? ` <small>(클리어 보너스 +${earn.bonus}${earn.firstClear ? ', 첫 클리어!' : ''})</small>` : '') + `<small>내 코인 ${earn.coins}</small>`
       + (items ? `<div class="reward">🎁 보상 아이템: ${items}</div>` : '');
   }
-  const hasNext = ok && G.si < STAGES.length - 1;
+  const hasNext = ok && G.si % HARD < HARD - 1 && unlocked(G.si + 1);
   $('btnNext').classList.toggle('hidden', !hasNext);
   setState('result');
 }
@@ -472,7 +480,12 @@ window.GameContinue = {
   go() { G.contUsed = true; G.coinBase = G.coins; clearTimers(); G.busy = 0; remaining().forEach((c) => setUp(c, false)); G.open = []; G.time = Math.max(G.time, 0) + 20; G.limit = Math.max(G.limit, G.time); setState('done'); GamePop.tapToGo(() => { setState('play'); Audio.startBgm(); }); },
 };
 function goMain() { if (typeof clearTimers === 'function') clearTimers(); Audio.stopBgm(); location.href = '../index.html#lobby'; } // 메인으로 (첫 화면)
-function goMap() { clearTimers(); Audio.stopBgm(); location.href = HUB ? '../index.html#map-memory' : '../index.html'; }
+function goMap() {
+  clearTimers(); Audio.stopBgm();
+  // 지도도 지금 하던 모드(쉬움·어려움)로 열리게 (hub.js 의 MODE_KEY 와 같은 키)
+  try { const m = JSON.parse(localStorage.getItem('twin_gameland_mapmode') || '{}'); m.memory = isHard(G.si) ? 'hard' : 'easy'; localStorage.setItem('twin_gameland_mapmode', JSON.stringify(m)); } catch (e) { /* ignore */ }
+  location.href = HUB ? '../index.html#map-memory' : '../index.html';
+}
 
 // ---------- input ----------
 document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });

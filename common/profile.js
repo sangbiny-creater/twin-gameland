@@ -25,7 +25,7 @@
     // 10개 월드 × 10판 (1-1 ~ 10-10) + 어려움 100판 (판 번호 100~199, 어려움 N월드는 쉬움 N월드를 다 깨면 열림)
     shisen: { name: '사천성', path: 'shisen/index.html', stages: 100, worlds: WORLDS, perWorld: 10, hard: true },
     downhill: { name: '다운힐 러너', path: 'downhill/index.html' },
-    memory: { name: '메모리 게임', path: 'memory/index.html', stages: 100, worlds: WORLDS, perWorld: 10 }, // 사천성처럼 10개 월드 × 10판
+    memory: { name: '메모리 게임', path: 'memory/index.html', stages: 100, worlds: WORLDS, perWorld: 10, hard: true }, // 10개 월드 × 10판 + 어려움 100판(번호 100~199, 사천성과 같은 규칙)
     mole: { name: '두더지 게임', path: 'mole/index.html', stages: 100, worlds: WORLDS, perWorld: 10 }, // 10개 월드 × 10판, 기록(best) = 최고 점수
     bakery: { name: '달콤 베이커리', path: 'bakery/index.html' }, // 끝없이 이어지는 게임, 기록(best) = 최고 점수
     dogsnack: { name: '멍멍이 간식 타임', path: 'dogsnack/index.html' }, // 3줄 버튼 리듬 게임 (베이커리와 같은 규칙·같은 기록 방식). 예전 이름 caketap(케이크 탭탭)
@@ -297,7 +297,7 @@
     costume(c = this.active()) { return (c && c.costume) || null; }, // 예전 어린이 옷 (게임의 예전 코드가 물어봄)
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611081217` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611081324` : null; },
     outfits(c = this.active()) { return c ? OUTFITS[lookBase(c.look)].filter((x) => !x.hidden || (c.outfits || []).includes(x.id)) : []; },
     outfit(c = this.active()) { return (c && c.outfit) || null; }, // 입은 옷 id (없으면 기본 옷)
     ownsOutfit(id, c = this.active()) { return !id || !!(c && (c.outfits || []).includes(id)); },
