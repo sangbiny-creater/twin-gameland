@@ -178,7 +178,7 @@
       const b = new Date(v), n = new Date(); let age = n.getFullYear() - b.getFullYear(); if (n < new Date(n.getFullYear(), b.getMonth(), b.getDate())) age--;
       if (age < 14) { err(box, '만 14세 미만은 보호자 동의가 필요해서 아직 가입할 수 없어요. 게스트로 즐겨 주세요!'); return; }
       st.over14 = true; save();
-      if (next === 'google') google(); else emailBox('signup');
+      if (next === 'google') google(); else if (!window.EMAIL_CODE_READY) toast('이메일 가입은 준비 중이에요.\n지금은 구글로 시작하거나 게스트로 입장해 주세요!', 3200); else emailBox('signup');
     };
   }
   async function google() {
@@ -244,7 +244,7 @@
     box.onclick = async (e) => {
       const a = e.target.closest('[data-a]'); if (!a) return;
       if (a.dataset.a === 'back') { loginBox(); return; }
-      if (a.dataset.a === 'reset') { emailBox('reset'); return; }
+      if (a.dataset.a === 'reset') { if (!window.EMAIL_CODE_READY) { err(box, '비밀번호 재설정은 준비 중이에요'); return; } emailBox('reset'); return; }
       const [em, pw] = [...box.querySelectorAll('input')].map((x) => x.value.trim());
       try { const f = await firebase(); await f.auth.signInWithEmailAndPassword(em.toLowerCase(), pw); done('로그인했어요!'); } catch (x) { err(box, '이메일 또는 비밀번호가 맞지 않아요'); }
     };

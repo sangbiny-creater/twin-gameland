@@ -58,6 +58,8 @@ WHOLE = {
 }
 # 문서 뒤에 새로 생긴 글 (2026-11-04 작업)
 EXTRA = {
+    '이메일 가입은 준비 중이에요.\n지금은 구글로 시작하거나 게스트로 입장해 주세요!': 'Email sign-up is coming soon.\nPlease continue with Google or play as a guest!',
+    '비밀번호 재설정은 준비 중이에요': 'Password reset is coming soon',
     '은유와 은결': 'Eunyu & Eungyeol',
     '계정 연동': 'Link Account',
     '구글로 시작하기': 'Continue with Google',

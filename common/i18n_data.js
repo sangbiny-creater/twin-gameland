@@ -3524,6 +3524,14 @@ window.I18N_DATA = {
 "Tap/Space = Jump · Hold in midair = Hook · Release = Swing!"
 ],
 [
+"이메일 가입은 준비 중이에요.\n지금은 구글로 시작하거나 게스트로 입장해 주세요!",
+"Email sign-up is coming soon.\nPlease continue with Google or play as a guest!"
+],
+[
+"비밀번호 재설정은 준비 중이에요",
+"Password reset is coming soon"
+],
+[
 "계정 연동",
 "Link Account"
 ],
