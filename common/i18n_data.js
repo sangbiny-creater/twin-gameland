@@ -3164,6 +3164,10 @@ window.I18N_DATA = {
 "Time's Up! Stage Clear!"
 ],
 [
+"별 3개! 클리어!",
+"3 Stars! Clear!"
+],
+[
 "타임 업!",
 "Time's Up!"
 ],

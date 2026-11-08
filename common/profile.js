@@ -26,7 +26,7 @@
     shisen: { name: '사천성', path: 'shisen/index.html', stages: 100, worlds: WORLDS, perWorld: 10, hard: true },
     downhill: { name: '다운힐 러너', path: 'downhill/index.html' },
     memory: { name: '메모리 게임', path: 'memory/index.html', stages: 100, worlds: WORLDS, perWorld: 10, hard: true }, // 10개 월드 × 10판 + 어려움 100판(번호 100~199, 사천성과 같은 규칙)
-    mole: { name: '두더지 게임', path: 'mole/index.html', stages: 100, worlds: WORLDS, perWorld: 10 }, // 10개 월드 × 10판, 기록(best) = 최고 점수
+    mole: { name: '두더지 게임', path: 'mole/index.html', stages: 100, worlds: WORLDS, perWorld: 10, hard: true }, // 10개 월드 × 10판 + 어려움 100판(번호 100~199, 사천성과 같은 규칙), 기록(best) = 최고 점수
     bakery: { name: '달콤 베이커리', path: 'bakery/index.html' }, // 끝없이 이어지는 게임, 기록(best) = 최고 점수
     dogsnack: { name: '멍멍이 간식 타임', path: 'dogsnack/index.html' }, // 3줄 버튼 리듬 게임 (베이커리와 같은 규칙·같은 기록 방식). 예전 이름 caketap(케이크 탭탭)
     darts: { name: '다트 게임', path: 'darts/index.html' }, // 카운트업 8라운드 × 3발, 기록(best) = 최고 점수

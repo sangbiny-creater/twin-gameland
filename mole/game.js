@@ -1,26 +1,28 @@
 'use strict';
 // 은유와 은결의 두더지 게임 — 구멍 9개에서 튀어나오는 두더지를 톡톡 치기
 //  · 일반 두더지(노란 안전모) +100 / 빠른 두더지(빨간 모자, 금방 숨음) +200 / 2대 두더지(빨간 헬멧, 두 번 쳐야 함) +300
-//  · 함정: 내 캐릭터 얼굴이 나오면 누르면 안 됨. 5월드부터는 은유·은결 둘 다 나옴
+//  · 함정: 내 캐릭터 얼굴이 나오면 누르면 안 됨. 어려움 4부터(난이도 사다리 8칸째)는 은유·은결 둘 다 나옴
 //  · 하트: 2개로 시작, 최대 3개. 두더지를 놓치거나 함정 캐릭터를 누르면 하트 -1, 하트가 다 없어지면 실패
-//  · 하트 두더지: 아주 가끔(약 20초에 한 번꼴) 나와서 아주 빨리 숨음. 잡으면 하트 +1 (하트가 꽉 차 있으면 +300점). 놓쳐도 괜찮음
+//  · 하트 두더지: 판마다 처음 4~7초쯤 한 번은 꼭 나오고, 그 뒤로는 아주 가끔(약 20초에 한 번꼴). 아주 빨리 숨음. 잡으면 하트 +1 (하트가 꽉 차 있으면 +300점). 놓쳐도 괜찮음
 //  · 빈 구멍을 눌러도 감점 없음
 //  · 콤보 5번 ×1.2, 10번 ×1.5, 20번 ×2 점수
-//  · 시간이 끝났을 때 목표 점수를 넘으면 클리어 → 점수로 별 1~3개
-//  · 징검다리: 10개 월드 × 10판 = 100판 (1-1 ~ 10-10). 판별 시간·목표·두더지 표는 levels.js
+//  · 시간이 끝났을 때 목표 점수를 넘으면 클리어 → 점수로 별 1~3개. 별 3개 점수에 닿으면 시간이 남아도 바로 클리어
+//  · 징검다리: 쉬움 100판 + 어려움 100판 (1-1 ~ 10-10, 어려움 1-1 ~ 10-10). 판별 시간·목표·두더지 표는 levels.js
 // 폰 세로: 세로 배치 (논리 폭 540) / 폰 가로·태블릿 가로·PC: 가로 배치 (논리 높이 540) — 화면을 돌리지 않고 구멍 자리를 바꿈
 
 let W = 540, H = 960;
 const WORLDS = ['하늘도시', '숲속 나무마을', '겨울왕국', '석양의 항구', '벚꽃마을', '구름왕국', '바닷속도시', '마법숲', '별빛우주', '황금성'];
-const { PER_WORLD, STAGES, PTS } = window.MoleLevels;
+const { PER_WORLD, STAGES, PTS, HARD } = window.MoleLevels;
+const isHard = (i) => i >= HARD;
+const worldOf = (i) => Math.floor((i % HARD) / PER_WORLD); // 어려움도 같은 월드 이름
 const START_HEARTS = 2, MAX_HEARTS = 3;
 const HEART_GAP = 15;      // 하트 두더지는 앞 하트 두더지 뒤로 최소 15초 지나야 다시 나옴
 const HEART_CHANCE = 0.12; // 그 뒤 새 두더지가 나올 때마다 이 확률로 하트 두더지 (→ 평균 약 20초에 한 번)
 const HEART_STAY = 0.6;    // 하트 두더지가 다 올라와 머무는 시간 (초) — 아주 빨리 숨음
 const HEART_FULL_PTS = 300; // 하트가 꽉 찼을 때 하트 두더지를 잡으면 받는 점수
-const label = (i) => `${Math.floor(i / PER_WORLD) + 1}-${(i % PER_WORLD) + 1}`;
-const stageName = (i) => `${WORLDS[Math.floor(i / PER_WORLD)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611081217';
+const label = (i) => `${isHard(i) ? '어려움 ' : ''}${worldOf(i) + 1}-${(i % PER_WORLD) + 1}`;
+const stageName = (i) => `${WORLDS[worldOf(i)]} ${(i % PER_WORLD) + 1}`;
+const ASSET_V = '202611081324';
 const asset = (p) => `assets/${p}.webp?v=${ASSET_V}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------
@@ -32,8 +34,14 @@ const Save = {
 Save.load();
 const HUB = window.Hub && window.Hub.active() ? window.Hub : null;
 if (HUB) Save.data.sound = HUB.settings.sound;
-const unlocked = (i) => (HUB ? HUB.stageUnlocked('mole', i) : i === 0 || !!Save.data.cleared[i - 1]);
-const nextStage = () => { if (HUB) return HUB.stageNext('mole'); for (let i = 0; i < STAGES.length; i++) if (!Save.data.cleared[i]) return i; return STAGES.length - 1; };
+// 어려움 판: 쉬움 같은 월드 마지막 판(N-10)과 어려움 앞 판을 깨면 열림 (profile.js 와 같은 규칙)
+const unlocked = (i) => {
+  if (HUB) return HUB.stageUnlocked('mole', i);
+  const C = Save.data.cleared;
+  if (isHard(i)) { const h = i - HARD; return !!C[Math.floor(h / PER_WORLD) * PER_WORLD + PER_WORLD - 1] && (h === 0 || !!C[i - 1]); }
+  return i === 0 || !!C[i - 1];
+};
+const nextStage = () => { if (HUB) return HUB.stageNext('mole'); for (let i = 0; i < HARD; i++) if (!Save.data.cleared[i]) return i; return HARD - 1; };
 const GOD = () => !!(window.Hub && window.Hub.god); // 무적 쿠폰 (테스트용)
 
 // ---------- utils ----------
@@ -186,7 +194,8 @@ function spawn() {
   const free = G.holes.filter((h) => !h.m && h.cool <= 0);
   if (!free.length) return;
   // 하트 두더지: 아주 가끔, 다른 두더지와 따로 (한꺼번에 나오는 수에 안 셈)
-  if (G.t - G.heartT >= HEART_GAP && Math.random() < HEART_CHANCE) {
+  if ((!G.heartSeen && G.t >= G.firstHeartAt) || (G.heartSeen && G.t - G.heartT >= HEART_GAP && Math.random() < HEART_CHANCE)) {
+    G.heartSeen = true;
     G.heartT = G.t;
     const hh = free[Math.floor(Math.random() * free.length)];
     hh.m = { type: 'heart', who: null, ph: 'up', t: 0, stay: HEART_STAY, hp: 1, u: 0, shake: 0 };
@@ -236,14 +245,15 @@ function startStage(si) {
   clearTimers();
   G.limit = st.time; G.time = st.time; G.score = 0; G.coins = 0; G.combo = 0; G.maxCombo = 0; G.caught = 0; G.coinBase = 0; G.contUsed = false;
   G.fx = []; G.t = 0; G.dblT = 0; G.comboX2 = false; G.spawnT = 0.3; G.tickT = 0;
-  G.hearts = START_HEARTS; G.maxH = MAX_HEARTS; G.heartT = 0; G.dead = false; renderHearts();
+  G.hearts = START_HEARTS; G.maxH = MAX_HEARTS; G.heartT = 0; G.dead = false; G.early = false; renderHearts();
+  G.heartSeen = false; G.firstHeartAt = rnd(4, 7); // 하트 두더지는 판마다 처음 4~7초쯤 한 번은 꼭
   for (const h of G.holes) { h.m = null; h.cool = 0; }
   if (HUB) HUB.starterKit('mole');
   const boosts = HUB ? HUB.takeBoosts('mole') : [];
   if (boosts.includes('combo')) G.comboX2 = true;
   if (boosts.includes('life')) { G.hearts = 3; G.maxH = 4; renderHearts(); } // 하트 아이템: 4칸에 3개로 시작 (기본 3칸에 2개)
   if (boosts.length) toast('부스트: ' + boosts.map((b) => HUB.boostName('mole', b)).join(' · '));
-  $('hudStage').textContent = `스테이지 ${label(si)}`;
+  $('hudStage').textContent = isHard(si) ? label(si) : `스테이지 ${label(si)}`;
   $('hudGoal').textContent = fmt(st.goal);
   renderItems(); renderBuffs();
   G.countT = 3;
@@ -402,7 +412,7 @@ function endStage() {
     earn = HUB.record('mole', { stage: G.si, cleared: ok, dist: G.score, coins: G.coins - G.coinBase, stars: s });
     reward = ok && !earn.god ? clearReward(s, earn.firstClear) : [];
   } else if (ok) { Save.data.cleared[G.si] = true; Save.store(); }
-  G.fx.push({ kind: 'text', text: G.dead ? '하트가 없어요!' : ok ? '타임 업! 클리어!' : '타임 업!', x: W / 2, y: H * 0.45, t: 0, life: 1.2, big: true, bad: !ok });
+  G.fx.push({ kind: 'text', text: G.dead ? '하트가 없어요!' : G.early ? '별 3개! 클리어!' : ok ? '타임 업! 클리어!' : '타임 업!', x: W / 2, y: H * 0.45, t: 0, life: 1.2, big: true, bad: !ok });
   later(() => showResult(ok, s, earn, reward, st), 1200);
 }
 // 클리어 보상 아이템 (캐릭터 보유 수량에 바로 더해짐)
@@ -433,7 +443,7 @@ function showResult(ok, st, earn, reward, stage) {
     $('resEarn').innerHTML = `+${earn.earned} 코인 획득!` + (earn.bonus ? ` <small>(클리어 보너스 +${earn.bonus}${earn.firstClear ? ', 첫 클리어!' : ''})</small>` : '') + `<small>내 코인 ${earn.coins}</small>`
       + (items ? `<div class="reward">🎁 보상 아이템: ${items}</div>` : '');
   }
-  const hasNext = ok && G.si < STAGES.length - 1;
+  const hasNext = ok && G.si % HARD < HARD - 1 && unlocked(G.si + 1);
   $('btnNext').classList.toggle('hidden', !hasNext);
   setState('result');
 }
@@ -463,7 +473,9 @@ function step(dt) {
   if (G.dblT > 0) { G.dblT = Math.max(0, G.dblT - dt); if (!G.dblT) renderBuffs(); }
   if (G.time > 0.6) { G.spawnT -= dt; if (G.spawnT <= 0) { spawn(); G.spawnT = STAGES[G.si].gap * rnd(0.8, 1.2); } }
   if (G.time < 5) { G.tickT -= dt; if (G.tickT <= 0) { G.tickT = 1; Audio.sfx('tick'); } }
-  if (G.time <= 0) { G.time = 0; endStage(); }
+  if (G.time <= 0) { G.time = 0; endStage(); return; }
+  // 별 3개 점수에 닿으면 시간이 남아 있어도 바로 클리어
+  if (G.score >= STAGES[G.si].s3) { G.early = true; endStage(); }
 }
 
 // ---------- render ----------
@@ -663,7 +675,12 @@ window.GameContinue = {
   },
 };
 function goMain() { if (typeof clearTimers === 'function') clearTimers(); Audio.stopBgm(); location.href = '../index.html#lobby'; } // 메인으로 (첫 화면)
-function goMap() { clearTimers(); Audio.stopBgm(); location.href = HUB ? '../index.html#map-mole' : '../index.html'; }
+function goMap() {
+  clearTimers(); Audio.stopBgm();
+  // 지도도 지금 하던 모드(쉬움·어려움)로 열리게 (hub.js 의 MODE_KEY 와 같은 키)
+  try { const m = JSON.parse(localStorage.getItem('twin_gameland_mapmode') || '{}'); m.mole = isHard(G.si) ? 'hard' : 'easy'; localStorage.setItem('twin_gameland_mapmode', JSON.stringify(m)); } catch (e) { /* ignore */ }
+  location.href = HUB ? '../index.html#map-mole' : '../index.html';
+}
 
 // ---------- input ----------
 document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });

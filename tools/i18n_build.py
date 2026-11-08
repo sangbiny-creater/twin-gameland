@@ -58,6 +58,7 @@ WHOLE = {
 }
 # 문서 뒤에 새로 생긴 글 (2026-11-04 작업)
 EXTRA = {
+    '별 3개! 클리어!': '3 Stars! Clear!',
     '구글로 로그인': 'Log in with Google',
     '이메일로 로그인': 'Log in with email',
     '가입하기': 'Sign up',

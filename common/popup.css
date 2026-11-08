@@ -21,6 +21,7 @@ html[data-who=eungyeol] { --who: #2C84DC; --who-d: #1F62AE; --who-bg: #EEF6FF; }
   padding: 22px 26px 22px !important;
   filter: drop-shadow(0 10px 22px rgba(0, 0, 0, .35)); color: #5A3B22;
   display: flex !important; flex-direction: column !important; align-items: center !important; gap: 8px !important;
+  position: relative; /* 오른쪽 위 X(.gp-x)가 화면 귀퉁이가 아니라 창 귀퉁이에 붙게 */
 }
 /* 제목 리본 */
 .screen.dim > .panel > .p-title:first-child, .screen.dim > .panel > .title:first-child, .screen.dim > .panel > .r-title:first-child,
