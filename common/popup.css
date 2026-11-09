@@ -105,3 +105,18 @@ html[data-who=eungyeol] .pp-acts button.pp-adb { border-image-source: url(ui/pop
   background: url(ui/popup/btn_pause.webp) center / contain no-repeat !important; box-shadow: none !important; font-size: 0 !important; color: transparent !important; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .25)); }
 #root #btnPause > * { display: none !important; }
 #root #btnPause:active { transform: scale(.94); }
+
+/* 결과 창 (2026-11-09 사용자 요청): 기록 표는 창에서 빼고 코인·다이아 칸만. 칸을 꾹 누르는 동안만 기록 상자(.pp-stat-tip)가 보임 — common/popup.js */
+#result .panel .r-box, #result .panel .res-stats, #result .panel .res-table, #result .panel .res-line,
+#result .panel .r-stats > div:not(:has(.r-stars)) { display: none !important; }
+#result .panel .res-body:not(:has(> :not(.res-stats):not(#resFace))) { display: none !important; } /* 하늘타기: 표만 들어 있던 칸 */
+#result #mnEarnRow, #result #resEarn, #result #mnGems { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: none; cursor: pointer; }
+#result #mnEarnRow *, #result #resEarn *, #result #mnGems * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-user-drag: none; }
+/* 기록 상자: 장식 없는 둥근 흰 네모 (첫 화면 이름·레벨 상자 .pk-me 와 같은 느낌) */
+.pp-stat-tip { position: absolute; left: 50%; z-index: 20; box-sizing: border-box; min-width: 220px; max-width: calc(100% + 20px); transform: translateX(-50%); padding: 12px 18px;
+  background: #fff; border: 3px solid var(--who); border-radius: 22px; box-shadow: 0 4px 10px rgba(24, 59, 91, .25);
+  font-family: Jua, 'Apple SD Gothic Neo', system-ui, sans-serif; color: #26365A; pointer-events: none; -webkit-user-select: none; user-select: none;
+  display: flex; flex-direction: column; gap: 7px; animation: ppTipIn .12s ease-out; }
+.pp-stat-tip > div { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; font-size: 17px; line-height: 1.15; white-space: nowrap; }
+.pp-stat-tip b { font-weight: normal; color: var(--who); font-variant-numeric: tabular-nums; }
+@keyframes ppTipIn { from { opacity: 0; transform: translate(-50%, 4px); } }
