@@ -13,9 +13,9 @@
   const atlas = {};
   // 입은 옷에 게임 안 포즈 묶음(common/chars/<look>_<옷>)이 있으면 그 포즈는 묶음에서, 나머지는 기본 묶음에서
   function open(file, t) {
-    return fetch(`${base}common/chars/${file}.json?v=202611092248`).then((r) => r.json()).then((j) => new Promise((done, fail) => {
+    return fetch(`${base}common/chars/${file}.json?v=202611100203`).then((r) => r.json()).then((j) => new Promise((done, fail) => {
       t.f = j.frames; t.img.onload = () => { const on = () => { t.ok = true; done(); }; if (t.img.decode) t.img.decode().then(on, on); else on(); }; // 미리 풀어 둠: 처음 그릴 때 화면이 잠깐 멈추지 않게
-      t.img.onerror = fail; t.img.src = `${base}common/chars/${file}.webp?v=202611092248`;
+      t.img.onerror = fail; t.img.src = `${base}common/chars/${file}.webp?v=202611100203`;
     }));
   }
   function load(look) {
@@ -82,5 +82,6 @@
   };
   window.CharV2 = CharV2;
   // 지금 캐릭터가 v2면 미리 불러 둠
-  try { const c = window.Hub && window.Hub.active(); if (c) load(c.look); } catch (e) { /* ignore */ }
+  //  첫 화면(놀이공원)에서는 화면이 다 뜬 뒤에 (놀이공원은 이 그림을 안 써서 첫 화면을 늦추지 않게 — 지도에서 쓸 때는 그때 바로 받음)
+  try { const c = window.Hub && window.Hub.active(); if (c) { const f = () => load(c.look); if (window.Boot && document.getElementById('scrLobby')) Boot.afterShow(f); else f(); } } catch (e) { /* ignore */ }
 })();

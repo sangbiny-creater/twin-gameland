@@ -45,7 +45,9 @@
   // 그림: common/ui/monet/ (GPT U01~U11 → tools/monet_assets.py). 창 틀·버튼은 border-image 로 늘려 씀
   const IMG = ROOT + 'common/ui/monet/', P4 = ROOT + 'common/ui/popup/v4/'; // P4: 공통 팝업 재료 (분홍 = 은유, 파랑 = 은결)
   const I = (n, cls = 'mn-ic') => `<img class="${cls}" src="${IMG}${n}.webp" alt="">`;
-  for (const n of ['locked', 'welcome', 'ico_key', 'ico_gem', 'ico_lock']) new Image().src = IMG + n + '.webp';
+  for (const n of ['ico_key', 'ico_gem', 'ico_lock', 'ico_ad', 'ico_continue', 'ico_x2']) new Image().src = IMG + n + '.webp';
+  if (window.Boot) Boot.later(['locked', 'welcome'].map((n) => IMG + n + '.webp')); else for (const n of ['locked', 'welcome']) new Image().src = IMG + n + '.webp'; // 큰 창 그림은 첫 화면 뒤에 (뜰 때 다 안 왔으면 그 창은 다 받은 뒤 한 번에 — common/boot.js) // 결과 창 광고 버튼·다이아 줄 그림도 처음에 받아 둠 (common/boot.js 가 다 받을 때까지 기다림)
+  new Image().src = ROOT + 'common/ui/coin.webp';
   const G = Hub.GAMES;
   const name = (g) => (G[g] && G[g].name) || g;
   const today = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
@@ -292,13 +294,25 @@ html[data-who=eungyeol] .mn-art-x{background-image:url(${P4}x_blue.webp)}
     const got = (isOpen(game) ? playGems(game, r) : []);
     if (gem) got.unshift([1, `게임 ${GEM_EVERY}판마다`]);
     const gems = got.reduce((a, [n]) => a + n, 0);
-    setTimeout(() => gemLine(gems, got), 900);
-    if (isOpen(game)) { // 체험 중에는 광고 없음
-      const failed = G[game].stages ? !r.cleared : !NO_CONTINUE.includes(game);
-      setTimeout(() => rewardBar(res.earned || 0, failed, 0, gems), 900);
-    }
+    // 결과 창이 뜨는 그 순간(그리기 전)에 다이아 줄·광고 버튼을 같이 넣음 — 창이 뜬 뒤에 붙어서 창이 커지지 않게 (예전: 0.9초 뒤에 붙임)
+    const failed = isOpen(game) && (G[game].stages ? !r.cleared : !NO_CONTINUE.includes(game));
+    whenResult(() => { gemLine(gems, got); if (isOpen(game)) rewardBar(res.earned || 0, failed, 0, gems); }); // 체험 중에는 광고 없음
     return res;
   };
+  // 결과 창(#result)이 보이면 바로 fn (이미 보이면 지금). 창이 열리는 순간의 감시자에서 불러서 꾸밈이 창과 같은 장면에 그려짐
+  let resultWait = null;
+  function whenResult(fn) {
+    const r = document.getElementById('result');
+    const open = () => !!document.querySelector('#result:not(.hidden) .panel');
+    if (resultWait) { resultWait(); resultWait = null; }
+    if (open()) { fn(); return; }
+    if (!r) return;
+    const mo = new MutationObserver(() => { if (open()) { stop(); fn(); } });
+    const tm = setTimeout(() => stop(), 30000);
+    const stop = () => { mo.disconnect(); clearTimeout(tm); if (resultWait === stop) resultWait = null; };
+    mo.observe(r, { attributes: true, attributeFilter: ['class'] });
+    resultWait = stop;
+  }
   // 결과 창 '+N 코인 획득!' 바로 아래에 '💎 +N 다이아 획득!' (이유는 작은 글자). 못 받았으면 다음 다이아까지 남은 판 수
   const short = (why) => why.replace('게임 ', '').replace('기록 ', '').replace(' 달성!', '').replace(' 첫 클리어!', ' 클리어').replace('!', ''); // 결과 창 작은 글자는 짧게
   function gemLine(n, got, tries = 0) {

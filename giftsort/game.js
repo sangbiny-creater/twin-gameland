@@ -18,7 +18,7 @@ const UNDO_FREE = 3, HINT_FREE = 1, UNDO_ITEM = 5; // 판마다 무료 되돌리
 const CART_COIN = 3, GOLD_COIN = 10;              // 카트 완성 코인 / 황금 선물 카트 완성 코인
 const label = (i) => `${isHard(i) ? '어려움 ' : ''}${worldOf(i) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[worldOf(i)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611092248';
+const ASSET_V = '202611100203';
 const giftSrc = (n) => `assets/gifts/${n}.webp?v=${ASSET_V}`;
 // 별: 옮긴 횟수가 par 에 가까울수록 (컴퓨터 풀이도 가장 짧은 풀이는 아니라서 넉넉하게)
 const starLimits = (par) => [par + 2 + Math.floor(par * 0.1), Math.ceil(par * 1.5) + 4];
@@ -51,6 +51,7 @@ const BG = { port: new Image(), land: new Image() };
 BG.port.src = `assets/bg/port.webp?v=${ASSET_V}`; BG.land.src = `assets/bg/land.webp?v=${ASSET_V}`;
 const FXI = [0, 1, 2, 3, 4, 5].map((k) => { const im = new Image(); im.src = `assets/fx/p${k}.webp?v=${ASSET_V}`; return im; });
 [...GIFTS, 'gold', 'mystery', 'bow'].forEach((n) => { new Image().src = giftSrc(n); });
+['cart', 'cart_one', 'cart_lock'].forEach((n) => { new Image().src = `assets/ui/${n}.webp?v=${ASSET_V}`; }); // 카트 틀도 처음에 받아 둠 (게임 시작 때 카트가 빈 채로 보이지 않게 — common/boot.js 가 기다림)
 // 내 캐릭터: 고른 사람 1명, 입은 옷 그대로 (그림이 없는 옷은 기본 옷)
 const ME = (() => {
   const look = HUB ? HUB.active().look : 'eunyu3';
