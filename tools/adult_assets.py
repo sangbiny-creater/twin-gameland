@@ -162,7 +162,8 @@ def ride_front(body, bb, top=0.40):
 
 def ride_frames(who, rides, ride_h=None):
     """구름 탑승 컷 4장(ride_fly·happy·hurt·dizzy) → 지금 구름 그림 위에 상체를 앉힌 그림과 스카이 라이더 heli_* 프레임"""
-    base = f'{ROOT}/character/{LOOK[who]}_v4/base/{LOOK[who]}_base_ride_cloud'
+    # 구름은 은유·은결 모두 은유 구름(동그란 몸통 하나). 은결 구름은 꼬리가 있어 몸이 몸통·꼬리에 걸쳐 보였음
+    base = f'{ROOT}/character/eunyu3_v4/base/eunyu3_base_ride_cloud'
     body = Image.open(f'{base}_body.png').convert('RGBA')
     W, H = body.size; rh = H * (0.74 if who == 'eunyu' else 0.80)
     s6 = rh / (ride_h or np.median([r.height for r in rides]))
