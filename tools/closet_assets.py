@@ -116,20 +116,7 @@ def sheet_frames(who, D, R):
     else:  # G2 는 베이커리 실수 순간에만 잠깐 보여서 받지 않음 → 서 있는 포즈로 (기본 옷으로 튀지 않게)
         for n in ['jump_up', 'hit', 'dizzy', 'dead']: frames[n] = frames['idle_1']
     # 구름 탑승 (tools/adult_assets.py build_look 와 같은 방법)
-    base = f'{ROOT}/character/{A.LOOK[who]}_v4/base/{A.LOOK[who]}_base_ride_cloud'
-    body = Image.open(f'{base}_body.png').convert('RGBA'); W, H = body.size
-    rides = cuts(g(3), 4); ext = round(H * 0.9); rh = H * (0.74 if who == 'eunyu' else 0.80)
-    s6 = rh / R['ride']
-    bb = body.getchannel('A').getbbox(); bh = bb[3] - bb[1]; cx = (bb[0] + bb[2]) / 2; seat = bb[1] + bh * 0.5
-    front = body.copy(); fa = np.array(front); fa[:round(bb[1] + bh * 0.42), :, 3] = 0; front = Image.fromarray(fa)
-    out = {}
-    for n, r in zip(['ride_fly', 'ride_happy', 'ride_hurt', 'ride_dizzy'], rides):
-        p = scaled(r, s6); c = Image.new('RGBA', (W + 2 * ext, H + ext))
-        c.alpha_composite(body, (ext, ext)); c.alpha_composite(p, (round(ext + cx - p.width / 2), round(ext + seat - p.height))); c.alpha_composite(front, (ext, ext)); out[n] = c
-    sc = 410 / W
-    for n, r in [('heli_0', 'ride_fly'), ('heli_1', 'ride_fly'), ('heli_2', 'ride_fly'), ('heli_happy', 'ride_happy'), ('heli_hurt', 'ride_hurt'), ('heli_crash', 'ride_dizzy')]:
-        bbx = out[r].getchannel('A').getbbox(); p = scaled(out[r].crop(bbx), sc)
-        frames[n] = (p, [round((bbx[0] - ext) * sc), round((bbx[1] - ext) * sc), 410, 256])
+    frames.update(A.ride_frames(who, A.ride_cuts(g(3), 4), R['ride'])[0])
     a = cuts(g(4), 4); s = 393 / R['back']
     for n, c in zip(['back_run_0', 'back_run_1', 'back_left', 'back_right'], a): frames[n] = ground_frame(c, s)
     for n, c in zip(['back_hit', 'back_happy', 'back_dead', 'back_boost'], cuts(g(5), 4)): frames[n] = ground_frame(c, s)
@@ -161,7 +148,7 @@ def pack(frames, name):
 def sheets():
     for who, L in OUTFITS.items():
         l = A.LETTER[who]; c = f'adult/common_{who}/{l}'
-        rides = cuts(key(f'{ROOT}/character/{c}06.png'), 4)
+        rides = A.ride_cuts(key(f'{ROOT}/character/{c}06.png'), 4)
         R = dict(stand=ref_height(f'{c}02', 4), ride=np.median([r.height for r in rides]),
                  back=ref_height(f'adult/downhill_sd/S0{1 if who == "eunyu" else 3}', 4), stairs=ref_height(f'adult2/stairs_sd/U0{1 if who == "eunyu" else 3}', 5))
         for oid in L:

@@ -136,6 +136,9 @@ for (const g of ['shisen', 'memory']) add(`stage-items-${g}-pp`, `${g}/index.htm
 for (const g of ['helicopter', 'stairs', 'downhill', 'shisen', 'memory', 'mole', 'bakery', 'dogsnack', 'darts', 'giftsort']) for (const vp of ['pp', 'pl']) add(`hudplay-${g}-${vp}`, `${g}/index.html${['shisen', 'memory', 'mole', 'giftsort'].includes(g) ? '?stage=12' : ''}`, { vp, wait: 2800,
   js: `(() => { document.querySelectorAll('#gpStart,.mn-modal').forEach((e) => e.remove()); document.querySelectorAll('.screen.dim,#ready,#home').forEach((e) => e.classList.add('hidden')); document.getElementById('hud').classList.remove('hidden');
     const r = document.getElementById('root').getBoundingClientRect(); return [...document.querySelectorAll('#hud .hp')].filter((e) => e.offsetParent).map((e) => { const b = e.getBoundingClientRect(); return [e.textContent.trim(), Math.round(b.height / r.height * (r.height > r.width ? 960 : 540))]; }); })()`, wait2: 300 });
+// 스카이 라이더 구름 탑승: 은유 손이 안 잘리는지, 은결이 구름 속에 앉아 있는지 (기본 옷·겨울옷·홈웨어)
+for (const [ch, outfit] of [['c1'], ['c2'], ['c1', 'winter'], ['c2', 'home'], ['c2', 'winter']]) for (const vp of ['pp', 'pl', 'tb']) add(`skyrider-ride-${ch}${outfit ? '-' + outfit : ''}-${vp}`, 'helicopter/index.html', { vp, ch, outfit, wait: 2800,
+  js: `(() => { document.querySelectorAll('#gpStart,.mn-modal').forEach((e) => e.remove()); document.querySelectorAll('.screen').forEach((e) => e.classList.add('hidden')); document.getElementById('hud').classList.remove('hidden'); startRun(); })()`, wait2: 1500 });
 // 선물가게 정리: 판 시작 화면(쉬운 판·카트 많은 판), 고르기·옮기기, 지도, 첫 화면 놀이기구
 for (const vp of ['pp', 'pl', 'tb']) for (const st of [0, 12, 199]) add(`giftsort-play${st}-${vp}`, `giftsort/index.html?stage=${st}`, { vp, wait: 2500, js: `(() => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(${st}); })()`, wait2: 1200 });
 add('giftsort-sel-pp', 'giftsort/index.html?stage=12', { vp: 'pp', wait: 2500, js: `(() => { startStage(12); const g = __giftsort; const m = g.hintMove(); g.tap(m[0]); return m; })()`, wait2: 600 });
@@ -288,6 +291,8 @@ const send = (method, params = {}, sessionId) => new Promise((res, rej) => {
   const id = ++mid; pend.set(id, { res, rej }); ws.send(JSON.stringify({ id, method, params, sessionId }));
   setTimeout(() => { if (pend.has(id)) { pend.delete(id); rej(new Error('timeout ' + method)); } }, 25000);
 });
+// outfit: 그 캐릭터가 옷을 입은 상태로 (예: { ch: 'c2', outfit: 'home' })
+const seedFor = (sc) => { const d = seed(sc.ch || 'c1'); if (sc.outfit) for (const c of d.chars) if (c.id === (sc.ch || 'c1')) { c.outfits = [sc.outfit]; c.outfit = sc.outfit; } return d; };
 const PRE = (data, empty) => `(() => {
   let s = 12345; Math.random = () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   try { if (!sessionStorage.getItem('__seeded')) { localStorage.clear(); ${empty ? '' : `localStorage.setItem('twin_gameland_v1', ${JSON.stringify(JSON.stringify(data))});`} localStorage.setItem('twin_tip_closed', '1'); ${empty ? '' : `localStorage.setItem('twin_auth_v1', '{"mode":"guest","uid":"local-test","at":1}');`} sessionStorage.setItem('__seeded', '1'); } } catch (e) {}
@@ -312,7 +317,7 @@ for (const sc of S) {
     const [w, ht, kind] = VP[sc.vp], desk = kind === 'desktop';
     await send('Emulation.setDeviceMetricsOverride', { width: w, height: ht, deviceScaleFactor: desk ? 1 : 2, mobile: !desk, screenOrientation: w > ht ? { type: 'landscapePrimary', angle: 90 } : { type: 'portraitPrimary', angle: 0 } }, sessionId);
     if (!desk) await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 }, sessionId);
-    await send('Page.addScriptToEvaluateOnNewDocument', { source: PRE(seed(sc.ch || 'c1'), sc.empty) }, sessionId);
+    await send('Page.addScriptToEvaluateOnNewDocument', { source: PRE(seedFor(sc), sc.empty) }, sessionId);
     if (sc.slow) await send('Network.emulateNetworkConditions', { offline: false, latency: 100, downloadThroughput: 1500 * 1024, uploadThroughput: 500 * 1024 }, sessionId);
     await send('Page.navigate', { url: BASE + sc.url }, sessionId);
     if (sc.film) {

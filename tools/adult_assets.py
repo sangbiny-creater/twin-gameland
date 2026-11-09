@@ -71,6 +71,114 @@ def cuts(im, n, rows=1):
     return out
 
 
+def mend_edges(im, m=6):
+    """시트 왼쪽·오른쪽 끝에 닿아 잘린 부분(소매·머리카락)을 둥글게 조금 늘이고 흐리게 → 일자로 잘린 자국이 안 보이게"""
+    a = np.array(im); al = a[..., 3].astype(np.float32); H, W = al.shape
+    for side in (0, 1):
+        col = m if side == 0 else W - 1 - m; on = al[:, col] > 24
+        lab, n = nd.label(on)
+        for i in range(1, n + 1):
+            ys = np.where(lab == i)[0]; y0, y1 = ys[0], ys[-1] + 1; L = y1 - y0
+            if L < 6: continue
+            R = min(L * 0.5, 34.0); c = (y0 + y1 - 1) / 2; h = L / 2
+            for y in range(y0, y1):
+                w = R * np.sqrt(max(0.0, 1 - ((y - c) / h) ** 2))
+                for d in range(1, int(np.ceil(w)) + 1):
+                    x = col - d if side == 0 else col + d
+                    if not 0 <= x < W: break
+                    k = min(1.0, w - d + 1) * (1 - d / (R + 1)) ** 1.3
+                    a[y, x, :3] = a[y, col, :3]; al[y, x] = max(al[y, x], al[y, col] * k)
+        # 원래 끝 몇 줄도 살짝 흐리게
+        f = np.linspace(0.75, 1, 8)
+        if side == 0: al[:, m:m + 8] *= f[None, :]
+        else: al[:, W - m - 8:W - m] *= f[::-1][None, :]
+    a[..., 3] = np.clip(al, 0, 255).astype(np.uint8)
+    return Image.fromarray(a)
+
+
+def ride_cuts(im, n=4):
+    """구름 상체 시트 → 컷 n 개. 뻗은 팔·든 손이 옆 컷에 닿아 있으면 세로 일자로 자르지 않고
+    가장 가는 이음매에서 나눔(그래야 손이 안 잘리고 옆 컷 손이 묻어 오지 않음)"""
+    import cv2
+    im = mend_edges(im); a = np.array(im); m = a[..., 3] > 24
+    lab, cnt = nd.label(m); sz = nd.sum(m, lab, range(1, cnt + 1))
+    if (sz > sz.max() * 0.12).sum() >= n: return cuts(im, n)
+    for it in range(2, 40):
+        e = nd.binary_erosion(m, iterations=it); el, ec = nd.label(e); es = nd.sum(e, el, range(1, ec + 1))
+        keep = [i + 1 for i, v in enumerate(es) if v > es.max() * 0.12]
+        if len(keep) >= n: break
+    else: raise SystemExit(f'구름 컷 {n}개를 못 나눔')
+    mk = np.zeros(m.shape, np.int32)
+    for j, i in enumerate(keep, 1): mk[el == i] = j
+    mk[~nd.binary_dilation(m, iterations=2)] = len(keep) + 1  # 바탕
+    dist = nd.distance_transform_edt(m); g = (255 - np.clip(dist / max(1, dist.max()) * 255, 0, 255)).astype(np.uint8)
+    cv2.watershed(cv2.merge([g, g, g]), mk)
+    # 경계선(-1)·흐린 가장자리는 가장 가까운 컷으로
+    own = np.where((mk >= 1) & (mk <= len(keep)), mk, 0)
+    idx = nd.distance_transform_edt(own == 0, return_distances=False, return_indices=True)
+    own = own[idx[0], idx[1]]
+    parts = []
+    for j in range(1, len(keep) + 1):
+        p = a.copy(); p[..., 3][own != j] = 0
+        # 이음매 근처의 가는 머리카락(옆 컷 것)은 버림
+        mm = p[..., 3] > 24; near = nd.binary_dilation((own != j) & m, iterations=30)
+        thin = mm & ~nd.binary_opening(mm, structure=np.ones((7, 7)))
+        p[..., 3][nd.binary_dilation(thin & near, iterations=1) & near] = 0
+        # 떨어진 작은 조각(옆 컷 손끝 부스러기)은 버림
+        mm = p[..., 3] > 24; ll, lc = nd.label(mm)
+        if lc > 1:
+            ls = nd.sum(mm, ll, range(1, lc + 1)); bad = np.isin(ll, [i + 1 for i, v in enumerate(ls) if v < ls.max() * 0.02])
+            p[..., 3][nd.binary_dilation(bad, iterations=2) & ~(mm & ~bad)] = 0
+        x = np.where(p[..., 3].max(0) > 24)[0]
+        parts.append((x.mean() if len(x) else 0, p[..., 3].astype(bool).sum(), tight(Image.fromarray(p))))
+    parts = sorted(sorted(parts, key=lambda t: -t[1])[:n], key=lambda t: t[0])
+    return [t[2] for t in parts]
+
+
+def ride_front(body, bb, top=0.40):
+    """구름 앞부분: 몸 앞을 가리는 구름 윗선을 일자가 아니라 뭉게뭉게 둥글게 + 얇은 테두리 → 구름 속에 앉은 것처럼"""
+    W, H = body.size; bh = bb[3] - bb[1]; base = bb[1] + bh * top; r = bh * 0.11
+    xs = np.arange(W, dtype=np.float32); edge = np.full(W, 1e9, np.float32)
+    span = bb[2] - bb[0]; k = max(3, round(span / (r * 1.7))); step = span / k
+    for i in range(k + 1):  # 나란한 뭉게 언덕 (가운데가 조금 높게)
+        cx = bb[0] + i * step; rr = r * (1.0 if 0 < i < k else 0.8)
+        top_y = base - rr * 0.55 * (1.15 if abs(i - k / 2) < k / 3 else 1.0)
+        d = (xs - cx) / rr; inside = np.abs(d) < 1
+        y = top_y + rr - rr * np.sqrt(np.clip(1 - d ** 2, 0, 1)) + 0  # 원의 윗부분
+        edge = np.where(inside, np.minimum(edge, y), edge)
+    edge = np.minimum(edge, base + r * 0.6)
+    yy = np.arange(H, dtype=np.float32)[:, None]
+    mask = np.clip(yy - edge[None, :] + 0.5, 0, 1)  # 부드러운 경계 1px
+    fa = np.array(body).astype(np.float32); fa[..., 3] *= mask
+    # 둥근 윗선을 따라 얇은 분홍빛 테두리 (구름 원래 테두리 색)
+    line = np.clip(1 - np.abs(yy - edge[None, :] - 1.2) / 1.4, 0, 1) * (np.array(body)[..., 3] > 200)
+    col = np.array([214, 160, 186], np.float32)
+    fa[..., :3] = fa[..., :3] * (1 - line[..., None] * 0.85) + col * line[..., None] * 0.85
+    # 테두리 바로 아래 살짝 그늘 (입체감)
+    sh = np.clip(1 - (yy - edge[None, :] - 2) / 10, 0, 1) * (yy > edge[None, :] + 2)
+    fa[..., :3] = fa[..., :3] * (1 - sh[..., None] * 0.08) + np.array([200, 190, 235]) * sh[..., None] * 0.08
+    return Image.fromarray(np.clip(fa, 0, 255).astype(np.uint8))
+
+
+def ride_frames(who, rides, ride_h=None):
+    """구름 탑승 컷 4장(ride_fly·happy·hurt·dizzy) → 지금 구름 그림 위에 상체를 앉힌 그림과 스카이 라이더 heli_* 프레임"""
+    base = f'{ROOT}/character/{LOOK[who]}_v4/base/{LOOK[who]}_base_ride_cloud'
+    body = Image.open(f'{base}_body.png').convert('RGBA')
+    W, H = body.size; rh = H * (0.74 if who == 'eunyu' else 0.80)
+    s6 = rh / (ride_h or np.median([r.height for r in rides]))
+    bb = body.getchannel('A').getbbox(); bh = bb[3] - bb[1]; cx = (bb[0] + bb[2]) / 2; seat = bb[1] + bh * 0.5
+    front = ride_front(body, bb)
+    ext = round(H * 0.9); out = {}; frames = {}
+    for n, r in zip(['ride_fly', 'ride_happy', 'ride_hurt', 'ride_dizzy'], rides):
+        p = scaled(r, s6); c = Image.new('RGBA', (W + 2 * ext, H + ext))
+        c.alpha_composite(body, (ext, ext)); c.alpha_composite(p, (round(ext + cx - p.width / 2), round(ext + seat - p.height))); c.alpha_composite(front, (ext, ext)); out[n] = c
+    sc = 410 / W
+    for n, r in [('heli_0', 'ride_fly'), ('heli_1', 'ride_fly'), ('heli_2', 'ride_fly'), ('heli_happy', 'ride_happy'), ('heli_hurt', 'ride_hurt'), ('heli_crash', 'ride_dizzy')]:
+        bbx = out[r].getchannel('A').getbbox(); p = scaled(out[r].crop(bbx), sc)
+        frames[n] = (p, [round((bbx[0] - ext) * sc), round((bbx[1] - ext) * sc), 410, 256])
+    return frames, out
+
+
 def save(im, rel, **kw):
     p = f'{ROOT}/{rel}'; os.makedirs(os.path.dirname(p), exist_ok=True)
     im.save(p, 'WEBP', **(kw or WEBP)); return im
@@ -115,21 +223,8 @@ def build_look(who, frames):
     for n, c in [('tile_face', a1[0]), ('tile_happy', a1[1])]:  # 타일: 얼굴 쪽만 (아래는 타일 칸에서 잘림)
         h = c.crop((0, 0, c.width, min(c.height, round(c.width * 0.92))))
         frames[n] = face_frame(h, 192)
-    # 구름 탑승: 지금 구름 그림 위에 어른 상체
-    base = f'{ROOT}/character/{LOOK[who]}_v4/base/{LOOK[who]}_base_ride_cloud'
-    body = Image.open(f'{base}_body.png').convert('RGBA')
-    W, H = body.size; rides = cuts(key(f'{D}/{l}06.png'), 4); rh = H * (0.74 if who == 'eunyu' else 0.80)
-    s6 = rh / np.median([r.height for r in rides])
-    bb = body.getchannel('A').getbbox(); bh = bb[3] - bb[1]; cx = (bb[0] + bb[2]) / 2; seat = bb[1] + bh * 0.5
-    front = body.copy(); fa = np.array(front); fa[:round(bb[1] + bh * 0.42), :, 3] = 0; front = Image.fromarray(fa)  # 구름 아랫부분이 몸 앞으로
-    ext = round(H * 0.9); out = {}
-    for n, r in zip(['ride_fly', 'ride_happy', 'ride_hurt', 'ride_dizzy'], rides):
-        p = scaled(r, s6); c = Image.new('RGBA', (W + 2 * ext, H + ext))
-        c.alpha_composite(body, (ext, ext)); c.alpha_composite(p, (round(ext + cx - p.width / 2), round(ext + seat - p.height))); c.alpha_composite(front, (ext, ext)); out[n] = c
-    sc = 410 / W
-    for n, r in [('heli_0', 'ride_fly'), ('heli_1', 'ride_fly'), ('heli_2', 'ride_fly'), ('heli_happy', 'ride_happy'), ('heli_hurt', 'ride_hurt'), ('heli_crash', 'ride_dizzy')]:
-        bbx = out[r].getchannel('A').getbbox(); p = scaled(out[r].crop(bbx), sc)
-        frames[n] = (p, [round((bbx[0] - ext) * sc), round((bbx[1] - ext) * sc), 410, 256])
+    # 구름 탑승: 지금 구름 그림 위에 어른 상체 (ride_frames: 손이 안 잘리게 나누고, 구름 윗선은 뭉게뭉게)
+    hf, out = ride_frames(who, ride_cuts(key(f'{D}/{l}06.png'), 4)); frames.update(hf)
     return a1, cuts(key(f'{D}/{l}07.png'), 5, rows=2), frames, out
 
 
