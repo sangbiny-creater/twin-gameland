@@ -142,6 +142,9 @@ add('giftsort-sel-pp', 'giftsort/index.html?stage=12', { vp: 'pp', wait: 2500, j
 add('giftsort-hint-pp', 'giftsort/index.html?stage=150', { vp: 'pp', wait: 2500, js: `(() => { startStage(150); __giftsort.useHint(); })()`, wait2: 800 });
 add('giftsort-add-pp', 'giftsort/index.html?stage=12', { vp: 'pp', wait: 2500, js: `(() => { startStage(12); __giftsort.G.add = 1; __giftsort.useAdd(); const g = __giftsort, m = g.hintMove(); g.tap(m[0]); g.tap(g.G.carts.length - 1); })()`, wait2: 900 });
 add('giftsort-pause-pp', 'giftsort/index.html?stage=12', { vp: 'pp', wait: 2500, js: `(() => { startStage(12); pauseGame(); })()`, wait2: 600 });
+for (const st of [0, 30, 120]) add(`giftsort-fast${st}-pp`, `giftsort/index.html?stage=${st}`, { vp: 'pp', wait: 2500, js: `(async () => { startStage(${st}); const g = __giftsort, sl = (t) => new Promise((r) => setTimeout(r, t)); let n = 0, carts0 = 0;
+  for (let k = 0; k < 120 && g.G.state === 'play'; k++) { const m = g.hintMove(); if (!m) break; g.tap(m[0]); await sl(40); g.tap(m[1]); await sl(80); n++; }
+  await sl(1500); return { state: g.G.state, taps: n, moves: g.G.moves, coins: g.G.coins, done: g.G.done, flying: g.G.flights.length }; })()`, wait2: 2500 });
 add('giftsort-clear-pp', 'giftsort/index.html?stage=0', { vp: 'pp', wait: 2500, js: `(async () => { startStage(0); const g = __giftsort, sl = (t) => new Promise((r) => setTimeout(r, t)); for (let k = 0; k < 40 && g.G.state === 'play'; k++) { const m = g.hintMove(); if (!m) break; g.G.hint = 9; g.tap(m[0]); g.tap(m[1]); await sl(700); } return g.G.moves; })()`, wait2: 3000 });
 for (const vp of ['pp', 'tb']) add(`giftsort-map-${vp}`, 'index.html#map-giftsort', { vp, wait: 2500 });
 // 버거 러시 (가로 전용): 판 화면 · 손님·굽기·쌓기 흉내 · 주문 보기 · 세로 멈춤 안내 · 결과

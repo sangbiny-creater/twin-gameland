@@ -18,7 +18,7 @@ const UNDO_FREE = 3, HINT_FREE = 1, UNDO_ITEM = 5; // 판마다 무료 되돌리
 const CART_COIN = 3, GOLD_COIN = 10;              // 카트 완성 코인 / 황금 선물 카트 완성 코인
 const label = (i) => `${isHard(i) ? '어려움 ' : ''}${worldOf(i) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[worldOf(i)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611081922';
+const ASSET_V = '202611092159';
 const giftSrc = (n) => `assets/gifts/${n}.webp?v=${ASSET_V}`;
 // 별: 옮긴 횟수가 par 에 가까울수록 (컴퓨터 풀이도 가장 짧은 풀이는 아니라서 넉넉하게)
 const starLimits = (par) => [par + 2 + Math.floor(par * 0.1), Math.ceil(par * 1.5) + 4];
@@ -150,6 +150,9 @@ function hintMove() {
   };
   const mv = (s, a, b) => { const c = s.c.map((t) => t.slice()), n = Math.min(run(c[a]), caps[b] - c[b].length); for (let i = 0; i < n; i++) c[b].push(c[a].pop()); return { c, done: c.filter(full).length }; };
   const key = (s) => (s.done >= G.need ? 'o|' : 'c|') + s.c.map((t, i) => (lk(s, i) ? '#' : '') + caps[i] + ':' + t.join('.')).sort().join(',');
+  // 지난번 힌트의 풀이를 그대로 따라오는 중이면 그 다음 수 (힌트를 여러 번 눌러도 왔다 갔다 하지 않게)
+  const raw = (s) => s.c.map((t, i) => caps[i] + ':' + t.join('.')).join(',') + '|' + s.done;
+  if (G.plan) { const j = G.plan.raws.indexOf(raw(S0)); if (j >= 0) return G.plan.path[j]; }
   const seen = new Set([key(S0)]); let nodes = 0;
   function dfs(s) {
     if (s.c.every((t) => !t.length || full(t))) return true;
@@ -160,11 +163,12 @@ function hintMove() {
       list.push([sc, a, b]);
     }
     list.sort((x, y) => y[0] - x[0]);
-    for (const [, a, b] of list) { const n = mv(s, a, b), k = key(n); if (seen.has(k)) continue; seen.add(k); if (dfs(n)) { path.unshift([a, b]); return true; } }
+    for (const [, a, b] of list) { const n = mv(s, a, b), k = key(n); if (seen.has(k)) continue; seen.add(k); if (dfs(n)) { path.unshift([a, b]); raws.unshift(raw(s)); return true; } }
     return false;
   }
-  const path = [];
-  return dfs(S0) ? path[0] : null;
+  const path = [], raws = [];
+  if (!dfs(S0)) { G.plan = null; return null; }
+  G.plan = { path, raws }; return path[0];
 }
 
 // ---------- state ----------
@@ -173,7 +177,7 @@ let scale = 1, dpr = 1;
 // 상태: ready → play → done(클리어 연출) → result / pause
 const G = {
   state: 'ready', si: 0, carts: [], lock: -1, need: 0, done: 0, gold: -1, sel: -1, moves: 0, hist: [], coins: 0, coinBase: 0,
-  undo: 0, hint: 0, add: 0, busy: 0, fx: [], t: 0, idleT: 0, pausedFrom: 'play', geo: null,
+  undo: 0, hint: 0, add: 0, flights: [], fx: [], t: 0, idleT: 0, pausedFrom: 'play', geo: null,
 };
 
 // ---------- board ----------
@@ -251,8 +255,8 @@ function render(deal = false) {
     const one = capOf(c) < CAP, ft = cartTop(c);
     let html = `<img class="frame" src="assets/ui/${lk ? 'cart_lock' : one ? 'cart_one' : 'cart'}.webp?v=${ASSET_V}" alt="" style="top:${ft}px;height:${ch - ft}px">`;
     c.b.forEach((_, k) => {
-      const g = boxGeo(k, c), lift = k >= c.b.length - run;
-      html += `<div class="box${lift ? ' lift' : ''}" data-k="${k}" style="left:${g.x}px;top:${g.y}px;width:${g.w}px;z-index:${k + 1}"><img src="${giftSrc(giftImg(c, k))}" alt=""></div>`;
+      const g = boxGeo(k, c), lift = k >= c.b.length - run, flying = G.flights.some((m) => m.b === i && m.ks.includes(k));
+      html += `<div class="box${lift ? ' lift' : ''}" data-k="${k}" style="left:${g.x}px;top:${g.y}px;width:${g.w}px;z-index:${k + 1}${flying ? ';visibility:hidden' : ''}"><img src="${giftSrc(giftImg(c, k))}" alt=""></div>`;
     });
     if (full) { const tw = cw * 1.05; html += `<img class="topper" src="assets/ui/topper.webp?v=${ASSET_V}" alt="" style="width:${tw}px;top:${boxGeo(CAP - 1, c).y - tw * 0.5}px;z-index:9">`; }
     if (lk) html += `<span class="need" style="top:${ch * 0.42}px">🎀 ${G.need - G.done}</span>`;
@@ -264,7 +268,7 @@ function render(deal = false) {
 function startStage(si) {
   G.si = si; const st = STAGES[si];
   clearTimers();
-  G.moves = 0; G.hist = []; G.coins = 0; G.coinBase = 0; G.fx = []; G.t = 0; G.idleT = 0; G.busy = 0;
+  G.moves = 0; G.hist = []; G.coins = 0; G.coinBase = 0; G.fx = []; G.t = 0; G.idleT = 0; G.plan = null; dropFlights();
   takeRound('giftsort', ['hint', 'undo', 'addcart']);
   const R = G.round || {};
   G.undo = UNDO_FREE + (R.undo ? UNDO_ITEM : 0); G.hint = HINT_FREE + (R.hint || 0); G.add = R.addcart || 0;
@@ -287,7 +291,7 @@ function coachTip(si) {
   return '';
 }
 function showReady(si) {
-  G.si = si; clearTimers(); boardEl.innerHTML = ''; G.carts = []; G.els = [];
+  G.si = si; clearTimers(); dropFlights(); boardEl.innerHTML = ''; G.carts = []; G.els = [];
   hero.classList.add('hidden');
   $('readyTitle').textContent = `${label(si)} ${stageName(si)}`;
   const st = STAGES[si], extra = [];
@@ -310,8 +314,9 @@ function setPose(p, back = 0) {
 }
 const bad = (i) => { const el = G.els[i]; el.classList.remove('bad'); void el.offsetWidth; el.classList.add('bad'); Audio.sfx('bad'); };
 
+// 상자가 날아가는 중에도 다음 카트를 바로 누를 수 있음 (규칙 상태는 누른 순간 바뀌고, 날아가는 건 그림만)
 function tap(i) {
-  if (G.state !== 'play' || G.busy) return;
+  if (G.state !== 'play') return;
   G.idleT = 0; clearHint();
   const c = G.carts[i];
   if (locked(i)) { bad(i); toast(`카트를 ${G.need - G.done}대 더 완성하면 리본이 풀려요!`); if (G.sel >= 0) { G.sel = -1; render(); } return; }
@@ -329,6 +334,8 @@ const snap = () => ({ carts: G.carts.map((c) => ({ b: c.b.slice(), h: c.h.slice(
 function move(a, b) {
   G.hist.push(snap());
   const A = G.carts[a], B = G.carts[b], n = Math.min(topRun(A), capOf(B) - B.b.length);
+  // 아직 날아오는 중인 상자를 다시 옮기면: 그 상자는 지금 자리에 내려놓은 것으로 하고 여기서 다시 날아감
+  for (const m of G.flights.slice()) if (m.b === a && m.ks.some((k) => k >= A.b.length - n)) landNow(m, false);
   // 옮기는 상자가 날아가는 모습: 들린 자리 → 새 자리
   const from = [], pb = G.geo.pos[b];
   for (let k = 0; k < n; k++) {
@@ -336,30 +343,40 @@ function move(a, b) {
     if (el) { const r = el.getBoundingClientRect(), rr = root.getBoundingClientRect(); from.push({ x: (r.left - rr.left) / scale, y: (r.top - rr.top) / scale, img: giftImg(A, src), dst: B.b.length + k }); }
   }
   for (let k = 0; k < n; k++) { B.b.push(A.b.pop()); B.h.push(A.h.pop()); }
-  G.sel = -1; G.moves++; G.busy++;
+  // 맨 위가 된 깜짝 상자는 바로 포장이 풀림 (날아가는 걸 기다리지 않고 다음 수를 고를 수 있게)
+  const rev = A.b.length > 0 && A.h[A.b.length - 1]; if (rev) A.h[A.b.length - 1] = false;
+  G.sel = -1; G.moves++;
+  // 날아오는 동안 새 자리의 상자는 숨겨 둠 (render 가 G.flights 를 보고 숨김)
+  const m = { a, b, ks: from.map((f) => f.dst), fls: [], tid: 0, run: runId };
+  G.flights.push(m);
   render();
-  // 날아오는 동안 새 자리의 상자는 숨겨 둠
-  const landed = from.map((f) => G.els[b].querySelector(`.box[data-k="${f.dst}"]`)).filter(Boolean);
-  landed.forEach((e) => { e.style.visibility = 'hidden'; });
+  if (rev) popBox(a, A.b.length - 1);
   from.forEach((f, k) => {
     const g = boxGeo(f.dst, B), tx = pb[0] + g.x, ty = pb[1] + g.y, fl = document.createElement('div');
     fl.className = 'flyer'; fl.style.width = g.w + 'px'; fl.style.left = f.x + 'px'; fl.style.top = f.y + 'px'; fl.style.zIndex = 30 + k;
-    fl.innerHTML = `<img src="${giftSrc(f.img)}" alt="">`; root.appendChild(fl);
+    fl.innerHTML = `<img src="${giftSrc(f.img)}" alt="">`; root.appendChild(fl); m.fls.push(fl);
     const top = Math.min(f.y, ty) - G.geo.ch * 0.15;
     const anim = fl.animate([{ transform: 'translate(0,0)' }, { transform: `translate(${(tx - f.x) / 2}px, ${top - f.y}px)` }, { transform: `translate(${tx - f.x}px, ${ty - f.y}px)` }],
       { duration: 280 + k * 40, easing: 'ease-in-out' });
     anim.onfinish = () => { fl.remove(); };
   });
-  const T = 300 + n * 40;
-  later(() => { landed.forEach((e) => { e.style.visibility = ''; }); Audio.sfx('drop', n); afterMove(a, b); }, T);
+  m.tid = setTimeout(() => landNow(m, true), 300 + n * 40);
 }
-function afterMove(a, b) {
-  G.busy = Math.max(0, G.busy - 1);
-  const A = G.carts[a], B = G.carts[b];
-  // 맨 위가 된 깜짝 상자는 포장이 풀림
-  if (A.b.length && A.h[A.b.length - 1]) { A.h[A.b.length - 1] = false; reveal(a, A.b.length - 1); }
-  if (isFull(B)) {
-    B.h = B.h.map(() => false);
+// 날던 상자가 내려앉음: 숨긴 상자를 보이고, 완성·깜짝 상자·클리어를 확인 (sound: 정상 도착일 때 소리)
+function landNow(m, sound) {
+  const i = G.flights.indexOf(m); if (i < 0) return;
+  G.flights.splice(i, 1); clearTimeout(m.tid); m.fls.forEach((f) => f.remove());
+  if (m.run !== runId) return;
+  if (sound) Audio.sfx('drop', m.ks.length);
+  afterMove(m.b);
+}
+const flushFlights = () => G.flights.slice().forEach((m) => landNow(m, false)); // 되돌리기·힌트·카트 추가 전에 모두 내려놓음
+function dropFlights() { G.flights.forEach((m) => { clearTimeout(m.tid); m.fls.forEach((f) => f.remove()); }); G.flights = []; }
+function afterMove(b) {
+  const B = G.carts[b];
+  // 완성: 이 카트로 날아오는 상자가 다 내려앉았을 때 한 번만 (빠르게 두 번 옮겨 채워도 코인은 한 번)
+  if (isFull(B) && !B.scored && !G.flights.some((f) => f.b === b)) {
+    B.scored = true; B.h = B.h.map(() => false);
     G.done = G.carts.filter(isFull).length;
     const gold = B.b[0] === G.gold;
     if (!GOD()) G.coins += gold ? GOLD_COIN : CART_COIN;
@@ -369,12 +386,11 @@ function afterMove(a, b) {
     Audio.sfx('full'); setPose('happy', 900);
     if (G.lock >= 0 && !G.unlockedShown && G.done >= G.need) unlock();
   } else render();
-  if (solvedAll()) { later(clearStage, 600); return; }
+  if (solvedAll() && !G.flights.length) { later(clearStage, 600); return; }
   if (!anyMove()) { setPose('think'); toast('더 옮길 수 없어요! 되돌리기나 다시하기를 눌러요'); }
   renderItems();
 }
-function reveal(i, k) {
-  render();
+function popBox(i, k) {
   const el = G.els[i].querySelector(`.box[data-k="${k}"]`); if (el) el.classList.add('pop');
   Audio.sfx('reveal');
 }
@@ -401,7 +417,8 @@ function takeRound(game, ids) {
   for (const id of ids) { if (HUB.isUsing(game, id)) { if (HUB.useBoost(game, id)) G.round[id] = 1; HUB.setUsing(game, id, false); } }
 }
 function useUndo() {
-  if (G.state !== 'play' || G.busy) return;
+  if (G.state !== 'play') return;
+  flushFlights();
   if (!G.hist.length) { toast('되돌릴 게 없어요'); return; }
   if (G.undo <= 0) { toast('되돌리기를 다 썼어요. 일시정지에서 다시하기를 해 볼까요?'); Audio.sfx('bad'); return; }
   const s = G.hist.pop();
@@ -413,7 +430,8 @@ function useUndo() {
 let hintEls = [];
 function clearHint() { hintEls.forEach((e) => e.classList.remove('hint')); hintEls = []; }
 function useHint() {
-  if (G.state !== 'play' || G.busy) return;
+  if (G.state !== 'play') return;
+  flushFlights();
   if (G.hint <= 0) { toast('힌트가 없어요. 시작할 때 힌트 아이템을 고를 수 있어요'); Audio.sfx('bad'); return; }
   const m = hintMove();
   if (!m) { toast('이대로는 풀기 어려워요. 되돌리기를 해 봐요!'); setPose('think', 1500); Audio.sfx('bad'); return; }
@@ -423,7 +441,8 @@ function useHint() {
   later(clearHint, 2600);
 }
 function useAdd() {
-  if (G.state !== 'play' || G.busy) return;
+  if (G.state !== 'play') return;
+  flushFlights();
   if (G.add <= 0) { toast('카트 추가 아이템이 없어요. 시작할 때 고를 수 있어요'); Audio.sfx('bad'); return; }
   G.add--; G.carts.push({ b: [], h: [], cap: 1 }); G.sel = -1;
   Audio.sfx('add'); layoutBoard(); render(); renderItems();
