@@ -18,7 +18,7 @@ const isHard = (i) => i >= HARD;
 const worldOf = (i) => Math.floor((i % HARD) / PER_WORLD);
 const label = (i) => `${isHard(i) ? '어려움 ' : ''}${worldOf(i) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[worldOf(i)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611092159';
+const ASSET_V = '202611092207';
 const START_HEARTS = 3;
 const COIN_GUEST = 2, COIN_TIP = 1;
 const NAME = { bun: '빵', bun_b: '아래 빵', bun_t: '위 빵', patty: '패티', patty_raw: '생패티', cheese: '치즈', lettuce: '양상추', tomato: '토마토', onion: '양파', bacon: '베이컨',
@@ -168,7 +168,7 @@ const innerOf = (tray) => tray.stack.filter((x) => x !== 'bun_b' && x !== 'bun_t
 
 // ---------- state ----------
 const cv = $('cv'), ctx = cv.getContext('2d'), root = $('root');
-let scale = 1, dpr = 1, portrait = false;
+let scale = 1, dpr = 1;
 const G = {
   state: 'ready', si: 0, st: null, guests: [], slots: [], trays: [], cur: 0, grill: [], hearts: START_HEARTS, maxH: START_HEARTS,
   spawned: 0, served: 0, missed: 0, nextT: 0, coins: 0, coinBase: 0, t: 0, fx: [], pose: 'idle', poseT: 0, hits: [], contUsed: false,
@@ -642,7 +642,7 @@ function setState(s) {
   lastKey = '';
 }
 function pauseGame() { if (G.state === 'play' || G.state === 'recipe') { G.pausedFrom = 'play'; setState('pause'); Audio.stopBgm(); } }
-function resumeGame() { if (G.state === 'pause' && !portrait) { Audio.unlock(); setState(G.pausedFrom); Audio.startBgm(); last = performance.now(); } }
+function resumeGame() { if (G.state === 'pause') { Audio.unlock(); setState(G.pausedFrom); Audio.startBgm(); last = performance.now(); } }
 // 광고 보고 이어하기 (common/monet.js): 하트 1개로 그 판을 이어서. 한 판에 한 번
 window.GameContinue = {
   can: () => !G.contUsed,
@@ -679,8 +679,9 @@ function tapAt(x, y) {
 }
 cv.addEventListener('pointerdown', (e) => {
   e.preventDefault(); Audio.unlock();
-  const r = cv.getBoundingClientRect();
-  tapAt((e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H);
+  // 화면 좌표 → 게임 좌표 (돌려 보여 줄 때는 거꾸로 돌려서)
+  if (rotated) tapAt((e.clientY - offX) / scale, (viewW - offY - e.clientX) / scale);
+  else tapAt((e.clientX - offX) / scale, (e.clientY - offY) / scale);
 });
 window.addEventListener('keydown', (e) => {
   Audio.unlock();
@@ -697,25 +698,28 @@ click('btnRetryP', () => showReady(G.si)); click('btnRetry', () => showReady(G.s
 click('btnNext', () => showReady(Math.min(STAGES.length - 1, G.si + 1)));
 $('recipe').addEventListener('pointerdown', (e) => { if (e.target === $('recipe')) closeRecipe(); });
 
-// ---------- layout ----------
+// ---------- layout: 가로 고정 (스카이 라이더처럼 세로로 든 폰에서는 게임을 90° 돌려서 보여 줌) ----------
+const isTouch = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+let rotated = false, offX = 0, offY = 0, viewW = 0;
 function resize() {
   const vv = window.visualViewport;
   const vw = Math.round(vv ? vv.width : window.innerWidth), vh = Math.round(window.fullViewH ? fullViewH() : (vv ? vv.height : window.innerHeight));
-  // 세로 화면: 게임을 멈추고 돌려 달라는 안내만 (가로로 돌리면 일시정지 창부터)
-  const wasPortrait = portrait; portrait = vh > vw;
-  $('rotate').classList.toggle('hidden', !portrait);
-  if (portrait && !wasPortrait) { pauseGame(); Audio.stopBgm(); }
-  if (portrait) return;
   const s = $('safe').getBoundingClientRect();
   const inset = { t: s.top, l: s.left, r: vw - s.right, b: vh - s.bottom };
-  if (vw / vh >= 16 / 9) { H = 540; W = Math.round(Math.min(1300, H * vw / vh)); } else { W = 960; H = Math.round(clamp(W * vh / vw, 540, 760)); }
-  scale = Math.min(vw / W, vh / H);
+  rotated = isTouch && vh > vw;
+  const sw = rotated ? vh : vw, sh = rotated ? vw : vh;
+  if (sw / sh >= 16 / 9) { H = 540; W = Math.round(Math.min(1300, H * sw / sh)); } else { W = 960; H = Math.round(clamp(W * sh / sw, 540, 760)); }
+  scale = Math.min(sw / W, sh / H);
   dpr = Math.min(window.devicePixelRatio || 1, 2.5);
   root.style.width = W + 'px'; root.style.height = H + 'px';
   root.classList.add('wide');
-  const ox = (vw - W * scale) / 2, oy = (vh - H * scale) / 2;
-  root.style.transform = `translate(${ox}px, ${oy}px) scale(${scale})`;
-  for (const k of ['l', 'r', 't', 'b']) root.style.setProperty('--safe-' + k, Math.max(0, (inset[k] - (k === 'l' || k === 'r' ? ox : oy)) / scale) + 'px');
+  const ox = (sw - W * scale) / 2, oy = (sh - H * scale) / 2;
+  offX = ox; offY = oy; viewW = vw;
+  root.style.transform = rotated
+    ? `translate(${vw - oy}px, ${ox}px) rotate(90deg) scale(${scale})`
+    : `translate(${ox}px, ${oy}px) scale(${scale})`;
+  const ins = rotated ? { l: inset.t, r: inset.b, t: inset.r, b: inset.l } : inset;
+  for (const k of ['l', 'r', 't', 'b']) root.style.setProperty('--safe-' + k, Math.max(0, (ins[k] - (k === 'l' || k === 'r' ? ox : oy)) / scale) + 'px');
   cv.width = Math.round(W * scale * dpr); cv.height = Math.round(H * scale * dpr);
   layout();
 }
@@ -728,7 +732,6 @@ let last = performance.now();
 function frame(now) {
   requestAnimationFrame(frame);
   let dt = (now - last) / 1000; last = now; if (dt > 0.05) dt = 0.05; if (dt < 0) dt = 0;
-  if (portrait) return; // 세로: 아무것도 움직이지 않음
   if (G.state !== 'pause' && G.state !== 'recipe') step(dt);
   draw();
 }

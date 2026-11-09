@@ -161,6 +161,10 @@ add('burger-pause-pl', 'burger/index.html?stage=12', { vp: 'pl', wait: 2500, js:
 add('burger-clear-pl', 'burger/index.html?stage=0', { vp: 'pl', wait: 2500, js: `(() => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(0); __burger.G.served = 4; __burger.G.spawned = 4; __burger.endStage(true); })()`, wait2: 2500 });
 add('burger-fail-pl', 'burger/index.html?stage=0', { vp: 'pl', wait: 2500, js: `(() => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(0); __burger.G.hearts = 0; __burger.endStage(false); })()`, wait2: 2500 });
 add('burger-portrait-pp', 'burger/index.html?stage=12', { vp: 'pp', wait: 2500, js: `(() => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(12); return { state: __burger.G.state }; })()`, wait2: 600 });
+// 세로로 든 폰(게임이 90° 돌려져 보임)에서 '아래 빵' 통을 화면 좌표로 눌러 실제로 쟁반에 올라가는지
+add('burger-portrait-tap-pp', 'burger/index.html?stage=0', { vp: 'pp', wait: 2500, js: `(async () => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(0); await new Promise((r) => setTimeout(r, 400)); const b = __burger, h = b.G.hits.find((x) => x.act.bin === 'bun'); if (!h) return 'no bin';
+  const d = document.createElement('div'); d.style.cssText = 'position:absolute;width:1px;height:1px;left:' + (h.x + h.w / 2) + 'px;top:' + (h.y + h.h / 2) + 'px'; document.getElementById('root').appendChild(d); const r = d.getBoundingClientRect(); d.remove();
+  document.getElementById('cv').dispatchEvent(new PointerEvent('pointerdown', { clientX: r.left, clientY: r.top, bubbles: true })); return { screen: [Math.round(r.left), Math.round(r.top)], stack: b.G.trays[b.G.cur].stack }; })()`, wait2: 600 });
 // 로봇이 '다음에 누를 곳'(1-1 안내와 같은 계산)을 0.35초마다 눌러 판을 끝까지 함 → 결과 창이 나오는지
 const BURGER_BOT = (st) => `(async () => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(${st}); const b = __burger, sl = (t) => new Promise((r) => setTimeout(r, t));
   for (let k = 0; k < 2000 && ['play', 'done'].includes(b.G.state); k++) { await sl(120); if (b.G.state !== 'play') continue; const a = b.nextAction(); if (!a) continue;
