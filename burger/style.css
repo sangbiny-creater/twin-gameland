@@ -6,7 +6,7 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body {
   margin: 0; height: 100%; overflow: hidden; position: fixed; inset: 0;
-  background: #F4D7CF url(assets/bg/land.webp?v=202611092248) center / cover no-repeat; touch-action: none; overscroll-behavior: none;
+  background: #F4D7CF url(assets/bg/land.webp?v=202611100159) center / cover no-repeat; touch-action: none; overscroll-behavior: none;
   -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
   font-family: var(--font); color: var(--navy);
 }
@@ -86,20 +86,22 @@ button:active { transform: translateY(3px); }
 .pill.coins { margin-left: auto; }
 /* 하트: 모든 게임 공통 그림 (common/ui/heart.webp · heart_empty.webp) */
 .pill.hearts { padding: 3px 8px; gap: 2px; }
-.heart { display: inline-block; width: 25px; height: 23px; background: center/contain no-repeat url(../common/ui/heart.webp?v=202611092248); filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); }
-.heart.empty { background-image: url(../common/ui/heart_empty.webp?v=202611092248); opacity: .85; }
+.heart { display: inline-block; width: 25px; height: 23px; background: center/contain no-repeat url(../common/ui/heart.webp?v=202611100159); filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); }
+.heart.empty { background-image: url(../common/ui/heart_empty.webp?v=202611100159); opacity: .85; }
 .heart.pop { animation: heartPop 380ms; }
 @keyframes heartPop { 40% { transform: scale(1.5); } }
 .r-why { font-size: 18px; color: #FFD9E2; }
 /* 주문 보기 창 */
-.rc-body { display: flex; gap: 14px; width: 100%; align-items: center; justify-content: center; }
-.rc-list { display: flex; flex-direction: column; gap: 2px; background: #fff; border-radius: 16px; padding: 8px 14px; min-width: 190px; }
+/* 꾹 누르는 동안만 보이는 주문 재료 상자 (장식 없는 둥근 흰 상자, 버튼 없음) */
+#recipe { pointer-events: none; background: rgba(20,14,40,.35); }
+.peek { display: flex; gap: 14px; align-items: center; background: #fff; border-radius: 22px; padding: 12px 16px; box-shadow: 0 10px 28px rgba(0,0,0,.35); }
+.rc-list { display: flex; flex-direction: column; gap: 1px; min-width: 170px; }
 .rc-row { display: flex; align-items: center; gap: 10px; font-size: 19px; }
 .rc-row img { width: 54px; height: 34px; object-fit: contain; }
 .rc-row b { font-weight: normal; color: #C25E12; margin-left: auto; }
 .rc-sides { display: flex; flex-direction: column; gap: 6px; }
 .rc-sides:empty { display: none; }
-.rc-side { display: flex; align-items: center; gap: 6px; background: #fff; border-radius: 14px; padding: 4px 10px; font-size: 17px; }
+.rc-side { display: flex; align-items: center; gap: 6px; background: #F6F1EA; border-radius: 14px; padding: 4px 10px; font-size: 17px; }
 .rc-side img { width: 36px; height: 40px; object-fit: contain; }
 /* 세로 화면 안내: 움직이는 것 없이 그림과 글자만 */
-.toast { top: 50%; font-size: 20px; }
+.toast { top: 37%; font-size: 20px; }

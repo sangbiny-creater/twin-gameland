@@ -152,20 +152,26 @@ add('giftsort-clear-pp', 'giftsort/index.html?stage=0', { vp: 'pp', wait: 2500, 
 for (const vp of ['pp', 'tb']) add(`giftsort-map-${vp}`, 'index.html#map-giftsort', { vp, wait: 2500 });
 // 버거 러시 (가로 전용): 판 화면 · 손님·굽기·쌓기 흉내 · 주문 보기 · 세로 멈춤 안내 · 결과
 const BURGER_PLAY = (st) => `(async () => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(${st}); const b = __burger, sl = (t) => new Promise((r) => setTimeout(r, t));
-  for (let k = 0; k < 4; k++) b.spawnGuest(); await sl(500); b.tapBin('patty_raw'); b.tapBin('patty_raw'); b.tapBin('bun'); await sl(b.STAGES[${st}].cook * 1000 + 300); b.tapGrill(0);
-  for (const x of b.STAGES[${st}].ing) b.tapBin(x); for (const x of b.STAGES[${st}].sides.slice(0, 2)) b.tapBin(x); if (b.G.trays[1]) { b.G.cur = 1; b.tapBin('bun'); b.tapBin(b.STAGES[${st}].ing[0]); b.G.cur = 0; }
+  for (let k = 0; k < 4; k++) b.spawnGuest(); await sl(500); b.tapBin('patty_raw'); b.tapBin('patty_raw'); b.tapBin('bun_b'); b.tapBin('bun_b'); await sl(b.STAGES[${st}].cook * 1000 + 300); b.tapGrill(0);
+  for (const x of b.STAGES[${st}].ing) b.tapBin(x); for (const x of b.STAGES[${st}].sides.slice(0, 2)) b.tapBin(x); if (b.G.trays[1]) { b.G.cur = 1; b.tapBin(b.STAGES[${st}].ing[0]); }
   b.G.guests.forEach((g, i) => { g.t = g.wait * [0.1, 0.55, 0.8, 0.3][i % 4]; }); })()`;
 for (const vp of ['pl', 'tb', 'pc']) for (const st of [0, 45, 99, 199]) add(`burger-play${st}-${vp}`, `burger/index.html?stage=${st}`, { vp, wait: 2500, js: BURGER_PLAY(st), wait2: 6000 });
 add('burger-ready-pl', 'burger/index.html?stage=0', { vp: 'pl', wait: 2800 });
 add('burger-ready-pp', 'burger/index.html?stage=0', { vp: 'pp', wait: 2800 });
 add('burger-recipe-pl', 'burger/index.html?stage=150', { vp: 'pl', wait: 2500, js: `(() => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(150); __burger.spawnGuest(); __burger.openRecipe(__burger.G.guests[0]); })()`, wait2: 800 });
+// 말풍선 버거를 꾹 누르면 재료 상자가 나오고, 손을 떼면 사라지는지 (화면 좌표로 누름)
+add('burger-hold-pl', 'burger/index.html?stage=150', { vp: 'pl', wait: 2500, js: `(async () => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(150); const b = __burger, sl = (t) => new Promise((r) => setTimeout(r, t)); b.spawnGuest(); await sl(500);
+  const h = b.G.hits.find((x) => x.act.bubble); const d = document.createElement('div'); d.style.cssText = 'position:absolute;width:1px;height:1px;left:' + (h.x + h.w / 2) + 'px;top:' + (h.y + h.h / 2) + 'px'; document.getElementById('root').appendChild(d); const r = d.getBoundingClientRect(); d.remove();
+  document.getElementById('cv').dispatchEvent(new PointerEvent('pointerdown', { clientX: r.left, clientY: r.top, bubbles: true })); await sl(150); const early = b.G.state; await sl(400); const held = b.G.state;
+  window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true })); await sl(100); const after = b.G.state;
+  document.getElementById('cv').dispatchEvent(new PointerEvent('pointerdown', { clientX: r.left, clientY: r.top, bubbles: true })); return { early, held, after }; })()`, wait2: 900 });
 add('burger-guide-pl', 'burger/index.html?stage=0', { vp: 'pl', wait: 2500, js: `(() => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(0); __burger.spawnGuest(); })()`, wait2: 900 });
 add('burger-pause-pl', 'burger/index.html?stage=12', { vp: 'pl', wait: 2500, js: `(() => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(12); pauseGame(); })()`, wait2: 600 });
 add('burger-clear-pl', 'burger/index.html?stage=0', { vp: 'pl', wait: 2500, js: `(() => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(0); __burger.G.served = 4; __burger.G.spawned = 4; __burger.endStage(true); })()`, wait2: 2500 });
 add('burger-fail-pl', 'burger/index.html?stage=0', { vp: 'pl', wait: 2500, js: `(() => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(0); __burger.G.hearts = 0; __burger.endStage(false); })()`, wait2: 2500 });
 add('burger-portrait-pp', 'burger/index.html?stage=12', { vp: 'pp', wait: 2500, js: `(() => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(12); return { state: __burger.G.state }; })()`, wait2: 600 });
 // 세로로 든 폰(게임이 90° 돌려져 보임)에서 '아래 빵' 통을 화면 좌표로 눌러 실제로 쟁반에 올라가는지
-add('burger-portrait-tap-pp', 'burger/index.html?stage=0', { vp: 'pp', wait: 2500, js: `(async () => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(0); await new Promise((r) => setTimeout(r, 400)); const b = __burger, h = b.G.hits.find((x) => x.act.bin === 'bun'); if (!h) return 'no bin';
+add('burger-portrait-tap-pp', 'burger/index.html?stage=0', { vp: 'pp', wait: 2500, js: `(async () => { document.querySelectorAll('#gpStart').forEach((e) => e.remove()); startStage(0); await new Promise((r) => setTimeout(r, 400)); const b = __burger, h = b.G.hits.find((x) => x.act.bin === 'bun_b'); if (!h) return 'no bin';
   const d = document.createElement('div'); d.style.cssText = 'position:absolute;width:1px;height:1px;left:' + (h.x + h.w / 2) + 'px;top:' + (h.y + h.h / 2) + 'px'; document.getElementById('root').appendChild(d); const r = d.getBoundingClientRect(); d.remove();
   document.getElementById('cv').dispatchEvent(new PointerEvent('pointerdown', { clientX: r.left, clientY: r.top, bubbles: true })); return { screen: [Math.round(r.left), Math.round(r.top)], stack: b.G.trays[b.G.cur].stack }; })()`, wait2: 600 });
 // 로봇이 '다음에 누를 곳'(1-1 안내와 같은 계산)을 0.35초마다 눌러 판을 끝까지 함 → 결과 창이 나오는지

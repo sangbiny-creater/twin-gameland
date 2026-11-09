@@ -90,6 +90,14 @@ EXTRA = {
     '폰을 가로로 돌려 주세요': 'Please turn your phone sideways',
     '손님 주문대로 버거를 쌓아 내줘요! 손님이 화나서 떠나면 하트 -1': 'Stack burgers just like the orders! If a guest leaves angry, you lose a heart.',
     '하트 -1': 'Heart -1',
+    # 버거 러시 새 화면 (2026-11-10)
+    '주스': 'Juice', '버리기': 'Trash', '패티를 눌러 구워요! 초록이 되면 눌러서 접시에 올려요': 'Tap a patty to cook it! When it turns green, tap it to put it on the plate.',
+    '말풍선 버거를 꾹 누르면 재료를 크게 볼 수 있어요': 'Press and hold a burger in a bubble to see its ingredients.',
+    '접시를 눌러 고르면 버거 2개를 같이 만들 수 있어요': 'Tap a plate to pick it, and make two burgers at once!',
+    '패티 2장 버거가 나와요! 말풍선 버거를 꾹 눌러 보세요': 'Double-patty burgers are here! Press and hold a bubble burger to check.',
+    '버거가 완성됐어요. 주문과 다르면 버리기를 눌러요': "The burger is done. If it doesn't match, tap Trash.",
+    '사이드가 달라요! 버리기로 비워요': 'Wrong sides! Empty the plate with Trash.',
+    '아직 안 나오는 메뉴예요': 'Not on the menu yet', '빈 접시가 없어요': 'No empty plate', '아래 빵부터 놓아요': 'Put the bottom bun first',
     # 선물가게 정리 (2026-11-08)
     '선물가게 정리': 'Gift Sort', '장난감 거리': 'Toy Street', '꽃집 정원': 'Flower Shop Garden', '사탕 과자점': 'Candy Shop',
     '바닷가 기념품점': 'Seaside Souvenirs', '눈꽃 선물마을': 'Snowflake Gift Village', '숲속 나무공방': 'Forest Workshop', '별빛 야시장': 'Starlight Night Market',

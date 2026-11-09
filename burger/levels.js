@@ -7,18 +7,18 @@
 //  fill: 버거 속 재료 수 [최소, 최대] (위·아래 빵 뺌, 패티 포함) · dbl: 패티 2장 버거
 //  sides: 나오는 사이드 · sideMax: 한 주문의 사이드 최대 수
 //  cook: 굽는 시간(초) · burn: 다 익은 뒤 탈 때까지(초, 0 = 안 탐) · wait: 손님이 기다려 주는 시간(초)
-//  guests: 한 판 손님 수 · conc: 카운터에 동시에 서는 손님 · grills: 굽는 칸 · trays: 쟁반
+//  guests: 한 판 손님 수 · conc: 카운터에 동시에 서는 손님(최대 3, 말풍선 3개) · grills: 굽는 칸 · trays: 접시(2026-11-10부터 항상 2개)
 //  press: 바쁨 정도 — 다음 손님이 오는 간격 gap = (보통 주문을 한 번에 1초씩 눌러 만드는 시간) ÷ press. 클수록 손님이 몰려 옴
 (function () {
   const PER_WORLD = 10, HARD = 100;
   const ING = ['cheese', 'lettuce', 'tomato', 'onion', 'bacon'];
-  const S2 = ['cola', 'fries'], S3 = ['cola', 'fries', 'cider'], S4 = ['cola', 'fries', 'cider', 'nuggets'], S5 = [...S4, 'icecream'];
+  const S2 = ['cola', 'fries'], S3 = ['cola', 'fries', 'cider'], S4 = ['cola', 'fries', 'cider', 'juice'], S5 = [...S4, 'icecream'];
   // 사다리 순서대로 (이름, 값)
   const R = (name, ing, fill, dbl, sides, sideMax, cook, burn, wait, guests, conc, press, grills, trays) =>
     ({ name, ing, fill, dbl, sides, sideMax, cook, burn, wait, guests, conc, press, grills, trays });
   const RUNGS = [
-    R('E1', 1, [1, 2], 0, S2, 1, 2.0, 0, 70, 4, 1, 0.42, 2, 1),
-    R('E2', 2, [2, 2], 0, S2, 1, 2.5, 0, 64, 6, 2, 0.48, 2, 1),
+    R('E1', 1, [1, 2], 0, S2, 1, 2.0, 0, 70, 4, 1, 0.42, 2, 2),
+    R('E2', 2, [2, 2], 0, S2, 1, 2.5, 0, 64, 6, 2, 0.48, 2, 2),
     R('H1', 3, [2, 3], 0, S3, 1, 3.0, 18, 60, 7, 2, 0.54, 3, 2),
     R('E3', 3, [2, 3], 0, S3, 1, 3.0, 16, 58, 7, 2, 0.56, 3, 2),
     R('H2', 4, [3, 3], 0, S3, 1, 3.0, 14, 56, 8, 2, 0.6, 3, 2),
@@ -31,14 +31,14 @@
     R('E7', 5, [4, 5], 1, S4, 2, 4.0, 8, 45, 11, 3, 0.78, 4, 2),
     R('H6', 5, [5, 5], 1, S4, 2, 4.0, 8, 44, 12, 3, 0.81, 4, 2),
     R('E8', 5, [5, 5], 1, S4, 2, 4.0, 7, 43, 12, 3, 0.83, 4, 2),
-    R('H7', 5, [5, 6], 1, S4, 2, 4.0, 7, 42, 13, 4, 0.86, 4, 2),
-    R('E9', 5, [5, 6], 1, S4, 2, 4.5, 6, 41, 13, 4, 0.88, 4, 2),
-    R('H8', 5, [6, 6], 1, S4, 3, 4.5, 6, 41, 14, 4, 0.91, 4, 2),
-    R('E10', 5, [6, 6], 1, S5, 3, 4.5, 6, 40, 14, 4, 0.92, 4, 2),
-    R('H9', 5, [6, 7], 1, S4, 3, 5.0, 5, 39, 15, 4, 0.96, 4, 2),
-    R('H10', 5, [7, 7], 1, S5, 3, 5.0, 5, 38, 16, 4, 1.0, 4, 2),
+    R('H7', 5, [5, 6], 1, S4, 2, 4.0, 7, 42, 13, 3, 0.86, 4, 2),
+    R('E9', 5, [5, 6], 1, S4, 2, 4.5, 6, 41, 13, 3, 0.88, 4, 2),
+    R('H8', 5, [6, 6], 1, S4, 3, 4.5, 6, 41, 14, 3, 0.91, 4, 2),
+    R('E10', 5, [6, 6], 1, S5, 3, 4.5, 6, 40, 14, 3, 0.92, 4, 2),
+    R('H9', 5, [6, 7], 1, S4, 3, 5.0, 5, 39, 15, 3, 0.96, 4, 2),
+    R('H10', 5, [7, 7], 1, S5, 3, 5.0, 5, 38, 16, 3, 1.0, 4, 2),
   ];
-  const END = R('END', 5, [7, 7], 1, S5, 3, 5.0, 5, 36, 18, 4, 1.04, 4, 2); // 어려움 10-10 이 다가가는 값
+  const END = R('END', 5, [7, 7], 1, S5, 3, 5.0, 5, 36, 18, 3, 1.04, 4, 2); // 어려움 10-10 이 다가가는 값
   // 판 번호 → 사다리 칸: 쉬움 N월드 = E N, 어려움 N월드 = H N
   const rungOf = (i) => { const w = Math.floor((i % HARD) / PER_WORLD) + 1; return RUNGS.findIndex((r) => r.name === (i >= HARD ? 'H' : 'E') + w); };
   const lerp = (a, b, t) => a + (b - a) * t;
@@ -53,7 +53,7 @@
       burn: r.burn ? Math.round(lerp(r.burn, n.burn || r.burn, t) * 10) / 10 : 0,
       wait: Math.round(lerp(r.wait, n.wait, t)),
       guests: Math.round(lerp(r.guests, n.guests, t)),
-      conc: Math.min(4, Math.floor(lerp(r.conc, n.conc, t) + 0.5)),
+      conc: Math.min(3, Math.floor(lerp(r.conc, n.conc, t) + 0.5)),
       press: Math.round(lerp(r.press, n.press, t) * 100) / 100,
       grills: r.grills, trays: r.trays,
     });
