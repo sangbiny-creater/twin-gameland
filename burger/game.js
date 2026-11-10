@@ -22,7 +22,7 @@ const isHard = (i) => i >= HARD;
 const worldOf = (i) => Math.floor((i % HARD) / PER_WORLD);
 const label = (i) => `${isHard(i) ? '어려움 ' : ''}${worldOf(i) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[worldOf(i)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611102055';
+const ASSET_V = '202611102109';
 const START_HEARTS = 3;
 const COIN_GUEST = 2, COIN_TIP = 1;
 const NAME = { bun: '빵', bun_b: '아래 빵', bun_t: '위 빵', patty: '패티', patty_raw: '생패티', cheese: '치즈', lettuce: '양상추', tomato: '토마토', onion: '양파', bacon: '베이컨', sauce: '소스',
@@ -64,6 +64,7 @@ if (window.BurgerLevels.SAUCE_ON) { img('sauce', 'food/sauce'); img('bin_sauce',
 // 재료 칸: 재료가 담긴 통(bin_) · 음료·아이스크림 기계(mach_) — 2026-11-10 v3 그림 (tools/burger_assets.py v3)
 ['bun_t', 'bun_b', 'cheese', 'bacon', 'lettuce', 'tomato', 'onion', 'patty_raw', 'fries', 'trash'].forEach((k) => img('bin_' + k, 'food/bin_' + k));
 ['cola', 'cider', 'juice', 'ice'].forEach((k) => img('mach_' + k, 'food/mach_' + k));
+['bun_t', 'bun_b', 'cheese', 'bacon', 'lettuce', 'tomato', 'onion', 'sauce'].forEach((k) => img('bint_' + k, 'food/bint_' + k)); // 세로 재료 통 (재료가 8개보다 적은 판)
 ['grill', 'tray', 'cover'].forEach((k) => img(k, 'ui/' + k));
 ['steam', 'smoke', 'spark', 'heart', 'sweat', 'check'].forEach((k) => img('fx_' + k, 'fx/' + k));
 for (const g of GUEST_IDS) for (const p of ['wait', 'angry', 'happy']) img(`g_${g}_${p}`, `guests/${g}_${p}`);
@@ -203,32 +204,41 @@ function layout() {
   L.binTop = L.kBot + 8; L.binBot = H - 6 - Math.max(0, v('b') * 0.5);
   layBins();
 }
-// 재료 칸 (2026-11-10 사용자 배치): 버리기 | 생패티 | 재료 통 2줄×4칸 | 감자튀김 | 음료·아이스크림 기계(감자튀김처럼 세로로 길게)
-// 그 판에 안 나오는 재료·기계는 칸을 아예 만들지 않음 → 남은 칸끼리 나눠서 크게
+// 재료 칸 (2026-11-10 사용자 배치): 버리기 | 생패티 | 재료 | 감자튀김 | 음료·아이스크림 기계 — 모두 패티·감자튀김 칸과 같은 높이
+//  재료는 짝(위·아래 빵 / 치즈·베이컨 / 양상추·토마토 / 양파·소스)끼리 한 칸에 위아래 2줄로 넣을 수 있음
+//  8개: 짝 4칸 (2줄×4칸) · 7개: 빵, 양상추·토마토만 2줄 · 6개: 빵만 2줄 · 5개 이하: 모두 세로로 길게 1줄
+//  그 판에 안 나오는 재료·기계는 칸을 아예 만들지 않음 → 남은 칸끼리 나눠서 크게
 const WIDE = ['bun_t', 'bun_b', 'cheese', 'bacon', 'lettuce', 'tomato', 'onion', 'sauce'];
+const PAIRS = [['bun_t', 'bun_b'], ['cheese', 'bacon'], ['lettuce', 'tomato'], ['onion', 'sauce']];
 const DRINKS = ['cola', 'cider', 'juice', 'icecream'];
+function binCols(ids) {
+  const n = ids.length, pairOn = n >= 8 ? [0, 1, 2, 3] : n === 7 ? [0, 2] : n === 6 ? [0] : [], cols = [];
+  PAIRS.forEach((pr, k) => {
+    const have = pr.filter((x) => ids.includes(x));
+    if (pairOn.includes(k) && have.length === 2) cols.push({ pair: have });
+    else have.forEach((x) => cols.push({ id: x }));
+  });
+  return cols;
+}
 function layBins() {
   const st = G.st, on = (id) => !st || !locked(id);
-  const top = L.binTop, bh = L.binBot - top, gap = 6, rh = (bh - gap) / 2;
-  const wide = WIDE.filter(on), right = ['fries', ...DRINKS].filter(on);
-  const nTall = 2 + right.length;
-  // 재료 통: 1줄·2줄 중 통이 더 크게 보이는 쪽 (재료가 적은 앞 판은 1줄로 크게, 많으면 2줄×4칸)
-  // 세로 칸 폭을 먼저 정함 (그림 비율 0.6, 칸이 많으면 화면 폭에 맞춰 줄임). 세로 칸 높이는 폭의 1.75배까지 (아래에 맞춤)
-  const tallW = Math.min(bh * 0.62, L.SP * 0.1, (L.SP * 0.6) / nTall - gap), tallH = Math.min(bh, tallW * 1.75), tallY = L.binBot - tallH;
-  const a = L.X0 + (tallW + gap) * 2, b = L.X1 - right.length * (tallW + gap);
-  let best = null;
-  for (const rows of [1, 2]) {
-    const cols = Math.max(1, Math.ceil(wide.length / rows));
-    let ch = rows === 1 ? bh : rh, cw = Math.min((b - a - gap * (cols - 1)) / cols, ch * 1.6); // 칸이 너무 넓어지지 않게 (통 비율 1.4)
-    ch = Math.min(ch, cw / 1.3);
-    if (!best || ch > best.ch + 0.5) best = { cols, ch, cw };
+  const bh = L.binBot - L.binTop, gap = 6;
+  const cols = [{ id: 'trash' }, { id: 'patty_raw' }, ...binCols(WIDE.filter(on)), ...['fries', ...DRINKS].filter(on).map((id) => ({ id }))];
+  const nT = cols.filter((c) => c.id).length, nP = cols.length - nT;
+  // 세로 칸 폭 tw (그림 비율 0.6, 높이는 폭의 1.75배까지) · 2줄 칸 폭 pw (넓은 통 비율 1.45) — 화면 폭에 다 들어갈 때까지 줄임
+  let tw = Math.min(bh * 0.62, L.SP * 0.11);
+  const size = (w) => { const th = Math.min(bh, w * 1.75), hh = (th - gap) / 2; return { th, hh, pw: hh * 1.45 }; };
+  for (let k = 0; k < 60 && nT * tw + nP * size(tw).pw + gap * (cols.length - 1) > L.SP; k++) tw *= 0.97;
+  const { th, hh, pw } = size(tw), ty = L.binBot - th;
+  const used = nT * tw + nP * pw, g = Math.min(tw * 0.35, Math.max(gap, (L.SP - used) / Math.max(1, cols.length - 1)));
+  let x = L.X0 + Math.max(0, L.SP - used - g * (cols.length - 1)) / 2;
+  L.bins = [];
+  for (const c of cols) {
+    if (c.pair) { c.pair.forEach((id, r) => L.bins.push([id, { x, y: ty + r * (hh + gap), w: pw, h: hh }])); x += pw + g; continue; }
+    const cell = { x, y: ty, w: tw, h: th, tall: WIDE.includes(c.id) };
+    if (c.id === 'trash') L.trash = cell; else L.bins.push([c.id, cell]);
+    x += tw + g;
   }
-  const { cols, ch, cw } = best, gy = L.binBot - (ch * (wide.length > cols ? 2 : 1) + (wide.length > cols ? gap : 0));
-  const gx = a + (b - a - (cw * cols + gap * (cols - 1))) / 2;
-  L.trash = { x: L.X0, y: tallY, w: tallW, h: tallH };
-  L.bins = [['patty_raw', { x: L.X0 + tallW + gap, y: tallY, w: tallW, h: tallH }]];
-  wide.forEach((id, i) => { const r = Math.floor(i / cols), c = i % cols; L.bins.push([id, { x: gx + c * (cw + gap), y: gy + r * (ch + gap), w: cw, h: ch }]); });
-  right.forEach((id, i) => L.bins.push([id, { x: L.X1 - (right.length - i) * (tallW + gap) + gap, y: tallY, w: tallW, h: tallH }]));
 }
 function slotX(k, n) { const a = L.X0, w = L.SP / 3; return n === 3 ? a + w * (k + 0.5) : n === 2 ? a + L.SP * (k === 0 ? 0.3 : 0.7) : a + L.SP / 2; }
 // 접시 자리: 굽는 판 오른쪽에 고르게 (음료 기계가 아래 재료 칸으로 옮겨져 카운터 오른쪽이 비었음)
@@ -647,7 +657,7 @@ function drawBins() {
   for (const [id, c] of L.bins) {
     const m = MACH[id];
     if (m) drawMach(IMG[m], IMG[id], id === 'icecream', c);
-    else put(IMG['bin_' + id], c);
+    else put(IMG[(c.tall ? 'bint_' : 'bin_') + id], c); // 세로 칸 재료는 세로 통 그림
     hit(c.x, c.y, c.w, c.h, { bin: id });
   }
 }

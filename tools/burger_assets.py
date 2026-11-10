@@ -107,7 +107,31 @@ def v3():
     if os.path.exists(src('v3/P07')):  # 소스 (13_소스.txt): 왼쪽 통 · 오른쪽 쌓는 조각
         save_grid('v3/P07', 2, 1, ['bin_sauce', None], 360, 'food')
         save_grid('v3/P07', 2, 1, [None, 'sauce'], 320, 'food', by_width=True)
+    tall_bins()
     print('v3')
+
+
+def tall_bins():
+    """임시 세로 재료 통 bint_<id> (2026-11-10): 버리기 통에서 마크를 지운 빈 세로 통 + 넓은 통 속 재료를 위아래 2번.
+    재료가 8개보다 적은 판에서 패티·감자튀김 칸과 같은 높이로 세움. GPT 세로 통 그림(14번)을 받으면 그걸로 바꿈"""
+    import numpy as np
+    from PIL import ImageDraw, ImageFilter
+    D = f'{ROOT}/burger/assets/food/'
+    t = np.array(Image.open(D + 'bin_trash.webp').convert('RGBA')).astype(float); h, w = t.shape[:2]
+    y0, y1 = int(h * 0.33), int(h * 0.71)
+    for y in range(y0 + 1, y1):
+        k = (y - y0) / (y1 - y0); t[y, :, :3] = t[y0, :, :3] * (1 - k) + t[y1, :, :3] * k
+    empty = Image.fromarray(t.astype('uint8'))
+    for n in ['bun_t', 'bun_b', 'cheese', 'bacon', 'lettuce', 'tomato', 'onion', 'sauce']:
+        if not os.path.exists(D + f'bin_{n}.webp'): continue
+        b = Image.open(D + f'bin_{n}.webp').convert('RGBA'); bw, bh = b.size
+        c = b.crop((int(bw * 0.075), int(bh * 0.065), int(bw * 0.925), int(bh * 0.785)))
+        iw = int(w * 0.72); c = c.resize((iw, int(c.height * iw / c.width)), Image.LANCZOS)
+        m = Image.new('L', c.size, 0); ImageDraw.Draw(m).rounded_rectangle((3, 3, c.width - 4, c.height - 4), 8, fill=255); m = m.filter(ImageFilter.GaussianBlur(3))
+        ca = np.array(c); ca[:, :, 3] = np.minimum(ca[:, :, 3], np.array(m)); c = Image.fromarray(ca)
+        out = empty.copy(); top, bot = int(h * 0.10), int(h * 0.86); step = min(c.height - 6, bot - top - c.height); y = top + (bot - top - c.height - step) // 2
+        out.alpha_composite(c, ((w - c.width) // 2, y)); out.alpha_composite(c, ((w - c.width) // 2, y + step))
+        A.save(out, f'burger/assets/food/bint_{n}.webp')
 
 
 def guests():
