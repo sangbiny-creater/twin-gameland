@@ -3,6 +3,7 @@
   python3 tools/burger_assets.py intro      # 인트로·카드·준비 창 로고 (한국어·영어)
   python3 tools/burger_assets.py play       # 가게 배경·장비·재료·사이드·아이콘·효과 (예전 그림)
   python3 tools/burger_assets.py v2         # 새 디자인 그림 N01~N13 (play 뒤에 돌려 같은 이름을 덮어씀)
+  python3 tools/burger_assets.py v3         # 재료가 담긴 통 P01·P02·P04 + 음료·아이스크림 기계 P05 (P03·P02④는 안 씀)
   python3 tools/burger_assets.py guests     # 손님 8명 × 표정 3
   python3 tools/burger_assets.py chars      # 은유·은결 상반신 4자세 × 옷 9벌
   python3 tools/burger_assets.py map        # 스테이지 지도 배경 10장
@@ -31,7 +32,7 @@ def intro():
     A.intro()
 
 
-KEEP_GREEN = {'lettuce', 'pile_lettuce', 'cider', 'machine_drink3'}  # 초록이 들어 있는 그림: 바깥과 이어진 초록만 지움 (나머지는 양파 고리 안쪽처럼 갇힌 초록까지 지움)
+KEEP_GREEN = {'lettuce', 'pile_lettuce', 'cider', 'machine_drink3', 'bin_lettuce', 'mach_cider'}  # 초록이 들어 있는 그림: 바깥과 이어진 초록만 지움 (나머지는 양파 고리 안쪽처럼 갇힌 초록까지 지움)
 
 
 def drop_small(im, frac=0.02):
@@ -97,6 +98,15 @@ def v2():
     print('v2')
 
 
+def v3():
+    """2026-11-10 재료가 담긴 통 + 기계 (making_GPT/버거러시/11_재료통_음료_다시.txt)"""
+    save_grid('v3/P01', 2, 2, ['bin_bun_t', 'bin_bun_b', 'bin_cheese', 'bin_bacon'], 360, 'food')
+    save_grid('v3/P02', 2, 2, ['bin_lettuce', 'bin_tomato', 'bin_onion', None], 360, 'food')
+    save_grid('v3/P04', 3, 1, ['bin_patty_raw', 'bin_fries', 'bin_trash'], 360, 'food')
+    save_grid('v3/P05', 2, 2, ['mach_cola', 'mach_cider', 'mach_juice', 'mach_ice'], 360, 'food')
+    print('v3')
+
+
 def guests():
     for i, gid in enumerate(GUESTS):
         p = src(f'guest/M{i + 1:02d}')
@@ -136,5 +146,5 @@ def ride():
 
 
 if __name__ == '__main__':
-    todo = sys.argv[1:] or ['intro', 'play', 'v2', 'guests', 'chars', 'map', 'ride']
-    for t in todo: {'intro': intro, 'play': play, 'v2': v2, 'guests': guests, 'chars': chars, 'map': map_, 'ride': ride}[t]()
+    todo = sys.argv[1:] or ['intro', 'play', 'v2', 'v3', 'guests', 'chars', 'map', 'ride']
+    for t in todo: {'intro': intro, 'play': play, 'v2': v2, 'v3': v3, 'guests': guests, 'chars': chars, 'map': map_, 'ride': ride}[t]()

@@ -22,7 +22,7 @@ const isHard = (i) => i >= HARD;
 const worldOf = (i) => Math.floor((i % HARD) / PER_WORLD);
 const label = (i) => `${isHard(i) ? '어려움 ' : ''}${worldOf(i) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[worldOf(i)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611101916';
+const ASSET_V = '202611102009';
 const START_HEARTS = 3;
 const COIN_GUEST = 2, COIN_TIP = 1;
 const NAME = { bun: '빵', bun_b: '아래 빵', bun_t: '위 빵', patty: '패티', patty_raw: '생패티', cheese: '치즈', lettuce: '양상추', tomato: '토마토', onion: '양파', bacon: '베이컨',
@@ -60,8 +60,10 @@ const buzz = (ms) => { try { if (navigator.vibrate) navigator.vibrate(ms); } cat
 const IMG = {};
 const img = (key, path) => { const im = new Image(); im.src = `assets/${path}.webp?v=${ASSET_V}`; IMG[key] = im; return im; };
 ['bun_b', 'bun_t', 'lettuce', 'tomato', 'onion', 'cheese', 'bacon', 'patty_raw', 'patty_cook', 'patty', 'patty_burnt', 'cola', 'cider', 'juice', 'fries', 'icecream'].forEach((k) => img(k, 'food/' + k));
-['bun_t', 'bun_b', 'cheese', 'bacon', 'lettuce', 'tomato', 'onion', 'patty_raw'].forEach((k) => img('pile_' + k, 'food/pile_' + k));
-['grill', 'machine_drink3', 'machine_ice', 'tray', 'cover', 'well_wide', 'well_tall', 'trash_well'].forEach((k) => img(k, 'ui/' + k));
+// 재료 칸: 재료가 담긴 통(bin_) · 음료·아이스크림 기계(mach_) — 2026-11-10 v3 그림 (tools/burger_assets.py v3)
+['bun_t', 'bun_b', 'cheese', 'bacon', 'lettuce', 'tomato', 'onion', 'patty_raw', 'fries', 'trash'].forEach((k) => img('bin_' + k, 'food/bin_' + k));
+['cola', 'cider', 'juice', 'ice'].forEach((k) => img('mach_' + k, 'food/mach_' + k));
+['grill', 'tray', 'cover'].forEach((k) => img(k, 'ui/' + k));
 ['steam', 'smoke', 'spark', 'heart', 'sweat', 'check'].forEach((k) => img('fx_' + k, 'fx/' + k));
 for (const g of GUEST_IDS) for (const p of ['wait', 'angry', 'happy']) img(`g_${g}_${p}`, `guests/${g}_${p}`);
 const BG = { day: img('bg_day', 'bg/land'), night: img('bg_night', 'bg/land_night') };
@@ -191,29 +193,42 @@ function layout() {
   const peek = Math.round(Math.max(52, H * 0.11));
   L.bTop = 52 + v('t'); L.bBot = yc - peek; L.bH = L.bBot - L.bTop;
   L.gTop = L.bBot - 6; L.guestH = Math.round((yc - L.gTop) * 1.9);
-  // 가운데 줄: 굽는 판 · 접시 · 음료 · 아이스크림 (아래끝 kBot 에 맞춰 세움)
+  // 가운데 줄: 굽는 판 · 접시 (아래끝 kBot 에 맞춰 세움). 음료·아이스크림 기계는 아래 재료 칸으로 옮김
   L.kTop = yc + 4; L.kBot = Math.round(H * 0.665); const kh = L.kBot - L.kTop;
   let gh = kh * 0.98, gw = gh * 640 / 333; if (gw > SP * 0.27) { gw = SP * 0.27; gh = gw * 333 / 640; }
   L.grill = { x: fx(0.135) - gw / 2, y: L.kBot - gh, w: gw, h: gh };
   L.trayW = Math.min(SP * 0.13, kh * 1.75, 230); L.trayY = L.kBot - 2;
-  const fit = (cx, aw, ar, hMax) => { let h = hMax, w = h * ar; if (w > aw) { w = aw; h = w / ar; } return { x: cx - w / 2, y: L.kBot - h, w, h }; };
-  L.drink = fit(fx(0.795), SP * 0.2, 640 / 470, kh * 1.15);
-  L.ice = fit(fx(0.952), SP * 0.092, 269 / 400, kh * 1.15);
   // 아래 2줄: 재료 칸 (글자 없음)
   L.binTop = L.kBot + 8; L.binBot = H - 6 - Math.max(0, v('b') * 0.5);
-  const bh = L.binBot - L.binTop, rh = (bh - 6) / 2, r2 = L.binTop + rh + 6;
-  const cell = (f0, f1, y, h) => ({ x: fx(f0) + 3, y, w: fx(f1) - fx(f0) - 6, h });
-  L.trash = cell(0, 0.1, L.binTop, bh);
-  L.bins = [
-    ['patty_raw', cell(0.1, 0.215, L.binTop, bh)],
-    ['bun_t', cell(0.215, 0.375, L.binTop, rh)], ['bun_b', cell(0.375, 0.535, L.binTop, rh)], ['cheese', cell(0.535, 0.695, L.binTop, rh)], ['bacon', cell(0.695, 0.855, L.binTop, rh)],
-    ['lettuce', cell(0.215, 0.428, r2, rh)], ['tomato', cell(0.428, 0.642, r2, rh)], ['onion', cell(0.642, 0.855, r2, rh)],
-    ['fries', cell(0.855, 1, L.binTop, bh)],
-  ];
+  layBins();
+}
+// 재료 칸: 왼쪽 세로 통(버리기·생패티) · 가운데 넓은 칸 2줄(재료 통 + 음료·아이스크림 기계) · 오른쪽 세로 통(감자튀김)
+// 그 판에 안 나오는 재료·기계는 칸을 아예 만들지 않음 → 남은 칸끼리 나눠서 크게
+const WIDE = ['bun_t', 'bun_b', 'cheese', 'bacon', 'lettuce', 'tomato', 'onion', 'cola', 'cider', 'juice', 'icecream'];
+function layBins() {
+  const st = G.st, on = (id) => !st || !locked(id);
+  const top = L.binTop, bh = L.binBot - top, gap = 6, rh = (bh - gap) / 2;
+  const tallW = Math.min(bh * 0.62, L.SP * 0.1); // 세로 통 (그림 비율 0.6)
+  const wide = WIDE.filter(on), fries = on('fries');
+  const a = L.X0 + (tallW + gap) * 2, b = L.X1 - (fries ? tallW + gap : 0);
+  // 1줄·2줄 중 통이 더 크게 보이는 쪽 (재료가 적은 앞 판은 1줄로 크게)
+  let best = null;
+  for (const rows of [1, 2]) {
+    const cols = Math.max(1, Math.ceil(wide.length / rows)), ch = rows === 1 ? bh : rh;
+    const cw = Math.min((b - a - gap * (cols - 1)) / cols, ch * 1.6); // 칸이 너무 넓어지지 않게 (통 비율 1.4)
+    const size = Math.min(cw / 1.4, ch);
+    if (!best || size > best.size + 0.5) best = { rows, cols, ch, cw, size };
+  }
+  const { cols, ch, cw } = best;
+  const gx = a + (b - a - (cw * cols + gap * (cols - 1))) / 2;
+  L.trash = { x: L.X0, y: top, w: tallW, h: bh };
+  L.bins = [['patty_raw', { x: L.X0 + tallW + gap, y: top, w: tallW, h: bh }]];
+  wide.forEach((id, i) => { const r = Math.floor(i / cols), c = i % cols; L.bins.push([id, { x: gx + c * (cw + gap), y: top + r * (ch + gap), w: cw, h: ch }]); });
+  if (fries) L.bins.push(['fries', { x: L.X1 - tallW, y: top, w: tallW, h: bh }]);
 }
 function slotX(k, n) { const a = L.X0, w = L.SP / 3; return n === 3 ? a + w * (k + 0.5) : n === 2 ? a + L.SP * (k === 0 ? 0.3 : 0.7) : a + L.SP / 2; }
-// 접시 자리: 3개면 굽는 판과 음료 기계 사이에 고르게, 2개면 그 사이 가운데 쪽
-function trayX(k) { const n = G.trays.length || 2, f = n >= 3 ? [0.345, 0.495, 0.645][k] : [0.4, 0.58][k]; return L.fx(f == null ? 0.495 : f); }
+// 접시 자리: 굽는 판 오른쪽에 고르게 (음료 기계가 아래 재료 칸으로 옮겨져 카운터 오른쪽이 비었음)
+function trayX(k) { const n = G.trays.length || 2, f = n >= 3 ? [0.4, 0.6, 0.8][k] : [0.47, 0.7][k]; return L.fx(f == null ? 0.6 : f); }
 
 // ---------- run ----------
 function startStage(si) {
@@ -223,6 +238,7 @@ function startStage(si) {
   G.grill = Array.from({ length: st.grills }, () => null);
   G.spawned = 0; G.served = 0; G.missed = 0; G.nextT = 0.8; G.coins = 0; G.coinBase = 0; G.t = 0; G.fx = []; G.contUsed = false; G.usedIds = [];
   G.hearts = START_HEARTS; G.maxH = START_HEARTS;
+  layBins(); // 이 판에 나오는 재료·기계만 칸으로
   const boosts = HUB ? HUB.takeBoosts('burger') : [];
   if (boosts.includes('life')) { G.hearts = 4; G.maxH = 4; } // 하트 아이템: 하트 4개로 시작
   renderHearts();
@@ -603,39 +619,21 @@ function drawKitchen() {
     t.sides.forEach((s, i) => drawImgH(IMG[s], x + tw * 0.32, ty + th * 0.78 - i * th * 0.3, th * 0.8));
     hit(x - tw / 2, L.kTop, tw, L.trayY - L.kTop + 4, { tray: k });
   });
-  // 음료 기계 (꼭지 3개: 콜라 · 사이다 · 주스) — 꼭지 아래에 컵, 안 나오는 음료는 흐리게
-  const D = L.drink, lock = (id) => !st.sides.includes(id);
-  drawImg(IMG.machine_drink3, D.x, D.y, D.w, D.h);
-  ['cola', 'cider', 'juice'].forEach((id, i) => {
-    const cx = D.x + D.w * [0.185, 0.5, 0.815][i], off = lock(id);
-    if (off) { ctx.fillStyle = 'rgba(40,40,50,.5)'; rr(D.x + D.w * [0.055, 0.36, 0.675][i], D.y + D.h * 0.09, D.w * 0.27, D.h * 0.22, 6); ctx.fill(); }
-    ctx.globalAlpha = off ? 0.3 : 1;
-    drawImgH(IMG[id], cx, D.y + D.h * 0.8, D.h * 0.36);
-    ctx.globalAlpha = 1;
-    hit(D.x + D.w * i / 3, D.y, D.w / 3, D.h, { bin: id });
-  });
-  // 아이스크림 기계 (10월드)
-  const I = L.ice, ioff = lock('icecream');
-  ctx.globalAlpha = ioff ? 0.4 : 1;
-  drawImg(IMG.machine_ice, I.x, I.y, I.w, I.h);
-  drawImgH(IMG.icecream, I.x + I.w / 2, I.y + I.h * 0.83, I.h * 0.42);
-  ctx.globalAlpha = 1;
-  hit(I.x, I.y, I.w, I.h, { bin: 'icecream' });
 }
+const MACH = { cola: 'mach_cola', cider: 'mach_cider', juice: 'mach_juice', icecream: 'mach_ice' };
 function drawBins() {
-  // 버리기: 빈 통 + 가운데 쓰레기통 마크 (trash_well 가운데를 잘라 붙임 — 칸이 길어져도 마크는 안 늘어남)
+  // 통·기계 그림은 칸 안에 비율 그대로 (칸 아래쪽에 맞춤)
+  const put = (im, c) => { if (!ok(im)) return null; const r = Math.min(c.w / im.naturalWidth, c.h / im.naturalHeight), w = im.naturalWidth * r, h = im.naturalHeight * r, x = c.x + (c.w - w) / 2, y = c.y + c.h - h; ctx.drawImage(im, x, y, w, h); return { x, y, w, h }; };
   const T = L.trash;
-  drawNine(IMG.well_tall, T.x, T.y, T.w, T.h);
-  const tw = IMG.trash_well;
-  if (ok(tw)) { const sx = tw.naturalWidth * 0.24, sy = tw.naturalHeight * 0.31, sw = tw.naturalWidth * 0.52, sh = tw.naturalHeight * 0.38, m = Math.min(T.w * 0.62 / sw, T.h * 0.5 / sh); ctx.drawImage(tw, sx, sy, sw, sh, T.x + T.w / 2 - sw * m / 2, T.y + T.h / 2 - sh * m / 2, sw * m, sh * m); }
+  put(IMG.bin_trash, T);
   hit(T.x, T.y, T.w, T.h, { trash: 1 });
   for (const [id, c] of L.bins) {
-    const dim = locked(id), tall = c.h > c.w * 1.1;
-    ctx.globalAlpha = dim ? 0.4 : 1;
-    drawNine(tall ? IMG.well_tall : IMG.well_wide, c.x, c.y, c.w, c.h);
-    const pile = IMG['pile_' + id] || IMG[id];
-    drawFit(pile, c.x + c.w * 0.05, c.y + c.h * 0.06, c.w * 0.9, c.h * 0.86);
-    ctx.globalAlpha = 1;
+    const m = MACH[id];
+    if (m) {
+      // 기계: 꼭지 아래 받침 위에 컵·콘 (기계 그림은 빈 꼭지)
+      const d = put(IMG[m], c);
+      if (d) drawImgH(IMG[id], d.x + d.w * 0.5, d.y + d.h * 0.87, d.h * (id === 'icecream' ? 0.5 : 0.44));
+    } else put(IMG['bin_' + id], c);
     hit(c.x, c.y, c.w, c.h, { bin: id });
   }
 }
