@@ -74,6 +74,10 @@ WHOLE = {
 }
 # 문서 뒤에 새로 생긴 글 (2026-11-04 작업)
 EXTRA = {
+    # 순위 스냅샷 (2026-11-11)
+    '10분마다 새로 매겨요': 'Updated every 10 minutes', '이벤트 순위': 'Event Ranking', '이벤트 결과 (집계 중)': 'Event Results (counting)',
+    '결과를 모으고 있어요. 조금 뒤에 보상을 받을 수 있어요': "We're still counting. You can claim your reward soon.",
+    '투어 포인트: 판 하나 끝내면 10점, 별 하나에 10점': 'Tour points: 10 per game finished, 10 per star',
     # 캐릭터 이름·ID (2026-11-11)
     '지금 이름과 같아요': "That's your current name", '이미 다른 사람이 쓰는 이름이에요': 'Someone else is already using that name',
     '이름을 확인하려면 인터넷 연결이 필요해요': 'An internet connection is needed to check the name', '이름을 바꿨어요!': 'Name changed!',

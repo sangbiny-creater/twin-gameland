@@ -28,7 +28,7 @@ cd server && firebase use --add   # 1번에서 만든 프로젝트 고르기
 firebase functions:secrets:set SMTP_USER   # 메일 주소
 firebase functions:secrets:set SMTP_PASS   # 앱 비밀번호
 cd functions && npm i && cd ..
-firebase deploy --only firestore,storage,functions
+firebase deploy --only firestore,storage,functions   # 서버 함수는 Blaze 요금제가 있어야 올라감
 ```
 
 ## 데이터 구조 (Firestore)
@@ -45,6 +45,8 @@ firebase deploy --only firestore,storage,functions
 | `config/guild` | 그룹투어 설정: open(새 투어 만들기), maxMembers, event { id, game, start(시각 ms), min(분, 기본 60), reward { r1·r2·r3·join 다이아 } } — 백오피스 'Group Tour' 탭 | 관리자 |
 | `tours/{id}` | 그룹투어(길드, 게임 화면 `tour/`): name, mark(분수 그림 번호), open(누구나 가입), max, code(초대 코드 6자리), guide(투어가이드 uid), gk(투어가이드 키), mem { '<uid>_<캐릭터>': { n 이름, f 얼굴 그림, uid, at 들어온 시각 } }, notice { text, at }, reacts { 키: { e 이모티콘, at 공지 시각, t } }, last(마지막으로 바꾼 멤버 키), createdAt. 주간 투어 랭킹·이벤트 점수는 records 로 화면에서 계산 | 만들기·공지·설정 = 투어가이드, 가입·나가기·이모티콘 = 본인 칸만 |
 | `guilds`, `seasons` | (예전 준비 칸, 지금은 안 씀) | 관리자 |
+| `ranks/{id}` | **순위 스냅샷** (서버 함수 `rankSnapshot`, `functions/rank.js`): 게임 랭킹 `{게임}_all`·`{게임}_w{주}` 상위 100명, 주간 투어 랭킹 `tours_w{주}`, 이벤트 `ev_{id}`, 살아 있는지 `_meta`. 게임 랭킹·투어 랭킹은 매시 정각(1시간 전 기준), 이벤트는 이벤트 중 10분마다·끝나고 '최종'. 화면은 문서 1개만 읽음. `_meta` 가 3시간 넘게 안 바뀌면 화면이 예전처럼 records 를 직접 읽음 | 서버만 씀, 누구나 읽기 |
+| `rankp`, `rankagg`, `rankjobs` | 순위 스냅샷 중간 계산(캐릭터별 누적·합계·어디까지 읽었는지). records 의 `sat`(서버가 받은 시각)로 새 기록만 읽음 | 서버만 |
 | `names/{이름 열쇠}` | 캐릭터 이름 하나에 주인 하나 (열쇠 = 띄어쓰기 빼고 영어 소문자): uid, pid, cid, name, at — 만들 때 중복 확인, 이름 바꾸기(첫 번째 무료·두 번째부터 다이아 100). `common/names.js` | 비어 있으면 누구나, 그 뒤로는 주인만 |
 | `pids/{캐릭터 ID}` | 캐릭터 ID 6자리(숫자·영어 대문자, 0·O·1·I 뺌): uid, cid, name, look, at — 그룹투어 친구 ID 초대에 씀 | 비어 있으면 누구나, 그 뒤로는 주인만 |
 | `coupons/{번호}` | 쿠폰 보상 | 관리자 |

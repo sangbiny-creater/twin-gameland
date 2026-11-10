@@ -3,7 +3,7 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html { -webkit-text-size-adjust: 100%; background: #CFE8FA; }
 body { margin: 0; min-height: 100vh; font-family: var(--font); color: var(--navy); overflow-x: hidden; -webkit-user-select: none; user-select: none;
-  background: #CFE8FA url(assets/bg.webp?v=202611110408) center top / cover fixed; }
+  background: #CFE8FA url(assets/bg.webp?v=202611110535) center top / cover fixed; }
 img { -webkit-user-drag: none; display: block; }
 button { font-family: var(--font); color: var(--navy); border: 0; background: none; padding: 0; cursor: pointer; touch-action: manipulation; }
 a { color: inherit; text-decoration: none; }
@@ -53,16 +53,16 @@ body.has-mine .rk { padding-bottom: calc(118px + env(safe-area-inset-bottom)); }
 .rk-divider { width: 92%; margin: 4px auto 6px; }
 
 /* 순위표 큰 판: 모서리 장식은 그대로, 가운데만 늘림 */
-.rk-board { border: solid transparent; border-width: 30px 26px 26px; border-image: url(assets/ui/board.webp?v=202611110408) 92 fill / 30px 26px 26px / 0 stretch; margin: 0 -2px; }
+.rk-board { border: solid transparent; border-width: 30px 26px 26px; border-image: url(assets/ui/board.webp?v=202611110535) 92 fill / 30px 26px 26px / 0 stretch; margin: 0 -2px; }
 .rk-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .rk-note { margin: 8px 0 0; text-align: center; font-size: 12px; color: #A08A78; }
 
 /* 한 줄: [메달·등수] [프로필 테두리 + 얼굴] [이름] [별 + 점수]. 줄 판 그림은 비율 그대로 */
-.rk-row { position: relative; display: flex; align-items: center; gap: 6px; padding: 0 7% 2px 3.5%; aspect-ratio: 900 / 160; background: url(assets/ui/row.webp?v=202611110408) center / 100% 100% no-repeat; }
-.rk-row.top1 { aspect-ratio: 900 / 176; background-image: url(assets/ui/row1.webp?v=202611110408); padding-left: 6%; padding-right: 12%; }
-.rk-row.top2 { aspect-ratio: 900 / 176; background-image: url(assets/ui/row2.webp?v=202611110408); padding-left: 6%; padding-right: 12%; }
-.rk-row.top3 { aspect-ratio: 900 / 176; background-image: url(assets/ui/row3.webp?v=202611110408); padding-left: 6%; padding-right: 12%; }
-.rk-row.me { aspect-ratio: 900 / 165; background-image: url(assets/ui/row_me.webp?v=202611110408); padding-left: 10.5%; padding-right: 11.5%; }
+.rk-row { position: relative; display: flex; align-items: center; gap: 6px; padding: 0 7% 2px 3.5%; aspect-ratio: 900 / 160; background: url(assets/ui/row.webp?v=202611110535) center / 100% 100% no-repeat; }
+.rk-row.top1 { aspect-ratio: 900 / 176; background-image: url(assets/ui/row1.webp?v=202611110535); padding-left: 6%; padding-right: 12%; }
+.rk-row.top2 { aspect-ratio: 900 / 176; background-image: url(assets/ui/row2.webp?v=202611110535); padding-left: 6%; padding-right: 12%; }
+.rk-row.top3 { aspect-ratio: 900 / 176; background-image: url(assets/ui/row3.webp?v=202611110535); padding-left: 6%; padding-right: 12%; }
+.rk-row.me { aspect-ratio: 900 / 165; background-image: url(assets/ui/row_me.webp?v=202611110535); padding-left: 10.5%; padding-right: 11.5%; }
 .r-rank { flex: 0 0 auto; position: relative; display: grid; place-items: center; background: center / contain no-repeat; }
 .r-rank.medal { width: 13%; aspect-ratio: 1; }
 .r-rank.medal b { margin-top: 4%; font-size: clamp(15px, 4.4vw, 20px); color: #7A4A12; }
@@ -84,7 +84,7 @@ body.has-mine .rk { padding-bottom: calc(118px + env(safe-area-inset-bottom)); }
 /* 20등 밖이면 맨 아래 내 등수 칸 (위 가운데 리본 그림이 있어서 비율 그대로) */
 .rk-mine { position: fixed; left: 0; right: 0; bottom: 0; padding: 0 8px calc(6px + env(safe-area-inset-bottom)); z-index: 5; background: linear-gradient(rgba(207,232,250,0), rgba(207,232,250,.95) 30%); }
 .rk-mine .rk-list { max-width: 464px; margin: 0 auto; }
-.rk-row.mine { aspect-ratio: 900 / 206; background-image: url(assets/ui/row_mine.webp?v=202611110408); padding: 6% 14.5% 2% 14%; }
+.rk-row.mine { aspect-ratio: 900 / 206; background-image: url(assets/ui/row_mine.webp?v=202611110535); padding: 6% 14.5% 2% 14%; }
 .rk-row.mine .r-name { color: #B8336A; }
 
 .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: rgba(38,54,90,.92); color: #fff; padding: 10px 16px; border-radius: 14px; font-size: 15px; z-index: 50; }

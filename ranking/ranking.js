@@ -7,7 +7,7 @@
 //    끝없는 게임 = 한 판 최고 점수(score), 징검다리 게임 = 판마다 가장 많이 받은 별을 모두 더한 것
 //    주간 = 이번 주 일요일~토요일(records.day 7일), 전체 = 그 게임 기록 전부. 지금은 화면에서 계산 (사람이 많아지면 서버에서 미리 계산하기)
 const $ = (id) => document.getElementById(id);
-const V = '?v=202611110408';
+const V = '?v=202611110535';
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 const { blip } = window.UI;
 const EN = window.I18N && I18N.lang === 'en';
@@ -65,8 +65,23 @@ async function server() {
 }
 const days = () => { const [s] = weekRange(), out = []; for (let i = 0; i < 7; i++) { const d = new Date(s); d.setDate(s.getDate() + i); out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`); } return out; };
 const cache = {};
+// ---------- 순위 스냅샷 (서버가 매시 정각에 찍어 둔 순위표 1개만 읽음, server/functions/rank.js) ----------
+//  ranks/_meta 가 3시간 안이면 서버 스냅샷을 씀. 서버 함수가 아직 없으면(요금제 Blaze 전) 예전처럼 기록을 직접 읽어 계산
+const HOUR = 3600e3;
+let metaP = null, snapAt = 0;
+const meta = (fb) => metaP || (metaP = fb.db.collection('ranks').doc('_meta').get().then((s) => (s.exists && Date.now() - (s.data().at || 0) < 3 * HOUR ? s.data() : null)).catch(() => null));
+const wkId = () => { const [s] = weekRange(); return `${s.getFullYear()}-${String(s.getMonth() + 1).padStart(2, '0')}-${String(s.getDate()).padStart(2, '0')}`; };
+async function fetchSnap(fb, g, m) {
+  const [mt, d] = await Promise.all([meta(fb), fb.db.collection('ranks').doc(m === 'week' ? `${g}_w${wkId()}` : `${g}_all`).get().catch(() => null)]);
+  if (!mt) return null;
+  const top = (d && d.exists && d.data().top) || [];
+  snapAt = Math.max(mt.at || 0, (d && d.exists && d.data().at) || 0);
+  return { uid: fb.auth.currentUser.uid, list: top.map((x) => ({ uid: x.uid, cid: x.cid, name: x.name || '?', face: faceOf(x.face, x.look), score: x.score || 0 })) };
+}
 async function fetchBoard(g, m) {
   const fb = await server(); if (!fb) return null;
+  const sn = await fetchSnap(fb, g, m); if (sn) return sn;
+  snapAt = 0;
   let qy = fb.db.collection('records').where('game', '==', g);
   if (m === 'week') qy = qy.where('day', 'in', days()); // 같음 조건만 → 서버에 새 색인을 만들지 않아도 됨
   const snap = await qy.limit(5000).get(), stage = isStage(g), P = new Map();
@@ -104,6 +119,11 @@ function rowHTML(x, cls) {
   const face = `<span class="r-face${top3 ? ' f' + k : ''}"><img class="ph" src="${x.face}" alt=""><img class="fr" src="assets/ui/frame${top3 ? k : ''}.webp${V}" alt="">${k === 1 ? `<img class="crown" src="assets/ui/crown.webp${V}" alt="">` : ''}</span>`;
   return `<li class="rk-row ${cls}">${rank}${face}<span class="r-name">${esc(x.name)}</span><span class="r-score"><img src="assets/ui/star.webp${V}" alt="">${x.score ? x.score.toLocaleString() : '-'}</span></li>`;
 }
+// '오후 3시 기준 · 매시 정각에 새로 매겨요'
+function snapText(at) {
+  const d = new Date(Math.floor(at / HOUR) * HOUR), h = d.getHours();
+  return EN ? `Rankings as of ${(h % 12) || 12} ${h < 12 ? 'AM' : 'PM'} · updated every hour` : `${h < 12 ? '오전' : '오후'} ${(h % 12) || 12}시 기준 순위 · 매시 정각에 새로 매겨요`;
+}
 let ticket = 0;
 async function render() {
   $('title').textContent = gname(game);
@@ -117,7 +137,8 @@ async function render() {
   if (t !== ticket) return; // 그새 다른 게임·탭을 누름
   $('list').innerHTML = list.slice(0, TOP).map((x) => rowHTML(x, x.me ? 'me' : x.rank <= 3 ? 'top' + x.rank : '')).join('');
   $('note').textContent = !ok ? tr('순위를 불러오지 못했어요. 인터넷 연결을 확인해 주세요')
-    : !list.length ? tr(mode === 'week' ? '이번 주 기록이 아직 없어요. 첫 번째 주인공이 되어 보세요!' : '아직 기록이 없어요. 첫 번째 주인공이 되어 보세요!') : '';
+    : !list.length ? tr(mode === 'week' ? '이번 주 기록이 아직 없어요. 첫 번째 주인공이 되어 보세요!' : '아직 기록이 없어요. 첫 번째 주인공이 되어 보세요!')
+    : snapAt ? snapText(snapAt) : '';
   $('note').classList.toggle('hidden', !$('note').textContent);
   const out = !(typeof me.rank === 'number' && me.rank <= TOP);
   $('mine').classList.toggle('hidden', !out);

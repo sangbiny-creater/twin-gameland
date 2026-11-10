@@ -56,6 +56,11 @@ service cloud.firestore {
       allow update: if signedIn() && resource.data.uid == request.auth.uid && request.resource.data.uid == request.auth.uid;
       allow delete: if isAdmin();
     }
+    // 순위 스냅샷 (server/functions/rank.js 가 매시 정각에 씀): 누구나 읽기, 쓰기는 서버만. 중간 계산 칸은 서버만
+    match /ranks/{id} { allow read: if true; allow write: if false; }
+    match /rankp/{id} { allow read, write: if false; }
+    match /rankagg/{id} { allow read, write: if false; }
+    match /rankjobs/{id} { allow read, write: if false; }
     match /admins/{email} { allow read: if signedIn() && request.auth.token.email == email; allow write: if false; }
     // 인증번호: 서버만
     match /emailCodes/{id} { allow read, write: if false; }

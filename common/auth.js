@@ -129,7 +129,8 @@
     const q = read(QKEY, []); if (!q.length) return; write(QKEY, []);
     const uid = fb.auth.currentUser.uid, b = fb.db.batch();
     let sec = 0;
-    for (const x of q) { b.set(fb.db.collection(x.kind === 'session' ? 'sessions' : 'records').doc(), { ...x.d, uid }); if (x.kind === 'session') sec += x.d.sec; }
+    const sat = fb.F.firestore.FieldValue.serverTimestamp(); // 서버가 받은 시각: 순위 스냅샷이 새로 온 기록만 읽게 (server/functions/rank.js)
+    for (const x of q) { b.set(fb.db.collection(x.kind === 'session' ? 'sessions' : 'records').doc(), x.kind === 'session' ? { ...x.d, uid } : { ...x.d, uid, sat }); if (x.kind === 'session') sec += x.d.sec; }
     if (sec) b.update(fb.db.collection('users').doc(uid), { totalSec: fb.F.firestore.FieldValue.increment(sec) });
     try { await b.commit(); } catch (e) { const r = read(QKEY, []); write(QKEY, [...q, ...r].slice(-300)); }
   }

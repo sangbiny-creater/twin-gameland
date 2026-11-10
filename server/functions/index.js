@@ -58,3 +58,6 @@ exports.verifyPurchase = onCall({ region: 'asia-northeast3' }, async (req) => {
   if (!req.auth || req.auth.token.firebase.sign_in_provider === 'anonymous') throw new HttpsError('permission-denied', '계정연동이 필요합니다.');
   throw new HttpsError('unimplemented', '앱 결제는 출시 준비 때 열어요');
 });
+
+// 순위 스냅샷 (1시간마다, 이벤트 중에는 10분마다) — rank.js
+Object.assign(exports, require('./rank'));

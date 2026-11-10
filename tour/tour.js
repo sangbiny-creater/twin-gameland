@@ -14,7 +14,7 @@
 //    누가 무엇을 바꿀 수 있는지는 server/firestore.rules 의 tours 칸
 //  · 이 기기 기억: localStorage 'twin_tour_v1' (어느 투어에 들었는지 · 받은 이벤트 보상). 게임 저장 데이터 twin_gameland_v1 은 다이아만 더함
 const $ = (id) => document.getElementById(id);
-const V = '?v=202611110408';
+const V = '?v=202611110535';
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 const { blip, toast: toast0 } = window.UI;
 const EN = window.I18N && I18N.lang === 'en';
@@ -64,6 +64,8 @@ function weekRange(now = Date.now()) {
   const e = new Date(s); e.setDate(s.getDate() + 6);
   return [s, e];
 }
+// '오후 3시 기준 순위 · 매시 정각에 새로 매겨요' (서버 스냅샷)
+function snapText(at) { const h = new Date(Math.floor(at / 3600e3) * 3600e3).getHours(); return EN ? `Rankings as of ${(h % 12) || 12} ${h < 12 ? 'AM' : 'PM'} · updated every hour` : `${h < 12 ? '오전' : '오후'} ${(h % 12) || 12}시 기준 순위 · 매시 정각에 새로 매겨요`; }
 const periodText = () => { const [s, e] = weekRange(); return `${dateText(s)} ~ ${dateText(e)}`; };
 
 // ---------- 서버 ----------
@@ -87,14 +89,36 @@ const memList = (t) => Object.entries(t.mem || {}).map(([k, m]) => ({ k, ...m })
 const guideKey = (t) => t.gk || '';
 const isGuide = () => !!(mine && guideKey(mine) === mid);
 const maxOf = (t) => t.max || cfg.maxMembers || MAX;
-const count = (t) => Object.keys(t.mem || {}).length;
+const count = (t) => (t.mem ? Object.keys(t.mem).length : t._count || 0); // 스냅샷 목록의 투어는 멤버 칸 없이 인원만
+const guideName = (t) => (t.mem ? (t.mem[guideKey(t)] || {}).n : t._guide) || '?';
 function newCode() { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; for (let i = 0; i < 6; i++) s += A[Math.floor(Math.random() * A.length)]; return s; }
 
+// 처음 불러오기 (읽기를 적게): 설정 1 + 내 투어 1 + 투어 목록(서버 스냅샷 1개, 없으면 투어 문서들) + 내 ID 초대
+//  투어 목록·주간 투어 포인트 = 서버가 매시 정각에 찍어 둔 ranks/tours_w{주} (server/functions/rank.js). 서버 함수가 아직 없으면 예전처럼 직접
+const HOUR = 3600e3;
+let snapOk = null, tourSnap = null, invTours = [];
+const wkId = () => wk(Date.now());
+async function snapOn() { if (snapOk == null) { try { const s = await fb.db.collection('ranks').doc('_meta').get(); snapOk = s.exists && Date.now() - (s.data().at || 0) < 3 * HOUR; } catch (e) { snapOk = false; } } return snapOk; }
 async function loadAll() {
-  const [cs, ts] = await Promise.all([fb.db.collection('config').doc('guild').get(), T().limit(200).get()]);
+  const FP = fb.F.firestore.FieldPath;
+  const [cs] = await Promise.all([fb.db.collection('config').doc('guild').get(), snapOn()]);
   if (cs.exists) cfg = { ...cfg, ...cs.data() };
-  tours = []; ts.forEach((d) => tours.push({ id: d.id, ...d.data() }));
-  mine = tours.find((t) => t.mem && t.mem[mid]) || null;
+  // 내 투어: 이 기기에 적어 둔 투어 → 아니면 멤버 칸으로 찾기 (다른 폰에서 가입한 경우)
+  mine = null;
+  const tid = local.my[C.id];
+  if (tid) { try { const d = await T().doc(tid).get(); if (d.exists && (d.data().mem || {})[mid]) mine = { id: d.id, ...d.data() }; } catch (e) { /* ignore */ } }
+  if (!mine) { try { const q = await T().where(new FP('mem', mid, 'at'), '>', 0).limit(1).get(); q.forEach((d) => { mine = { id: d.id, ...d.data() }; }); } catch (e) { console.warn('tour mine', e); } }
+  // 투어 목록
+  tourSnap = null; tours = [];
+  if (snapOk) {
+    try { const d = await fb.db.collection('ranks').doc('tours_w' + wkId()).get(); tourSnap = d.exists ? d.data() : { at: 0, list: [] }; } catch (e) { tourSnap = null; }
+  }
+  if (tourSnap) tours = (tourSnap.list || []).map((x) => ({ id: x.id, name: x.name, mark: x.mark, open: x.open, max: x.max, createdAt: x.createdAt, _count: x.count, _guide: x.guide }));
+  else { const ts = await T().limit(200).get(); ts.forEach((d) => tours.push({ id: d.id, ...d.data() })); if (!mine) mine = tours.find((t) => t.mem && t.mem[mid]) || null; }
+  if (mine) { const i = tours.findIndex((t) => t.id === mine.id); if (i >= 0) tours[i] = mine; else tours.push(mine); }
+  // 내 ID 로 온 초대
+  invTours = [];
+  if (!mine && C.pid) { try { const q = await T().where(new FP('inv', C.pid, 'at'), '>', Date.now() - 7 * 864e5).limit(10).get(); q.forEach((d) => invTours.push({ id: d.id, ...d.data() })); } catch (e) { console.warn('tour inv', e); } }
   if (mine) local.my[C.id] = mine.id; else delete local.my[C.id];
   saveLocal();
 }
@@ -106,6 +130,10 @@ function records(key, make) { if (!recCache[key]) recCache[key] = make().catch((
 const keyOf = (r) => `${r.uid}_${r.cid || ''}`;
 // 이번 주 투어 포인트: 투어마다 [포인트, 멤버별 포인트]
 async function weekBoard() {
+  if (tourSnap) { // 서버 스냅샷 (매시 정각)
+    const by = new Map((tourSnap.list || []).map((x) => [x.id, x]));
+    return tours.map((t) => { const x = by.get(t.id) || { score: 0, by: {} }; return { t, score: x.score || 0, by: x.by || {} }; }).sort((a, b) => b.score - a.score || (a.t.createdAt || 0) - (b.t.createdAt || 0));
+  }
   const list = await records('wk', async () => { const s = await fb.db.collection('records').where('wk', '==', wk(Date.now())).limit(5000).get(); const a = []; s.forEach((d) => a.push(d.data())); return a; });
   if (!list) return null;
   const per = new Map();
@@ -121,7 +149,12 @@ async function weekBoard() {
 }
 // 이벤트: 투어마다 { best: 멤버 최고 점수 합, total: 모든 판 점수 합, by: 멤버별 {best,total,plays} }
 const evEnd = (e) => e.start + (e.min || 60) * 60000;
+let evSnap = null;
 async function eventBoard(e) {
+  if (snapOk) { // 서버 스냅샷 (이벤트 중 10분마다, 끝나고 '최종')
+    try { const d = await fb.db.collection('ranks').doc('ev_' + String(e.id).replace(/[^A-Za-z0-9_-]/g, '_')).get(); evSnap = d.exists ? d.data() : { at: 0, list: [] }; } catch (er) { return null; }
+    return (evSnap.list || []).map((x) => ({ t: tours.find((t) => t.id === x.id) || { id: x.id, name: x.name, mark: x.mark }, best: x.best, total: x.total, plays: x.plays, by: x.by || {} }));
+  }
   const days = [day(e.start)]; if (day(evEnd(e) - 1) !== days[0]) days.push(day(evEnd(e) - 1)); // 이벤트는 1시간이라 하루 또는 이틀(자정을 넘길 때)
   const list = await records('ev' + e.id, async () => { const s = await fb.db.collection('records').where('game', '==', e.game).where('day', 'in', days.slice(0, 10)).limit(5000).get(); const a = []; s.forEach((d) => a.push(d.data())); return a; });
   if (!list) return null;
@@ -173,10 +206,10 @@ async function draw() {
 async function drawFind() {
   const wb = await weekBoard(), pts = new Map((wb || []).map((x) => [x.t.id, x.score]));
   const open = tours.filter((t) => t.open !== false && count(t) < maxOf(t)).sort((a, b) => (pts.get(b.id) || 0) - (pts.get(a.id) || 0) || count(b) - count(a));
-  const rows = open.slice(0, 50).map((t) => rowHTML({ img: markImg(t.mark), name: t.name, sub: `${tr('투어가이드')} <span translate="no">${esc((t.mem && t.mem[guideKey(t)] || {}).n || '?')}</span> · ${count(t)}/${maxOf(t)}`,
+  const rows = open.slice(0, 50).map((t) => rowHTML({ img: markImg(t.mark), name: t.name, sub: `${tr('투어가이드')} <span translate="no">${esc(guideName(t))}</span> · ${count(t)}/${maxOf(t)}`,
     score: pts.get(t.id) || 0, unit: '<img class="pt" src="../ranking/assets/ui/star.webp' + V + '" alt="">', btn: `<button class="tb small pink" data-join="${esc(t.id)}">${tr('가입')}</button>` })).join('');
   // 친구가 내 ID 로 보낸 초대 (7일 동안)
-  const invs = tours.filter((t) => C.pid && t.inv && t.inv[C.pid] && Date.now() - (t.inv[C.pid].at || 0) < 7 * 864e5);
+  const invs = invTours.filter((t) => t.inv && t.inv[C.pid] && Date.now() - (t.inv[C.pid].at || 0) < 7 * 864e5);
   const invRows = invs.map((t) => rowHTML({ img: markImg(t.mark), name: t.name, sub: `<span translate="no">${esc(t.inv[C.pid].by || '?')}</span> ${tr('님이 초대했어요')}`,
     btn: `<button class="tb small pink" data-join="${esc(t.id)}">${tr('가입')}</button>` })).join('');
   return (invRows ? board(`<h3 class="tr-h">💌 ${tr('초대가 왔어요!')}</h3><ol class="tr-list">${invRows}</ol>`) : '')
@@ -239,14 +272,15 @@ async function drawEvent() {
       const sub = `<div class="ev-tabs"><button data-ev="best" class="${evTab === 'best' ? 'on' : ''}">${tr('보상 순위')}<small>${tr('멤버 최고 점수 합')}</small></button><button data-ev="total" class="${evTab === 'total' ? 'on' : ''}">${tr('투어 랭킹')}<small>${tr('모든 점수 누적 합')}</small></button></div>`;
       // 보상 받기: 이벤트가 끝나고, 내 투어가 참가했고, 내가 이벤트 중에 한 판이라도 했으면
       let claim = '';
-      if (state === 'done' && mine) {
+      if (state === 'done' && mine && evSnap && !evSnap.final) claim = note('결과를 모으고 있어요. 조금 뒤에 보상을 받을 수 있어요');
+      else if (state === 'done' && mine) {
         const bl = eb.slice().sort((a, b) => b.best - a.best || b.plays - a.plays), pos = bl.findIndex((x) => x.t.id === mine.id), meX = pos >= 0 ? bl[pos] : null;
         const played = !!(meX && meX.by[mid]), gkey = `${e.id}|${C.id}`;
         const gems = !played ? 0 : (pos === 0 ? R.r1 : pos === 1 ? R.r2 : pos === 2 ? R.r3 : R.join);
         claim = !played ? note('이벤트 시간에 게임을 한 멤버만 보상을 받아요') : local.got[gkey] ? note('보상을 받았어요!')
           : `<div class="tr-acts"><button class="tb pink" id="bClaim" data-g="${gems}">${tr('보상 받기')} <img class="pt" src="../hub/park/ui/gem.webp${V}" alt=""> ${gems}</button></div>`;
       }
-      res = `<img class="tr-divider" src="../ranking/assets/ui/divider.webp${V}" alt="">` + board(`<h3 class="tr-h">${tr(state === 'live' ? '실시간 순위' : '이벤트 결과')}</h3>${sub}${claim}<ol class="tr-list">${rows}</ol>
+      res = `<img class="tr-divider" src="../ranking/assets/ui/divider.webp${V}" alt="">` + board(`<h3 class="tr-h">${tr(state === 'live' ? (evSnap ? '이벤트 순위' : '실시간 순위') : (evSnap && !evSnap.final ? '이벤트 결과 (집계 중)' : '이벤트 결과'))}</h3>${evSnap && state === 'live' ? `<p class="tr-note">${tr('10분마다 새로 매겨요')}${evSnap.at ? ' · ' + clock(evSnap.at) : ''}</p>` : ''}${sub}${claim}<ol class="tr-list">${rows}</ol>
         ${rows ? (myPos >= 30 ? note(`우리 투어 ${myPos + 1}등`) : '') : note(state === 'live' ? '아직 기록이 없어요. 첫 번째 주인공이 되어 보세요!' : '이벤트에 참가한 투어가 없어요')}`);
     }
   }
@@ -269,8 +303,8 @@ async function drawRank() {
   const rows = list.slice(0, 30).map((x, i) => rowHTML({ rank: i + 1, img: markImg(x.t.mark), name: x.t.name, sub: `${tr('멤버')} ${count(x.t)}/${maxOf(x.t)}`, score: x.score,
     unit: `<img class="pt" src="../ranking/assets/ui/star.webp${V}" alt="">`, cls: mine && x.t.id === mine.id ? 'me' : i < 3 ? 'top' + (i + 1) : '' })).join('');
   const myPos = mine ? list.findIndex((x) => x.t.id === mine.id) : -1;
-  return top + board(`<ol class="tr-list">${rows}</ol>${rows ? '' : note('이번 주 기록이 아직 없어요. 첫 번째 주인공이 되어 보세요!')}${myPos >= 30 ? note(`우리 투어 ${myPos + 1}등`) : ''}`)
-    + note('투어 포인트: 판 하나 끝내면 10점, 별 하나에 10점 (투어에 들어온 뒤의 기록만)');
+  return top + board(`<ol class="tr-list">${rows}</ol>${rows ? '' : note('이번 주 기록이 아직 없어요. 첫 번째 주인공이 되어 보세요!')}${myPos >= 30 ? note(`우리 투어 ${myPos + 1}등`) : ''}${tourSnap && tourSnap.at ? `<p class="tr-note">${snapText(tourSnap.at)}</p>` : ''}`)
+    + note(tourSnap ? '투어 포인트: 판 하나 끝내면 10점, 별 하나에 10점' : '투어 포인트: 판 하나 끝내면 10점, 별 하나에 10점 (투어에 들어온 뒤의 기록만)');
 }
 
 // ---------- 누르기 ----------
@@ -281,7 +315,7 @@ function bindView() {
   on('bNotice', () => { $('ntIn').value = ''; openModal('popNotice'); });
   on('bPlay', () => { location.href = `../${esc(cfg.event.game)}/index.html`; });
   on('bClaim', claim);
-  view.querySelectorAll('[data-join]').forEach((b) => { b.onclick = () => { blip(); openJoin(tours.find((t) => t.id === b.dataset.join)); }; });
+  view.querySelectorAll('[data-join]').forEach((b) => { b.onclick = () => { blip(); openJoin(tours.find((t) => t.id === b.dataset.join) || invTours.find((t) => t.id === b.dataset.join)); }; });
   view.querySelectorAll('[data-emo]').forEach((b) => { b.onclick = () => { blip(); react(b.dataset.emo); }; });
   view.querySelectorAll('[data-ev]').forEach((b) => { b.onclick = () => { if (evTab === b.dataset.ev) return; blip(); evTab = b.dataset.ev; draw(); }; });
   if (isGuide()) view.querySelectorAll('[data-mem]').forEach((li) => { if (li.dataset.mem !== mid) li.onclick = () => { blip(); openMember(li.dataset.mem); }; });
@@ -329,7 +363,7 @@ $('cGo').onclick = () => { blip(); act(async () => {
 let joinT = null;
 function openJoin(t) {
   if (!t) return; joinT = t;
-  $('jCard').innerHTML = `<span class="r-mark big"><img src="${markImg(t.mark)}" alt=""></span><div><b translate="no">${esc(t.name)}</b><small>${tr('투어가이드')} <span translate="no">${esc((t.mem && t.mem[guideKey(t)] || {}).n || '?')}</span> · ${tr('멤버')} ${count(t)}/${maxOf(t)}</small></div>`;
+  $('jCard').innerHTML = `<span class="r-mark big"><img src="${markImg(t.mark)}" alt=""></span><div><b translate="no">${esc(t.name)}</b><small>${tr('투어가이드')} <span translate="no">${esc(guideName(t))}</span> · ${tr('멤버')} ${count(t)}/${maxOf(t)}</small></div>`;
   const full = count(t) >= maxOf(t);
   $('jMsg').textContent = tr(mine ? (mine.id === t.id ? '이미 이 투어의 멤버예요' : '이미 다른 투어에 들어 있어요. 나간 뒤에 가입할 수 있어요') : full ? '이 투어는 자리가 꽉 찼어요' : '이 투어에 가입할까요?');
   $('jGo').disabled = !!mine || full; $('jGo').classList.toggle('off', !!mine || full);

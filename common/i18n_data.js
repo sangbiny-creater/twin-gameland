@@ -3572,6 +3572,26 @@ window.I18N_DATA = {
 "Tap/Space = Jump · Hold in midair = Hook · Release = Swing!"
 ],
 [
+"10분마다 새로 매겨요",
+"Updated every 10 minutes"
+],
+[
+"이벤트 순위",
+"Event Ranking"
+],
+[
+"이벤트 결과 (집계 중)",
+"Event Results (counting)"
+],
+[
+"결과를 모으고 있어요. 조금 뒤에 보상을 받을 수 있어요",
+"We're still counting. You can claim your reward soon."
+],
+[
+"투어 포인트: 판 하나 끝내면 10점, 별 하나에 10점",
+"Tour points: 10 per game finished, 10 per star"
+],
+[
 "지금 이름과 같아요",
 "That's your current name"
 ],
