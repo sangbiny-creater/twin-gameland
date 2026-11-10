@@ -67,7 +67,7 @@ async function boot() {
     try { await loadAll(); renderTabs(); } catch (e) { $('main').innerHTML = `<div class="panel">불러오지 못했어요: ${H(e.message)}</div>`; }
   });
 }
-$('btnLogin').onclick = () => fb && fb.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+$('btnLogin').onclick = () => { if (!fb) return; const p = new firebase.auth.GoogleAuthProvider(); p.setCustomParameters({ prompt: 'select_account' }); fb.auth.signInWithPopup(p); }; // 늘 계정 고르기 창
 $('btnLogout').onclick = () => fb && fb.auth.signOut();
 
 // ---------- 탭 ----------

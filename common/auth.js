@@ -40,6 +40,18 @@
     })().catch((e) => { console.warn('firebase', e); return null; });
     return ready;
   }
+  // 이 기기 게임 저장 데이터(twin_gameland_v1)의 주인 계정. 한 폰에서 다른 계정으로 바꿔 로그인하면
+  // 그 계정이 서버에 맡긴 데이터로 바꿈 (없으면 처음부터). 바꾸기 전 데이터는 twin_gameland_v1_backup 에 한 벌. true = 바꿔서 다시 불러옴
+  const OWNER = 'twin_auth_owner';
+  function switchData(uid, profile) {
+    const owner = localStorage.getItem(OWNER);
+    localStorage.setItem(OWNER, uid);
+    if (!owner || owner === uid) return false; // 예전부터 쓰던 기기(주인 기록 없음)·같은 계정은 그대로
+    const cur = localStorage.getItem('twin_gameland_v1');
+    if (cur) localStorage.setItem('twin_gameland_v1_backup', cur);
+    if (profile) localStorage.setItem('twin_gameland_v1', profile); else localStorage.removeItem('twin_gameland_v1');
+    location.reload(); return true;
+  }
   // 로그인될 때마다 (같은 계정·같은 연결 상태면 한 번만). true = 들어옴, false = 가입 절차가 남았거나 막힘
   let busy = null;
   function onUser(u) {
@@ -60,10 +72,11 @@
       st = { ...st, mode: prov, uid: u.uid, email: u.email || '' }; save(); paintAccount();
       const base = { provider: prov, email: u.email || '', lastAt: now, over14: st.over14 !== false, ver: (window.Hub && Hub.ver) || '' };
       if (st.join) { Object.assign(base, { agreedAt: st.join.at, agreeVer: TERMS_VER }); delete st.join; save(); }
-      if (!d) await ref.set({ ...base, createdAt: now, status: 'active', totalSec: 0 });
+      if (!d) { await ref.set({ ...base, createdAt: now, status: 'active', totalSec: 0 }); if (switchData(u.uid, null)) return false; }
       else {
         if (d.status === 'banned') { block('이용이 제한된 계정이에요.'); return false; }
         await ref.update(base);
+        if (switchData(u.uid, d.profile)) return false;
         // 새 기기에서 로그인: 이 기기에 캐릭터가 없고 서버에 저장 데이터가 있으면 가져옴
         const local = read('twin_gameland_v1', null);
         if (d.profile && (!local || !(local.chars || []).length)) { localStorage.setItem('twin_gameland_v1', d.profile); location.reload(); return false; }
@@ -122,11 +135,11 @@
   }
   // 게임 저장 데이터를 계정에 보관 (새 기기에서 로그인하면 이어서 함). 30초에 한 번까지
   let lastSync = 0;
-  function syncProfile() {
-    if (!fb || !fb.auth.currentUser || Date.now() - lastSync < 30000) return;
+  function syncProfile(force) { // force: 로그아웃 직전처럼 바로 올리고 끝날 때까지 기다림
+    if (!fb || !fb.auth.currentUser || (!force && Date.now() - lastSync < 30000)) return Promise.resolve();
     lastSync = Date.now();
-    const p = localStorage.getItem('twin_gameland_v1'); if (!p || p.length > 900000) return;
-    fb.db.collection('users').doc(fb.auth.currentUser.uid).update({ profile: p, profileAt: Date.now() }).catch(() => {});
+    const p = localStorage.getItem('twin_gameland_v1'); if (!p || p.length > 900000) return Promise.resolve();
+    return fb.db.collection('users').doc(fb.auth.currentUser.uid).update({ profile: p, profileAt: Date.now() }).catch(() => {});
   }
 
   // ---------- 화면 (로그인 창 · 계정 창 · 계정연동 안내) ----------
@@ -303,6 +316,7 @@
   async function google() {
     const f = await firebase(); if (!f) { noServer(); return; }
     const p = new f.F.auth.GoogleAuthProvider();
+    p.setCustomParameters({ prompt: 'select_account' }); // 로그아웃 뒤에도 늘 구글 계정 고르기 창 (다른 계정·새 계정으로도 로그인)
     const joining = !!st.join;
     try {
       const u = f.auth.currentUser;
@@ -385,7 +399,7 @@
     box.onclick = async (e) => {
       const a = e.target.closest('[data-a]'); if (!a) return;
       if (a.dataset.a === 'close') { close(); return; }
-      syncProfile(); const f = await firebase(); if (f) await f.auth.signOut();
+      const f = await firebase(); await syncProfile(true); if (f) await f.auth.signOut();
       st = {}; save(); close(); toast('로그아웃했어요'); if (isHub) loginBox(); paintAccount();
     };
   }

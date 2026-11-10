@@ -7,7 +7,7 @@
 //    끝없는 게임 = 한 판 최고 점수(score), 징검다리 게임 = 판마다 가장 많이 받은 별을 모두 더한 것
 //    주간 = 이번 주 일요일~토요일(records.day 7일), 전체 = 그 게임 기록 전부. 지금은 화면에서 계산 (사람이 많아지면 서버에서 미리 계산하기)
 const $ = (id) => document.getElementById(id);
-const V = '?v=202611102225';
+const V = '?v=202611102343';
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 const { blip } = window.UI;
 const EN = window.I18N && I18N.lang === 'en';
