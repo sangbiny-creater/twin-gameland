@@ -22,10 +22,10 @@ const isHard = (i) => i >= HARD;
 const worldOf = (i) => Math.floor((i % HARD) / PER_WORLD);
 const label = (i) => `${isHard(i) ? '어려움 ' : ''}${worldOf(i) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[worldOf(i)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611102021';
+const ASSET_V = '202611102032';
 const START_HEARTS = 3;
 const COIN_GUEST = 2, COIN_TIP = 1;
-const NAME = { bun: '빵', bun_b: '아래 빵', bun_t: '위 빵', patty: '패티', patty_raw: '생패티', cheese: '치즈', lettuce: '양상추', tomato: '토마토', onion: '양파', bacon: '베이컨',
+const NAME = { bun: '빵', bun_b: '아래 빵', bun_t: '위 빵', patty: '패티', patty_raw: '생패티', cheese: '치즈', lettuce: '양상추', tomato: '토마토', onion: '양파', bacon: '베이컨', sauce: '소스',
   cola: '콜라', cider: '사이다', juice: '주스', fries: '감자튀김', nuggets: '치킨너겟', icecream: '아이스크림' };
 const GUEST_IDS = ['bear', 'rabbit', 'cat', 'puppy', 'panda', 'penguin', 'fox', 'raccoon'];
 
@@ -60,6 +60,7 @@ const buzz = (ms) => { try { if (navigator.vibrate) navigator.vibrate(ms); } cat
 const IMG = {};
 const img = (key, path) => { const im = new Image(); im.src = `assets/${path}.webp?v=${ASSET_V}`; IMG[key] = im; return im; };
 ['bun_b', 'bun_t', 'lettuce', 'tomato', 'onion', 'cheese', 'bacon', 'patty_raw', 'patty_cook', 'patty', 'patty_burnt', 'cola', 'cider', 'juice', 'fries', 'icecream'].forEach((k) => img(k, 'food/' + k));
+if (window.BurgerLevels.SAUCE_ON) { img('sauce', 'food/sauce'); img('bin_sauce', 'food/bin_sauce'); } // 소스 그림(13번 요청 글)을 받은 뒤에만
 // 재료 칸: 재료가 담긴 통(bin_) · 음료·아이스크림 기계(mach_) — 2026-11-10 v3 그림 (tools/burger_assets.py v3)
 ['bun_t', 'bun_b', 'cheese', 'bacon', 'lettuce', 'tomato', 'onion', 'patty_raw', 'fries', 'trash'].forEach((k) => img('bin_' + k, 'food/bin_' + k));
 ['cola', 'cider', 'juice', 'ice'].forEach((k) => img('mach_' + k, 'food/mach_' + k));
@@ -142,8 +143,8 @@ const Audio = {
 };
 
 // ---------- 주문 ----------
-// 버거 속 재료(패티 포함)를 보기 좋은 순서로: 패티 → 치즈 → (두 번째 패티) → 베이컨 → 양파 → 토마토 → 양상추
-const SHOW_ORDER = ['patty', 'cheese', 'bacon', 'onion', 'tomato', 'lettuce'];
+// 버거 속 재료(패티 포함)를 보기 좋은 순서로: 패티 → 치즈 → (두 번째 패티) → 베이컨 → 양파 → 토마토 → 양상추 → 소스(위 빵 바로 아래)
+const SHOW_ORDER = ['patty', 'cheese', 'bacon', 'onion', 'tomato', 'lettuce', 'sauce'];
 function showStack(inner) {
   const ps = inner.filter((x) => x === 'patty').length, rest = SHOW_ORDER.filter((x) => x !== 'patty' && inner.includes(x));
   const out = ['patty'];
@@ -204,7 +205,7 @@ function layout() {
 }
 // 재료 칸 (2026-11-10 사용자 배치): 버리기 | 생패티 | 재료 통 2줄×4칸 | 감자튀김 | 음료·아이스크림 기계(감자튀김처럼 세로로 길게)
 // 그 판에 안 나오는 재료·기계는 칸을 아예 만들지 않음 → 남은 칸끼리 나눠서 크게
-const WIDE = ['bun_t', 'bun_b', 'cheese', 'bacon', 'lettuce', 'tomato', 'onion'];
+const WIDE = ['bun_t', 'bun_b', 'cheese', 'bacon', 'lettuce', 'tomato', 'onion', 'sauce'];
 const DRINKS = ['cola', 'cider', 'juice', 'icecream'];
 function layBins() {
   const st = G.st, on = (id) => !st || !locked(id);
@@ -262,6 +263,7 @@ function coachTip(si) {
   if (st.burn && !(prev && prev.burn)) return '패티를 너무 오래 두면 타요! 빨개지기 전에 눌러요';
   if (st.dbl && !(prev && prev.dbl)) return '패티 2장 버거가 나와요! 말풍선 버거를 꾹 눌러 보세요';
   if (st.sides.includes('icecream') && !(prev && prev.sides.includes('icecream'))) return '아이스크림이 새로 나왔어요!';
+  if (st.ing.includes('sauce') && !(prev && prev.ing.includes('sauce'))) return '소스가 새로 나왔어요!';
   return '';
 }
 function showReady(si) {
@@ -467,7 +469,7 @@ function grillPos(k) {
   return { x: L.grill.x + L.grill.w * fx, y: L.grill.y + L.grill.h * fy, r: L.grill.w * 0.135 };
 }
 // 버거 조각: 그림 폭 비율(폭), 위로 쌓이는 높이(폭 비율) — 접시 위(꽉 붙여 쌓음)
-const PIECE = { bun_b: [1, 0.2], patty: [0.96, 0.2], cheese: [1.04, 0.08], lettuce: [1.08, 0.1], tomato: [0.96, 0.1], onion: [0.96, 0.09], bacon: [1, 0.1], bun_t: [1.02, 0] };
+const PIECE = { bun_b: [1, 0.2], patty: [0.96, 0.2], cheese: [1.04, 0.08], lettuce: [1.08, 0.1], tomato: [0.96, 0.1], onion: [0.96, 0.09], bacon: [1, 0.1], sauce: [1, 0.06], bun_t: [1.02, 0] };
 function drawStack(items, cx, by, w) {
   let y = by;
   for (const it of items) {

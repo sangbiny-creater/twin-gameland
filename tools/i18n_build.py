@@ -81,6 +81,7 @@ EXTRA = {
     '쟁반이 2개! 쟁반을 눌러 골라요': 'Two trays! Tap a tray to choose it.',
     '패티 2장 버거가 나와요! 말풍선을 눌러 보세요': 'Double-patty burgers are here! Tap a bubble to check.',
     '아이스크림이 새로 나왔어요!': 'Ice cream is new on the menu!',
+    '소스': 'Sauce', '소스가 새로 나왔어요!': 'Sauce is new on the menu!',
     '손님 말풍선을 누르면 재료를 크게 볼 수 있어요': "Tap a guest's bubble to see the ingredients up close.",
     '버거가 완성됐어요. 주문과 다르면 쓰레기통을 눌러요': "The burger is done. If it doesn't match, tap the trash can.",
     '더 쌓을 수 없어요': "Can't stack any more", '굽는 판이 꽉 찼어요': 'The grill is full', '사이드는 3개까지예요': 'Up to 3 sides',

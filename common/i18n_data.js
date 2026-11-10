@@ -3684,6 +3684,14 @@ window.I18N_DATA = {
 "Ice cream is new on the menu!"
 ],
 [
+"소스",
+"Sauce"
+],
+[
+"소스가 새로 나왔어요!",
+"Sauce is new on the menu!"
+],
+[
 "손님 말풍선을 누르면 재료를 크게 볼 수 있어요",
 "Tap a guest's bubble to see the ingredients up close."
 ],

@@ -3,7 +3,8 @@
 //  사천성·메모리·두더지·선물가게와 같은 난이도 사다리: 쉬움1 < 쉬움2 < 어려움1 < 쉬움3 < 어려움2 < … < 쉬움10 < 어려움9 < 어려움10
 //  사다리 칸(RUNGS)마다 값을 적고, 월드 안 1~10판은 지금 칸 값 → 다음 칸 값으로 조금씩 다가감 → 판이 올라갈수록 절대 쉬워지지 않음
 //  (검사: node tools/burger_levels.mjs — 거꾸로 가는 값이 있거나, 느린 손으로 못 깨는 판이 있으면 멈춤)
-//  ing: 버거 속 재료 가지 수 (패티 말고, cheese·lettuce·tomato·onion·bacon 앞에서부터)
+//  ing: 버거 속 재료 가지 수 (패티 말고, cheese·lettuce·tomato·onion·bacon·sauce 앞에서부터)
+//  소스(2026-11-10 사용자 요청, 8번째 재료 통): 그림(making_GPT/버거러시/13_소스.txt P07)을 받아 적용하면 SAUCE_ON = true → 쉬움 7월드(E7)부터 나옴
 //  fill: 버거 속 재료 수 [최소, 최대] (위·아래 빵 뺌, 패티 포함) · dbl: 패티 2장 버거
 //  sides: 나오는 사이드 · sideMax: 한 주문의 사이드 최대 수
 //  cook: 굽는 시간(초) · burn: 다 익은 뒤 탈 때까지(초, 0 = 안 탐) · wait: 손님이 기다려 주는 시간(초)
@@ -11,7 +12,8 @@
 //  press: 바쁨 정도 — 다음 손님이 오는 간격 gap = (보통 주문을 한 번에 1초씩 눌러 만드는 시간) ÷ press. 클수록 손님이 몰려 옴
 (function () {
   const PER_WORLD = 10, HARD = 100;
-  const ING = ['cheese', 'lettuce', 'tomato', 'onion', 'bacon'];
+  const SAUCE_ON = false;
+  const ING = ['cheese', 'lettuce', 'tomato', 'onion', 'bacon', ...(SAUCE_ON ? ['sauce'] : [])];
   const S2 = ['cola', 'fries'], S3 = ['cola', 'fries', 'cider'], S4 = ['cola', 'fries', 'cider', 'juice'], S5 = [...S4, 'icecream'];
   // 사다리 순서대로 (이름, 값)
   const R = (name, ing, fill, dbl, sides, sideMax, cook, burn, wait, guests, conc, press, grills, trays) =>
@@ -39,6 +41,8 @@
     R('H10', 5, [7, 7], 1, S5, 3, 5.0, 5, 38, 16, 3, 1.0, 4, 2),
   ];
   const END = R('END', 5, [7, 7], 1, S5, 3, 5.0, 5, 36, 18, 3, 1.04, 4, 2); // 어려움 10-10 이 다가가는 값
+  // 소스: 사다리 E7 칸부터 끝까지 재료 6가지 (앞 칸은 그대로 5가지 → 판이 올라갈수록 쉬워지지 않음)
+  if (SAUCE_ON) { const e7 = RUNGS.findIndex((r) => r.name === 'E7'); RUNGS.forEach((r, i) => { if (i >= e7) r.ing = 6; }); END.ing = 6; }
   // 판 번호 → 사다리 칸: 쉬움 N월드 = E N, 어려움 N월드 = H N
   const rungOf = (i) => { const w = Math.floor((i % HARD) / PER_WORLD) + 1; return RUNGS.findIndex((r) => r.name === (i >= HARD ? 'H' : 'E') + w); };
   const lerp = (a, b, t) => a + (b - a) * t;
@@ -62,5 +66,5 @@
   const avgTaps = (s) => { const n = (s.fill[0] + s.fill[1]) / 2, p = s.dbl && n >= 3 ? 1.3 : 1, sd = !s.sideMax ? 0 : s.sideMax === 1 ? 0.6 : (1 + s.sideMax) / 2; return n + p + 2 + sd; };
   for (const s of STAGES) s.trays = s.conc >= 3 ? 3 : 2;
   for (const s of STAGES) s.gap = Math.round(avgTaps(s) / s.press * 10) / 10;
-  window.BurgerLevels = { PER_WORLD, HARD, ING, RUNGS, STAGES, avgTaps };
+  window.BurgerLevels = { PER_WORLD, HARD, ING, SAUCE_ON, RUNGS, STAGES, avgTaps };
 })();
