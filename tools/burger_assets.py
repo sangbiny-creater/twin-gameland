@@ -32,7 +32,7 @@ def intro():
     A.intro()
 
 
-KEEP_GREEN = {'lettuce', 'pile_lettuce', 'cider', 'machine_drink3', 'bin_lettuce', 'mach_cider'}  # 초록이 들어 있는 그림: 바깥과 이어진 초록만 지움 (나머지는 양파 고리 안쪽처럼 갇힌 초록까지 지움)
+KEEP_GREEN = {'lettuce', 'pile_lettuce', 'cider', 'machine_drink3', 'bin_lettuce', 'mach_cider', 'bint_lettuce'}  # 초록이 들어 있는 그림: 바깥과 이어진 초록만 지움 (나머지는 양파 고리 안쪽처럼 갇힌 초록까지 지움)
 
 
 def drop_small(im, frac=0.02):
@@ -109,7 +109,11 @@ def v3():
     if os.path.exists(src('v3/P07')):  # 소스 (13_소스.txt): 왼쪽 통 · 오른쪽 쌓는 조각
         save_grid('v3/P07', 2, 1, ['bin_sauce', None], 360, 'food')
         save_grid('v3/P07', 2, 1, [None, 'sauce'], 320, 'food', by_width=True)
-    tall_bins()
+    if os.path.exists(src('v3/P08')) and os.path.exists(src('v3/P09')):  # 세로 재료 통 (14_세로재료통.txt)
+        save_grid('v3/P08', 4, 1, ['bint_bun_t', 'bint_bun_b', 'bint_cheese', 'bint_bacon'], 360, 'food')
+        save_grid('v3/P09', 4, 1, ['bint_lettuce', 'bint_tomato', 'bint_onion', 'bint_sauce'], 360, 'food')
+    else:
+        tall_bins()
     print('v3')
 
 
