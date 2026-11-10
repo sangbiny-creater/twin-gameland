@@ -22,7 +22,7 @@ const isHard = (i) => i >= HARD;
 const worldOf = (i) => Math.floor((i % HARD) / PER_WORLD);
 const label = (i) => `${isHard(i) ? '어려움 ' : ''}${worldOf(i) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[worldOf(i)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611102109';
+const ASSET_V = '202611102115';
 const START_HEARTS = 3;
 const COIN_GUEST = 2, COIN_TIP = 1;
 const NAME = { bun: '빵', bun_b: '아래 빵', bun_t: '위 빵', patty: '패티', patty_raw: '생패티', cheese: '치즈', lettuce: '양상추', tomato: '토마토', onion: '양파', bacon: '베이컨', sauce: '소스',
@@ -224,20 +224,22 @@ function layBins() {
   const st = G.st, on = (id) => !st || !locked(id);
   const bh = L.binBot - L.binTop, gap = 6;
   const cols = [{ id: 'trash' }, { id: 'patty_raw' }, ...binCols(WIDE.filter(on)), ...['fries', ...DRINKS].filter(on).map((id) => ({ id }))];
-  const nT = cols.filter((c) => c.id).length, nP = cols.length - nT;
+  const nD = cols.filter((c) => DRINKS.includes(c.id)).length, nT = cols.filter((c) => c.id).length - nD, nP = cols.length - nT - nD;
   // 세로 칸 폭 tw (그림 비율 0.6, 높이는 폭의 1.75배까지) · 2줄 칸 폭 pw (넓은 통 비율 1.45) — 화면 폭에 다 들어갈 때까지 줄임
   let tw = Math.min(bh * 0.62, L.SP * 0.11);
-  const size = (w) => { const th = Math.min(bh, w * 1.75), hh = (th - gap) / 2; return { th, hh, pw: hh * 1.45 }; };
-  for (let k = 0; k < 60 && nT * tw + nP * size(tw).pw + gap * (cols.length - 1) > L.SP; k++) tw *= 0.97;
-  const { th, hh, pw } = size(tw), ty = L.binBot - th;
-  const used = nT * tw + nP * pw, g = Math.min(tw * 0.35, Math.max(gap, (L.SP - used) / Math.max(1, cols.length - 1)));
+  // 음료 기계 칸 dw: 세로 기계 그림이 홀쭉해서(폭 = 높이 × 0.36) 칸도 그만큼 좁게
+  const size = (w) => { const th = Math.min(bh, w * 1.75), hh = (th - gap) / 2; return { th, hh, pw: hh * 1.45, dw: th * 0.4 }; };
+  const need = (w) => { const z = size(w); return nT * w + nP * z.pw + nD * z.dw + gap * (cols.length - 1); };
+  for (let k = 0; k < 60 && need(tw) > L.SP; k++) tw *= 0.97;
+  const { th, hh, pw, dw } = size(tw), ty = L.binBot - th;
+  const used = nT * tw + nP * pw + nD * dw, g = Math.min(tw * 0.35, Math.max(gap, (L.SP - used) / Math.max(1, cols.length - 1)));
   let x = L.X0 + Math.max(0, L.SP - used - g * (cols.length - 1)) / 2;
   L.bins = [];
   for (const c of cols) {
     if (c.pair) { c.pair.forEach((id, r) => L.bins.push([id, { x, y: ty + r * (hh + gap), w: pw, h: hh }])); x += pw + g; continue; }
-    const cell = { x, y: ty, w: tw, h: th, tall: WIDE.includes(c.id) };
+    const cw = DRINKS.includes(c.id) ? dw : tw, cell = { x, y: ty, w: cw, h: th, tall: WIDE.includes(c.id) };
     if (c.id === 'trash') L.trash = cell; else L.bins.push([c.id, cell]);
-    x += tw + g;
+    x += cw + g;
   }
 }
 function slotX(k, n) { const a = L.X0, w = L.SP / 3; return n === 3 ? a + w * (k + 0.5) : n === 2 ? a + L.SP * (k === 0 ? 0.3 : 0.7) : a + L.SP / 2; }
@@ -635,17 +637,13 @@ function drawKitchen() {
     hit(x - tw / 2, L.kTop, tw, L.trayY - L.kTop + 4, { tray: k });
   });
 }
-// 세로 칸 기계: 지금 그림(P05, 낮고 넓음)의 꼭지 아래 빈 곳(높이 63~75%)만 위아래로 늘려 감자튀김 칸처럼 길게.
-// 꼭지 아래 받침 위에 컵·콘을 얹음 (기계 그림은 빈 꼭지). 세로 기계 그림(12번 요청 글)을 받으면 늘리지 않고 그대로 그림
+// 세로 칸 기계 (P06 세로 음료 기계, 2026-11-10): 칸 안에 비율 그대로 (아래·가운데 맞춤). 꼭지 아래 받침 위에 컵·콘을 얹음 (기계 그림은 빈 꼭지)
 function drawMach(im, cup, cone, c) {
   if (!ok(im)) return;
-  const iw = im.naturalWidth, ih = im.naturalHeight, k = c.w / iw, y0 = 0.63, y1 = 0.75;
-  const tH = ih * y0 * k, bH = ih * (1 - y1) * k, mH = Math.max(ih * (y1 - y0) * k, c.h - tH - bH), y = c.y + c.h - (tH + mH + bH);
-  ctx.drawImage(im, 0, 0, iw, ih * y0, c.x, y, c.w, tH);
-  ctx.drawImage(im, 0, ih * y0, iw, ih * (y1 - y0), c.x, y + tH, c.w, mH);
-  ctx.drawImage(im, 0, ih * y1, iw, ih * (1 - y1), c.x, y + tH + mH, c.w, bH);
-  const floor = y + tH + mH + bH * 0.48, room = floor - (y + ih * 0.62 * k);
-  drawImgH(cup, c.x + c.w / 2, floor, Math.min(room * (cone ? 0.95 : 0.85), c.w * (cone ? 1.5 : 1.15)));
+  const iw = im.naturalWidth, ih = im.naturalHeight, k = Math.min(c.w / iw, c.h / ih), w = iw * k, h = ih * k, x = c.x + (c.w - w) / 2, y = c.y + c.h - h;
+  ctx.drawImage(im, x, y, w, h);
+  const floor = y + h * 0.88, room = floor - (y + h * 0.36);
+  drawImgH(cup, x + w / 2, floor, Math.min(room * (cone ? 0.9 : 0.75), w * (cone ? 1.35 : 1.1)));
 }
 const MACH = { cola: 'mach_cola', cider: 'mach_cider', juice: 'mach_juice', icecream: 'mach_ice' };
 function drawBins() {

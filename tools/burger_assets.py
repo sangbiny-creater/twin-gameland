@@ -104,6 +104,8 @@ def v3():
     save_grid('v3/P02', 2, 2, ['bin_lettuce', 'bin_tomato', 'bin_onion', None], 360, 'food')
     save_grid('v3/P04', 3, 1, ['bin_patty_raw', 'bin_fries', 'bin_trash'], 360, 'food')
     save_grid('v3/P05', 2, 2, ['mach_cola', 'mach_cider', 'mach_juice', 'mach_ice'], 360, 'food')
+    if os.path.exists(src('v3/P06')):  # 세로 음료 기계 (12_음료기계_세로.txt) — P05 낮은 기계를 덮어씀
+        save_grid('v3/P06', 4, 1, ['mach_cola', 'mach_cider', 'mach_juice', 'mach_ice'], 400, 'food')
     if os.path.exists(src('v3/P07')):  # 소스 (13_소스.txt): 왼쪽 통 · 오른쪽 쌓는 조각
         save_grid('v3/P07', 2, 1, ['bin_sauce', None], 360, 'food')
         save_grid('v3/P07', 2, 1, [None, 'sauce'], 320, 'food', by_width=True)
