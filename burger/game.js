@@ -22,7 +22,7 @@ const isHard = (i) => i >= HARD;
 const worldOf = (i) => Math.floor((i % HARD) / PER_WORLD);
 const label = (i) => `${isHard(i) ? '어려움 ' : ''}${worldOf(i) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[worldOf(i)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611102009';
+const ASSET_V = '202611102021';
 const START_HEARTS = 3;
 const COIN_GUEST = 2, COIN_TIP = 1;
 const NAME = { bun: '빵', bun_b: '아래 빵', bun_t: '위 빵', patty: '패티', patty_raw: '생패티', cheese: '치즈', lettuce: '양상추', tomato: '토마토', onion: '양파', bacon: '베이컨',
@@ -202,29 +202,32 @@ function layout() {
   L.binTop = L.kBot + 8; L.binBot = H - 6 - Math.max(0, v('b') * 0.5);
   layBins();
 }
-// 재료 칸: 왼쪽 세로 통(버리기·생패티) · 가운데 넓은 칸 2줄(재료 통 + 음료·아이스크림 기계) · 오른쪽 세로 통(감자튀김)
+// 재료 칸 (2026-11-10 사용자 배치): 버리기 | 생패티 | 재료 통 2줄×4칸 | 감자튀김 | 음료·아이스크림 기계(감자튀김처럼 세로로 길게)
 // 그 판에 안 나오는 재료·기계는 칸을 아예 만들지 않음 → 남은 칸끼리 나눠서 크게
-const WIDE = ['bun_t', 'bun_b', 'cheese', 'bacon', 'lettuce', 'tomato', 'onion', 'cola', 'cider', 'juice', 'icecream'];
+const WIDE = ['bun_t', 'bun_b', 'cheese', 'bacon', 'lettuce', 'tomato', 'onion'];
+const DRINKS = ['cola', 'cider', 'juice', 'icecream'];
 function layBins() {
   const st = G.st, on = (id) => !st || !locked(id);
   const top = L.binTop, bh = L.binBot - top, gap = 6, rh = (bh - gap) / 2;
-  const tallW = Math.min(bh * 0.62, L.SP * 0.1); // 세로 통 (그림 비율 0.6)
-  const wide = WIDE.filter(on), fries = on('fries');
-  const a = L.X0 + (tallW + gap) * 2, b = L.X1 - (fries ? tallW + gap : 0);
-  // 1줄·2줄 중 통이 더 크게 보이는 쪽 (재료가 적은 앞 판은 1줄로 크게)
+  const wide = WIDE.filter(on), right = ['fries', ...DRINKS].filter(on);
+  const nTall = 2 + right.length;
+  // 재료 통: 1줄·2줄 중 통이 더 크게 보이는 쪽 (재료가 적은 앞 판은 1줄로 크게, 많으면 2줄×4칸)
+  // 세로 칸 폭을 먼저 정함 (그림 비율 0.6, 칸이 많으면 화면 폭에 맞춰 줄임). 세로 칸 높이는 폭의 1.75배까지 (아래에 맞춤)
+  const tallW = Math.min(bh * 0.62, L.SP * 0.1, (L.SP * 0.6) / nTall - gap), tallH = Math.min(bh, tallW * 1.75), tallY = L.binBot - tallH;
+  const a = L.X0 + (tallW + gap) * 2, b = L.X1 - right.length * (tallW + gap);
   let best = null;
   for (const rows of [1, 2]) {
-    const cols = Math.max(1, Math.ceil(wide.length / rows)), ch = rows === 1 ? bh : rh;
-    const cw = Math.min((b - a - gap * (cols - 1)) / cols, ch * 1.6); // 칸이 너무 넓어지지 않게 (통 비율 1.4)
-    const size = Math.min(cw / 1.4, ch);
-    if (!best || size > best.size + 0.5) best = { rows, cols, ch, cw, size };
+    const cols = Math.max(1, Math.ceil(wide.length / rows));
+    let ch = rows === 1 ? bh : rh, cw = Math.min((b - a - gap * (cols - 1)) / cols, ch * 1.6); // 칸이 너무 넓어지지 않게 (통 비율 1.4)
+    ch = Math.min(ch, cw / 1.3);
+    if (!best || ch > best.ch + 0.5) best = { cols, ch, cw };
   }
-  const { cols, ch, cw } = best;
+  const { cols, ch, cw } = best, gy = L.binBot - (ch * (wide.length > cols ? 2 : 1) + (wide.length > cols ? gap : 0));
   const gx = a + (b - a - (cw * cols + gap * (cols - 1))) / 2;
-  L.trash = { x: L.X0, y: top, w: tallW, h: bh };
-  L.bins = [['patty_raw', { x: L.X0 + tallW + gap, y: top, w: tallW, h: bh }]];
-  wide.forEach((id, i) => { const r = Math.floor(i / cols), c = i % cols; L.bins.push([id, { x: gx + c * (cw + gap), y: top + r * (ch + gap), w: cw, h: ch }]); });
-  if (fries) L.bins.push(['fries', { x: L.X1 - tallW, y: top, w: tallW, h: bh }]);
+  L.trash = { x: L.X0, y: tallY, w: tallW, h: tallH };
+  L.bins = [['patty_raw', { x: L.X0 + tallW + gap, y: tallY, w: tallW, h: tallH }]];
+  wide.forEach((id, i) => { const r = Math.floor(i / cols), c = i % cols; L.bins.push([id, { x: gx + c * (cw + gap), y: gy + r * (ch + gap), w: cw, h: ch }]); });
+  right.forEach((id, i) => L.bins.push([id, { x: L.X1 - (right.length - i) * (tallW + gap) + gap, y: tallY, w: tallW, h: tallH }]));
 }
 function slotX(k, n) { const a = L.X0, w = L.SP / 3; return n === 3 ? a + w * (k + 0.5) : n === 2 ? a + L.SP * (k === 0 ? 0.3 : 0.7) : a + L.SP / 2; }
 // 접시 자리: 굽는 판 오른쪽에 고르게 (음료 기계가 아래 재료 칸으로 옮겨져 카운터 오른쪽이 비었음)
@@ -620,6 +623,18 @@ function drawKitchen() {
     hit(x - tw / 2, L.kTop, tw, L.trayY - L.kTop + 4, { tray: k });
   });
 }
+// 세로 칸 기계: 지금 그림(P05, 낮고 넓음)의 꼭지 아래 빈 곳(높이 63~75%)만 위아래로 늘려 감자튀김 칸처럼 길게.
+// 꼭지 아래 받침 위에 컵·콘을 얹음 (기계 그림은 빈 꼭지). 세로 기계 그림(12번 요청 글)을 받으면 늘리지 않고 그대로 그림
+function drawMach(im, cup, cone, c) {
+  if (!ok(im)) return;
+  const iw = im.naturalWidth, ih = im.naturalHeight, k = c.w / iw, y0 = 0.63, y1 = 0.75;
+  const tH = ih * y0 * k, bH = ih * (1 - y1) * k, mH = Math.max(ih * (y1 - y0) * k, c.h - tH - bH), y = c.y + c.h - (tH + mH + bH);
+  ctx.drawImage(im, 0, 0, iw, ih * y0, c.x, y, c.w, tH);
+  ctx.drawImage(im, 0, ih * y0, iw, ih * (y1 - y0), c.x, y + tH, c.w, mH);
+  ctx.drawImage(im, 0, ih * y1, iw, ih * (1 - y1), c.x, y + tH + mH, c.w, bH);
+  const floor = y + tH + mH + bH * 0.48, room = floor - (y + ih * 0.62 * k);
+  drawImgH(cup, c.x + c.w / 2, floor, Math.min(room * (cone ? 0.95 : 0.85), c.w * (cone ? 1.5 : 1.15)));
+}
 const MACH = { cola: 'mach_cola', cider: 'mach_cider', juice: 'mach_juice', icecream: 'mach_ice' };
 function drawBins() {
   // 통·기계 그림은 칸 안에 비율 그대로 (칸 아래쪽에 맞춤)
@@ -629,11 +644,8 @@ function drawBins() {
   hit(T.x, T.y, T.w, T.h, { trash: 1 });
   for (const [id, c] of L.bins) {
     const m = MACH[id];
-    if (m) {
-      // 기계: 꼭지 아래 받침 위에 컵·콘 (기계 그림은 빈 꼭지)
-      const d = put(IMG[m], c);
-      if (d) drawImgH(IMG[id], d.x + d.w * 0.5, d.y + d.h * 0.87, d.h * (id === 'icecream' ? 0.5 : 0.44));
-    } else put(IMG['bin_' + id], c);
+    if (m) drawMach(IMG[m], IMG[id], id === 'icecream', c);
+    else put(IMG['bin_' + id], c);
     hit(c.x, c.y, c.w, c.h, { bin: id });
   }
 }
