@@ -98,7 +98,10 @@
   }
   const day = (ms) => { const d = new Date(ms); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
   const week = (ms) => { const d = new Date(ms); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7)); const y = new Date(d.getFullYear(), 0, 4); return `${d.getFullYear()}-W${String(1 + Math.round(((d - y) / 864e5 - 3 + ((y.getDay() + 6) % 7)) / 7)).padStart(2, '0')}`; };
-  const who = () => { const c = window.Hub && Hub.active(); return c ? { name: c.name, look: c.look } : {}; };
+  // 랭킹 주(일요일~토요일, 사용자 결정 2026-11-10): 그 주 일요일 날짜 'YYYY-MM-DD' (week 는 백오피스용 ISO 주 그대로)
+  const wk = (ms) => { const d = new Date(ms); d.setDate(d.getDate() - d.getDay()); return day(d.getTime()); };
+  // cid = 캐릭터 번호(한 계정에 캐릭터가 여럿이라 랭킹은 캐릭터마다), face = 랭킹 화면 얼굴 그림 (입은 옷 그림 또는 기본 얼굴, 저장소 안 경로)
+  const who = () => { const c = window.Hub && Hub.active(); if (!c) return {}; const f = (Hub.costumeImg && Hub.costumeImg(c)) || `common/faces/${c.look}_base.webp`; return { name: c.name, cid: c.id, look: c.look, face: f.split('?')[0] }; };
   // 화면에 머문 시간 (게임 화면마다, 3초 미만은 안 셈)
   let since = Date.now();
   const endSession = () => {
@@ -112,7 +115,7 @@
     const orig = Hub.record;
     Hub.record = function (game, r) {
       const out = orig.call(this, game, r);
-      if (out && !out.god) { const now = Date.now(); queue({ kind: 'record', d: { game, stage: r.stage ?? null, cleared: !!r.cleared, score: r.dist || 0, stars: r.stars || 0, time: r.time || 0, coins: (out && out.earned) || 0, at: now, day: day(now), week: week(now), month: day(now).slice(0, 7), ...who() } }); flush(); }
+      if (out && !out.god) { const now = Date.now(); queue({ kind: 'record', d: { game, stage: r.stage ?? null, cleared: !!r.cleared, score: r.dist || 0, stars: r.stars || 0, time: r.time || 0, coins: (out && out.earned) || 0, at: now, day: day(now), week: week(now), wk: wk(now), month: day(now).slice(0, 7), ...who() } }); flush(); }
       return out;
     };
     Hub.record._auth = true;
@@ -399,7 +402,7 @@
   // 결제 기록 (지금은 가짜 결제. 앱에서는 구글 결제 확인 뒤 서버(verifyPurchase)가 씀)
   function logPay(p) { if (fb && fb.auth.currentUser) fb.db.collection('payments').add({ uid: fb.auth.currentUser.uid, email: st.email || '', product: p.id, won: p.won || 0, at: Date.now(), day: day(Date.now()), status: 'test', ...who() }).catch(() => {}); }
 
-  window.Auth = { state: () => ({ ...st }), canPay, needLink, account, login: () => loginBox({ dim: true }), logPay, isAdmin, flush, firebase, week, day };
+  window.Auth = { state: () => ({ ...st }), canPay, needLink, account, login: () => loginBox({ dim: true }), logPay, isAdmin, flush, firebase, week, wk, day };
   const start = () => {
     paintAccount();
     if (isHub && !st.mode) loginBox(); // 처음 들어온 사람: 로그인 창

@@ -3,10 +3,11 @@
 //  · 위: 뒤로 · 제목 띠(고른 게임 이름) / 주간·전체 탭 / 주간이면 기간(일요일~토요일) / 게임 고르기 줄(좌우로 밀기, 첫 화면 놀이기구 그림)
 //  · 순위표: 1·2·3등은 메달·금은동 줄·월계수 테두리(1등은 왕관), 4~20등은 보통 줄. 내 줄은 분홍 줄
 //  · 내가 20등 밖이면 맨 아래에 내 등수 칸을 따로
-//  · 지금은 서버(Firebase records) 연결 전이라 다른 사람 순위는 예시. 내 점수만 이 기기 저장 데이터에서 읽음
-//    서버 연결 때: records 의 week 가 지금 ISO 주(월~일)라서, 사용자 결정(일~토)에 맞춰 바꿔야 함 (common/auth.js week)
+//  · 순위 = 서버(Firebase Firestore records: 게임이 끝날 때마다 common/auth.js 가 올림)에서 캐릭터마다 가장 좋은 기록
+//    끝없는 게임 = 한 판 최고 점수(score), 징검다리 게임 = 판마다 가장 많이 받은 별을 모두 더한 것
+//    주간 = 이번 주 일요일~토요일(records.day 7일), 전체 = 그 게임 기록 전부. 지금은 화면에서 계산 (사람이 많아지면 서버에서 미리 계산하기)
 const $ = (id) => document.getElementById(id);
-const V = '?v=202611102101';
+const V = '?v=202611102108';
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 const { blip } = window.UI;
 const EN = window.I18N && I18N.lang === 'en';
@@ -40,56 +41,85 @@ function periodText() {
   return `${s.getMonth() + 1}월 ${s.getDate()}일(일) ~ ${e.getMonth() + 1}월 ${e.getDate()}일(토)`;
 }
 
-// ---------- 내 점수 (이 기기): 끝없는 게임 = 최고 기록, 징검다리 게임 = 모은 별 ----------
+// ---------- 내 점수 (이 기기): 끝없는 게임 = 최고 기록, 징검다리 게임 = 모은 별 (서버 기록보다 크면 전체 순위에서 이 값을 씀) ----------
+const isStage = (g) => !!(Hub.GAMES[g] && Hub.GAMES[g].stages);
 function myScore(g) {
   const c = Hub.active(), r = c.games && c.games[g];
   if (!r) return 0;
-  if (Hub.GAMES[g] && Hub.GAMES[g].stages) return Object.values(r.stages || {}).reduce((n, x) => n + (x.stars || 0), 0);
+  if (isStage(g)) return Object.values(r.stages || {}).reduce((n, x) => n + (x.stars || 0), 0);
   return r.best || 0;
 }
 const myFace = () => { const c = Hub.active(); return Hub.costumeImg(c, '../') || `../common/faces/${c.look}_base.webp${V}`; };
+// 서버 기록의 얼굴 그림은 저장소 안 그림만 (다른 글이 들어와도 화면에 넣지 않게)
+const faceOf = (f, look) => (/^common\/(faces|costumes)\/[a-z0-9_]+\.webp$/.test(f || '') ? `../${f}${V}`
+  : `../common/faces/${/^[a-z0-9]+$/.test(look || '') ? look : 'eunyu3'}_base.webp${V}`);
 
-// ---------- 예시 순위 (서버 연결 전) ----------
-const NICK = ['별빛토끼', '하늘고래', '딸기우유', '구름빵', '초코칩', '반짝이', '솜사탕', '레몬캔디', '푸딩왕', '꿀벌이', '해바라기', '바다소리', '젤리곰',
-  '민트초코', '눈송이', '복숭아', '무지개', '쿠키몬', '도토리', '파랑새', '보리차', '감귤이', '마카롱', '팝콘', '새싹이', '달토끼', '체리', '호떡', '사과잼', '라떼'];
-const NICK_EN = ['StarBunny', 'SkyWhale', 'StrawberryMilk', 'CloudBun', 'ChocoChip', 'Sparkle', 'CottonCandy', 'LemonDrop', 'PuddingKing', 'HoneyBee', 'Sunflower', 'SeaBreeze', 'JellyBear',
-  'MintChoco', 'Snowflake', 'Peachy', 'Rainbow', 'CookieMon', 'Acorn', 'Bluebird', 'BarleyTea', 'Tangerine', 'Macaron', 'Popcorn', 'Sprout', 'MoonBunny', 'Cherry', 'Hotteok', 'AppleJam', 'Latte'];
-const BASE = { helicopter: 3000, stairs: 900, shisen: 300, downhill: 6000, memory: 300, mole: 9000, bakery: 12000, dogsnack: 15000, darts: 900, giftsort: 300, burger: 8000 };
-function seeded(str) { let h = 2166136261; for (const ch of str) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return () => ((h = Math.imul(h ^ (h >>> 15), 2246822507) ^ Math.imul(h ^ (h >>> 13), 3266489909)) >>> 0) / 4294967296; }
-function sample(g, m) {
-  const rnd = seeded(g + m + weekRange()[0].toDateString()), top = BASE[g] * (m === 'week' ? 0.6 : 1), out = [];
-  const order = NICK.map((_, i) => i).sort(() => rnd() - 0.5); // 이름이 겹치지 않게
-  for (let i = 0; i < NICK.length; i++) {
-    const k = order[i];
-    out.push({ name: EN ? NICK_EN[k] : NICK[k], score: Math.max(1, Math.round(top * Math.pow(0.93, i) * (0.97 + rnd() * 0.06))), face: `../common/faces/${rnd() < 0.5 ? 'eunyu3' : 'eungyeol3'}_base.webp${V}` });
-  }
-  return out;
+// ---------- 서버 순위 ----------
+const waitAuth = () => new Promise((ok) => { let n = 0; const t = setInterval(() => { if (window.Auth || ++n > 40) { clearInterval(t); ok(window.Auth || null); } }, 100); });
+async function server() {
+  const A = await waitAuth(); if (!A) return null;
+  const fb = await A.firebase(); if (!fb) return null;
+  if (!fb.auth.currentUser) { try { await fb.auth.signInAnonymously(); } catch (e) { return null; } }
+  try { A.flush(); } catch (e) { /* ignore */ }
+  return fb;
 }
-function board(g, m) {
-  const c = Hub.active(), list = sample(g, m), me = { name: c.name, score: myScore(g), face: myFace(), me: true };
-  list.push(me); list.sort((a, b) => b.score - a.score || (a.me ? -1 : b.me ? 1 : 0));
-  list.forEach((x, i) => { x.rank = i + 1; });
-  return { list, me };
+const days = () => { const [s] = weekRange(), out = []; for (let i = 0; i < 7; i++) { const d = new Date(s); d.setDate(s.getDate() + i); out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`); } return out; };
+const cache = {};
+async function fetchBoard(g, m) {
+  const fb = await server(); if (!fb) return null;
+  let qy = fb.db.collection('records').where('game', '==', g);
+  if (m === 'week') qy = qy.where('day', 'in', days()); // 같음 조건만 → 서버에 새 색인을 만들지 않아도 됨
+  const snap = await qy.limit(5000).get(), stage = isStage(g), P = new Map();
+  snap.forEach((doc) => {
+    const r = doc.data(); if (!r.uid) return;
+    const k = r.uid + '|' + (r.cid || r.name || ''), p = P.get(k) || { uid: r.uid, cid: r.cid, name: '', face: '', at: 0, best: 0, st: {} };
+    if (stage) { if (r.stage != null && (r.stars || 0) > (p.st[r.stage] || 0)) p.st[r.stage] = r.stars || 0; } else p.best = Math.max(p.best, r.score || 0);
+    if ((r.at || 0) >= p.at) { p.at = r.at || 0; p.name = r.name || '?'; p.face = faceOf(r.face, r.look); }
+    P.set(k, p);
+  });
+  return { uid: fb.auth.currentUser.uid, list: [...P.values()].map((p) => ({ uid: p.uid, cid: p.cid, name: p.name, face: p.face, score: stage ? Object.values(p.st).reduce((n, x) => n + x, 0) : p.best })) };
+}
+async function board(g, m) {
+  const key = g + m;
+  if (!cache[key]) cache[key] = fetchBoard(g, m).catch((e) => { console.warn('rank', e); delete cache[key]; return null; });
+  const got = await cache[key], c = Hub.active();
+  const me = { name: c.name, face: myFace(), me: true, score: 0, rank: '-' };
+  if (!got) return { ok: false, list: [], me };
+  const list = got.list.filter((x) => !(x.uid === got.uid && (x.cid === c.id || (!x.cid && x.name === c.name))));
+  const mine = got.list.find((x) => x.uid === got.uid && (x.cid === c.id || (!x.cid && x.name === c.name)));
+  me.score = Math.max(mine ? mine.score : 0, m === 'all' ? myScore(g) : 0);
+  const all = list.filter((x) => x.score > 0);
+  if (me.score > 0) all.push(me);
+  all.sort((a, b) => b.score - a.score || (a.me ? -1 : b.me ? 1 : 0));
+  all.forEach((x, i) => { x.rank = i + 1; });
+  return { ok: true, list: all, me };
 }
 
 // ---------- 그리기 ----------
 const esc = (s) => String(s).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 function rowHTML(x, cls) {
-  const top3 = x.rank <= 3, k = top3 ? x.rank : 0;
+  const top3 = typeof x.rank === "number" && x.rank <= 3, k = top3 ? x.rank : 0;
   const rank = top3 ? `<span class="r-rank medal" style="background-image:url(assets/ui/medal${k}.webp${V})"><b>${x.rank}</b></span>`
     : `<span class="r-rank badge" style="background-image:url(assets/ui/badge.webp${V})"><b>${x.rank}</b></span>`;
   const face = `<span class="r-face${top3 ? ' f' + k : ''}"><img class="ph" src="${x.face}" alt=""><img class="fr" src="assets/ui/frame${top3 ? k : ''}.webp${V}" alt="">${k === 1 ? `<img class="crown" src="assets/ui/crown.webp${V}" alt="">` : ''}</span>`;
-  return `<li class="rk-row ${cls}">${rank}${face}<span class="r-name">${esc(x.name)}</span><span class="r-score"><img src="assets/ui/star.webp${V}" alt="">${x.score.toLocaleString()}</span></li>`;
+  return `<li class="rk-row ${cls}">${rank}${face}<span class="r-name">${esc(x.name)}</span><span class="r-score"><img src="assets/ui/star.webp${V}" alt="">${x.score ? x.score.toLocaleString() : '-'}</span></li>`;
 }
-function render() {
+let ticket = 0;
+async function render() {
   $('title').textContent = gname(game);
   document.querySelectorAll('.rk-tabs button').forEach((b) => b.classList.toggle('on', b.dataset.mode === mode));
   $('period').classList.toggle('hidden', mode !== 'week');
   $('periodText').textContent = periodText();
   document.querySelectorAll('.rk-gbtn').forEach((b) => b.classList.toggle('on', b.dataset.g === game));
-  const { list, me } = board(game, mode);
+  const t = ++ticket;
+  $('list').innerHTML = ''; $('note').textContent = tr('순위를 불러오는 중이에요…'); $('note').classList.remove('hidden');
+  const { ok, list, me } = await board(game, mode);
+  if (t !== ticket) return; // 그새 다른 게임·탭을 누름
   $('list').innerHTML = list.slice(0, TOP).map((x) => rowHTML(x, x.me ? 'me' : x.rank <= 3 ? 'top' + x.rank : '')).join('');
-  const out = me.rank > TOP;
+  $('note').textContent = !ok ? tr('순위를 불러오지 못했어요. 인터넷 연결을 확인해 주세요')
+    : !list.length ? tr(mode === 'week' ? '이번 주 기록이 아직 없어요. 첫 번째 주인공이 되어 보세요!' : '아직 기록이 없어요. 첫 번째 주인공이 되어 보세요!') : '';
+  $('note').classList.toggle('hidden', !$('note').textContent);
+  const out = !(typeof me.rank === 'number' && me.rank <= TOP);
   $('mine').classList.toggle('hidden', !out);
   document.body.classList.toggle('has-mine', out);
   if (out) $('mine').innerHTML = `<ol class="rk-list">${rowHTML(me, 'mine')}</ol>`;
@@ -109,5 +139,4 @@ function buildGames() {
   const cur = sc.querySelector(`[data-g="${game}"]`); if (cur) setTimeout(() => cur.scrollIntoView({ inline: 'center', block: 'nearest' }), 0);
 }
 document.querySelectorAll('.rk-tabs button').forEach((b) => b.addEventListener('click', () => { if (b.dataset.mode === mode) return; blip(); mode = b.dataset.mode; render(); }));
-$('note').textContent = tr($('note').textContent);
 buildGames(); render();

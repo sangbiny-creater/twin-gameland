@@ -3560,8 +3560,20 @@ window.I18N_DATA = {
 "All-time"
 ],
 [
-"지금은 예시 순위예요 (서버 연결 전)",
-"Sample rankings for now (before server connection)"
+"순위를 불러오는 중이에요…",
+"Loading rankings…"
+],
+[
+"순위를 불러오지 못했어요. 인터넷 연결을 확인해 주세요",
+"Couldn't load rankings. Please check your internet connection."
+],
+[
+"이번 주 기록이 아직 없어요. 첫 번째 주인공이 되어 보세요!",
+"No records this week yet. Be the first star!"
+],
+[
+"아직 기록이 없어요. 첫 번째 주인공이 되어 보세요!",
+"No records yet. Be the first star!"
 ],
 [
 "버거 러시",

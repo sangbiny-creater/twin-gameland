@@ -68,7 +68,8 @@ WHOLE = {
 # 문서 뒤에 새로 생긴 글 (2026-11-04 작업)
 EXTRA = {
     # 주간 랭킹 (2026-11-10)
-    '주간': 'Weekly', '전체': 'All-time', '지금은 예시 순위예요 (서버 연결 전)': 'Sample rankings for now (before server connection)',
+    '주간': 'Weekly', '전체': 'All-time', '순위를 불러오는 중이에요…': 'Loading rankings…', '순위를 불러오지 못했어요. 인터넷 연결을 확인해 주세요': "Couldn't load rankings. Please check your internet connection.",
+    '이번 주 기록이 아직 없어요. 첫 번째 주인공이 되어 보세요!': 'No records this week yet. Be the first star!', '아직 기록이 없어요. 첫 번째 주인공이 되어 보세요!': 'No records yet. Be the first star!',
     # 버거 러시 (2026-11-08)
     '버거 러시': 'Burger Rush', '햄버거 골목': 'Burger Alley', '양상추 농장': 'Lettuce Farm', '토마토 언덕': 'Tomato Hill', '양파 들판': 'Onion Fields',
     '베이컨 캠핑장': 'Bacon Campground', '바닷가 버거 트럭': 'Seaside Burger Truck', '감자튀김 성': 'French Fry Castle', '탄산 분수 공원': 'Fizzy Fountain Park',

@@ -37,7 +37,7 @@ firebase deploy --only firestore,storage,functions
 |---|---|---|
 | `users/{uid}` | provider(google·email·guest), email, agreedAt·agreeVer(약관 동의 시각·판), createdAt, lastAt, totalSec, status(active·banned), memo, profile(게임 저장 데이터 글) | 본인 / 관리자 |
 | `sessions` | uid, game, start, sec, day — 화면에 머문 시간 | 본인 추가만 |
-| `records` | uid, game, stage, cleared, score, stars, at, day, week, month, name — 게임 결과 (순위) | 본인 추가만 |
+| `records` | uid, game, stage, cleared, score, stars, at, day, week(ISO 주, 백오피스), wk(일요일 시작 주, 랭킹), month, name, cid(캐릭터), look, face(얼굴 그림) — 게임 결과. 게임 안 랭킹 화면(ranking/)이 game·day 같음 조건으로 읽어 캐릭터마다 최고 기록을 계산 (새 색인 필요 없음) | 본인 추가, 로그인하면 읽기 |
 | `payments` | uid, email, product, won, at, status(test = 웹 검수용 가짜 결제) | 앱(test) / 서버(진짜) |
 | `config/catalog` | 상점 값: outfits·boosts·park·packs (백오피스 → 게임 다음 접속부터 적용) | 관리자 |
 | `config/terms` | 개인정보 처리방침·이용약관 글 | 관리자 |
