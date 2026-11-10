@@ -18,7 +18,7 @@ const MISS_SHOW = 0.75;  // 틀린 두 장을 보여 주는 시간 (초)
 const MISS_TIME = 0.2;   // 틀리면 줄어드는 시간 (초)
 const label = (i) => `${isHard(i) ? '어려움 ' : ''}${worldOf(i) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[worldOf(i)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611101847';
+const ASSET_V = '202611101902';
 const cardSrc = (n) => `assets/cards/${n}.webp?v=${ASSET_V}`;
 
 // ---------- save (메인 화면 없이 단독 실행할 때) ----------

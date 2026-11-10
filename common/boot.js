@@ -3,7 +3,7 @@
 //  <head> 맨 앞(스타일시트 다음)에서 읽음: <script src="../common/boot.js?v=…"></script>
 //  ① 처음 열 때: 화면에 보일 그림(<img>·CSS 배경·테두리 그림)·글꼴(Jua)·게임 코드가 만든 그림(new Image)이
 //     모두 받아지고 풀릴(decode) 때까지 화면을 가려 두고(html.booting), 다 되면 한 번에 보여 줌.
-//     늦으면(0.35초 넘게) 같은 색 바탕에 빙글빙글 도는 사탕색 동그라미를 보여 줌. 아주 느려도 1분 뒤에는 그냥 보여 줌.
+//     늦으면(0.35초 넘게) 같은 색 바탕에 살살 도는 회색 동그라미를 보여 줌. 아주 느려도 1분 뒤에는 그냥 보여 줌.
 //  ② 화면이 바뀔 때·창이 뜰 때: 새로 보이는 창(.screen·.modal·결과/일시정지 창…)의 그림이 아직이면
 //     그 창만 잠깐 숨겨 두었다가(.boot-hold) 다 받으면 한 번에 보여 줌 — 게임 코드는 그대로.
 //  ③ 다 보인 뒤: 숨어 있는 화면·창의 그림을 미리 받아 둠 (나중에 열 때 바로 뜨게)
@@ -26,11 +26,8 @@
 html.booting body>*{visibility:hidden!important}
 .boot-hold{visibility:hidden!important}
 html.booting::before,html.boot-wait::before{content:'';position:fixed;inset:0;z-index:2147483646;background:linear-gradient(#BFE6FF,#FFE9F2);opacity:0;animation:bootIn .25s .35s forwards;pointer-events:none}
-html.booting::after,html.boot-wait::after{content:'';position:fixed;left:50%;top:50%;z-index:2147483647;width:84px;height:84px;margin:-42px 0 0 -42px;border-radius:50%;
-  background:radial-gradient(closest-side,transparent calc(100% - 19px),#fff calc(100% - 19px) calc(100% - 15px),transparent calc(100% - 15px) calc(100% - 4px),#fff calc(100% - 4px)),
-    conic-gradient(#FF7FAE 0 21%,#fff 21% 25%,#FFD23F 25% 46%,#fff 46% 50%,#6EC6FF 50% 71%,#fff 71% 75%,#7EDDB0 75% 96%,#fff 96%);
-  -webkit-mask:radial-gradient(closest-side,transparent calc(100% - 19px),#000 calc(100% - 19px));mask:radial-gradient(closest-side,transparent calc(100% - 19px),#000 calc(100% - 19px));
-  opacity:0;animation:bootIn .25s .35s forwards,bootSpin 1.1s linear infinite;pointer-events:none}
+html.booting::after,html.boot-wait::after{content:'';position:fixed;left:50%;top:50%;z-index:2147483647;width:38px;height:38px;margin:-19px 0 0 -19px;border-radius:50%;box-sizing:border-box;
+  border:3.5px solid rgba(90,100,115,.16);border-top-color:rgba(90,100,115,.55);opacity:0;animation:bootIn .25s .35s forwards,bootSpin .9s linear infinite;pointer-events:none}
 @keyframes bootSpin{to{transform:rotate(1turn)}}
 @keyframes bootIn{to{opacity:1}}`;
   (document.head || D).appendChild(css);
