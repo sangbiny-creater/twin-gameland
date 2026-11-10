@@ -12,7 +12,7 @@
 //  press: 바쁨 정도 — 다음 손님이 오는 간격 gap = (보통 주문을 한 번에 1초씩 눌러 만드는 시간) ÷ press. 클수록 손님이 몰려 옴
 (function () {
   const PER_WORLD = 10, HARD = 100;
-  const SAUCE_ON = false;
+  const SAUCE_ON = true;
   const ING = ['cheese', 'lettuce', 'tomato', 'onion', 'bacon', ...(SAUCE_ON ? ['sauce'] : [])];
   const S2 = ['cola', 'fries'], S3 = ['cola', 'fries', 'cider'], S4 = ['cola', 'fries', 'cider', 'juice'], S5 = [...S4, 'icecream'];
   // 사다리 순서대로 (이름, 값)
