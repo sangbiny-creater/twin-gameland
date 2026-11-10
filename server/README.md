@@ -58,6 +58,7 @@ firebase deploy --only firestore,storage,functions   # 서버 함수는 Blaze �
 - 게스트(익명 로그인)는 결제 불가: 앱 `common/auth.js` canPay + 서버 `verifyPurchase` 둘 다 막음.
 - 만 14세 미만은 계정(구글·이메일)을 만들 수 없음 (보호자 동의 절차를 만들기 전까지). 생년월일은 저장하지 않음.
 - 비밀번호 찾기는 없고, 이메일 인증번호로 재설정만 됨.
+- 서버 읽기·쓰기 아끼기 (common/auth.js): 같은 계정은 10분 동안 계정 문서·관리자·상점 값(config)을 다시 읽지 않음(`twin_auth_chk`, 점검·공지는 `twin_ops_v1`에 받아 둠) — 백오피스에서 바꾼 상점 값·점검은 최대 10분 뒤 적용. 사용 시간(sessions)은 5분에 한 번 같은 날·같은 화면끼리 합쳐서, 저장 데이터(profile)는 2분에 한 번 바뀌었을 때만 올림.
 - 순위는 지금 백오피스에서 records로 계산 (사용자가 많아지면 서버에서 미리 계산하도록 바꾸기).
 - 그룹투어·이름·캐릭터 ID 규칙(`firestore.rules` 의 tours·names·pids)은 규칙을 다시 올려야 적용돼요: `firebase deploy --only firestore:rules` 또는 Firebase 콘솔 → Firestore → 규칙 에 `firestore.rules` 내용을 붙여 넣고 '게시'.
 - 그룹투어 이벤트 보상은 이벤트가 끝난 뒤 게임 화면에서 각자 받아요 (이 기기 기억 `twin_tour_v1`). 나중에 서버 함수로 자동 지급·결과 고정을 하면 더 안전해요.

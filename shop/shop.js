@@ -4,7 +4,7 @@
 //  · 탭: 꾸미기(놀이공원 꾸미기) / 아이템(코인, 모든 게임 공통 수량) / 다이아 구매(common/monet.js 결제 흐름을 그대로 씀)
 //  · 옷장은 별도 화면 (closet/)
 const $ = (id) => document.getElementById(id);
-const V = '?v=202611110535'; // bump when images change so phones don't show old cached ones
+const V = '?v=202611110739'; // bump when images change so phones don't show old cached ones
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 
 const q = new URLSearchParams(location.search);

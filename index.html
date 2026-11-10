@@ -14,17 +14,17 @@
 <meta name="theme-color" content="#5CA9E6">
 <meta name="application-name" content="은유와 은결">
 <title>은유와 은결</title>
-<link rel="manifest" href="hub/manifest.json?v=202611110535">
-<link rel="apple-touch-icon" href="hub/icons/icon-180.png?v=202611110535">
-<link rel="icon" type="image/png" sizes="32x32" href="hub/icons/favicon-32.png?v=202611110535">
-<link rel="icon" type="image/png" sizes="16x16" href="hub/icons/favicon-16.png?v=202611110535">
-<link rel="icon" type="image/png" sizes="192x192" href="hub/icons/favicon-192.png?v=202611110535">
-<link rel="shortcut icon" href="favicon.ico?v=202611110535">
-<link rel="preload" href="common/fonts/jua.woff2?v=202611110535" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="hub/hub.css?v=202611110535">
-<link rel="stylesheet" href="common/popup.css?v=202611110535">
+<link rel="manifest" href="hub/manifest.json?v=202611110739">
+<link rel="apple-touch-icon" href="hub/icons/icon-180.png?v=202611110739">
+<link rel="icon" type="image/png" sizes="32x32" href="hub/icons/favicon-32.png?v=202611110739">
+<link rel="icon" type="image/png" sizes="16x16" href="hub/icons/favicon-16.png?v=202611110739">
+<link rel="icon" type="image/png" sizes="192x192" href="hub/icons/favicon-192.png?v=202611110739">
+<link rel="shortcut icon" href="favicon.ico?v=202611110739">
+<link rel="preload" href="common/fonts/jua.woff2?v=202611110739" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="hub/hub.css?v=202611110739">
+<link rel="stylesheet" href="common/popup.css?v=202611110739">
 <!-- 화면을 한 번에 보여 주기: 그림·글꼴이 다 준비될 때까지 가려 두고 한꺼번에 (common/boot.js) -->
-<script src="common/boot.js?v=202611110535"></script>
+<script src="common/boot.js?v=202611110739"></script>
 </head>
 <body>
 <div id="safe"></div>
@@ -34,7 +34,7 @@
   <section id="scrSelect" class="screen hidden"><!-- 처음엔 모든 화면을 숨겨 둠: 놀이공원으로 바로 갈 때 캐릭터 선택 그림까지 받지 않게 (hub.js go 가 고른 화면만 보여 줌) -->
     <!-- 게임의 맨 첫 화면: 은유·은결 중 고르기 (캐릭터는 은유 1명·은결 1명, 둘 다 무료). 배경·전신 그림은 hub/select/ -->
     <img id="selBg" class="sel-bg" alt="">
-    <img class="sel-logo" src="hub/park/ui/logo.webp?v=202611110535" alt="Twin Gameland">
+    <img class="sel-logo" src="hub/park/ui/logo.webp?v=202611110739" alt="Twin Gameland">
     <div class="sel-ask"><b>캐릭터 선택</b><small>함께 떠날 캐릭터를 선택해 주세요!</small></div>
     <div id="charGrid" class="sel-chars"></div>
     <button id="btnSound" class="round sel-sound" aria-label="소리"><span class="ico-sound"></span></button>
@@ -47,19 +47,19 @@
     <div class="pk-side"></div>
     <div id="pkScroll" class="pk-scroll"><div id="pkWorld" class="pk-world"></div></div>
     <header class="pk-top">
-      <div class="pk-logo"><img src="hub/park/ui/logo.webp?v=202611110535" alt="Twin Gameland"><span class="pk-ribbon">놀고, 꾸미고, 나만의 게임랜드!</span></div>
+      <div class="pk-logo"><img src="hub/park/ui/logo.webp?v=202611110739" alt="Twin Gameland"><span class="pk-ribbon">놀고, 꾸미고, 나만의 게임랜드!</span></div>
       <div class="pk-pills">
         <button class="pk-pill" data-open="shop" aria-label="코인 · 아이템샵"><i class="coin"></i><b id="meCoins">0</b><span class="pk-plus">+</span></button>
-        <div class="pk-pill"><img src="hub/park/ui/star.webp?v=202611110535" alt=""><b id="meStars">0</b></div>
-        <button id="btnGems" class="pk-pill" aria-label="다이아"><img src="hub/park/ui/gem.webp?v=202611110535" alt=""><b id="meGems">0</b><span class="pk-plus">+</span></button>
-        <button id="btnSettings" class="pk-icon" aria-label="설정"><img src="hub/park/ui/settings.webp?v=202611110535" alt=""></button>
+        <div class="pk-pill"><img src="hub/park/ui/star.webp?v=202611110739" alt=""><b id="meStars">0</b></div>
+        <button id="btnGems" class="pk-pill" aria-label="다이아"><img src="hub/park/ui/gem.webp?v=202611110739" alt=""><b id="meGems">0</b><span class="pk-plus">+</span></button>
+        <button id="btnSettings" class="pk-icon" aria-label="설정"><img src="hub/park/ui/settings.webp?v=202611110739" alt=""></button>
       </div>
     </header>
     <img id="pkCoaster" class="pk-coaster" alt="">
     <button id="pkMe" class="pk-me" aria-label="캐릭터 바꾸기">
       <span class="pk-meinfo"><span class="pk-metop"><b id="meName"></b><span id="meLv">Lv.1</span></span><span class="pk-bar"><i id="meLvBar"></i></span></span>
     </button>
-    <button id="pkEdit" class="pk-edit" aria-label="놀이기구 자리 바꾸기"><img src="hub/park/ui/edit.webp?v=202611110535" alt=""></button>
+    <button id="pkEdit" class="pk-edit" aria-label="놀이기구 자리 바꾸기"><img src="hub/park/ui/edit.webp?v=202611110739" alt=""></button>
     <div id="pkEditBar" class="pk-editbar hidden">
       <span>놀이기구를 눌러 고르고, 바꿀 자리를 눌러요<small>끌어서 옮겨도 돼요</small></span>
       <button id="pkPlate" class="pk-reset">이름표</button>
@@ -71,7 +71,7 @@
   <!-- 3. 스카이훅 징검다리 -->
   <section id="scrMap" class="screen hidden">
     <header class="top-bar">
-      <button class="map-back" data-go="lobby" aria-label="게임 고르기"><img src="hub/ui/back.webp?v=202611110535" alt=""></button>
+      <button class="map-back" data-go="lobby" aria-label="게임 고르기"><img src="hub/ui/back.webp?v=202611110739" alt=""></button>
       <!-- v0.3 스테이지 지도 위쪽 줄 (사천성·메모리·두더지 공통): 깬 판 수/전체 · 모은 별 (+ 쉬움/어려움) -->
       <div id="mapBar3" class="mapbar3 hidden"><span class="mb3-pill flag"><b id="mb3Clear">0 / 100</b></span><span class="mb3-pill star"><b id="mb3Stars">0</b></span></div>
       <div class="map-title"><span id="mapName">Sky Hook Runner</span><small id="mapProg">0 / 12 클리어</small>
@@ -193,17 +193,17 @@
   <div id="scrTitle" class="title-scr hidden" data-boot-hold>
     <div id="tsBg" class="ts-bg"></div>
     <img id="tsArt" class="ts-art" alt="">
-    <button id="tsBack" class="ts-back" aria-label="뒤로"><img src="hub/ui/back.webp?v=202611110535" alt=""></button>
-    <button id="tsStart" class="ts-start" aria-label="START"><img src="hub/ui/btn_start.webp?v=202611110535" alt="START"></button>
+    <button id="tsBack" class="ts-back" aria-label="뒤로"><img src="hub/ui/back.webp?v=202611110739" alt=""></button>
+    <button id="tsStart" class="ts-start" aria-label="START"><img src="hub/ui/btn_start.webp?v=202611110739" alt="START"></button>
   </div>
 
-<script src="common/chars/looks.js?v=202611110535"></script>
-<script src="common/profile.js?v=202611110535"></script>
-<script src="common/i18n_data.js?v=202611110535"></script>
-<script src="common/i18n.js?v=202611110535"></script>
-<script src="common/charv2.js?v=202611110535"></script>
-<script src="common/ui.js?v=202611110535"></script>
-<script src="hub/hub.js?v=202611110535"></script>
-<script src="common/popup.js?v=202611110535"></script>
+<script src="common/chars/looks.js?v=202611110739"></script>
+<script src="common/profile.js?v=202611110739"></script>
+<script src="common/i18n_data.js?v=202611110739"></script>
+<script src="common/i18n.js?v=202611110739"></script>
+<script src="common/charv2.js?v=202611110739"></script>
+<script src="common/ui.js?v=202611110739"></script>
+<script src="hub/hub.js?v=202611110739"></script>
+<script src="common/popup.js?v=202611110739"></script>
 </body>
 </html>

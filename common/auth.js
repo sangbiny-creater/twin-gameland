@@ -58,6 +58,7 @@
   //  · 서버 profileAt > at → 다른 기기가 서버를 바꿈. 이 기기 데이터가 그 뒤로 안 바뀌었으면(지문 같음) 서버 것으로,
   //    둘 다 바뀌었으면 진행(모은 코인 합 + 별)이 더 많은 쪽. 서버 것으로 바꿀 때 이 기기 것은 twin_gameland_v1_backup 에 한 벌
   const SKEY = 'twin_sync_v1';
+  const CHK = 'twin_auth_chk', CHK_MS = 10 * 60000, OPSKEY = 'twin_ops_v1'; // 계정·상점 값을 마지막으로 확인한 때 (10분 동안 다시 안 읽음) · 받아 둔 점검·공지
   const hash = (s) => { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0; return h.toString(36) + ':' + s.length; };
   const progress = (txt) => { try { return (JSON.parse(txt).chars || []).reduce((n, c) => n + (c.earned || 0) + Object.values(c.games || {}).reduce((m, g) => m + Object.values(g.stages || {}).reduce((k, x) => k + (x.stars || 0), 0), 0), 0); } catch (e) { return 0; } };
   function serverWins(d) {
@@ -84,6 +85,12 @@
   }
   async function userIn(u) {
     const prov = u.isAnonymous ? 'guest' : (u.providerData[0] || {}).providerId === 'google.com' ? 'google' : 'email';
+    // 서버 읽기 아끼기: 같은 계정을 10분 안에 확인했으면 계정 문서·관리자·상점 값을 다시 읽지 않음 (화면을 옮길 때마다 5번씩 읽던 것)
+    //  예외: 처음 들어온 계정·가입 중·다른 계정으로 바뀜 → 그대로 다 확인
+    const chk = read(CHK, {});
+    if (!st.join && st.mode === prov && st.uid === u.uid && chk.uid === u.uid && Date.now() - (chk.at || 0) < CHK_MS) {
+      paintAccount(); applyOps(read(OPSKEY, {})); flush(); syncProfile(); return true;
+    }
     try {
       const ref = fb.db.collection('users').doc(u.uid), snap = await ref.get(), now = Date.now(), d = snap.exists ? snap.data() : null;
       // 처음 온 계정(가입 절차 없이 구글로 로그인 · 게스트에서 연동): 생년월일 → 약관 동의를 먼저
@@ -106,6 +113,7 @@
         if (d.profile && serverWins(d)) { takeServer(d); return false; }
       }
       if (u.email) { try { st.admin = (await fb.db.collection('admins').doc(u.email).get()).exists; save(); } catch (e) { st.admin = false; } }
+      write(CHK, { uid: u.uid, at: now });
       flush(); syncProfile(); loadConfig();
     } catch (e) { console.warn('user', e); }
     return true;
@@ -116,17 +124,31 @@
       if (cat.exists) write(CATKEY, cat.data()); // 다음 화면부터 적용 (common/profile.js applyCatalog)
       if (img.exists) write('twin_images_v1', img.data()); else localStorage.removeItem('twin_images_v1'); // 사천성·메모리 그림 목록 (common/game_images.js)
       const o = ops.exists ? ops.data() : {};
-      if (o.maintenance && !isAdmin()) block(o.maintenanceMsg || '지금은 점검 중이에요. 잠시 뒤에 다시 와 주세요!');
-      else if (o.notice && isHub && sessionStorage.getItem('twin_notice') !== o.notice) { sessionStorage.setItem('twin_notice', o.notice); toast(o.notice, 4000); }
+      write(OPSKEY, o); applyOps(o);
     } catch (e) { /* ignore */ }
+  }
+  // 점검·공지 (서버에서 받은 것 또는 10분 안에 받아 둔 것)
+  function applyOps(o) {
+    if (!o) return;
+    if (o.maintenance && !isAdmin()) block(o.maintenanceMsg || '지금은 점검 중이에요. 잠시 뒤에 다시 와 주세요!');
+    else if (o.notice && isHub && sessionStorage.getItem('twin_notice') !== o.notice) { sessionStorage.setItem('twin_notice', o.notice); toast(o.notice, 4000); }
   }
   const isAdmin = () => !!st.admin;
 
   // ---------- 기록 보내기: 사용 시간 · 게임 기록 (서버가 없으면 이 기기에 모아 둠, 최대 300개) ----------
   const queue = (x) => { const q = read(QKEY, []); q.push(x); write(QKEY, q.slice(-300)); };
+  // 사용 시간은 바로 보내지 않고 모아서 5분에 한 번 (게임 결과가 생기면 그때 같이). 같은 날·같은 화면 시간은 한 줄로 합침
+  const flushSoon = () => { if (Date.now() - +(localStorage.getItem('twin_flush_last') || 0) > 5 * 60000) flush(); };
   async function flush() {
     if (!fb || !fb.auth.currentUser) return;
-    const q = read(QKEY, []); if (!q.length) return; write(QKEY, []);
+    let q = read(QKEY, []); if (!q.length) return; write(QKEY, []); try { localStorage.setItem('twin_flush_last', String(Date.now())); } catch (e) { /* ignore */ }
+    const merged = [], seen = new Map();
+    for (const x of q) {
+      if (x.kind !== 'session') { merged.push(x); continue; }
+      const k = [x.d.game, x.d.day, x.d.cid || '', x.d.mode].join('|'), m = seen.get(k);
+      if (m) { m.d.sec += x.d.sec; m.d.start = Math.min(m.d.start, x.d.start); } else { const c = { kind: 'session', d: { ...x.d } }; seen.set(k, c); merged.push(c); }
+    }
+    q = merged;
     const uid = fb.auth.currentUser.uid, b = fb.db.batch();
     let sec = 0;
     const sat = fb.F.firestore.FieldValue.serverTimestamp(); // 서버가 받은 시각: 순위 스냅샷이 새로 온 기록만 읽게 (server/functions/rank.js)
@@ -144,7 +166,7 @@
   let since = Date.now();
   const endSession = () => {
     const sec = Math.round((Date.now() - since) / 1000); since = Date.now();
-    if (sec >= 3 && sec < 6 * 3600) { queue({ kind: 'session', d: { game: page, start: Date.now() - sec * 1000, sec, day: day(Date.now()), mode: st.mode || 'none', ...who() } }); flush(); }
+    if (sec >= 3 && sec < 6 * 3600) { queue({ kind: 'session', d: { game: page, start: Date.now() - sec * 1000, sec, day: day(Date.now()), mode: st.mode || 'none', ...who() } }); flushSoon(); }
   };
   document.addEventListener('visibilitychange', () => { if (document.hidden) { endSession(); syncProfile(); } else since = Date.now(); });
   addEventListener('pagehide', () => { endSession(); syncProfile(); });
@@ -158,12 +180,13 @@
     };
     Hub.record._auth = true;
   }
-  // 게임 저장 데이터를 계정에 보관 (새 기기에서 로그인하면 이어서 함). 30초에 한 번까지
-  let lastSync = 0;
+  // 게임 저장 데이터를 계정에 보관 (새 기기에서 로그인하면 이어서 함). 2분에 한 번까지, 지난번에 올린 것과 같으면 안 올림
+  let lastSync = +(localStorage.getItem('twin_sync_last') || 0);
   function syncProfile(force) { // force: 로그아웃 직전처럼 바로 올리고 끝날 때까지 기다림
-    if (!fb || !fb.auth.currentUser || (!force && Date.now() - lastSync < 30000)) return Promise.resolve();
-    lastSync = Date.now();
+    if (!fb || !fb.auth.currentUser || (!force && Date.now() - lastSync < 120000)) return Promise.resolve();
     const p = localStorage.getItem('twin_gameland_v1'); if (!p || p.length > 900000) return Promise.resolve();
+    if (!force && read(SKEY, {}).h === hash(p)) return Promise.resolve(); // 바뀐 것 없음
+    lastSync = Date.now(); try { localStorage.setItem('twin_sync_last', String(lastSync)); } catch (e) { /* ignore */ }
     const at = Date.now();
     return fb.db.collection('users').doc(fb.auth.currentUser.uid).update({ profile: p, profileAt: at }).then(() => write(SKEY, { at, h: hash(p) })).catch(() => {});
   }
@@ -426,7 +449,7 @@
       const a = e.target.closest('[data-a]'); if (!a) return;
       if (a.dataset.a === 'close') { close(); return; }
       const f = await firebase(); await syncProfile(true); if (f) await f.auth.signOut();
-      st = {}; save(); close(); toast('로그아웃했어요'); if (isHub) loginBox(); paintAccount();
+      st = {}; save(); localStorage.removeItem(CHK); close(); toast('로그아웃했어요'); if (isHub) loginBox(); paintAccount();
     };
   }
   function paintAccount() {
