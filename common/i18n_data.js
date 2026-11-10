@@ -3552,8 +3552,16 @@ window.I18N_DATA = {
 "Tap/Space = Jump · Hold in midair = Hook · Release = Swing!"
 ],
 [
-"랭킹은 곧 열려요!",
-"Ranking is coming soon!"
+"주간",
+"Weekly"
+],
+[
+"전체",
+"All-time"
+],
+[
+"지금은 예시 순위예요 (서버 연결 전)",
+"Sample rankings for now (before server connection)"
 ],
 [
 "버거 러시",

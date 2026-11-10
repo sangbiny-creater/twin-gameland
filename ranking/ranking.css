@@ -1,0 +1,90 @@
+/* 주간 랭킹 (세로 전용) — 판·탭·칸·줄·메달·테두리는 GPT 그림 (ranking/assets/ui), 여기서는 자리와 글자만 */
+:root { --navy: #26365A; --font: 'Jua', 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; background: #CFE8FA; }
+body { margin: 0; min-height: 100vh; font-family: var(--font); color: var(--navy); overflow-x: hidden; -webkit-user-select: none; user-select: none;
+  background: #CFE8FA url(assets/bg.webp?v=202611102101) center top / cover fixed; }
+img { -webkit-user-drag: none; display: block; }
+button { font-family: var(--font); color: var(--navy); border: 0; background: none; padding: 0; cursor: pointer; touch-action: manipulation; }
+a { color: inherit; text-decoration: none; }
+.hidden { display: none !important; }
+
+.rk { max-width: 480px; margin: 0 auto; padding: calc(8px + env(safe-area-inset-top)) 8px calc(16px + env(safe-area-inset-bottom)); }
+body.has-mine .rk { padding-bottom: calc(118px + env(safe-area-inset-bottom)); }
+
+/* 위: 뒤로 + 제목 띠 (글자는 띠 안 크림색 칸: 그림 높이 39~77%, 폭 12~87%) */
+.rk-head { position: relative; height: 0; padding-top: 22%; }
+.rk-back { position: absolute; left: 0; top: 4px; width: 42px; height: 42px; border-radius: 50%; background: var(--who); border: 3px solid #fff; box-shadow: 0 3px 8px rgba(24,40,62,.3); display: grid; place-items: center; z-index: 2; }
+.rk-back img { width: 22px; height: 22px; }
+.rk-title { position: absolute; left: 13%; right: 0; top: 0; }
+.rk-title img { width: 100%; }
+.rk-title b { position: absolute; left: 13%; right: 14%; top: 39%; bottom: 23%; display: flex; align-items: center; justify-content: center; font-weight: normal; font-size: clamp(17px, 5.2vw, 24px); color: #B8336A; white-space: nowrap; overflow: hidden; }
+
+/* 주간 / 전체 탭 (그림 두 장: 고른 것·안 고른 것) */
+.rk-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 6px 4px 0; }
+.rk-tabs button { position: relative; }
+.rk-tabs img { width: 100%; }
+.rk-tabs .t-on, .rk-tabs button.on .t-off { display: none; }
+.rk-tabs button.on .t-on { display: block; }
+.rk-tabs b { position: absolute; inset: 0 0 12% 0; display: flex; align-items: center; justify-content: center; font-weight: normal; font-size: clamp(16px, 4.8vw, 21px); color: #B98A6A; }
+.rk-tabs button.on b { color: #fff; text-shadow: 0 1px 2px rgba(160,30,80,.45); }
+
+/* 기간 띠 (왼쪽 달력·오른쪽 별은 그림) */
+.rk-period { position: relative; width: 84%; margin: 6px auto 0; }
+.rk-period img { width: 100%; }
+.rk-period b { position: absolute; left: 15%; right: 12%; top: 18%; bottom: 20%; display: flex; align-items: center; justify-content: center; font-weight: normal; font-size: clamp(13px, 3.8vw, 16px); color: #8A5A3C; white-space: nowrap; }
+
+/* 게임 고르기 줄: 좌우로 밀기 + 양쪽 화살표 (화살표 그림 하나를 뒤집어 왼쪽에도) */
+.rk-games { position: relative; margin: 8px 0 0; }
+.rk-gscroll { display: flex; gap: 6px; overflow-x: auto; scroll-snap-type: x proximity; padding: 8px 34px 6px; scrollbar-width: none; }
+.rk-gscroll::-webkit-scrollbar { display: none; }
+.rk-gbtn { position: relative; flex: 0 0 68px; height: 68px; scroll-snap-align: center; }
+.rk-gbtn > img { position: absolute; }
+.rk-gbtn .on, .rk-gbtn .off { inset: 0; width: 100%; height: 100%; }
+.rk-gbtn .on, .rk-gbtn.on .off { display: none; }
+.rk-gbtn.on .on { display: block; }
+.rk-gbtn .ride { left: 12%; top: 10%; width: 76%; height: 78%; object-fit: contain; }
+.rk-gbtn:not(.on) .ride { opacity: .85; }
+.rk-arrow { position: absolute; top: 50%; width: 34px; height: 34px; transform: translateY(-50%); z-index: 2; transition: opacity .2s; }
+.rk-arrow img { width: 100%; height: 100%; }
+.rk-arrow.l { left: -2px; } .rk-arrow.l img { transform: scaleX(-1); }
+.rk-arrow.r { right: -2px; }
+.rk-arrow.dim { opacity: .35; }
+.rk-divider { width: 92%; margin: 4px auto 6px; }
+
+/* 순위표 큰 판: 모서리 장식은 그대로, 가운데만 늘림 */
+.rk-board { border: solid transparent; border-width: 30px 26px 26px; border-image: url(assets/ui/board.webp?v=202611102101) 92 fill / 30px 26px 26px / 0 stretch; margin: 0 -2px; }
+.rk-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.rk-note { margin: 8px 0 0; text-align: center; font-size: 12px; color: #A08A78; }
+
+/* 한 줄: [메달·등수] [프로필 테두리 + 얼굴] [이름] [별 + 점수]. 줄 판 그림은 비율 그대로 */
+.rk-row { position: relative; display: flex; align-items: center; gap: 6px; padding: 0 7% 2px 3.5%; aspect-ratio: 900 / 160; background: url(assets/ui/row.webp?v=202611102101) center / 100% 100% no-repeat; }
+.rk-row.top1 { aspect-ratio: 900 / 176; background-image: url(assets/ui/row1.webp?v=202611102101); padding-left: 6%; padding-right: 12%; }
+.rk-row.top2 { aspect-ratio: 900 / 176; background-image: url(assets/ui/row2.webp?v=202611102101); padding-left: 6%; padding-right: 12%; }
+.rk-row.top3 { aspect-ratio: 900 / 176; background-image: url(assets/ui/row3.webp?v=202611102101); padding-left: 6%; padding-right: 12%; }
+.rk-row.me { aspect-ratio: 900 / 165; background-image: url(assets/ui/row_me.webp?v=202611102101); padding-left: 10.5%; padding-right: 11.5%; }
+.r-rank { flex: 0 0 auto; position: relative; display: grid; place-items: center; background: center / contain no-repeat; }
+.r-rank.medal { width: 13%; aspect-ratio: 1; }
+.r-rank.medal b { margin-top: 4%; font-size: clamp(15px, 4.4vw, 20px); color: #7A4A12; }
+.rk-row.top2 .r-rank b { color: #4E5A6E; }
+.rk-row.top3 .r-rank b { color: #6E3A1A; }
+.r-rank.badge { width: 9%; aspect-ratio: 1; margin: 0 2% 0 1%; }
+.r-rank b { font-weight: normal; font-size: clamp(13px, 3.8vw, 17px); color: #8A5A3C; font-variant-numeric: tabular-nums; }
+.r-face { position: relative; flex: 0 0 auto; width: 13%; aspect-ratio: 1; }
+.r-face .ph { position: absolute; left: 17%; top: 17%; width: 66%; height: 66%; border-radius: 50%; object-fit: cover; object-position: 50% 15%; background: #FFF6EE; }
+.r-face .fr { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.r-face.f1, .r-face.f2, .r-face.f3 { width: 15%; aspect-ratio: 200 / 177; }
+.r-face.f1 .ph, .r-face.f2 .ph, .r-face.f3 .ph { left: 26%; width: 48%; top: 17%; height: auto; aspect-ratio: 1; }
+.r-face .crown { position: absolute; left: 24%; width: 52%; top: -34%; transform: rotate(-8deg); }
+.r-name { flex: 1; min-width: 0; font-size: clamp(14px, 4.2vw, 18px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rk-row.me .r-name { color: #B8336A; }
+.r-score { flex: 0 0 auto; display: flex; align-items: center; gap: 3px; font-size: clamp(14px, 4.2vw, 18px); color: #B87A12; font-variant-numeric: tabular-nums; }
+.r-score img { width: 18px; height: 18px; }
+
+/* 20등 밖이면 맨 아래 내 등수 칸 (위 가운데 리본 그림이 있어서 비율 그대로) */
+.rk-mine { position: fixed; left: 0; right: 0; bottom: 0; padding: 0 8px calc(6px + env(safe-area-inset-bottom)); z-index: 5; background: linear-gradient(rgba(207,232,250,0), rgba(207,232,250,.95) 30%); }
+.rk-mine .rk-list { max-width: 464px; margin: 0 auto; }
+.rk-row.mine { aspect-ratio: 900 / 206; background-image: url(assets/ui/row_mine.webp?v=202611102101); padding: 6% 14.5% 2% 14%; }
+.rk-row.mine .r-name { color: #B8336A; }
+
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: rgba(38,54,90,.92); color: #fff; padding: 10px 16px; border-radius: 14px; font-size: 15px; z-index: 50; }
