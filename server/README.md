@@ -42,7 +42,9 @@ firebase deploy --only firestore,storage,functions
 | `config/catalog` | 상점 값: outfits·boosts·park·packs (백오피스 → 게임 다음 접속부터 적용) | 관리자 |
 | `config/terms` | 개인정보 처리방침·이용약관 글 | 관리자 |
 | `config/ops` | 공지·점검 모드 | 관리자 |
-| `config/guild`, `guilds`, `seasons` | Group Tour(길드전) 준비 | 관리자 |
+| `config/guild` | 그룹투어 설정: open(새 투어 만들기), maxMembers, event { id, game, start(시각 ms), min(분, 기본 60), reward { r1·r2·r3·join 다이아 } } — 백오피스 'Group Tour' 탭 | 관리자 |
+| `tours/{id}` | 그룹투어(길드, 게임 화면 `tour/`): name, mark(분수 그림 번호), open(누구나 가입), max, code(초대 코드 6자리), guide(투어가이드 uid), gk(투어가이드 키), mem { '<uid>_<캐릭터>': { n 이름, f 얼굴 그림, uid, at 들어온 시각 } }, notice { text, at }, reacts { 키: { e 이모티콘, at 공지 시각, t } }, last(마지막으로 바꾼 멤버 키), createdAt. 주간 투어 랭킹·이벤트 점수는 records 로 화면에서 계산 | 만들기·공지·설정 = 투어가이드, 가입·나가기·이모티콘 = 본인 칸만 |
+| `guilds`, `seasons` | (예전 준비 칸, 지금은 안 씀) | 관리자 |
 | `coupons/{번호}` | 쿠폰 보상 | 관리자 |
 | `admins/{이메일}` | 백오피스 관리자 | 콘솔에서 직접 |
 | `emailCodes` | 인증번호(암호화) | 서버만 |
@@ -53,3 +55,5 @@ firebase deploy --only firestore,storage,functions
 - 만 14세 미만은 계정(구글·이메일)을 만들 수 없음 (보호자 동의 절차를 만들기 전까지). 생년월일은 저장하지 않음.
 - 비밀번호 찾기는 없고, 이메일 인증번호로 재설정만 됨.
 - 순위는 지금 백오피스에서 records로 계산 (사용자가 많아지면 서버에서 미리 계산하도록 바꾸기).
+- 그룹투어 규칙(`firestore.rules` 의 tours)은 규칙을 다시 올려야 적용돼요: `firebase deploy --only firestore:rules` 또는 Firebase 콘솔 → Firestore → 규칙 에 `firestore.rules` 내용을 붙여 넣고 '게시'.
+- 그룹투어 이벤트 보상은 이벤트가 끝난 뒤 게임 화면에서 각자 받아요 (이 기기 기억 `twin_tour_v1`). 나중에 서버 함수로 자동 지급·결과 고정을 하면 더 안전해요.

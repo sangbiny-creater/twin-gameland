@@ -2,7 +2,7 @@
 // 은유와 은결 백오피스 (https://sangbiny-creater.github.io/twin-gameland/admin/)
 //  · 관리자: Firestore admins/{이메일} 문서가 있는 구글 계정 (server/README.md 4번). 데이터 보호는 server/firestore.rules 가 함 (이 화면은 공개돼도 관리자 아니면 아무것도 못 읽음)
 //  · Firebase 가 아직 없으면 예시 데이터로 화면만 보여 줌 (데모)
-//  · 데이터: users · sessions(사용 시간) · records(게임 기록) · payments · config/{catalog,terms,ops} · coupons · guilds · seasons (server/README.md)
+//  · 데이터: users · sessions(사용 시간) · records(게임 기록) · payments · config/{catalog,terms,ops,guild} · coupons · tours(그룹투어) · seasons (server/README.md)
 const $ = (id) => document.getElementById(id);
 const H = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fmtN = (n) => (+n || 0).toLocaleString('ko-KR');
@@ -20,7 +20,7 @@ const PACKS0 = [{ id: 'diamond_60', name: '다이아 60', gems: 60, won: 1200 },
 
 // ---------- 데이터 (Firebase 또는 데모) ----------
 let fb = null, me = null;
-const DB = { users: [], sessions: [], records: [], payments: [], config: {}, coupons: [], guilds: [], seasons: [] };
+const DB = { users: [], sessions: [], records: [], payments: [], config: {}, coupons: [], tours: [], seasons: [] };
 const isDemo = () => !window.FIREBASE_CONFIG;
 function demoData() {
   let s = 7; const r = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
@@ -35,16 +35,16 @@ function demoData() {
     if (r() < 0.7) DB.records.push({ uid: u.id, game: g, stage: Math.floor(r() * 30), cleared: r() < 0.7, score: Math.round(r() * 5000), stars: Math.floor(r() * 4), at, day: day(at), week: week(at), month: day(at).slice(0, 7), name: u.name });
   }
   for (let k = 0; k < 26; k++) { const u = DB.users.filter((x) => x.provider !== 'guest')[Math.floor(r() * 20)], p = PACKS0[Math.floor(r() * PACKS0.length)], at = now - r() * 30 * D; DB.payments.push({ uid: u.id, email: u.email, product: p.id, won: p.won, at, day: day(at), status: 'test' }); }
-  DB.guilds.push({ id: 'g1', name: '하늘 탐험대', leader: 'user3@example.com', members: 12, score: 15400, createdAt: now - 5 * D }, { id: 'g2', name: '별빛 원정대', leader: 'user7@example.com', members: 8, score: 9800, createdAt: now - 2 * D });
+  DB.tours.push({ id: 't1', name: '하늘 탐험대', gk: 'demo3_c1', mem: { demo3_c1: { n: '은유', at: now - 5 * D }, demo4_c1: { n: '은결', at: now - 4 * D } }, max: 20, open: true, code: 'SKY123', notice: { text: '이번 주 토요일 저녁 8시 이벤트 같이 해요!', at: now - D }, createdAt: now - 5 * D });
 }
 async function loadAll() {
   if (isDemo()) { demoData(); return; }
   const since = Date.now() - 31 * 864e5;
   const get = async (col, q) => (await (q || fb.db.collection(col)).get()).docs.map((d) => ({ id: d.id, ...d.data() }));
-  const [users, sessions, records, payments, coupons, guilds, seasons, cfg] = await Promise.all([
+  const [users, sessions, records, payments, coupons, tours, seasons, cfg] = await Promise.all([
     get('users'), get('sessions', fb.db.collection('sessions').where('start', '>=', since)), get('records', fb.db.collection('records').where('at', '>=', since)),
-    get('payments'), get('coupons'), get('guilds'), get('seasons'), get('config')]);
-  Object.assign(DB, { users, sessions, records, payments, coupons, guilds, seasons, config: Object.fromEntries(cfg.map((c) => [c.id, c])) });
+    get('payments'), get('coupons'), get('tours'), get('seasons'), get('config')]);
+  Object.assign(DB, { users, sessions, records, payments, coupons, tours, seasons, config: Object.fromEntries(cfg.map((c) => [c.id, c])) });
 }
 async function saveDoc(col, id, data, merge = true) {
   if (isDemo()) { toast('데모라서 저장하지 않았어요 (서버 연결 후 저장돼요)'); return false; }
@@ -71,7 +71,7 @@ $('btnLogin').onclick = () => fb && fb.auth.signInWithPopup(new firebase.auth.Go
 $('btnLogout').onclick = () => fb && fb.auth.signOut();
 
 // ---------- 탭 ----------
-const TABS = [['dash', '대시보드'], ['users', '사용자'], ['games', '게임별 통계'], ['rank', '주간·월간 순위'], ['shop', '캐릭터샵·아이템샵'], ['pay', '결제 내역'], ['terms', '약관·개인정보'], ['guild', 'Group Tour (길드)'], ['ops', '운영 (공지·점검·쿠폰)'], ['images', '게임 그림 (사천성·메모리)'], ['balance', '난이도·보상 기준'], ['setup', '출시 준비']];
+const TABS = [['dash', '대시보드'], ['users', '사용자'], ['games', '게임별 통계'], ['rank', '주간·월간 순위'], ['shop', '캐릭터샵·아이템샵'], ['pay', '결제 내역'], ['terms', '약관·개인정보'], ['guild', 'Group Tour (그룹투어)'], ['ops', '운영 (공지·점검·쿠폰)'], ['images', '게임 그림 (사천성·메모리)'], ['balance', '난이도·보상 기준'], ['setup', '출시 준비']];
 let tab = (location.hash || '#dash').slice(1);
 function renderTabs() {
   $('tabs').innerHTML = TABS.map(([k, n]) => `<button data-t="${k}" class="${k === tab ? 'on' : ''}">${n}</button>`).join('');
@@ -108,7 +108,7 @@ const VIEWS = {
       <div class="card"><small>전체 사용자</small><b>${fmtN(U.length)}</b></div><div class="card"><small>오늘 접속</small><b>${fmtN(dau)}</b></div>
       <div class="card"><small>7일 접속</small><b>${fmtN(wau)}</b></div><div class="card"><small>7일 새 사용자</small><b>${fmtN(U.filter((u) => u.createdAt >= d7).length)}</b></div>
       <div class="card"><small>오늘 사용 시간</small><b>${fmtT(sum(S.filter((x) => x.day === today), (x) => x.sec))}</b></div><div class="card"><small>1인 평균 사용 시간</small><b>${fmtT(sum(U, (u) => u.totalSec) / Math.max(1, U.length))}</b></div>
-      <div class="card"><small>30일 결제(검수용 포함)</small><b>${fmtN(sum(DB.payments, (p) => p.won))}원</b></div><div class="card"><small>길드</small><b>${fmtN(DB.guilds.length)}</b></div></div>
+      <div class="card"><small>30일 결제(검수용 포함)</small><b>${fmtN(sum(DB.payments, (p) => p.won))}원</b></div><div class="card"><small>그룹투어</small><b>${fmtN(DB.tours.length)}</b></div></div>
       <div class="panel barsx"><h3>날마다 접속한 사람 (14일)</h3>${bars(perDay)}</div>
       <div class="panel barsx"><h3>날마다 사용 시간 (분, 14일)</h3>${bars(secDay, 'blue')}</div>
       <div class="panel barsx"><h3>날마다 새 사용자 (14일)</h3>${bars(newDay)}</div>
@@ -225,17 +225,48 @@ const VIEWS = {
     $('tSave').onclick = async () => { const d = { privacy: $('tp').value, terms: $('tt').value, updatedAt: Date.now() }; if (await saveDoc('config', 'terms', d, false)) DB.config.terms = d; };
   },
   guild(m) {
-    const S = DB.config.guild || { season: '', start: '', end: '', reward: '', maxMembers: 20, open: false };
-    m.innerHTML = `<h2>Group Tour (길드)</h2><p class="note">첫 화면 매표소 자리에 열 길드전 준비 칸이에요. 지금은 길드와 시즌 설정만 저장해 두고, 게임 화면(길드 만들기·가입·길드전)은 다음 단계에서 만들어요.</p>
-      <div class="panel form"><h3>시즌 설정</h3><div class="grid2"><div><label>시즌 이름</label><input id="gs" value="${H(S.season)}" placeholder="예: 2026 겨울 시즌"></div><div><label>최대 인원</label><input id="gm" type="number" value="${S.maxMembers}"></div>
-        <div><label>시작</label><input id="ga" type="date" value="${H(S.start)}"></div><div><label>끝</label><input id="gb" type="date" value="${H(S.end)}"></div>
-        <div><label>보상 (예: 1등 길드 다이아 300)</label><input id="gr" value="${H(S.reward)}"></div><div><label>열기</label><select id="go"><option value="0">닫힘 (준비 중)</option><option value="1" ${S.open ? 'selected' : ''}>열림</option></select></div></div>
-        <div class="row" style="margin-top:10px"><button class="btn" id="gSave">시즌 저장</button></div></div>
-      <div class="panel"><h3>길드 (${DB.guilds.length})</h3><table><thead><tr><th>이름</th><th>길드장</th><th class="num">인원</th><th class="num">점수</th><th>만든 날</th><th></th></tr></thead><tbody>${DB.guilds.map((g) => `<tr><td>${H(g.name)}</td><td>${H(g.leader)}</td><td class="num">${g.members || 0}</td><td class="num">${fmtN(g.score)}</td><td>${fmtD(g.createdAt)}</td><td><button class="btn small red" data-del="${H(g.id)}">삭제</button></td></tr>`).join('') || '<tr><td colspan="6">아직 없어요</td></tr>'}</tbody></table>
-        <div class="row" style="margin-top:10px"><input id="gn" placeholder="새 길드 이름"><input id="gl" placeholder="길드장 이메일"><button class="btn" id="gAdd">길드 만들기</button></div></div>`;
-    $('gSave').onclick = async () => { const d = { season: $('gs').value, maxMembers: +$('gm').value, start: $('ga').value, end: $('gb').value, reward: $('gr').value, open: $('go').value === '1' }; if (await saveDoc('config', 'guild', d, false)) DB.config.guild = d; };
-    $('gAdd').onclick = async () => { const n = $('gn').value.trim(); if (!n) return; const g = { name: n, leader: $('gl').value.trim(), members: 1, score: 0, createdAt: Date.now() }; const id = 'g' + Date.now(); if (await saveDoc('guilds', id, g, false)) { DB.guilds.push({ id, ...g }); VIEWS.guild(m); } };
-    m.onclick = async (e) => { const b = e.target.closest('[data-del]'); if (!b || !confirm('이 길드를 지울까요?')) return; if (!isDemo()) await fb.db.collection('guilds').doc(b.dataset.del).delete(); DB.guilds = DB.guilds.filter((g) => g.id !== b.dataset.del); VIEWS.guild(m); };
+    // 그룹투어 (게임 화면 tour/tour.js · 서버 규칙 server/firestore.rules tours). 설정·이벤트는 config/guild 한 문서
+    const S = { open: true, maxMembers: 20, ...(DB.config.guild || {}) }, E = S.event || {}, R = { r1: 100, r2: 60, r3: 40, join: 10, ...(E.reward || {}) };
+    const EV_GAMES = ['helicopter', 'stairs', 'downhill', 'bakery', 'dogsnack', 'darts']; // 점수가 있는 끝없는 게임 (tour.js NAME 과 같게)
+    const local = (ms) => { if (!ms) return ''; const d = new Date(ms), p = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; };
+    const now = Date.now(), end = E.start ? E.start + (E.min || 60) * 60000 : 0;
+    const state = !E.start ? '정한 이벤트 없음' : now < E.start ? `예정 (${fmtD(E.start)} 시작)` : now < end ? '진행 중' : '끝남 (결과 발표 중)';
+    // 이벤트 결과 미리 보기 (불러온 31일 기록으로 계산 — 게임 화면과 같은 방법)
+    const res = [];
+    if (E.start && E.game) for (const t of DB.tours) {
+      let best = 0, total = 0, plays = 0;
+      for (const [k, mm] of Object.entries(t.mem || {})) {
+        const rs = DB.records.filter((r) => r.game === E.game && `${r.uid}_${r.cid || ''}` === k && r.at >= E.start && r.at < end && r.at >= (mm.at || 0));
+        if (!rs.length) continue; best += Math.max(...rs.map((r) => r.score || 0)); total += rs.reduce((n, r) => n + (r.score || 0), 0); plays += rs.length;
+      }
+      if (plays) res.push({ name: t.name, best, total, plays });
+    }
+    const byBest = res.slice().sort((a, b) => b.best - a.best), byTotal = res.slice().sort((a, b) => b.total - a.total);
+    const gk = (t) => (t.mem && t.mem[t.gk]) || {};
+    m.innerHTML = `<h2>Group Tour (그룹투어)</h2><p class="note">첫 화면 매표소를 누르면 나오는 그룹투어(길드)예요. 투어가이드가 투어를 만들고, 투어멤버는 목록이나 초대 코드로 들어와요. 공지는 투어가이드만, 멤버는 이모티콘만 달아요.<br>
+      매주 이벤트 시간과 게임을 여기서 정해요. 시작부터 정한 시간(기본 1시간) 동안 그 게임 기록만 세서 <b>멤버 최고 점수 합</b>으로 보상 순위, <b>모든 점수 누적 합</b>으로 투어 랭킹을 발표해요. 보상은 이벤트가 끝난 뒤 게임 화면에서 각자 받아요.</p>
+      <div class="panel form"><h3>기본 설정</h3><div class="grid2"><div><label>새 투어 만들기</label><select id="go"><option value="1">열림</option><option value="0" ${S.open === false ? 'selected' : ''}>닫힘 (가입만 됨)</option></select></div><div><label>투어 최대 인원 (새로 만드는 투어부터)</label><input id="gm" type="number" min="2" max="50" value="${+S.maxMembers || 20}"></div></div>
+        <div class="row" style="margin-top:10px"><button class="btn" id="gSave">기본 설정 저장</button></div></div>
+      <div class="panel form"><h3>이번 주 이벤트 <small style="font-weight:normal;color:#888">— 지금: ${H(state)}</small></h3><div class="grid2">
+        <div><label>게임</label><select id="eg">${EV_GAMES.map((g) => `<option value="${g}" ${E.game === g ? 'selected' : ''}>${H(gname(g))}</option>`).join('')}</select></div>
+        <div><label>시작 시각 (이 컴퓨터 시간, 한국이면 한국 시간)</label><input id="es" type="datetime-local" value="${local(E.start)}"></div>
+        <div><label>길이 (분)</label><input id="em" type="number" min="10" max="240" value="${E.min || 60}"></div><div></div>
+        <div><label>1등 투어 멤버 다이아</label><input id="r1" type="number" value="${R.r1}"></div><div><label>2등</label><input id="r2" type="number" value="${R.r2}"></div>
+        <div><label>3등</label><input id="r3" type="number" value="${R.r3}"></div><div><label>참가한 투어 멤버</label><input id="rj" type="number" value="${R.join}"></div></div>
+        <p class="note">보상은 이벤트 시간에 한 판 이상 한 멤버만 받아요. 시작 시각을 바꾸면 새 이벤트가 돼요(보상도 새로).</p>
+        <div class="row" style="margin-top:10px"><button class="btn" id="eSave">이벤트 저장 (게임에 바로 공지)</button><button class="btn red" id="eDel">이벤트 지우기</button></div></div>
+      ${E.start ? `<div class="panel"><h3>이벤트 결과 (지금까지)</h3><div class="grid2"><div><b>보상 순위 · 멤버 최고 점수 합</b><table><tbody>${byBest.map((x, i) => `<tr><td>${i + 1}</td><td>${H(x.name)}</td><td class="num">${fmtN(x.best)}</td></tr>`).join('') || '<tr><td>아직 없어요</td></tr>'}</tbody></table></div>
+        <div><b>투어 랭킹 · 모든 점수 누적 합</b><table><tbody>${byTotal.map((x, i) => `<tr><td>${i + 1}</td><td>${H(x.name)}</td><td class="num">${fmtN(x.total)}</td><td class="num">${x.plays}판</td></tr>`).join('') || '<tr><td>아직 없어요</td></tr>'}</tbody></table></div></div></div>` : ''}
+      <div class="panel"><h3>투어 (${DB.tours.length})</h3><table><thead><tr><th>이름</th><th>투어가이드</th><th class="num">인원</th><th>가입</th><th>초대 코드</th><th>공지</th><th>만든 날</th><th></th></tr></thead><tbody>${DB.tours.map((t) => `<tr><td>${H(t.name)}</td><td>${H(gk(t).n || '-')}</td><td class="num">${Object.keys(t.mem || {}).length}/${t.max || 20}</td><td>${t.open === false ? '초대로만' : '누구나'}</td><td>${H(t.code || '')}</td><td>${H(((t.notice || {}).text || '').slice(0, 30))}</td><td>${fmtD(t.createdAt)}</td><td><button class="btn small red" data-del="${H(t.id)}">삭제</button></td></tr>`).join('') || '<tr><td colspan="8">아직 없어요</td></tr>'}</tbody></table></div>`;
+    const keep = (d) => { DB.config.guild = d; VIEWS.guild(m); };
+    $('gSave').onclick = async () => { const d = { ...S, open: $('go').value === '1', maxMembers: Math.max(2, Math.min(50, +$('gm').value || 20)) }; if (await saveDoc('config', 'guild', d, false)) keep(d); };
+    $('eSave').onclick = async () => {
+      const st = new Date($('es').value).getTime(); if (!st) { toast('시작 시각을 넣어 주세요'); return; }
+      const ev = { id: 'e' + st, game: $('eg').value, start: st, min: Math.max(10, Math.min(240, +$('em').value || 60)), reward: { r1: +$('r1').value || 0, r2: +$('r2').value || 0, r3: +$('r3').value || 0, join: +$('rj').value || 0 }, at: Date.now() };
+      const d = { ...S, event: ev }; if (await saveDoc('config', 'guild', d, false)) keep(d);
+    };
+    $('eDel').onclick = async () => { if (!confirm('이벤트를 지울까요? 게임 화면에서 이벤트가 사라져요')) return; const d = { ...S }; delete d.event; if (await saveDoc('config', 'guild', d, false)) keep(d); };
+    m.onclick = async (e) => { const b = e.target.closest('[data-del]'); if (!b || !confirm('이 투어를 지울까요? 멤버들은 투어가 없어져요')) return; if (!isDemo()) await fb.db.collection('tours').doc(b.dataset.del).delete(); DB.tours = DB.tours.filter((g) => g.id !== b.dataset.del); VIEWS.guild(m); };
   },
   ops(m) {
     const O = DB.config.ops || {};

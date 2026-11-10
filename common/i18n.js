@@ -79,7 +79,7 @@
     parts.forEach((p, i) => { if (i) el.appendChild(document.createElement('br')); el.appendChild(document.createTextNode(p)); });
   }
   function doEl(el) {
-    if (SKIP.has(el.tagName)) return;
+    if (SKIP.has(el.tagName) || (el.getAttribute && el.getAttribute('translate') === 'no')) return; // translate="no" = 사람이 쓴 글(투어 이름·공지·닉네임)은 그대로
     for (const a of ['alt', 'aria-label', 'placeholder', 'title']) {
       const v = el.getAttribute && el.getAttribute(a);
       if (v && HANGUL.test(v)) { const o = tr(v); if (o !== v) el.setAttribute(a, o); }
@@ -99,7 +99,7 @@
   }
   function doText(n) {
     const v = n.nodeValue; if (!v || !HANGUL.test(v) || done.get(n) === v) return;
-    const p = n.parentElement; if (p && SKIP.has(p.tagName)) return;
+    const p = n.parentElement; if (p && (SKIP.has(p.tagName) || p.closest('[translate=no]'))) return;
     // 부모가 꾸밈 글씨 덩어리면 부모째로
     if (p && p.childNodes.length > 1 && canFlat(p)) { const f = flat(p); if (f != null) { const t = f.replace(/\s+/g, ' ').trim(), o = tr(t, true); if (o !== t) { setFlat(p, o); done.set(p, p.textContent); return; } } }
     const o = tr(v); if (o !== v) n.nodeValue = o;

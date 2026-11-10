@@ -24,6 +24,24 @@ service cloud.firestore {
     // 쿠폰 · 길드(Group Tour) · 순위 시즌
     match /coupons/{id} { allow read: if signedIn(); allow write: if isAdmin(); }
     match /guilds/{id} { allow read: if signedIn(); allow write: if isAdmin(); }
+    // 그룹투어 (tour/tour.js): 투어 한 곳 = 문서 하나. mem = 멤버(키 '<uid>_<캐릭터>'), gk = 투어가이드 키, guide = 투어가이드 uid
+    //  · 만들기: 내가 투어가이드인 투어만 · 투어가이드(와 관리자)는 무엇이든 고치고 지울 수 있음 (공지·설정·내보내기·넘기기)
+    //  · 투어멤버는 ① 내 멤버 칸만 넣고 빼기(가입·나가기, 인원 max 까지) ② 내 이모티콘 칸만 바꾸기 — last = 바꾸는 내 키
+    match /tours/{id} {
+      function nd() { return request.resource.data; }
+      function meKey() { return nd().last is string && nd().last.matches(request.auth.uid + '_[A-Za-z0-9]+'); }
+      function onlyKeys(ks) { return nd().diff(resource.data).affectedKeys().hasOnly(ks); }
+      allow read: if signedIn();
+      allow create: if signedIn() && nd().guide == request.auth.uid && nd().name is string && nd().name.size() > 0 && nd().name.size() <= 12
+        && nd().mem.size() == 1 && nd().max <= 50;
+      allow update: if isAdmin() || (signedIn() && resource.data.guide == request.auth.uid && nd().max <= 50)
+        || (signedIn() && meKey() && onlyKeys(['mem', 'reacts', 'last'])
+            && nd().mem.diff(resource.data.mem).affectedKeys().hasOnly([nd().last])
+            && nd().reacts.diff(resource.data.reacts).affectedKeys().hasOnly([nd().last])
+            && nd().mem.size() <= resource.data.max
+            && (!(nd().last in nd().reacts) || nd().last in nd().mem));
+      allow delete: if isAdmin() || (signedIn() && resource.data.guide == request.auth.uid);
+    }
     match /seasons/{id} { allow read: if true; allow write: if isAdmin(); }
     match /admins/{email} { allow read: if signedIn() && request.auth.token.email == email; allow write: if false; }
     // 인증번호: 서버만

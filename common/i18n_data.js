@@ -536,6 +536,10 @@ window.I18N_DATA = {
 "{0}"
 ],
 [
+"우리 투어 {}등",
+"Our tour: #{0}"
+],
+[
 "은유와 은결",
 "Angela & Luke"
 ],
@@ -3552,6 +3556,402 @@ window.I18N_DATA = {
 "Tap/Space = Jump · Hold in midair = Hook · Release = Swing!"
 ],
 [
+"그룹투어",
+"Group Tour"
+],
+[
+"투어 찾기",
+"Find a Tour"
+],
+[
+"이벤트",
+"Event"
+],
+[
+"투어 랭킹",
+"Tour Ranking"
+],
+[
+"우리 투어",
+"My Tour"
+],
+[
+"투어 만들기",
+"Create a Tour"
+],
+[
+"투어 이름",
+"Tour name"
+],
+[
+"투어 이름을 입력하세요",
+"Enter a tour name"
+],
+[
+"투어 마크",
+"Tour badge"
+],
+[
+"누구나 가입",
+"Anyone can join"
+],
+[
+"초대로만",
+"Invite only"
+],
+[
+"만들기",
+"Create"
+],
+[
+"투어 가입",
+"Join Tour"
+],
+[
+"가입",
+"Join"
+],
+[
+"초대 코드",
+"Invite Code"
+],
+[
+"친구에게 받은 초대 코드 6자리를 넣어 주세요",
+"Enter the 6-character code from your friend."
+],
+[
+"찾기",
+"Find"
+],
+[
+"친구 초대",
+"Invite Friends"
+],
+[
+"이 코드나 링크를 친구에게 보내 주세요",
+"Send this code or link to your friends."
+],
+[
+"링크 보내기",
+"Send Link"
+],
+[
+"공지 쓰기",
+"Write Notice"
+],
+[
+"새 공지 쓰기",
+"New Notice"
+],
+[
+"투어 멤버들에게 알릴 말을 써 주세요",
+"Write a message for your tour members"
+],
+[
+"새 공지를 올리면 지난 이모티콘은 지워져요",
+"Posting a new notice clears the old emoji replies."
+],
+[
+"올리기",
+"Post"
+],
+[
+"투어 설정",
+"Tour Settings"
+],
+[
+"투어가이드",
+"Tour Guide"
+],
+[
+"투어멤버",
+"Tour Member"
+],
+[
+"투어가이드 넘기기",
+"Make Tour Guide"
+],
+[
+"내보내기",
+"Remove"
+],
+[
+"그룹투어 서버에 연결하지 못했어요. 인터넷 연결을 확인해 주세요",
+"Couldn't connect to Group Tour. Please check your internet connection."
+],
+[
+"그룹투어에 오신 걸 환영해요!",
+"Welcome to Group Tour!"
+],
+[
+"친구들과 투어를 만들어 함께 놀아요. 매주 투어끼리 순위를 겨루고, 주 1회 이벤트에서 다이아를 받아요.",
+"Make a tour with friends and play together. Tours compete in a weekly ranking, and a weekly event gives out Diamonds."
+],
+[
+"가입할 수 있는 투어",
+"Tours you can join"
+],
+[
+"아직 가입할 수 있는 투어가 없어요. 첫 번째 투어를 만들어 보세요!",
+"No tours to join yet. Be the first to create one!"
+],
+[
+"멤버",
+"Members"
+],
+[
+"이번 주",
+"This week"
+],
+[
+"공지",
+"Notice"
+],
+[
+"아직 공지가 없어요. 멤버들에게 첫 공지를 올려 보세요!",
+"No notice yet. Post the first one for your members!"
+],
+[
+"아직 공지가 없어요",
+"No notice yet"
+],
+[
+"이모티콘으로 공지에 답해 보세요",
+"Reply to the notice with an emoji"
+],
+[
+"투어 멤버",
+"Tour Members"
+],
+[
+"이번 주 투어 포인트",
+"This week's tour points"
+],
+[
+"멤버를 누르면 내보내거나 투어가이드를 넘길 수 있어요",
+"Tap a member to remove them or make them Tour Guide."
+],
+[
+"투어 나가기",
+"Leave Tour"
+],
+[
+"주 1회 투어 이벤트",
+"Weekly Tour Event"
+],
+[
+"다음 이벤트를 준비하고 있어요. 시간이 정해지면 여기에 알려 드려요!",
+"The next event is being prepared. We'll post the time here!"
+],
+[
+"시작까지",
+"Starts in"
+],
+[
+"지금 이벤트 중!",
+"Event is on!"
+],
+[
+"남은 시간",
+"Time left"
+],
+[
+"이벤트가 끝났어요. 결과를 확인해 보세요!",
+"The event is over. Check the results!"
+],
+[
+"이번 주 이벤트 게임",
+"This week's event game"
+],
+[
+"게임하러 가기",
+"Go Play"
+],
+[
+"투어에 들어가야 이벤트에 참가할 수 있어요",
+"Join a tour to take part in the event."
+],
+[
+"참가",
+"Joined"
+],
+[
+"결과를 불러오지 못했어요. 인터넷 연결을 확인해 주세요",
+"Couldn't load the results. Please check your internet connection."
+],
+[
+"보상 순위",
+"Reward Ranking"
+],
+[
+"멤버 최고 점수 합",
+"Sum of members' best scores"
+],
+[
+"모든 점수 누적 합",
+"Total of all scores"
+],
+[
+"이벤트 시간에 게임을 한 멤버만 보상을 받아요",
+"Only members who played during the event get rewards."
+],
+[
+"보상을 받았어요!",
+"Reward received!"
+],
+[
+"보상 받기",
+"Claim Reward"
+],
+[
+"실시간 순위",
+"Live Ranking"
+],
+[
+"이벤트 결과",
+"Event Results"
+],
+[
+"이벤트에 참가한 투어가 없어요",
+"No tours took part in the event."
+],
+[
+"이벤트 규칙",
+"Event Rules"
+],
+[
+"매주 한 번, 정해진 시간에 게임 하나로 투어끼리 겨뤄요",
+"Once a week, tours compete in one game at a set time."
+],
+[
+"시작 시각부터 1시간 동안 투어 멤버들이 그 게임을 해요",
+"Tour members play that game for 1 hour from the start time."
+],
+[
+"멤버마다 가장 높은 점수를 모두 더해서 보상 순위를 정해요",
+"Each member's best score is added up to decide the reward ranking."
+],
+[
+"플레이한 모든 점수를 더해서 투어 랭킹을 발표해요",
+"All scores played are added up for the tour ranking."
+],
+[
+"끝나면 이 화면에서 보상을 받아요 (이벤트 시간에 한 판 이상 한 멤버)",
+"Claim rewards here when it ends (members who played at least once)."
+],
+[
+"투어 포인트: 판 하나 끝내면 10점, 별 하나에 10점 (투어에 들어온 뒤의 기록만)",
+"Tour points: 10 per game finished, 10 per star (only after joining the tour)."
+],
+[
+"아직 그룹투어 서버 준비 중이에요. 조금만 기다려 주세요!",
+"Group Tour server is still getting ready. Please wait a little!"
+],
+[
+"잘 안 됐어요. 인터넷 연결을 확인해 주세요",
+"Something went wrong. Please check your internet connection."
+],
+[
+"이미 투어에 들어 있어요",
+"You're already in a tour"
+],
+[
+"같은 이름의 투어가 있어요",
+"A tour with that name already exists"
+],
+[
+"투어를 만들었어요! 친구를 초대해 보세요",
+"Tour created! Invite your friends."
+],
+[
+"이미 이 투어의 멤버예요",
+"You're already a member of this tour"
+],
+[
+"이미 다른 투어에 들어 있어요. 나간 뒤에 가입할 수 있어요",
+"You're already in another tour. Leave it first to join."
+],
+[
+"이 투어는 자리가 꽉 찼어요",
+"This tour is full"
+],
+[
+"이 투어에 가입할까요?",
+"Join this tour?"
+],
+[
+"없어진 투어예요",
+"This tour no longer exists"
+],
+[
+"투어에 들어왔어요! 반가워요",
+"You joined the tour! Welcome!"
+],
+[
+"초대 코드 6자리를 넣어 주세요",
+"Please enter the 6-character invite code"
+],
+[
+"그 코드의 투어를 찾지 못했어요",
+"Couldn't find a tour with that code"
+],
+[
+"그룹투어 초대",
+"Group Tour Invite"
+],
+[
+"초대 링크를 복사했어요. 친구에게 붙여 넣어 보내 주세요",
+"Invite link copied. Paste it to your friend."
+],
+[
+"공지 내용을 써 주세요",
+"Please write a notice"
+],
+[
+"공지는 투어가이드만 쓸 수 있어요",
+"Only the Tour Guide can post notices"
+],
+[
+"공지를 올렸어요!",
+"Notice posted!"
+],
+[
+"저장했어요!",
+"Saved!"
+],
+[
+"이 멤버를 어떻게 할까요?",
+"What would you like to do with this member?"
+],
+[
+"내보냈어요",
+"Removed"
+],
+[
+"투어가이드를 넘겼어요",
+"Tour Guide handed over"
+],
+[
+"혼자 있는 투어라 나가면 투어가 없어져요. 나갈까요?",
+"You're the only one here, so the tour will close if you leave. Leave?"
+],
+[
+"나가면 가장 오래된 멤버가 투어가이드가 돼요. 나갈까요?",
+"If you leave, the longest-standing member becomes Tour Guide. Leave?"
+],
+[
+"투어에서 나갈까요?",
+"Leave this tour?"
+],
+[
+"투어에서 나왔어요",
+"You left the tour"
+],
+[
+"확인",
+"OK"
+],
+[
 "주간",
 "Weekly"
 ],
@@ -4590,10 +4990,6 @@ window.I18N_DATA = {
 [
 "계속하기",
 "Continue"
-],
-[
-"확인",
-"OK"
 ],
 [
 "사기",
