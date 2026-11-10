@@ -1,10 +1,11 @@
 'use strict';
 // 버거 러시 — 햄버거 가게 타이쿤 (가로 전용)
 //  · 손님이 카운터에 와서 버거(+사이드)를 주문 → 재료 칸을 눌러 쟁반에 쌓고, 위 빵을 덮어 주문과 같으면 그 손님에게 저절로 나감
-//  · 화면 (2026-11-10 사용자 시안): 위 = 큰 주문 말풍선(버거 속이 다 보이게 층마다 띄워 그림) + 그 아래 손님 얼굴 / 가운데 = 굽는 판 · 접시 2개 · 음료 기계(콜라·사이다·주스) · 아이스크림 기계
-//          아래 2줄 = 버리기 · 패티 · 위 빵 · 아래 빵 · 치즈 · 베이컨 / 양상추 · 토마토 · 양파 · 감자튀김 (큰 버튼)
+//  · 화면 (2026-11-10 사용자 시안, 새 그림 N01~N13): 위 = 큰 주문 말풍선(버거 속이 다 보이게 층마다 띄워 그림) + 그 아래 손님 얼굴 윗부분
+//          카운터 윗선 = 화면 46% 높이 / 가운데 = 굽는 판(2x2) · 접시 최대 3개 · 음료 기계(콜라·사이다·주스) · 아이스크림 기계
+//          아래 2줄 = 버리기(쓰레기통 마크 통) · 패티 · 위 빵 · 아래 빵 · 치즈 · 베이컨 / 양상추 · 토마토 · 양파 · 감자튀김 — 글자 없이 재료 그림이 통을 꽉 채움
 //  · 패티: 패티 칸(또는 빈 굽는 자리)을 누르면 굽는 판으로 → 진행 막대가 초록(다 익음)일 때 누르면 고른 접시로. 너무 오래 두면 탐(쉬운 판은 안 탐)
-//  · 접시 2개: 처음엔 언제나 앞(왼쪽) 접시가 골라져 있음. 다른 접시는 그 접시를 눌러 골랐을 때만 그 접시에 쌓임. 버거를 내면 다시 앞 접시
+//  · 접시 2~3개: 처음엔 언제나 앞(왼쪽) 접시가 골라져 있음. 다른 접시는 그 접시를 눌러 골랐을 때만 그 접시에 쌓임. 버거를 내면 다시 앞 접시
 //    아래 빵은 고른 접시와 상관없이 빈 접시마다 앞에서부터 하나씩 (2번 누르면 두 접시에 하나씩) / 다른 재료·위 빵·익은 패티·음료는 고른 접시에
 //  · 주문 비교: 재료 종류와 개수만 같으면 됨 (쌓는 순서는 상관없음) + 사이드도 같아야 함
 //  · 손님 기다림 막대(말풍선 안): 초록 → 노랑(50%) → 빨강(75%) → 0이면 화나서 떠남 = 하트 -1. 하트가 다 없어지면 실패
@@ -21,7 +22,7 @@ const isHard = (i) => i >= HARD;
 const worldOf = (i) => Math.floor((i % HARD) / PER_WORLD);
 const label = (i) => `${isHard(i) ? '어려움 ' : ''}${worldOf(i) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[worldOf(i)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611101902';
+const ASSET_V = '202611101916';
 const START_HEARTS = 3;
 const COIN_GUEST = 2, COIN_TIP = 1;
 const NAME = { bun: '빵', bun_b: '아래 빵', bun_t: '위 빵', patty: '패티', patty_raw: '생패티', cheese: '치즈', lettuce: '양상추', tomato: '토마토', onion: '양파', bacon: '베이컨',
@@ -58,8 +59,9 @@ const buzz = (ms) => { try { if (navigator.vibrate) navigator.vibrate(ms); } cat
 // ---------- images ----------
 const IMG = {};
 const img = (key, path) => { const im = new Image(); im.src = `assets/${path}.webp?v=${ASSET_V}`; IMG[key] = im; return im; };
-['bun_b', 'bun_t', 'lettuce', 'tomato', 'onion', 'cheese', 'bacon', 'paper', 'patty_raw', 'patty_cook', 'patty', 'patty_burnt', 'cola', 'cider', 'fries', 'nuggets', 'icecream', 'cup', 'fry_box', 'bag'].forEach((k) => img(k, 'food/' + k));
-['grill', 'machine_drink', 'machine_fry', 'machine_ice', 'trash', 'bin', 'tray', 'cover', 'plate', 'bubble', 'tip', 'recipe'].forEach((k) => img(k, 'ui/' + k));
+['bun_b', 'bun_t', 'lettuce', 'tomato', 'onion', 'cheese', 'bacon', 'patty_raw', 'patty_cook', 'patty', 'patty_burnt', 'cola', 'cider', 'juice', 'fries', 'icecream'].forEach((k) => img(k, 'food/' + k));
+['bun_t', 'bun_b', 'cheese', 'bacon', 'lettuce', 'tomato', 'onion', 'patty_raw'].forEach((k) => img('pile_' + k, 'food/pile_' + k));
+['grill', 'machine_drink3', 'machine_ice', 'tray', 'cover', 'well_wide', 'well_tall', 'trash_well'].forEach((k) => img(k, 'ui/' + k));
 ['steam', 'smoke', 'spark', 'heart', 'sweat', 'check'].forEach((k) => img('fx_' + k, 'fx/' + k));
 for (const g of GUEST_IDS) for (const p of ['wait', 'angry', 'happy']) img(`g_${g}_${p}`, `guests/${g}_${p}`);
 const BG = { day: img('bg_day', 'bg/land'), night: img('bg_night', 'bg/land_night') };
@@ -67,16 +69,7 @@ const ok = (im) => im && im.complete && im.naturalWidth > 0;
 // 내 캐릭터 색 (고른 접시 테두리): 은결 파랑 / 은유 분홍
 const ME = (() => { const look = HUB ? HUB.active().look : 'eunyu3'; return { who: String(look).startsWith('eungyeol') ? 'eungyeol' : 'eunyu' }; })();
 const PICK = ME.who === 'eungyeol' ? '#3E8CFF' : '#FF5C93';
-// 주스: 그림이 오기 전까지 사이다 컵을 주황으로 물들여 씀 (GPT 그림 요청 03번)
-const JUICE = document.createElement('canvas');
-IMG.juice = JUICE;
-IMG.cider.addEventListener('load', () => {
-  const im = IMG.cider; JUICE.width = im.naturalWidth; JUICE.height = im.naturalHeight; const c = JUICE.getContext('2d');
-  c.drawImage(im, 0, 0); c.globalCompositeOperation = 'hue'; c.fillStyle = '#FF9A1F'; c.fillRect(0, 0, JUICE.width, JUICE.height);
-  c.globalCompositeOperation = 'destination-in'; c.drawImage(im, 0, 0);
-  JUICE.naturalWidth = JUICE.width; JUICE.naturalHeight = JUICE.height; JUICE.complete = true; JUICE.url = JUICE.toDataURL();
-});
-const foodSrc = (x) => x === 'juice' ? (JUICE.url || `assets/food/cider.webp?v=${ASSET_V}`) : `assets/food/${x}.webp?v=${ASSET_V}`;
+const foodSrc = (x) => `assets/food/${x}.webp?v=${ASSET_V}`;
 
 // ---------- audio ----------
 const Audio = {
@@ -180,42 +173,47 @@ const G = {
   usedIds: [], pausedFrom: 'play', tips: {},
 };
 
-// ---------- 배치 (논리 좌표) — 2026-11-10 사용자 시안을 기준으로 ----------
-// 배경(1536x1024) 속 카운터 나무 윗선 y=568, 분홍 타일 아래 끝 y=790 → 카운터 윗선을 화면 46% 높이에 맞춤
-const BG_TOP = 568, BG_TILE = 790;
+// ---------- 배치 (논리 좌표) — 2026-11-10 사용자 시안 + 새 그림(N01) 기준 ----------
+// 배경(1536x1024): 카운터 나무 윗선 y=468, 카운터 앞턱 끝 560, 분홍 타일 560~712, 아래 나무 판 714~1000
+//  → 카운터 윗선을 화면 46% 높이에 맞춤. 타일은 일하는 줄 뒤에 보이는 만큼만, 아래 나무 판은 재료 칸 뒤에 늘려 깔음
+const BG_TOP = 468, BG_EDGE = 560, BG_TILE = 712, BG_BOARD = 714, BG_END = 1000;
 const L = {};
 function layout() {
   const v = (k) => parseFloat(getComputedStyle(root).getPropertyValue('--safe-' + k)) || 0;
   OX = (W - 960) / 2;
   const X0 = Math.max(8, v('l') + 4), X1 = W - Math.max(8, v('r') + 4), SP = X1 - X0;
   const fx = (f) => X0 + SP * f;
-  const yc = Math.round(H * 0.48); // 카운터 윗선
-  const s = Math.max(W / 1536, (H - yc) / (1024 - BG_TOP), yc / BG_TOP);
+  const yc = Math.round(H * 0.46); // 카운터 윗선 (손님 얼굴 윗부분만 보이게)
+  const s = Math.max(W / 1536, yc / BG_TOP);
   Object.assign(L, { X0, X1, SP, fx, yc, bgS: s, bgX: (W - 1536 * s) / 2, bgY: yc - BG_TOP * s, safeB: v('b') });
-  // 위: 말풍선 (HUD 아래) + 손님 얼굴
-  L.bTop = 52 + v('t'); L.bH = Math.round(yc - L.bTop - Math.max(58, H * 0.12)); L.bBot = L.bTop + L.bH;
-  L.gTop = L.bBot - 10; L.guestH = Math.round((yc - L.gTop) * 1.9);
-  // 가운데 줄: 굽는 판 · 접시 · 음료 · 아이스크림
-  L.kTop = yc + 8; L.kBot = Math.round(H * 0.705); const kh = L.kBot - L.kTop;
-  const gw = Math.min(SP * 0.315, kh * 2.6), gh = gw * 256 / 720;
-  L.grill = { x: fx(0.16) - gw / 2, y: L.kTop + (kh - gh) / 2, w: gw, h: gh };
-  L.trayY = L.kBot - 6; L.trayW = Math.min(SP * 0.155, 210); L.trayC = [fx(0.415), fx(0.585)];
-  L.drink = { x: fx(0.68), y: L.kTop + 2, w: SP * 0.205, h: kh - 4 };
-  L.ice = { x: fx(0.893), y: L.kTop + 2, w: SP * 0.107, h: kh - 4 };
-  // 아래 2줄: 재료 칸
-  L.binTop = L.kBot + 6; L.binBot = H - 6 - Math.max(0, v('b') * 0.5);
+  L.ya = yc + (BG_EDGE - BG_TOP) * s;
+  // 위: 말풍선 (HUD 아래) + 손님 얼굴 윗부분
+  const peek = Math.round(Math.max(52, H * 0.11));
+  L.bTop = 52 + v('t'); L.bBot = yc - peek; L.bH = L.bBot - L.bTop;
+  L.gTop = L.bBot - 6; L.guestH = Math.round((yc - L.gTop) * 1.9);
+  // 가운데 줄: 굽는 판 · 접시 · 음료 · 아이스크림 (아래끝 kBot 에 맞춰 세움)
+  L.kTop = yc + 4; L.kBot = Math.round(H * 0.665); const kh = L.kBot - L.kTop;
+  let gh = kh * 0.98, gw = gh * 640 / 333; if (gw > SP * 0.27) { gw = SP * 0.27; gh = gw * 333 / 640; }
+  L.grill = { x: fx(0.135) - gw / 2, y: L.kBot - gh, w: gw, h: gh };
+  L.trayW = Math.min(SP * 0.13, kh * 1.75, 230); L.trayY = L.kBot - 2;
+  const fit = (cx, aw, ar, hMax) => { let h = hMax, w = h * ar; if (w > aw) { w = aw; h = w / ar; } return { x: cx - w / 2, y: L.kBot - h, w, h }; };
+  L.drink = fit(fx(0.795), SP * 0.2, 640 / 470, kh * 1.15);
+  L.ice = fit(fx(0.952), SP * 0.092, 269 / 400, kh * 1.15);
+  // 아래 2줄: 재료 칸 (글자 없음)
+  L.binTop = L.kBot + 8; L.binBot = H - 6 - Math.max(0, v('b') * 0.5);
   const bh = L.binBot - L.binTop, rh = (bh - 6) / 2, r2 = L.binTop + rh + 6;
   const cell = (f0, f1, y, h) => ({ x: fx(f0) + 3, y, w: fx(f1) - fx(f0) - 6, h });
-  L.trash = cell(0, 0.105, L.binTop, bh);
+  L.trash = cell(0, 0.1, L.binTop, bh);
   L.bins = [
-    ['patty_raw', cell(0.105, 0.225, L.binTop, bh)],
-    ['bun_t', cell(0.225, 0.38, L.binTop, rh)], ['bun_b', cell(0.38, 0.535, L.binTop, rh)], ['cheese', cell(0.535, 0.69, L.binTop, rh)], ['bacon', cell(0.69, 0.845, L.binTop, rh)],
-    ['lettuce', cell(0.225, 0.432, r2, rh)], ['tomato', cell(0.432, 0.638, r2, rh)], ['onion', cell(0.638, 0.845, r2, rh)],
-    ['fries', cell(0.845, 1, L.binTop, bh)],
+    ['patty_raw', cell(0.1, 0.215, L.binTop, bh)],
+    ['bun_t', cell(0.215, 0.375, L.binTop, rh)], ['bun_b', cell(0.375, 0.535, L.binTop, rh)], ['cheese', cell(0.535, 0.695, L.binTop, rh)], ['bacon', cell(0.695, 0.855, L.binTop, rh)],
+    ['lettuce', cell(0.215, 0.428, r2, rh)], ['tomato', cell(0.428, 0.642, r2, rh)], ['onion', cell(0.642, 0.855, r2, rh)],
+    ['fries', cell(0.855, 1, L.binTop, bh)],
   ];
 }
 function slotX(k, n) { const a = L.X0, w = L.SP / 3; return n === 3 ? a + w * (k + 0.5) : n === 2 ? a + L.SP * (k === 0 ? 0.3 : 0.7) : a + L.SP / 2; }
-function trayX(k) { return L.trayC[k] || L.trayC[0]; }
+// 접시 자리: 3개면 굽는 판과 음료 기계 사이에 고르게, 2개면 그 사이 가운데 쪽
+function trayX(k) { const n = G.trays.length || 2, f = n >= 3 ? [0.345, 0.495, 0.645][k] : [0.4, 0.58][k]; return L.fx(f == null ? 0.495 : f); }
 
 // ---------- run ----------
 function startStage(si) {
@@ -443,12 +441,14 @@ function step(dt) {
 }
 
 // ---------- 그리기 ----------
+// 굽는 자리 4곳 (grill.webp 640x333 위 동그라미): 앞줄 왼·오른 → 뒷줄 왼·오른 (2칸이면 앞줄만)
+const GRILL_AT = [[0.289, 0.57], [0.711, 0.57], [0.308, 0.285], [0.6875, 0.285]];
 function grillPos(k) {
-  const fx = [0.178, 0.397, 0.61, 0.824][k];
-  return { x: L.grill.x + L.grill.w * fx, y: L.grill.y + L.grill.h * 0.43, r: L.grill.w * 0.085 };
+  const [fx, fy] = GRILL_AT[k];
+  return { x: L.grill.x + L.grill.w * fx, y: L.grill.y + L.grill.h * fy, r: L.grill.w * 0.135 };
 }
 // 버거 조각: 그림 폭 비율(폭), 위로 쌓이는 높이(폭 비율) — 접시 위(꽉 붙여 쌓음)
-const PIECE = { bun_b: [1, 0.2], patty: [0.94, 0.2], cheese: [1.02, 0.1], lettuce: [1.08, 0.12], tomato: [0.92, 0.12], onion: [0.9, 0.11], bacon: [0.96, 0.12], bun_t: [1, 0] };
+const PIECE = { bun_b: [1, 0.2], patty: [0.96, 0.2], cheese: [1.04, 0.08], lettuce: [1.08, 0.1], tomato: [0.96, 0.1], onion: [0.96, 0.09], bacon: [1, 0.1], bun_t: [1.02, 0] };
 function drawStack(items, cx, by, w) {
   let y = by;
   for (const it of items) {
@@ -494,21 +494,23 @@ function draw() {
   ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
   G.hits = [];
   const bg = isHard(G.si) ? BG.night : BG.day;
-  if (ok(bg)) ctx.drawImage(bg, L.bgX, L.bgY, 1536 * L.bgS, 1024 * L.bgS); else { ctx.fillStyle = '#F4D7CF'; ctx.fillRect(0, 0, W, H); }
+  ctx.fillStyle = '#F4D7CF'; ctx.fillRect(0, 0, W, H);
+  drawBg(bg, 0);
   const playing = ['play', 'pause', 'done', 'recipe'].includes(G.state) && G.st && G.trays.length;
   if (playing) drawGuests();
-  // 카운터 띠를 손님 위에 한 번 더 (손님 아래쪽이 카운터 뒤로)
-  if (ok(bg)) ctx.drawImage(bg, 0, BG_TOP - 4, 1536, BG_TILE - BG_TOP + 4, L.bgX, L.bgY + (BG_TOP - 4) * L.bgS, 1536 * L.bgS, (BG_TILE - BG_TOP + 4) * L.bgS);
-  drawCounterBase();
+  drawBg(bg, BG_TOP - 4); // 카운터부터 아래를 손님 위에 한 번 더 (손님 아래쪽이 카운터 뒤로)
   if (playing) { drawBubbles(); drawKitchen(); drawBins(); drawGuide(); }
   drawFx();
 }
-// 아래 재료 칸 밑판 (스테인리스)
-function drawCounterBase() {
-  const y = L.binTop - 4;
-  const g = ctx.createLinearGradient(0, y, 0, H); g.addColorStop(0, '#E9D3B4'); g.addColorStop(1, '#D9BC94');
-  ctx.fillStyle = g; ctx.fillRect(0, y, W, H - y);
-  ctx.fillStyle = 'rgba(120,80,40,.25)'; ctx.fillRect(0, y, W, 3);
+// 배경: 카운터 앞턱까지는 그대로 / 분홍 타일은 일하는 줄 뒤에 보이는 만큼만 / 아래 나무 판은 재료 칸 뒤에 늘려 깔음
+function drawBg(bg, from) {
+  if (!ok(bg)) return;
+  const s = L.bgS, X = L.bgX, bw = 1536 * s;
+  const seg = (sy0, sy1, dy0, dy1) => { if (dy1 > dy0 + 0.5 && sy1 > sy0) ctx.drawImage(bg, 0, sy0, 1536, sy1 - sy0, X, dy0, bw, dy1 - dy0); };
+  seg(from, BG_EDGE, L.bgY + from * s, L.ya);
+  const tiles = clamp((L.kBot + 4 - L.ya) / s, 0, BG_TILE - BG_EDGE);
+  seg(BG_EDGE, BG_EDGE + tiles, L.ya, L.ya + tiles * s);
+  seg(BG_BOARD, BG_END, L.ya + tiles * s, H);
 }
 function drawGuests() {
   for (const g of G.guests) {
@@ -559,90 +561,80 @@ function drawBubbles() {
     hit(bx, by, bw, bh + 10, { bubble: g });
   }
 }
-// 스테인리스 칸 (재료 통·버리기)
-function drawCell(c, lbl, dim) {
-  ctx.globalAlpha = dim ? 0.4 : 1;
-  const g = ctx.createLinearGradient(0, c.y, 0, c.y + c.h); g.addColorStop(0, '#F3F5F8'); g.addColorStop(1, '#AEB7C2');
-  ctx.fillStyle = g; rr(c.x, c.y, c.w, c.h, 10); ctx.fill();
-  ctx.strokeStyle = '#7D8794'; ctx.lineWidth = 2; ctx.stroke();
-  ctx.fillStyle = '#4B525C'; rr(c.x + 5, c.y + 5, c.w - 10, c.h - 10 - 18, 7); ctx.fill();
-  ctx.fillStyle = '#5E6670'; rr(c.x + 7, c.y + 7, c.w - 14, c.h - 14 - 18, 6); ctx.fill();
-  text(lbl, c.x + c.w / 2, c.y + c.h - 11, 15, '#2A2348', null);
-  ctx.globalAlpha = 1;
+// 통 그림을 칸 크기에 맞춰 늘림: 모서리는 그대로, 가운데만 늘어남 (9조각)
+function drawNine(im, x, y, w, h) {
+  if (!ok(im)) return;
+  const iw = im.naturalWidth, ih = im.naturalHeight, s = Math.round(Math.min(iw, ih) * 0.2), d = Math.min(w, h) * 0.18;
+  const xs = [0, s, iw - s, iw], ys = [0, s, ih - s, ih], dx = [x, x + d, x + w - d, x + w], dy = [y, y + d, y + h - d, y + h];
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) ctx.drawImage(im, xs[c], ys[r], xs[c + 1] - xs[c], ys[r + 1] - ys[r], dx[c], dy[r], dx[c + 1] - dx[c], dy[r + 1] - dy[r]);
 }
 function drawKitchen() {
   const st = G.st;
-  // 굽는 판
+  // 굽는 판 (앞줄 2칸 → 뒷줄 2칸). 뒷줄을 먼저 그려 앞줄 패티가 위에 오게
   drawImg(IMG.grill, L.grill.x, L.grill.y, L.grill.w, L.grill.h);
-  for (let k = 0; k < 4; k++) {
+  for (const k of [2, 3, 0, 1]) {
     const gp = grillPos(k);
-    if (k >= G.grill.length) { drawImgW(IMG.cover, gp.x, gp.y + gp.r * 0.75, gp.r * 2.3); continue; }
+    if (k >= G.grill.length) { drawImgW(IMG.cover, gp.x, gp.y + gp.r * 0.45, gp.r * 1.7); continue; }
     const p = G.grill[k];
-    hit(gp.x - gp.r * 1.25, L.grill.y - 6, gp.r * 2.5, L.grill.h + 12, { grill: k });
+    hit(gp.x - gp.r * 1.4, gp.y - L.grill.h * 0.2, gp.r * 2.8, L.grill.h * 0.36, { grill: k });
     if (!p) continue;
     const im = p.ph === 'burnt' ? IMG.patty_burnt : p.ph === 'done' ? IMG.patty : p.t < st.cook * 0.5 ? IMG.patty_raw : IMG.patty_cook;
     const jig = p.ph === 'cook' ? Math.sin(G.t * 30 + k) * 0.6 : 0;
-    drawImgW(im, gp.x + jig, gp.y + gp.r * 0.55, gp.r * 2.1);
+    drawImgW(im, gp.x + jig, gp.y + gp.r * 0.42, gp.r * 1.6);
     let f, c;
     if (p.ph === 'cook') { f = p.t / st.cook; c = '#B9B2C6'; }
     else if (p.ph === 'done') { if (!st.burn) { f = 1; c = '#4CC46A'; } else { const r = (p.t - st.cook) / st.burn; f = 1 - r; c = r < 0.5 ? '#4CC46A' : r < 0.8 ? '#FF9F2E' : '#F2546B'; } }
     else { f = 1; c = '#3A3044'; }
-    bar(gp.x - gp.r, L.grill.y + L.grill.h * 0.83, gp.r * 2, 7, f, c);
-    if (p.ph === 'done' && (!st.burn || (p.t - st.cook) / st.burn < 0.5)) drawImg(IMG.fx_check, gp.x + gp.r * 0.55, gp.y - gp.r * 1.25, 20, 20);
+    bar(gp.x - gp.r * 0.7, gp.y + gp.r * 0.5, gp.r * 1.4, 6, f, c);
+    if (p.ph === 'done' && (!st.burn || (p.t - st.cook) / st.burn < 0.5)) drawImg(IMG.fx_check, gp.x + gp.r * 0.45, gp.y - gp.r * 0.95, 18, 18);
   }
-  // 접시 2개: 고른 접시는 테두리 + ▼
+  // 접시 2~3개: 고른 접시는 테두리 + ▼
   G.trays.forEach((t, k) => {
-    const x = trayX(k) + (t.shake ? Math.sin(t.shake * 50) * 6 : 0), tw = L.trayW, th = tw * 153 / 300, ty = L.trayY - th;
+    const x = trayX(k) + (t.shake ? Math.sin(t.shake * 50) * 6 : 0), tw = L.trayW, th = tw * 220 / 400, ty = L.trayY - th;
     const sel = k === G.cur;
     if (sel) { ctx.save(); ctx.shadowColor = PICK; ctx.shadowBlur = 18; drawImg(IMG.tray, x - tw / 2, ty, tw, th); ctx.restore(); }
     drawImg(IMG.tray, x - tw / 2, ty, tw, th);
     if (sel) {
-      ctx.strokeStyle = PICK; ctx.lineWidth = 4; rr(x - tw / 2 - 3, ty - 3, tw + 6, th + 6, 14); ctx.stroke();
-      const ay = L.kTop + 4 + Math.sin(G.t * 6) * 3; ctx.fillStyle = PICK; ctx.beginPath(); ctx.moveTo(x - 10, ay); ctx.lineTo(x + 10, ay); ctx.lineTo(x, ay + 12); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = PICK; ctx.lineWidth = 4; rr(x - tw / 2 - 2, ty - 2, tw + 4, th + 4, 12); ctx.stroke();
+      const ay = L.kTop + 2 + Math.sin(G.t * 6) * 3; ctx.fillStyle = PICK; ctx.beginPath(); ctx.moveTo(x - 10, ay); ctx.lineTo(x + 10, ay); ctx.lineTo(x, ay + 12); ctx.closePath(); ctx.fill();
     }
-    const bw = tw * 0.56;
-    if (t.stack.length) drawStack(t.stack, x - tw * 0.12, ty + th * 0.66, bw);
-    t.sides.forEach((s, i) => drawImgH(IMG[s], x + tw * 0.33, ty + th * 0.7 - i * th * 0.32, th * 0.85));
+    const bw = tw * 0.52;
+    if (t.stack.length) drawStack(t.stack, x - tw * 0.1, ty + th * 0.68, bw);
+    t.sides.forEach((s, i) => drawImgH(IMG[s], x + tw * 0.32, ty + th * 0.78 - i * th * 0.3, th * 0.8));
     hit(x - tw / 2, L.kTop, tw, L.trayY - L.kTop + 4, { tray: k });
   });
-  // 음료 기계: 콜라 · 사이다 · 주스
+  // 음료 기계 (꼭지 3개: 콜라 · 사이다 · 주스) — 꼭지 아래에 컵, 안 나오는 음료는 흐리게
   const D = L.drink, lock = (id) => !st.sides.includes(id);
-  ctx.fillStyle = '#3A3F48'; rr(D.x, D.y, D.w, D.h, 12); ctx.fill();
-  ctx.fillStyle = '#272B32'; rr(D.x + 6, D.y + D.h * 0.62, D.w - 12, D.h * 0.32, 8); ctx.fill();
-  [['cola', '콜라', '#E0303A'], ['cider', '사이다', '#2FA84F'], ['juice', '주스', '#F28A1A']].forEach(([id, lbl, col], i) => {
-    const cw = (D.w - 12) / 3, x = D.x + 6 + cw * i, off = lock(id);
-    ctx.globalAlpha = off ? 0.38 : 1;
-    ctx.fillStyle = col; rr(x + 3, D.y + 6, cw - 6, D.h * 0.22, 7); ctx.fill();
-    text(lbl, x + cw / 2, D.y + 6 + D.h * 0.11, Math.min(17, cw * 0.26));
-    ctx.fillStyle = '#9AA3AE'; ctx.fillRect(x + cw / 2 - 5, D.y + 6 + D.h * 0.22, 10, D.h * 0.1);
-    drawFit(IMG[id], x + 6, D.y + D.h * 0.36, cw - 12, D.h * 0.58);
+  drawImg(IMG.machine_drink3, D.x, D.y, D.w, D.h);
+  ['cola', 'cider', 'juice'].forEach((id, i) => {
+    const cx = D.x + D.w * [0.185, 0.5, 0.815][i], off = lock(id);
+    if (off) { ctx.fillStyle = 'rgba(40,40,50,.5)'; rr(D.x + D.w * [0.055, 0.36, 0.675][i], D.y + D.h * 0.09, D.w * 0.27, D.h * 0.22, 6); ctx.fill(); }
+    ctx.globalAlpha = off ? 0.3 : 1;
+    drawImgH(IMG[id], cx, D.y + D.h * 0.8, D.h * 0.36);
     ctx.globalAlpha = 1;
-    hit(x, D.y, cw, D.h, { bin: id });
+    hit(D.x + D.w * i / 3, D.y, D.w / 3, D.h, { bin: id });
   });
   // 아이스크림 기계 (10월드)
   const I = L.ice, ioff = lock('icecream');
-  ctx.globalAlpha = ioff ? 0.38 : 1;
-  ctx.fillStyle = '#F7A8C8'; rr(I.x, I.y, I.w, I.h, 12); ctx.fill();
-  ctx.fillStyle = '#E2669A'; rr(I.x + 5, I.y + 6, I.w - 10, I.h * 0.22, 7); ctx.fill();
-  text('아이스크림', I.x + I.w / 2, I.y + 6 + I.h * 0.11, Math.min(15, I.w * 0.15));
-  drawFit(IMG.icecream, I.x + 8, I.y + I.h * 0.33, I.w - 16, I.h * 0.62);
+  ctx.globalAlpha = ioff ? 0.4 : 1;
+  drawImg(IMG.machine_ice, I.x, I.y, I.w, I.h);
+  drawImgH(IMG.icecream, I.x + I.w / 2, I.y + I.h * 0.83, I.h * 0.42);
   ctx.globalAlpha = 1;
   hit(I.x, I.y, I.w, I.h, { bin: 'icecream' });
 }
 function drawBins() {
-  // 버리기
+  // 버리기: 빈 통 + 가운데 쓰레기통 마크 (trash_well 가운데를 잘라 붙임 — 칸이 길어져도 마크는 안 늘어남)
   const T = L.trash;
-  drawCell(T, '버리기');
-  drawFit(IMG.trash, T.x + 8, T.y + 10, T.w - 16, T.h - 40);
+  drawNine(IMG.well_tall, T.x, T.y, T.w, T.h);
+  const tw = IMG.trash_well;
+  if (ok(tw)) { const sx = tw.naturalWidth * 0.24, sy = tw.naturalHeight * 0.31, sw = tw.naturalWidth * 0.52, sh = tw.naturalHeight * 0.38, m = Math.min(T.w * 0.62 / sw, T.h * 0.5 / sh); ctx.drawImage(tw, sx, sy, sw, sh, T.x + T.w / 2 - sw * m / 2, T.y + T.h / 2 - sh * m / 2, sw * m, sh * m); }
   hit(T.x, T.y, T.w, T.h, { trash: 1 });
   for (const [id, c] of L.bins) {
-    const dim = locked(id);
-    drawCell(c, NAME[id === 'patty_raw' ? 'patty' : id], dim);
+    const dim = locked(id), tall = c.h > c.w * 1.1;
     ctx.globalAlpha = dim ? 0.4 : 1;
-    const ix = c.x + 10, iy = c.y + 9, iw = c.w - 20, ih = c.h - 18 - 18;
-    if (id === 'patty_raw') { drawFit(IMG.patty_raw, ix, iy, iw, ih / 2); drawFit(IMG.patty_raw, ix, iy + ih / 2, iw, ih / 2); }
-    else if (id === 'fries') drawFit(IMG.fries, ix, iy, iw, ih);
-    else { drawFit(IMG[id], ix, iy, iw / 2 - 3, ih); drawFit(IMG[id], ix + iw / 2 + 3, iy, iw / 2 - 3, ih); }
+    drawNine(tall ? IMG.well_tall : IMG.well_wide, c.x, c.y, c.w, c.h);
+    const pile = IMG['pile_' + id] || IMG[id];
+    drawFit(pile, c.x + c.w * 0.05, c.y + c.h * 0.06, c.w * 0.9, c.h * 0.86);
     ctx.globalAlpha = 1;
     hit(c.x, c.y, c.w, c.h, { bin: id });
   }

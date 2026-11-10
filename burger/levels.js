@@ -7,7 +7,7 @@
 //  fill: 버거 속 재료 수 [최소, 최대] (위·아래 빵 뺌, 패티 포함) · dbl: 패티 2장 버거
 //  sides: 나오는 사이드 · sideMax: 한 주문의 사이드 최대 수
 //  cook: 굽는 시간(초) · burn: 다 익은 뒤 탈 때까지(초, 0 = 안 탐) · wait: 손님이 기다려 주는 시간(초)
-//  guests: 한 판 손님 수 · conc: 카운터에 동시에 서는 손님(최대 3, 말풍선 3개) · grills: 굽는 칸 · trays: 접시(2026-11-10부터 항상 2개)
+//  guests: 한 판 손님 수 · conc: 카운터에 동시에 서는 손님(최대 3, 말풍선 3개) · grills: 굽는 칸 · trays: 접시(2026-11-10부터 2개, 동시 손님이 3명인 판부터 3개)
 //  press: 바쁨 정도 — 다음 손님이 오는 간격 gap = (보통 주문을 한 번에 1초씩 눌러 만드는 시간) ÷ press. 클수록 손님이 몰려 옴
 (function () {
   const PER_WORLD = 10, HARD = 100;
@@ -55,11 +55,12 @@
       guests: Math.round(lerp(r.guests, n.guests, t)),
       conc: Math.min(3, Math.floor(lerp(r.conc, n.conc, t) + 0.5)),
       press: Math.round(lerp(r.press, n.press, t) * 100) / 100,
-      grills: r.grills, trays: r.trays,
+      grills: r.grills,
     });
   }
   // 보통 주문 하나를 만드는 누르기 수: 생패티 p · 아래 빵 · 다른 재료 · 사이드 · 익은 패티 p · 위 빵 (game.js 의 주문 만들기와 같은 확률)
   const avgTaps = (s) => { const n = (s.fill[0] + s.fill[1]) / 2, p = s.dbl && n >= 3 ? 1.3 : 1, sd = !s.sideMax ? 0 : s.sideMax === 1 ? 0.6 : (1 + s.sideMax) / 2; return n + p + 2 + sd; };
+  for (const s of STAGES) s.trays = s.conc >= 3 ? 3 : 2;
   for (const s of STAGES) s.gap = Math.round(avgTaps(s) / s.press * 10) / 10;
   window.BurgerLevels = { PER_WORLD, HARD, ING, RUNGS, STAGES, avgTaps };
 })();

@@ -1,7 +1,8 @@
 """버거 러시(burger) 그림 적용 — 받은 GPT 그림(character/burger/, 저장소에 안 올림)을 잘라 게임 그림으로
   python3 tools/burger_assets.py            # 전부
   python3 tools/burger_assets.py intro      # 인트로·카드·준비 창 로고 (한국어·영어)
-  python3 tools/burger_assets.py play       # 가게 배경·장비·재료·사이드·아이콘·효과
+  python3 tools/burger_assets.py play       # 가게 배경·장비·재료·사이드·아이콘·효과 (예전 그림)
+  python3 tools/burger_assets.py v2         # 새 디자인 그림 N01~N13 (play 뒤에 돌려 같은 이름을 덮어씀)
   python3 tools/burger_assets.py guests     # 손님 8명 × 표정 3
   python3 tools/burger_assets.py chars      # 은유·은결 상반신 4자세 × 옷 9벌
   python3 tools/burger_assets.py map        # 스테이지 지도 배경 10장
@@ -30,17 +31,30 @@ def intro():
     A.intro()
 
 
-KEEP_GREEN = {'lettuce'}  # 초록이 들어 있는 그림: 바깥과 이어진 초록만 지움 (나머지는 양파 고리 안쪽처럼 갇힌 초록까지 지움)
+KEEP_GREEN = {'lettuce', 'pile_lettuce', 'cider', 'machine_drink3'}  # 초록이 들어 있는 그림: 바깥과 이어진 초록만 지움 (나머지는 양파 고리 안쪽처럼 갇힌 초록까지 지움)
 
 
-def save_grid(name, cols, rows, names, size, folder):
+def drop_small(im, frac=0.02):
+    """옆 칸에서 넘어온 작은 조각(가장 큰 덩어리의 2% 미만)을 지움"""
+    import numpy as np
+    from scipy import ndimage
+    a = np.array(im); m = a[:, :, 3] > 20
+    lab, k = ndimage.label(m)
+    if k <= 1: return im
+    sz = ndimage.sum(m, lab, range(1, k + 1)); keep = np.isin(lab, [i + 1 for i in range(k) if sz[i] >= sz.max() * frac])
+    a[~keep, 3] = 0
+    return A.tight(Image.fromarray(a))
+
+
+def save_grid(name, cols, rows, names, size, folder, by_width=False, boxes=None):
     full, outer = A.key(src(name), soft=False), GS.key_out(src(name))
     w, h = full.width / cols, full.height / rows
     for k, n in enumerate(names):
         if not n: continue
         r, c = divmod(k, cols); box = (round(c * w), round(r * h), round((c + 1) * w), round((r + 1) * h))
-        im = A.tight(GS.drop_far(A.tight((outer if n in KEEP_GREEN else full).crop(box)), gap=40))
-        A.save(A.scaled(im, size / max(im.size)), f'burger/assets/{folder}/{n}.webp')
+        if boxes: box = tuple(round(v * full.width / 1024) for v in boxes[k])
+        im = drop_small(A.tight(GS.drop_far(A.tight((outer if n in KEEP_GREEN else full).crop(box)), gap=40)))
+        A.save(A.scaled(im, size / (im.width if by_width else max(im.size))), f'burger/assets/{folder}/{n}.webp')
 
 
 def play():
@@ -59,6 +73,28 @@ def play():
     save_grid('play/U01', 2, 2, ['bubble', 'rotate', 'tip', 'recipe'], 320, 'ui')
     save_grid('play/E01', 3, 2, ['steam', 'smoke', 'spark', 'heart', 'sweat', 'check'], 120, 'fx')
     print('play')
+
+
+def v2():
+    """2026-11-10 새 디자인 (making_GPT/버거러시/10_새디자인_전체그림.txt)"""
+    for n, name in [('N01', 'land'), ('N02', 'land_night')]:
+        im = Image.open(src(f'v2/{n}')).convert('RGB')
+        A.save(im.resize((1536, 1024), Image.LANCZOS), f'burger/assets/bg/{name}.webp', quality=84, method=6)
+    save_grid('v2/N03', 1, 1, ['grill'], 640, 'ui')
+    save_grid('v2/N04', 1, 1, ['machine_drink3'], 640, 'ui')
+    save_grid('v2/N05', 1, 1, ['machine_ice'], 400, 'ui')
+    save_grid('v2/N06', 2, 2, ['well_wide', 'well_tall', 'trash_well', 'icecream'], 320, 'ui',
+              boxes=[(0, 0, 640, 512), (640, 0, 1024, 512), (0, 512, 512, 1024), (512, 512, 1024, 1024)])  # 넓은 통이 칸 경계를 넘어서
+    save_grid('v2/N07', 2, 2, ['pile_bun_t', 'pile_bun_b', 'pile_cheese', 'pile_bacon'], 320, 'food')
+    save_grid('v2/N08', 2, 2, ['pile_lettuce', 'pile_tomato', 'pile_onion', 'pile_patty_raw'], 320, 'food')
+    # 쌓는 조각은 모두 같은 폭(320)으로 — 쌓을 때 폭이 같게 보이게
+    save_grid('v2/N09', 2, 2, ['bun_b', 'bun_t', None, 'cheese'], 320, 'food', by_width=True)
+    save_grid('v2/N10', 2, 2, ['lettuce', 'tomato', 'onion', 'bacon'], 320, 'food', by_width=True)
+    save_grid('v2/N11', 2, 2, ['patty_raw', 'patty_cook', 'patty', 'patty_burnt'], 320, 'food', by_width=True)
+    save_grid('v2/N12', 2, 2, ['cola', 'cider', 'juice', 'fries'], 240, 'food')
+    save_grid('v2/N13', 1, 1, ['tray'], 400, 'ui')
+    import shutil; shutil.move(f'{ROOT}/burger/assets/ui/icecream.webp', f'{ROOT}/burger/assets/food/icecream.webp')
+    print('v2')
 
 
 def guests():
@@ -100,5 +136,5 @@ def ride():
 
 
 if __name__ == '__main__':
-    todo = sys.argv[1:] or ['intro', 'play', 'guests', 'chars', 'map', 'ride']
-    for t in todo: {'intro': intro, 'play': play, 'guests': guests, 'chars': chars, 'map': map_, 'ride': ride}[t]()
+    todo = sys.argv[1:] or ['intro', 'play', 'v2', 'guests', 'chars', 'map', 'ride']
+    for t in todo: {'intro': intro, 'play': play, 'v2': v2, 'guests': guests, 'chars': chars, 'map': map_, 'ride': ride}[t]()
