@@ -3552,6 +3552,10 @@ window.I18N_DATA = {
 "Tap/Space = Jump · Hold in midair = Hook · Release = Swing!"
 ],
 [
+"랭킹은 곧 열려요!",
+"Ranking is coming soon!"
+],
+[
 "버거 러시",
 "Burger Rush"
 ],

@@ -67,6 +67,8 @@ WHOLE = {
 }
 # 문서 뒤에 새로 생긴 글 (2026-11-04 작업)
 EXTRA = {
+    # 주간 랭킹 (2026-11-10)
+    '랭킹은 곧 열려요!': 'Ranking is coming soon!',
     # 버거 러시 (2026-11-08)
     '버거 러시': 'Burger Rush', '햄버거 골목': 'Burger Alley', '양상추 농장': 'Lettuce Farm', '토마토 언덕': 'Tomato Hill', '양파 들판': 'Onion Fields',
     '베이컨 캠핑장': 'Bacon Campground', '바닷가 버거 트럭': 'Seaside Burger Truck', '감자튀김 성': 'French Fry Castle', '탄산 분수 공원': 'Fizzy Fountain Park',
