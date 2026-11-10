@@ -540,6 +540,22 @@ window.I18N_DATA = {
 "Our tour: #{0}"
 ],
 [
+"'{}'은(는) 다른 사람이 먼저 쓰고 있어요. 새 이름을 정해 주세요!",
+"'{0}' is already taken by someone else. Please choose a new name!"
+],
+[
+"두 번째부터는 다이아 {}개가 필요해요 (지금 {}개)",
+"From the second change it costs {0} Diamonds (you have {1})"
+],
+[
+"이름을 바꿨어요! (다이아 -{})",
+"Name changed! (Diamonds -{0})"
+],
+[
+"내 ID: {}",
+"My ID: {0}"
+],
+[
 "은유와 은결",
 "Angela & Luke"
 ],
@@ -3554,6 +3570,70 @@ window.I18N_DATA = {
 [
 "탭/스페이스 = 점프 · 공중에서 꾹 = 훅 · 손 떼면 슝~",
 "Tap/Space = Jump · Hold in midair = Hook · Release = Swing!"
+],
+[
+"지금 이름과 같아요",
+"That's your current name"
+],
+[
+"이미 다른 사람이 쓰는 이름이에요",
+"Someone else is already using that name"
+],
+[
+"이름을 확인하려면 인터넷 연결이 필요해요",
+"An internet connection is needed to check the name"
+],
+[
+"첫 번째 이름 바꾸기는 무료예요 (다음부터는 다이아)",
+"Your first name change is free (Diamonds after that)"
+],
+[
+"이번에는 무료예요",
+"It's free this time"
+],
+[
+"새 이름을 입력하세요",
+"Enter a new name"
+],
+[
+"내 ID",
+"My ID"
+],
+[
+"내 ID를 복사했어요!",
+"Copied your ID!"
+],
+[
+"초대가 왔어요!",
+"You have an invite!"
+],
+[
+"님이 초대했어요",
+"invited you"
+],
+[
+"ID로 초대",
+"Invite by ID"
+],
+[
+"친구 ID 6자리",
+"Friend's 6-character ID"
+],
+[
+"친구 ID 6자리를 넣어 주세요",
+"Please enter your friend's 6-character ID"
+],
+[
+"내 ID예요. 친구 ID를 넣어 주세요",
+"That's your own ID. Please enter a friend's ID"
+],
+[
+"그 ID의 친구를 찾지 못했어요",
+"Couldn't find a friend with that ID"
+],
+[
+"이미 우리 투어 멤버예요",
+"Already a member of our tour"
 ],
 [
 "그룹투어",

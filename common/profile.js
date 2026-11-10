@@ -310,7 +310,7 @@
     costume(c = this.active()) { return (c && c.costume) || null; }, // 예전 어린이 옷 (게임의 예전 코드가 물어봄)
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611102343` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611110408` : null; },
     outfits(c = this.active()) { return c ? OUTFITS[lookBase(c.look)].filter((x) => !x.hidden || (c.outfits || []).includes(x.id)) : []; },
     outfit(c = this.active()) { return (c && c.outfit) || null; }, // 입은 옷 id (없으면 기본 옷)
     ownsOutfit(id, c = this.active()) { return !id || !!(c && (c.outfits || []).includes(id)); },
@@ -421,6 +421,7 @@
     reload,
 
     chars() { return data.chars; },
+    mutateChar(id, fn) { reload(); const c = find(id); if (!c) return null; const r = fn(c); save(); return r; }, // 지금 고른 캐릭터가 아니어도 (common/names.js)
     get(id) { return find(id); },
     active() { return find(data.activeId); },
     paintWho,
@@ -588,6 +589,6 @@
   if (Hub.ver === '0.4' && document.currentScript && !/\/admin\//.test(location.pathname)) { // 백오피스는 상점 값만 읽음
     const src = document.currentScript.src, add = (n, then) => { const s = document.createElement('script'); s.src = src.replace(/profile\.js(\?.*)?$/, n + '$1'); if (then) s.onload = then; document.head.appendChild(s); };
     add('monet.js');
-    add('firebase_config.js', () => add('auth.js')); // 로그인·기록 보내기 (common/auth.js)
+    add('firebase_config.js', () => add('auth.js', () => add('names.js'))); // 로그인·기록 보내기 (common/auth.js) → 캐릭터 이름·ID (common/names.js)
   }
 })();

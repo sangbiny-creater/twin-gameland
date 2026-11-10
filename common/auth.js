@@ -50,7 +50,29 @@
     const cur = localStorage.getItem('twin_gameland_v1');
     if (cur) localStorage.setItem('twin_gameland_v1_backup', cur);
     if (profile) localStorage.setItem('twin_gameland_v1', profile); else localStorage.removeItem('twin_gameland_v1');
+    localStorage.removeItem('twin_sync_v1');
     location.reload(); return true;
+  }
+  // ---------- 여러 기기 저장 데이터 맞추기 ----------
+  //  twin_sync_v1 = { at: 이 기기가 마지막으로 서버와 맞춘 서버 시각(profileAt), h: 그때 데이터의 짧은 지문 }
+  //  · 서버 profileAt > at → 다른 기기가 서버를 바꿈. 이 기기 데이터가 그 뒤로 안 바뀌었으면(지문 같음) 서버 것으로,
+  //    둘 다 바뀌었으면 진행(모은 코인 합 + 별)이 더 많은 쪽. 서버 것으로 바꿀 때 이 기기 것은 twin_gameland_v1_backup 에 한 벌
+  const SKEY = 'twin_sync_v1';
+  const hash = (s) => { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0; return h.toString(36) + ':' + s.length; };
+  const progress = (txt) => { try { return (JSON.parse(txt).chars || []).reduce((n, c) => n + (c.earned || 0) + Object.values(c.games || {}).reduce((m, g) => m + Object.values(g.stages || {}).reduce((k, x) => k + (x.stars || 0), 0), 0), 0); } catch (e) { return 0; } };
+  function serverWins(d) {
+    const cur = localStorage.getItem('twin_gameland_v1') || '', sy = read(SKEY, {});
+    if (!d.profile || d.profile === cur) { write(SKEY, { at: d.profileAt || 0, h: hash(cur) }); return false; }
+    if ((d.profileAt || 0) <= (sy.at || 0)) return false; // 서버는 그대로 → 이 기기 것을 올림 (syncProfile)
+    if (sy.h && sy.h === hash(cur)) return true;            // 이 기기는 그 뒤로 안 바뀜
+    return progress(d.profile) > progress(cur);             // 둘 다 바뀜 (예전 기기 포함): 진행이 같으면 이 기기 것
+  }
+  function takeServer(d) {
+    const cur = localStorage.getItem('twin_gameland_v1');
+    if (cur) localStorage.setItem('twin_gameland_v1_backup', cur);
+    localStorage.setItem('twin_gameland_v1', d.profile);
+    write(SKEY, { at: d.profileAt || Date.now(), h: hash(d.profile) });
+    location.reload();
   }
   // 로그인될 때마다 (같은 계정·같은 연결 상태면 한 번만). true = 들어옴, false = 가입 절차가 남았거나 막힘
   let busy = null;
@@ -79,7 +101,9 @@
         if (switchData(u.uid, d.profile)) return false;
         // 새 기기에서 로그인: 이 기기에 캐릭터가 없고 서버에 저장 데이터가 있으면 가져옴
         const local = read('twin_gameland_v1', null);
-        if (d.profile && (!local || !(local.chars || []).length)) { localStorage.setItem('twin_gameland_v1', d.profile); location.reload(); return false; }
+        if (d.profile && (!local || !(local.chars || []).length)) { takeServer(d); return false; }
+        // 같은 계정을 여러 폰에서: 다른 폰에서 서버 데이터가 바뀌었으면 서버 것으로 (이 폰에서 바뀐 것도 있으면 진행이 더 많은 쪽)
+        if (d.profile && serverWins(d)) { takeServer(d); return false; }
       }
       if (u.email) { try { st.admin = (await fb.db.collection('admins').doc(u.email).get()).exists; save(); } catch (e) { st.admin = false; } }
       flush(); syncProfile(); loadConfig();
@@ -114,7 +138,7 @@
   // 랭킹 주(일요일~토요일, 사용자 결정 2026-11-10): 그 주 일요일 날짜 'YYYY-MM-DD' (week 는 백오피스용 ISO 주 그대로)
   const wk = (ms) => { const d = new Date(ms); d.setDate(d.getDate() - d.getDay()); return day(d.getTime()); };
   // cid = 캐릭터 번호(한 계정에 캐릭터가 여럿이라 랭킹은 캐릭터마다), face = 랭킹 화면 얼굴 그림 (입은 옷 그림 또는 기본 얼굴, 저장소 안 경로)
-  const who = () => { const c = window.Hub && Hub.active(); if (!c) return {}; const f = (Hub.costumeImg && Hub.costumeImg(c)) || `common/faces/${c.look}_base.webp`; return { name: c.name, cid: c.id, look: c.look, face: f.split('?')[0] }; };
+  const who = () => { const c = window.Hub && Hub.active(); if (!c) return {}; const f = (Hub.costumeImg && Hub.costumeImg(c)) || `common/faces/${c.look}_base.webp`; return { name: c.name, cid: c.id, pid: c.pid || '', look: c.look, face: f.split('?')[0] }; };
   // 화면에 머문 시간 (게임 화면마다, 3초 미만은 안 셈)
   let since = Date.now();
   const endSession = () => {
@@ -139,7 +163,8 @@
     if (!fb || !fb.auth.currentUser || (!force && Date.now() - lastSync < 30000)) return Promise.resolve();
     lastSync = Date.now();
     const p = localStorage.getItem('twin_gameland_v1'); if (!p || p.length > 900000) return Promise.resolve();
-    return fb.db.collection('users').doc(fb.auth.currentUser.uid).update({ profile: p, profileAt: Date.now() }).catch(() => {});
+    const at = Date.now();
+    return fb.db.collection('users').doc(fb.auth.currentUser.uid).update({ profile: p, profileAt: at }).then(() => write(SKEY, { at, h: hash(p) })).catch(() => {});
   }
 
   // ---------- 화면 (로그인 창 · 계정 창 · 계정연동 안내) ----------

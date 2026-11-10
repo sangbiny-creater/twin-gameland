@@ -14,7 +14,7 @@
 //    누가 무엇을 바꿀 수 있는지는 server/firestore.rules 의 tours 칸
 //  · 이 기기 기억: localStorage 'twin_tour_v1' (어느 투어에 들었는지 · 받은 이벤트 보상). 게임 저장 데이터 twin_gameland_v1 은 다이아만 더함
 const $ = (id) => document.getElementById(id);
-const V = '?v=202611102343';
+const V = '?v=202611110408';
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 const { blip, toast: toast0 } = window.UI;
 const EN = window.I18N && I18N.lang === 'en';
@@ -23,6 +23,8 @@ const toast = (s) => toast0(tr(s));
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 
 const C = Hub.active();
+// 내 캐릭터 ID (6자리, common/names.js): 친구에게 알려 주면 친구가 ID 로 초대할 수 있음
+const myIdHTML = () => (C.pid ? `<small class="my-id">${tr('내 ID')} <b translate="no">${C.pid}</b></small>` : '');
 const MAX = 20;                     // 투어 한 곳 최대 인원 (백오피스 config/guild.maxMembers 로 바꿈)
 const PLAY_PT = 10, STAR_PT = 10;   // 투어 포인트: 판 하나 끝내면 10점, 별 하나에 10점
 const MARKS = [1, 2, 3, 4, 5, 6, 7]; // 투어 마크 = 첫 화면 분수 그림 (hub/park/items/fountain_N.webp) — 나중에 전용 그림으로
@@ -79,7 +81,7 @@ async function server() {
   return f;
 }
 const T = () => fb.db.collection('tours');
-const myInfo = () => { const f = (Hub.costumeImg && Hub.costumeImg(C)) || `common/faces/${C.look}_base.webp`; return { n: C.name, f: f.split('?')[0], uid }; };
+const myInfo = () => { const f = (Hub.costumeImg && Hub.costumeImg(C)) || `common/faces/${C.look}_base.webp`; return { n: C.name, f: f.split('?')[0], uid, p: C.pid || '' }; };
 const faceOf = (f) => (/^common\/(faces|costumes)\/[a-z0-9_]+\.webp$/.test(f || '') ? `../${f}${V}` : `../common/faces/eunyu3_base.webp${V}`);
 const memList = (t) => Object.entries(t.mem || {}).map(([k, m]) => ({ k, ...m })).sort((a, b) => (a.k === guideKey(t) ? -1 : b.k === guideKey(t) ? 1 : (a.at || 0) - (b.at || 0)));
 const guideKey = (t) => t.gk || '';
@@ -173,7 +175,12 @@ async function drawFind() {
   const open = tours.filter((t) => t.open !== false && count(t) < maxOf(t)).sort((a, b) => (pts.get(b.id) || 0) - (pts.get(a.id) || 0) || count(b) - count(a));
   const rows = open.slice(0, 50).map((t) => rowHTML({ img: markImg(t.mark), name: t.name, sub: `${tr('투어가이드')} <span translate="no">${esc((t.mem && t.mem[guideKey(t)] || {}).n || '?')}</span> · ${count(t)}/${maxOf(t)}`,
     score: pts.get(t.id) || 0, unit: '<img class="pt" src="../ranking/assets/ui/star.webp' + V + '" alt="">', btn: `<button class="tb small pink" data-join="${esc(t.id)}">${tr('가입')}</button>` })).join('');
-  return board(`<div class="tr-hero"><img src="../hub/park/ui/ticket.webp${V}" alt=""><div><b>${tr('그룹투어에 오신 걸 환영해요!')}</b><p>${tr('친구들과 투어를 만들어 함께 놀아요. 매주 투어끼리 순위를 겨루고, 주 1회 이벤트에서 다이아를 받아요.')}</p></div></div>
+  // 친구가 내 ID 로 보낸 초대 (7일 동안)
+  const invs = tours.filter((t) => C.pid && t.inv && t.inv[C.pid] && Date.now() - (t.inv[C.pid].at || 0) < 7 * 864e5);
+  const invRows = invs.map((t) => rowHTML({ img: markImg(t.mark), name: t.name, sub: `<span translate="no">${esc(t.inv[C.pid].by || '?')}</span> ${tr('님이 초대했어요')}`,
+    btn: `<button class="tb small pink" data-join="${esc(t.id)}">${tr('가입')}</button>` })).join('');
+  return (invRows ? board(`<h3 class="tr-h">💌 ${tr('초대가 왔어요!')}</h3><ol class="tr-list">${invRows}</ol>`) : '')
+    + board(`<div class="tr-hero"><img src="../hub/park/ui/ticket.webp${V}" alt=""><div><b>${tr('그룹투어에 오신 걸 환영해요!')}</b><p>${tr('친구들과 투어를 만들어 함께 놀아요. 매주 투어끼리 순위를 겨루고, 주 1회 이벤트에서 다이아를 받아요.')}</p>${myIdHTML()}</div></div>
     <div class="tr-acts">${cfg.open === false ? '' : btn('bCreate', '투어 만들기')}${btn('bCode', '초대 코드', 'white')}</div>`)
     + `<img class="tr-divider" src="../ranking/assets/ui/divider.webp${V}" alt="">`
     + board(`<h3 class="tr-h">${tr('가입할 수 있는 투어')}</h3><ol class="tr-list">${rows}</ol>${rows ? '' : note('아직 가입할 수 있는 투어가 없어요. 첫 번째 투어를 만들어 보세요!')}`);
@@ -184,7 +191,7 @@ async function drawMine() {
   const t = mine, wb = await weekBoard(), me = (wb || []).find((x) => x.t.id === t.id), rank = me ? (wb.indexOf(me) + 1) : '-';
   const role = isGuide() ? '투어가이드' : '투어멤버';
   const head = `<div class="tr-card"><span class="r-mark big"><img src="${markImg(t.mark)}" alt=""></span><div class="c-text"><b translate="no">${esc(t.name)}</b>
-    <small><i class="chip ${isGuide() ? 'g' : ''}">${tr(role)}</i> ${tr('멤버')} ${count(t)}/${maxOf(t)}</small>
+    <small><i class="chip ${isGuide() ? 'g' : ''}">${tr(role)}</i> ${tr('멤버')} ${count(t)}/${maxOf(t)}</small>${myIdHTML()}
     <small>${tr('이번 주')} <img class="pt" src="../ranking/assets/ui/star.webp${V}" alt=""> ${(me ? me.score : 0).toLocaleString()} · ${EN ? `Tour Rank ${typeof rank === 'number' ? '#' + rank : '-'}` : `투어 랭킹 ${rank}${typeof rank === 'number' ? '등' : ''}`}</small></div></div>`;
   // 공지 + 이모티콘
   const n = t.notice && t.notice.text ? t.notice : null;
@@ -353,7 +360,18 @@ $('codeGo').onclick = () => { blip(); findCode($('codeIn').value); };
 
 // 친구 초대 (코드 + 링크)
 const inviteUrl = () => new URL(`index.html?code=${mine.code}`, location.href).href;
-function openInvite() { $('invCode').textContent = mine.code; openModal('popInvite'); }
+function openInvite() { $('invCode').textContent = mine.code; $('invId').value = ''; $('invById').classList.toggle('hidden', !isGuide()); openModal('popInvite'); }
+// 친구 ID 로 초대 (투어가이드): 친구의 그룹투어 화면 '초대가 왔어요'에 이 투어가 나옴 (tours.inv.<ID>)
+$('invIdGo').onclick = () => { blip(); act(async () => {
+  const pid = String($('invId').value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (pid.length !== 6) fail('친구 ID 6자리를 넣어 주세요');
+  if (pid === C.pid) fail('내 ID예요. 친구 ID를 넣어 주세요');
+  const who = window.Names ? await Names.find(pid) : null; if (!who) fail('그 ID의 친구를 찾지 못했어요');
+  if (mine.mem[`${who.uid}_${who.cid}`]) fail('이미 우리 투어 멤버예요');
+  await T().doc(mine.id).update({ [`inv.${pid}`]: { at: Date.now(), by: C.name, n: who.name || '' } });
+  await reloadMine(); $('invId').value = '';
+  toast(EN ? `Invited ${who.name}!` : `${who.name}에게 초대를 보냈어요!`);
+}); };
 $('invShare').onclick = async () => {
   blip(); const url = inviteUrl(), text = EN ? `Join my tour "${mine.name}" in Twin Gameland! Code: ${mine.code}` : `은유와 은결 게임랜드에서 내 투어 '${mine.name}'에 들어와! 초대 코드: ${mine.code}`;
   try { if (navigator.share) { await navigator.share({ title: tr('그룹투어 초대'), text, url }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
@@ -434,6 +452,9 @@ function claim(b) {
   try { const s = sessionStorage.getItem('twin_tour_tab'); if (['home', 'event', 'rank'].includes(s)) tab = s; } catch (e) { /* ignore */ }
   const start = (async () => {
     fb = await server();
+    // 캐릭터 ID 가 아직 없으면 지금 만듦 (common/names.js, auth.js 다음에 불러옴)
+    for (let i = 0; i < 20 && !window.Names; i++) await new Promise((r) => setTimeout(r, 100));
+    if (window.Names) { Names.sync(); const c2 = Hub.active(); if (c2 && c2.pid) C.pid = c2.pid; }
     if (fb) { uid = fb.auth.currentUser.uid; mid = `${uid}_${C.id}`; try { await loadAll(); } catch (e) { console.warn('tour load', e); } }
     await draw();
   })();
