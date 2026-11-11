@@ -61,7 +61,7 @@ const $ = (id) => document.getElementById(id);
 const rng = (seed) => { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let x = s; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; };
 
 // ---------- sprites ----------
-const ASSET_V = '202611110739';
+const ASSET_V = '202611111943';
 const SP = { img: new Image(), f: null, ready: false };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -701,7 +701,7 @@ function render() {
   if (G.state === 'ready') {
     const a = 0.75 + Math.sin(G.t * 5) * 0.25;
     ctx.globalAlpha = a; drawLabel('TAP TO START', W / 2, H * 0.4, 40); ctx.globalAlpha = 1;
-    drawLabel(isTouch ? '화면 왼쪽·오른쪽을 눌러 피해요' : '← → 키로 피해요', W / 2, H * 0.4 + 62, 20);
+    drawLabel(isTouch ? '화면 왼쪽·오른쪽을 눌러 피해요' : '← → 키로 피해요 · 스페이스 = 점프', W / 2, H * 0.4 + 62, 20);
   }
   if (bannerT > 0) {
     const k = bannerT > 1.9 ? (2.2 - bannerT) / 0.3 : bannerT < 0.4 ? bannerT / 0.4 : 1;
@@ -943,11 +943,11 @@ document.addEventListener('dblclick', (e) => e.preventDefault());
 window.addEventListener('keydown', (e) => {
   Audio.unlock();
   const k = e.code;
-  if ((k === 'ArrowUp' || k === 'KeyW') && (G.state === 'play' || G.state === 'ready')) { e.preventDefault(); useJump(); return; }
+  // 점프: 스페이스·↑·W (꾹 누르고 있어도 한 번만)
+  if ((k === 'Space' || k === 'ArrowUp' || k === 'KeyW') && (G.state === 'play' || G.state === 'ready')) { e.preventDefault(); if (!e.repeat) useJump(); return; }
   if (k === 'ArrowLeft' || k === 'ArrowRight' || k === 'KeyA' || k === 'KeyD' || k === 'Space') {
     e.preventDefault();
     if (G.state === 'play' || G.state === 'ready') {
-      if (k === 'Space') { if (G.state === 'ready') go(); return; }
       const dir = k === 'ArrowLeft' || k === 'KeyA' ? -1 : 1;
       move(dir);
       const pad = $(dir < 0 ? 'padL' : 'padR'); pad.classList.add('down'); setTimeout(() => pad.classList.remove('down'), 90);

@@ -3572,6 +3572,10 @@ window.I18N_DATA = {
 "Tap/Space = Jump · Hold in midair = Hook · Release = Swing!"
 ],
 [
+"← → 키로 피해요 · 스페이스 = 점프",
+"Use ← → keys to dodge · Space = jump"
+],
+[
 "10분마다 새로 매겨요",
 "Updated every 10 minutes"
 ],

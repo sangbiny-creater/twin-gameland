@@ -74,6 +74,8 @@ WHOLE = {
 }
 # 문서 뒤에 새로 생긴 글 (2026-11-04 작업)
 EXTRA = {
+    # 다운힐 키보드 점프 (2026-11-11)
+    '← → 키로 피해요 · 스페이스 = 점프': 'Use ← → keys to dodge · Space = jump',
     # 순위 스냅샷 (2026-11-11)
     '10분마다 새로 매겨요': 'Updated every 10 minutes', '이벤트 순위': 'Event Ranking', '이벤트 결과 (집계 중)': 'Event Results (counting)',
     '결과를 모으고 있어요. 조금 뒤에 보상을 받을 수 있어요': "We're still counting. You can claim your reward soon.",
