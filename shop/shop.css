@@ -46,14 +46,13 @@ html[data-who=eungyeol] .sh-card.att { --img: url(assets/ui/card_att_blue.webp);
 /* ---------- 탭 ---------- */
 .sh-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; padding: 8px 8px 0; position: sticky; top: 0; z-index: 10; background: var(--who-bg); scroll-margin-top: 0; }
 /* 탭: GPT 탭 그림(P05~P08) — 고른 탭 = 진한 분홍/파랑, 나머지 = 흰 탭(은유 분홍 테두리 / 은결 파랑 테두리).
-   폭이 화면마다 달라서 모서리는 그대로 두고 가운데만 늘림 (border-image) */
-.sh-tabs button { --tab: url(assets/ui/tab_off_pink.webp); height: 50px; display: flex; align-items: center; justify-content: center; gap: 3px; min-width: 0; font-size: 15px; color: var(--who-d);
-  border: solid transparent; border-width: 16px 9px 4px; border-image: var(--tab) 44 56 10 fill / 16px 9px 4px stretch; background: none; padding: 0 0 2px; }
+   그림 원래 가로:세로(360x100) 그대로 (늘리지 않음, 사용자 요청) */
+.sh-tabs button { --tab: url(assets/ui/tab_off_pink.webp); aspect-ratio: 360 / 100; height: auto; display: flex; align-items: center; justify-content: center; gap: 4px; min-width: 0;
+  font-size: 15px; color: var(--who-d); border: 0; background: var(--tab) center / 100% 100% no-repeat; padding: 6% 6% 2%; }
 html[data-who=eungyeol] .sh-tabs button { --tab: url(assets/ui/tab_off_blue.webp); }
 .sh-tabs button.on { --tab: url(assets/ui/tab_on_pink.webp); color: #fff; text-shadow: 0 2px 0 var(--who-d), 0 0 3px var(--who-d); }
 html[data-who=eungyeol] .sh-tabs button.on { --tab: url(assets/ui/tab_on_blue.webp); }
-.sh-tabs button > * { margin: -12px 0 -2px; } /* 위쪽 테두리 두께만큼 글자·아이콘을 가운데로 */
-.sh-tabs button img { width: 24px; height: 24px; flex: none; object-fit: contain; filter: drop-shadow(0 1px 1px rgba(24,40,62,.25)); }
+.sh-tabs button img { width: 22px; height: 22px; flex: none; object-fit: contain; filter: drop-shadow(0 1px 1px rgba(24,40,62,.25)); }
 .sh-tabs button span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sh-tabs button.on img { filter: drop-shadow(0 0 2px #fff) drop-shadow(0 1px 1px rgba(0,0,0,.2)); }
 .sh-body { background: #fff; border-top: 3px solid var(--who); padding: 12px 10px; }
