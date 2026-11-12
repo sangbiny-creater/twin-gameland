@@ -14,7 +14,7 @@
 //    누가 무엇을 바꿀 수 있는지는 server/firestore.rules 의 tours 칸
 //  · 이 기기 기억: localStorage 'twin_tour_v1' (어느 투어에 들었는지 · 받은 이벤트 보상). 게임 저장 데이터 twin_gameland_v1 은 다이아만 더함
 const $ = (id) => document.getElementById(id);
-const V = '?v=202611121724';
+const V = '?v=202611121820';
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 const { blip, toast: toast0 } = window.UI;
 const EN = window.I18N && I18N.lang === 'en';

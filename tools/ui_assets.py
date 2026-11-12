@@ -84,5 +84,33 @@ def cards():
         print('card', os.path.basename(p))
 
 
+
+
+# ---- 아이템샵 출석·광고 판(P01~P04)과 탭(P05~P08): making_GPT/아이템샵_버튼/ → shop/assets/ui/
+#   python3 tools/ui_assets.py shop   (판마다 흰 작은 칸 자리를 재서 % 로 알려 줌 → shop.css 의 --px·--py·--pw·--ph)
+SHOP = f'{ROOT}/making_GPT/아이템샵_버튼'
+SHOP_OUT = {'P01': 'card_att_pink', 'P02': 'card_att_blue', 'P03': 'card_ad_blue', 'P04': 'card_ad_pink',
+            'P05': 'tab_on_pink', 'P06': 'tab_on_blue', 'P07': 'tab_off_pink', 'P08': 'tab_off_blue'}
+
+
+def shop():
+    for k, name in SHOP_OUT.items():
+        im = unchroma(f'{SHOP}/{k}.png')
+        im = fit_w(im, 560 if name.startswith('card') else 360)
+        save(im, f'shop/assets/ui/{name}.webp')
+        if name.startswith('card'):
+            a = np.array(im).astype(int); H, W = a.shape[:2]
+            r, g, b, al = a[..., 0], a[..., 1], a[..., 2], a[..., 3]
+            # 흰 작은 칸 = 아이콘(왼쪽)·화살표(오른쪽) 사이 아래쪽의 가장 큰 밝은 덩어리
+            from scipy import ndimage
+            m = (a[..., :3].min(2) > 190) & (a[..., 3] > 250)
+            w = np.zeros_like(m); y0, y1, x0, x1 = int(H * .45), int(H * .95), int(W * .33), int(W * .84)
+            w[y0:y1, x0:x1] = m[y0:y1, x0:x1]
+            lab, k = ndimage.label(w); big = np.argmax(ndimage.sum(w, lab, range(1, k + 1))) + 1
+            ys, xs = np.where(lab == big); px, pw, py, ph = xs.min(), xs.max() - xs.min(), ys.min(), ys.max() - ys.min()
+            print(f'  {name}: 크기 {W}x{H}  작은 칸 --px:{px / W * 100:.1f}% --py:{py / H * 100:.1f}% --pw:{pw / W * 100:.1f}% --ph:{ph / H * 100:.1f}%')
+
+
 if __name__ == '__main__':
-    cards() if sys.argv[1:] == ['cards'] else build()
+    arg = sys.argv[1:]
+    cards() if arg == ['cards'] else shop() if arg == ['shop'] else build()

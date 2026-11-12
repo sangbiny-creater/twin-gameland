@@ -27,32 +27,34 @@ a { color: inherit; text-decoration: none; }
 .plus { position: relative; flex: 0 0 20px; width: 20px; height: 20px; margin-right: -6px; border-radius: 50%; background: var(--who); }
 .plus::before, .plus::after { content: ''; position: absolute; left: 50%; top: 50%; background: #fff; border-radius: 1px; transform: translate(-50%, -50%); } /* 글자 대신 막대 2개: 어느 폰에서나 정가운데 */
 .plus::before { width: 10px; height: 2.5px; } .plus::after { width: 2.5px; height: 10px; }
-.sh-cards { position: absolute; left: 16px; right: 8px; bottom: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-/* 출석·광고 버튼판: 반짝이는 알약 판 + 왼쪽에 튀어나온 큰 아이콘 + 오른쪽 화살표 동그라미 (GPT 판 그림이 오기 전까지 CSS로)
-   --c: 판 색, --c-d: 진한 테두리, --c-l: 연한 판 */
-.sh-card { --c: #FF8DB5; --c-d: #E2457E; --c-l: #FFD4E4; position: relative; min-width: 0; height: 64px; margin-top: 10px; padding: 0 31px 0 46px; border-radius: 32px;
-  background: linear-gradient(var(--c-l), var(--c) 85%); border: 3px solid var(--c-d);
-  box-shadow: inset 0 4px 0 rgba(255,255,255,.6), inset 0 -3px 0 rgba(0,0,0,.06), 0 4px 8px rgba(24,40,62,.25);
-  display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 3px; text-align: left; }
-.sh-card.ad, html[data-who=eungyeol] .sh-card { --c: #7DB8F5; --c-d: #2C7FD6; --c-l: #D6EBFF; }
+.sh-cards { position: absolute; left: 6px; right: 6px; bottom: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; align-items: end; }
+/* 출석·광고 버튼판: GPT 그림 한 장(아이콘·화살표·흰 작은 칸까지, making_GPT/아이템샵_버튼 P01~P04 → tools/ui_assets.py shop)
+   위에 제목과 작은 칸 글자만 얹음. --px·--py·--pw·--ph = 그림 속 흰 작은 칸 자리(%), 제목은 그 위 같은 폭
+   은유 = 출석 분홍 + 광고 파랑, 은결 = 둘 다 파랑 (광고 분홍 card_ad_pink 은 예비) */
+.sh-card { --img: url(assets/ui/card_att_pink.webp); --ar: 560 / 204; --px: 41.2%; --py: 62.7%; --pw: 41.8%; --ph: 23.1%; --d: #D23C72;
+  position: relative; display: block; min-width: 0; width: 100%; aspect-ratio: var(--ar); padding: 0; border: 0; background: var(--img) center / 100% 100% no-repeat;
+  filter: drop-shadow(0 4px 5px rgba(24,40,62,.28)); text-align: left; }
+html[data-who=eungyeol] .sh-card.att { --img: url(assets/ui/card_att_blue.webp); --ar: 560 / 213; --px: 45.5%; --py: 63.4%; --pw: 30.7%; --ph: 22%; --d: #1F6FCC; }
+.sh-card.ad { --img: url(assets/ui/card_ad_blue.webp); --ar: 560 / 199; --px: 38.2%; --py: 62.3%; --pw: 45.6%; --ph: 22.6%; --d: #1F6FCC; }
 .sh-card:disabled { opacity: .75; }
-.sc-ico { position: absolute; left: -12px; top: -14px; width: 62px; height: 62px; object-fit: contain; filter: drop-shadow(0 3px 3px rgba(24,40,62,.3)); pointer-events: none; }
-.sc-t { font-weight: normal; font-size: 17px; line-height: 1; color: #FFF6C8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
-  text-shadow: 0 2px 0 var(--c-d), 2px 0 0 var(--c-d), -2px 0 0 var(--c-d), 0 -2px 0 var(--c-d), 0 3px 2px rgba(0,0,0,.2); padding: 2px 2px 1px; }
+.sc-t { position: absolute; left: var(--px); right: 15%; top: 21%; height: 38%; display: flex; align-items: center; font-weight: normal; font-size: 17px; line-height: 1; white-space: nowrap; overflow: hidden;
+  color: #FFF4B8; text-shadow: 0 2px 0 var(--d), 2px 0 0 var(--d), -2px 0 0 var(--d), 0 -2px 0 var(--d), 1.5px 1.5px 0 var(--d), -1.5px 1.5px 0 var(--d), 0 3px 3px rgba(0,0,0,.2); padding: 0 2px; }
 .sh-card.ad .sc-t, html[data-who=eungyeol] .sh-card .sc-t { color: #fff; }
-.sc-pill { margin: 0; max-width: 100%; padding: 2px 6px; border-radius: 10px; background: rgba(255,255,255,.72); font-size: 11.5px; letter-spacing: -.3px; line-height: 15px; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sc-go { position: absolute; right: 5px; top: 50%; width: 26px; height: 26px; margin-top: -13px; border-radius: 50%; background: #fff; border: 2px solid var(--c-d); box-shadow: 0 2px 0 rgba(0,0,0,.12); }
-.sc-go::after { content: ''; position: absolute; left: 7px; top: 7px; width: 7px; height: 7px; border: solid var(--c-d); border-width: 3px 3px 0 0; transform: rotate(45deg); border-radius: 1px; }
+.sc-pill { position: absolute; left: var(--px); top: var(--py); width: var(--pw); height: var(--ph); margin: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 11.5px; letter-spacing: -.4px; line-height: 1; color: var(--navy); white-space: nowrap; overflow: hidden; }
 
 /* ---------- 탭 ---------- */
 .sh-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; padding: 8px 8px 0; position: sticky; top: 0; z-index: 10; background: var(--who-bg); scroll-margin-top: 0; }
-/* 탭: 고른 탭 = 진한 분홍(은결은 파랑) 반짝이 탭, 나머지 = 흰 탭 (GPT 탭 그림이 오기 전까지 CSS로) */
-.sh-tabs button { height: 50px; border-radius: 16px 16px 0 0; display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; font-size: 17px; color: var(--who-d);
-  background: linear-gradient(#fff, #FFF8FB); border: 2px solid color-mix(in srgb, var(--who) 35%, #fff); border-bottom: 0; box-shadow: inset 0 3px 0 rgba(255,255,255,.9); }
-.sh-tabs button img { width: 28px; height: 28px; object-fit: contain; filter: drop-shadow(0 1px 1px rgba(24,40,62,.25)); }
+/* 탭: GPT 탭 그림(P05~P08) — 고른 탭 = 진한 분홍/파랑, 나머지 = 흰 탭(은유 분홍 테두리 / 은결 파랑 테두리).
+   폭이 화면마다 달라서 모서리는 그대로 두고 가운데만 늘림 (border-image) */
+.sh-tabs button { --tab: url(assets/ui/tab_off_pink.webp); height: 50px; display: flex; align-items: center; justify-content: center; gap: 3px; min-width: 0; font-size: 15px; color: var(--who-d);
+  border: solid transparent; border-width: 16px 9px 4px; border-image: var(--tab) 44 56 10 fill / 16px 9px 4px stretch; background: none; padding: 0 0 2px; }
+html[data-who=eungyeol] .sh-tabs button { --tab: url(assets/ui/tab_off_blue.webp); }
+.sh-tabs button.on { --tab: url(assets/ui/tab_on_pink.webp); color: #fff; text-shadow: 0 2px 0 var(--who-d), 0 0 3px var(--who-d); }
+html[data-who=eungyeol] .sh-tabs button.on { --tab: url(assets/ui/tab_on_blue.webp); }
+.sh-tabs button > * { margin: -12px 0 -2px; } /* 위쪽 테두리 두께만큼 글자·아이콘을 가운데로 */
+.sh-tabs button img { width: 24px; height: 24px; flex: none; object-fit: contain; filter: drop-shadow(0 1px 1px rgba(24,40,62,.25)); }
 .sh-tabs button span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sh-tabs button.on { background: linear-gradient(color-mix(in srgb, var(--who) 70%, #fff), var(--who) 70%); border-color: #fff; color: #fff;
-  text-shadow: 0 2px 0 var(--who-d); box-shadow: inset 0 4px 0 rgba(255,255,255,.45), 0 -2px 6px rgba(24,40,62,.15); }
 .sh-tabs button.on img { filter: drop-shadow(0 0 2px #fff) drop-shadow(0 1px 1px rgba(0,0,0,.2)); }
 .sh-body { background: #fff; border-top: 3px solid var(--who); padding: 12px 10px; }
 .sh-tab { display: flex; flex-direction: column; gap: 12px; }
@@ -114,7 +116,7 @@ a { color: inherit; text-decoration: none; }
   .sh { max-width: none; }
   .sh-top { aspect-ratio: auto; height: 236px; }
   .sh-art { object-position: 50% 24%; }
-    .sh-cards { top: 62px; bottom: auto; left: calc(18px + env(safe-area-inset-left)); right: calc(8px + env(safe-area-inset-right)); grid-template-columns: 210px 210px; justify-content: space-between; }
+    .sh-cards { top: 62px; bottom: auto; left: calc(8px + env(safe-area-inset-left)); right: calc(8px + env(safe-area-inset-right)); grid-template-columns: 230px 230px; justify-content: space-between; }
 }
 @media (min-width: 640px) {
   .gm-packs { grid-template-columns: repeat(4, 1fr); }
@@ -122,7 +124,7 @@ a { color: inherit; text-decoration: none; }
       
 }
 @media (max-width: 360px) {
-  .sh-tabs button { font-size: 14px; }
+  .sh-tabs button { font-size: 13px; }
   .sc-t { font-size: 15px; }
 }
 
