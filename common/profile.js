@@ -310,7 +310,7 @@
     costume(c = this.active()) { return (c && c.costume) || null; }, // 예전 어린이 옷 (게임의 예전 코드가 물어봄)
     latestLook, lookBase, // 계열(은유/은결)의 가장 새 모습 · 모습의 계열
     canDress(c = this.active()) { return !!(c && DRESSABLE.includes(c.look)); },
-    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611121837` : null; },
+    costumeImg(c = this.active(), base = '') { const id = this.canDress(c) && this.costume(c); return id ? `${base}common/costumes/${c.look}_${id}.webp?v=202611121949` : null; },
     outfits(c = this.active()) { return c ? OUTFITS[lookBase(c.look)].filter((x) => !x.hidden || (c.outfits || []).includes(x.id)) : []; },
     outfit(c = this.active()) { return (c && c.outfit) || null; }, // 입은 옷 id (없으면 기본 옷)
     ownsOutfit(id, c = this.active()) { return !id || !!(c && (c.outfits || []).includes(id)); },

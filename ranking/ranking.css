@@ -1,90 +1,72 @@
-/* 주간 랭킹 (세로 전용) — 판·탭·칸·줄·메달·테두리는 GPT 그림 (ranking/assets/ui), 여기서는 자리와 글자만 */
-:root { --navy: #26365A; --font: 'Jua', 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif; }
+/* 주간 랭킹 (세로 전용) — 2차 화면: 사용자가 고른 시안 (GPT T01~T09 → assets/v2)
+   은유 = 분홍, 은결 = 파랑 (html[data-who], common/profile.js paintWho). 그림은 두 벌, 여기서는 자리와 글자만 */
+:root { --navy: #26365A; --font: 'Jua', 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif;
+  --bg: url(assets/v2/bg_pink.webp?v=202611121949); --bgc: #FFF4F2;
+  --seg-week: url(assets/v2/seg_pink_week.webp?v=202611121949); --seg-all: url(assets/v2/seg_pink_all.webp?v=202611121949);
+  --line: url(assets/v2/line_pink.webp?v=202611121949); --panel: url(assets/v2/panel_pink.webp?v=202611121949);
+  --me: url(assets/v2/me_pink.webp?v=202611121949); --mine: url(assets/v2/mine_pink.webp?v=202611121949); }
+html[data-who=eungyeol] { --bg: url(assets/v2/bg_blue.webp?v=202611121949); --bgc: #F2F8FE;
+  --seg-week: url(assets/v2/seg_blue_week.webp?v=202611121949); --seg-all: url(assets/v2/seg_blue_all.webp?v=202611121949);
+  --line: url(assets/v2/line_blue.webp?v=202611121949); --panel: url(assets/v2/panel_blue.webp?v=202611121949);
+  --me: url(assets/v2/me_blue.webp?v=202611121949); --mine: url(assets/v2/mine_blue.webp?v=202611121949); }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html { -webkit-text-size-adjust: 100%; background: #CFE8FA; }
+html { -webkit-text-size-adjust: 100%; background: var(--bgc); }
 body { margin: 0; min-height: 100vh; font-family: var(--font); color: var(--navy); overflow-x: hidden; -webkit-user-select: none; user-select: none;
-  background: #CFE8FA url(assets/bg.webp?v=202611121837) center top / cover fixed; }
+  background: var(--bgc) var(--bg) center top / 100% auto no-repeat; }
 img { -webkit-user-drag: none; display: block; }
 button { font-family: var(--font); color: var(--navy); border: 0; background: none; padding: 0; cursor: pointer; touch-action: manipulation; }
 a { color: inherit; text-decoration: none; }
 .hidden { display: none !important; }
 
-.rk { max-width: 480px; margin: 0 auto; padding: calc(8px + env(safe-area-inset-top)) 8px calc(16px + env(safe-area-inset-bottom)); }
-body.has-mine .rk { padding-bottom: calc(118px + env(safe-area-inset-bottom)); }
+.rk { max-width: 520px; margin: 0 auto; padding: 0 12px calc(16px + env(safe-area-inset-bottom)); }
+body.has-mine .rk { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 
-/* 위: 뒤로 + 제목 띠 (글자는 띠 안 크림색 칸: 그림 높이 39~77%, 폭 12~87%) */
-.rk-head { position: relative; height: 0; padding-top: 22%; }
-.rk-back { position: absolute; left: 0; top: 4px; width: 42px; height: 42px; border-radius: 50%; background: var(--who); border: 3px solid #fff; box-shadow: 0 3px 8px rgba(24,40,62,.3); display: grid; place-items: center; z-index: 2; }
-.rk-back img { width: 22px; height: 22px; }
-.rk-title { position: absolute; left: 13%; right: 0; top: 0; }
-.rk-title img { width: 100%; }
-.rk-title b { position: absolute; left: 13%; right: 14%; top: 39%; bottom: 23%; display: flex; align-items: center; justify-content: center; font-weight: normal; font-size: clamp(17px, 5.2vw, 24px); color: #B8336A; white-space: nowrap; overflow: hidden; }
+/* 맨 윗줄: 뒤로(아이템샵 .sh-back 과 같은 자리·모양) · 주간|전체 한 알약 (아이템샵 코인·다이아 자리) */
+.rk-head { position: relative; height: calc(70px + env(safe-area-inset-top)); }
+.rk-back { position: absolute; left: calc(-2px + env(safe-area-inset-left)); top: calc(10px + env(safe-area-inset-top)); width: 46px; height: 46px; border-radius: 50%; background: var(--who); border: 3px solid #fff; box-shadow: 0 3px 8px rgba(24,40,62,.3); display: grid; place-items: center; z-index: 2; }
+.rk-back img { width: 24px; height: 24px; }
+.rk-seg { position: absolute; right: calc(-2px + env(safe-area-inset-right)); top: calc(10px + env(safe-area-inset-top)); width: clamp(150px, 40vw, 172px); aspect-ratio: 360 / 125; display: grid; grid-template-columns: 1fr 1fr; padding: 0 3%; background: var(--seg-week) center / 100% 100% no-repeat; }
+.rk-seg[data-mode=all] { background-image: var(--seg-all); }
+.rk-seg button { display: flex; align-items: center; justify-content: center; font-size: clamp(16px, 4.6vw, 19px); color: var(--who-d); }
+.rk-seg button.on { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.18); }
+.rk-seg button b { font-weight: normal; }
 
-/* 주간 / 전체 탭 (그림 두 장: 고른 것·안 고른 것) */
-.rk-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 6px 4px 0; }
-.rk-tabs button { position: relative; }
-.rk-tabs img { width: 100%; }
-.rk-tabs .t-on, .rk-tabs button.on .t-off { display: none; }
-.rk-tabs button.on .t-on { display: block; }
-.rk-tabs b { position: absolute; inset: 0 0 12% 0; display: flex; align-items: center; justify-content: center; font-weight: normal; font-size: clamp(16px, 4.8vw, 21px); color: #B98A6A; }
-.rk-tabs button.on b { color: #fff; text-shadow: 0 1px 2px rgba(160,30,80,.45); }
+/* 기간: 작은 글자 한 줄 */
+.rk-period { margin: 2px 0 0; text-align: center; font-size: clamp(14px, 3.9vw, 16px); color: #5E6B88; }
 
-/* 기간 띠 (왼쪽 달력·오른쪽 별은 그림) */
-.rk-period { position: relative; width: 84%; margin: 6px auto 0; }
-.rk-period img { width: 100%; }
-.rk-period b { position: absolute; left: 15%; right: 12%; top: 18%; bottom: 20%; display: flex; align-items: center; justify-content: center; font-weight: normal; font-size: clamp(13px, 3.8vw, 16px); color: #8A5A3C; white-space: nowrap; }
-
-/* 게임 고르기 줄: 좌우로 밀기 + 양쪽 화살표 (화살표 그림 하나를 뒤집어 왼쪽에도) */
-.rk-games { position: relative; margin: 8px 0 0; }
-.rk-gscroll { display: flex; gap: 6px; overflow-x: auto; scroll-snap-type: x proximity; padding: 8px 34px 6px; scrollbar-width: none; }
+/* 게임 고르기: 칸 없는 놀이기구 + 이름 (고른 게임 = 이름 색 + 밑줄) */
+.rk-gscroll { display: flex; gap: 2px; overflow-x: auto; scroll-snap-type: x proximity; padding: 6px 0 4px; margin: 0 -12px; padding-left: 8px; padding-right: 8px; scrollbar-width: none; }
 .rk-gscroll::-webkit-scrollbar { display: none; }
-.rk-gbtn { position: relative; flex: 0 0 68px; height: 68px; scroll-snap-align: center; }
-.rk-gbtn > img { position: absolute; }
-.rk-gbtn .on, .rk-gbtn .off { inset: 0; width: 100%; height: 100%; }
-.rk-gbtn .on, .rk-gbtn.on .off { display: none; }
-.rk-gbtn.on .on { display: block; }
-.rk-gbtn .ride { left: 12%; top: 10%; width: 76%; height: 78%; object-fit: contain; }
-.rk-gbtn:not(.on) .ride { opacity: .85; }
-.rk-arrow { position: absolute; top: 50%; width: 34px; height: 34px; transform: translateY(-50%); z-index: 2; transition: opacity .2s; }
-.rk-arrow img { width: 100%; height: 100%; }
-.rk-arrow.l { left: -2px; } .rk-arrow.l img { transform: scaleX(-1); }
-.rk-arrow.r { right: -2px; }
-.rk-arrow.dim { opacity: .35; }
-.rk-divider { width: 92%; margin: 4px auto 6px; }
+.rk-gbtn { flex: 0 0 auto; width: 25%; min-width: 86px; max-width: 120px; display: flex; flex-direction: column; align-items: center; scroll-snap-align: center; padding: 0 2px; }
+.rk-gbtn .ride { width: 88%; aspect-ratio: 460 / 470; object-fit: contain; }
+.g-name { margin-top: 2px; font-size: clamp(12px, 3.5vw, 15px); color: #4A5878; white-space: nowrap; }
+.g-line { display: block; width: 72%; height: 6px; margin-top: 4px; background: var(--line) center / 100% 100% no-repeat; visibility: hidden; }
+.rk-gbtn.on .g-name { color: var(--who-d); }
+.rk-gbtn.on .g-line { visibility: visible; }
 
-/* 순위표 큰 판: 모서리 장식은 그대로, 가운데만 늘림 */
-.rk-board { border: solid transparent; border-width: 30px 26px 26px; border-image: url(assets/ui/board.webp?v=202611121837) 92 fill / 30px 26px 26px / 0 stretch; margin: 0 -2px; }
-.rk-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
-.rk-note { margin: 8px 0 0; text-align: center; font-size: 12px; color: #A08A78; }
+/* 흰 목록 판 (모서리 그대로, 가운데만 늘림) */
+.rk-panel { margin-top: 6px; border: solid transparent; border-width: 16px 12px; border-image: var(--panel) 44 fill / 16px 12px / 0 stretch; }
+.rk-list { list-style: none; margin: 0; padding: 0; }
+.rk-note { margin: 10px 0 4px; text-align: center; font-size: 13px; color: #8A94AA; }
 
-/* 한 줄: [메달·등수] [프로필 테두리 + 얼굴] [이름] [별 + 점수]. 줄 판 그림은 비율 그대로 */
-.rk-row { position: relative; display: flex; align-items: center; gap: 6px; padding: 0 7% 2px 3.5%; aspect-ratio: 900 / 160; background: url(assets/ui/row.webp?v=202611121837) center / 100% 100% no-repeat; }
-.rk-row.top1 { aspect-ratio: 900 / 176; background-image: url(assets/ui/row1.webp?v=202611121837); padding-left: 6%; padding-right: 12%; }
-.rk-row.top2 { aspect-ratio: 900 / 176; background-image: url(assets/ui/row2.webp?v=202611121837); padding-left: 6%; padding-right: 12%; }
-.rk-row.top3 { aspect-ratio: 900 / 176; background-image: url(assets/ui/row3.webp?v=202611121837); padding-left: 6%; padding-right: 12%; }
-.rk-row.me { aspect-ratio: 900 / 165; background-image: url(assets/ui/row_me.webp?v=202611121837); padding-left: 10.5%; padding-right: 11.5%; }
-.r-rank { flex: 0 0 auto; position: relative; display: grid; place-items: center; background: center / contain no-repeat; }
-.r-rank.medal { width: 13%; aspect-ratio: 1; }
-.r-rank.medal b { margin-top: 4%; font-size: clamp(15px, 4.4vw, 20px); color: #7A4A12; }
-.rk-row.top2 .r-rank b { color: #4E5A6E; }
-.rk-row.top3 .r-rank b { color: #6E3A1A; }
-.r-rank.badge { width: 9%; aspect-ratio: 1; margin: 0 2% 0 1%; }
-.r-rank b { font-weight: normal; font-size: clamp(13px, 3.8vw, 17px); color: #8A5A3C; font-variant-numeric: tabular-nums; }
-.r-face { position: relative; flex: 0 0 auto; width: 13%; aspect-ratio: 1; }
-.r-face .ph { position: absolute; left: 17%; top: 17%; width: 66%; height: 66%; border-radius: 50%; object-fit: cover; object-position: 50% 15%; background: #FFF6EE; }
-.r-face .fr { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
-.r-face.f1, .r-face.f2, .r-face.f3 { width: 15%; aspect-ratio: 200 / 177; }
-.r-face.f1 .ph, .r-face.f2 .ph, .r-face.f3 .ph { left: 26%; width: 48%; top: 17%; height: auto; aspect-ratio: 1; }
-.r-face .crown { position: absolute; left: 24%; width: 52%; top: -34%; transform: rotate(-8deg); }
-.r-name { flex: 1; min-width: 0; font-size: clamp(14px, 4.2vw, 18px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rk-row.me .r-name { color: #B8336A; }
-.r-score { flex: 0 0 auto; display: flex; align-items: center; gap: 3px; font-size: clamp(14px, 4.2vw, 18px); color: #B87A12; font-variant-numeric: tabular-nums; }
-.r-score img { width: 18px; height: 18px; }
+/* 한 줄: 숫자 동그라미 · 프로필 고리 · 이름 · 별 점수. 줄 사이 구분선 (T08 ③) */
+.rk-row { position: relative; display: flex; align-items: center; gap: 10px; height: clamp(56px, 15vw, 66px); padding: 0 12px 0 8px; }
+.rk-row + .rk-row::before { content: ''; position: absolute; left: 10px; right: 10px; top: -1px; height: 2px; background: url(assets/v2/divider.webp?v=202611121949) center / 100% 100% no-repeat; opacity: .9; }
+.rk-row.me { border: solid transparent; border-width: 0 26px; border-image: var(--me) 0 50 fill / 0 26px / 0 stretch; padding: 0 0 0 0; margin: 2px -6px; }
+.rk-row.me::before, .rk-row.me + .rk-row::before { display: none; }
+.r-num { flex: 0 0 auto; width: clamp(32px, 9vw, 38px); aspect-ratio: 1; display: grid; place-items: center; background: center / contain no-repeat; }
+.r-num b { font-weight: normal; font-size: clamp(14px, 4vw, 17px); color: #6A4A2A; font-variant-numeric: tabular-nums; margin-top: 1px; }
+.r-face { position: relative; flex: 0 0 auto; width: clamp(44px, 12vw, 52px); aspect-ratio: 1; }
+.r-face .ph { position: absolute; inset: 9%; width: 82%; height: 82%; border-radius: 50%; object-fit: cover; object-position: 50% 12%; background: #fff; }
+.r-face .ring { position: absolute; inset: 0; width: 100%; height: 100%; }
+.r-name { flex: 1; min-width: 0; font-size: clamp(15px, 4.3vw, 18px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.r-score { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; font-size: clamp(15px, 4.3vw, 18px); color: #7A5A2E; font-variant-numeric: tabular-nums; }
+.r-score img { width: 22px; height: 22px; object-fit: contain; }
+.rk-row.me .r-name, .rk-row.me .r-score, .rk-row.mine .r-name, .rk-row.mine .r-score { color: var(--who-d); }
 
-/* 20등 밖이면 맨 아래 내 등수 칸 (위 가운데 리본 그림이 있어서 비율 그대로) */
-.rk-mine { position: fixed; left: 0; right: 0; bottom: 0; padding: 0 8px calc(6px + env(safe-area-inset-bottom)); z-index: 5; background: linear-gradient(rgba(207,232,250,0), rgba(207,232,250,.95) 30%); }
-.rk-mine .rk-list { max-width: 464px; margin: 0 auto; }
-.rk-row.mine { aspect-ratio: 900 / 206; background-image: url(assets/ui/row_mine.webp?v=202611121837); padding: 6% 14.5% 2% 14%; }
-.rk-row.mine .r-name { color: #B8336A; }
+/* 20등 밖(또는 기록 없음): 화면 맨 아래 내 등수 칸 */
+.rk-mine { position: fixed; left: 0; right: 0; bottom: 0; padding: 0 8px calc(8px + env(safe-area-inset-bottom)); z-index: 5; }
+.rk-mine .rk-list { max-width: 504px; margin: 0 auto; }
+.rk-row.mine { height: clamp(62px, 17vw, 74px); border: solid transparent; border-width: 0 30px; border-image: var(--mine) 0 62 fill / 0 30px / 0 stretch; padding: 0; }
 
 .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: rgba(38,54,90,.92); color: #fff; padding: 10px 16px; border-radius: 14px; font-size: 15px; z-index: 50; }

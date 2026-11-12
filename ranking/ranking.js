@@ -1,13 +1,15 @@
 'use strict';
 // 트윈 게임랜드 주간 랭킹 (세로 전용)
-//  · 위: 뒤로 · 제목 띠(고른 게임 이름) / 주간·전체 탭 / 주간이면 기간(일요일~토요일) / 게임 고르기 줄(좌우로 밀기, 첫 화면 놀이기구 그림)
-//  · 순위표: 1·2·3등은 메달·금은동 줄·월계수 테두리(1등은 왕관), 4~20등은 보통 줄. 내 줄은 분홍 줄
-//  · 내가 20등 밖이면 맨 아래에 내 등수 칸을 따로
+//  · 2차 화면 (사용자가 고른 시안 2026-11-12, GPT T01~T09 → ranking/assets/v2): 맨 위 왼쪽 뒤로(아이템샵과 같음) · 오른쪽 주간|전체 한 알약 버튼
+//    → 기간 작은 글자 → 게임 고르기(칸 없는 놀이기구 + 이름, 고른 게임은 이름 색 + 밑줄) → 흰 판 안 등수 목록
+//  · 한 줄 = 숫자 동그라미(1·2·3등 금·은·동, 4등부터 크림) · 프로필 고리(은유 얼굴 분홍, 은결 얼굴 파랑) · 이름 · 별 점수. 줄 사이 구분선
+//  · 화면 색: 은유 = 분홍, 은결 = 파랑 (html data-who, common/profile.js paintWho) — 배경·버튼·밑줄·판·내 줄·맨 아래 칸 모두 두 벌
+//  · 내 줄은 연한 색 줄, 내가 20등 밖(또는 기록 없음)이면 화면 맨 아래에 내 등수 칸을 따로
 //  · 순위 = 서버(Firebase Firestore records: 게임이 끝날 때마다 common/auth.js 가 올림)에서 캐릭터마다 가장 좋은 기록
 //    끝없는 게임 = 한 판 최고 점수(score), 징검다리 게임 = 판마다 가장 많이 받은 별을 모두 더한 것
 //    주간 = 이번 주 일요일~토요일(records.day 7일), 전체 = 그 게임 기록 전부. 지금은 화면에서 계산 (사람이 많아지면 서버에서 미리 계산하기)
 const $ = (id) => document.getElementById(id);
-const V = '?v=202611121837';
+const V = '?v=202611121949';
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 const { blip } = window.UI;
 const EN = window.I18N && I18N.lang === 'en';
@@ -112,12 +114,13 @@ async function board(g, m) {
 
 // ---------- 그리기 ----------
 const esc = (s) => String(s).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+const A2 = (n) => `assets/v2/${n}.webp${V}`;
+const ringOf = (x) => (/eungyeol/.test(x.face || '') ? 'blue' : 'pink'); // 얼굴 그림 이름으로 은유·은결
 function rowHTML(x, cls) {
-  const top3 = typeof x.rank === "number" && x.rank <= 3, k = top3 ? x.rank : 0;
-  const rank = top3 ? `<span class="r-rank medal" style="background-image:url(assets/ui/medal${k}.webp${V})"><b>${x.rank}</b></span>`
-    : `<span class="r-rank badge" style="background-image:url(assets/ui/badge.webp${V})"><b>${x.rank}</b></span>`;
-  const face = `<span class="r-face${top3 ? ' f' + k : ''}"><img class="ph" src="${x.face}" alt=""><img class="fr" src="assets/ui/frame${top3 ? k : ''}.webp${V}" alt="">${k === 1 ? `<img class="crown" src="assets/ui/crown.webp${V}" alt="">` : ''}</span>`;
-  return `<li class="rk-row ${cls}">${rank}${face}<span class="r-name">${esc(x.name)}</span><span class="r-score"><img src="assets/ui/star.webp${V}" alt="">${x.score ? x.score.toLocaleString() : '-'}</span></li>`;
+  const n = typeof x.rank === 'number' && x.rank <= 3 ? x.rank : '';
+  return `<li class="rk-row ${cls}"><span class="r-num" style="background-image:url(${A2('num' + n)})"><b>${x.rank}</b></span>`
+    + `<span class="r-face"><img class="ph" src="${x.face}" alt=""><img class="ring" src="${A2('ring_' + ringOf(x))}" alt=""></span>`
+    + `<span class="r-name">${esc(x.name)}</span><span class="r-score"><img src="assets/ui/star.webp${V}" alt="">${x.score ? x.score.toLocaleString() : '-'}</span></li>`;
 }
 // '오후 3시 기준 · 매시 정각에 새로 매겨요'
 function snapText(at) {
@@ -126,16 +129,16 @@ function snapText(at) {
 }
 let ticket = 0;
 async function render() {
-  $('title').textContent = gname(game);
-  document.querySelectorAll('.rk-tabs button').forEach((b) => b.classList.toggle('on', b.dataset.mode === mode));
+  document.querySelectorAll('.rk-seg button').forEach((b) => b.classList.toggle('on', b.dataset.mode === mode));
+  $('seg').dataset.mode = mode;
   $('period').classList.toggle('hidden', mode !== 'week');
-  $('periodText').textContent = periodText();
+  $('period').textContent = periodText();
   document.querySelectorAll('.rk-gbtn').forEach((b) => b.classList.toggle('on', b.dataset.g === game));
   const t = ++ticket;
   $('list').innerHTML = ''; $('note').textContent = tr('순위를 불러오는 중이에요…'); $('note').classList.remove('hidden');
   const { ok, list, me } = await board(game, mode);
   if (t !== ticket) return; // 그새 다른 게임·탭을 누름
-  $('list').innerHTML = list.slice(0, TOP).map((x) => rowHTML(x, x.me ? 'me' : x.rank <= 3 ? 'top' + x.rank : '')).join('');
+  $('list').innerHTML = list.slice(0, TOP).map((x) => rowHTML(x, x.me ? 'me' : '')).join('');
   $('note').textContent = !ok ? tr('순위를 불러오지 못했어요. 인터넷 연결을 확인해 주세요')
     : !list.length ? tr(mode === 'week' ? '이번 주 기록이 아직 없어요. 첫 번째 주인공이 되어 보세요!' : '아직 기록이 없어요. 첫 번째 주인공이 되어 보세요!')
     : snapAt ? snapText(snapAt) : '';
@@ -146,18 +149,13 @@ async function render() {
   if (out) $('mine').innerHTML = `<ol class="rk-list">${rowHTML(me, 'mine')}</ol>`;
 }
 function buildGames() {
-  $('games').innerHTML = GAMES.map((g) => `<button class="rk-gbtn" data-g="${g}" aria-label="${esc(gname(g))}"><img class="on" src="assets/ui/game_on.webp${V}" alt=""><img class="off" src="assets/ui/game_off.webp${V}" alt=""><img class="ride" src="../hub/park/rides/${g}.webp${V}" alt=""></button>`).join('');
+  $('games').innerHTML = GAMES.map((g) => `<button class="rk-gbtn" data-g="${g}"><img class="ride" src="../hub/park/rides/${g}.webp${V}" alt=""><span class="g-name">${esc(gname(g))}</span><i class="g-line"></i></button>`).join('');
   $('games').addEventListener('click', (e) => {
     const b = e.target.closest('.rk-gbtn'); if (!b || b.dataset.g === game) return;
     blip(); game = b.dataset.g; try { sessionStorage.setItem('twin_rank_game', game); } catch (er) { /* ignore */ }
     render(); b.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   });
-  const sc = $('games'), step = () => sc.clientWidth * 0.7;
-  $('arrL').onclick = () => { blip(); sc.scrollBy({ left: -step(), behavior: 'smooth' }); };
-  $('arrR').onclick = () => { blip(); sc.scrollBy({ left: step(), behavior: 'smooth' }); };
-  const arrows = () => { $('arrL').classList.toggle('dim', sc.scrollLeft < 4); $('arrR').classList.toggle('dim', sc.scrollLeft > sc.scrollWidth - sc.clientWidth - 4); };
-  sc.addEventListener('scroll', arrows, { passive: true }); setTimeout(arrows, 50);
-  const cur = sc.querySelector(`[data-g="${game}"]`); if (cur) setTimeout(() => cur.scrollIntoView({ inline: 'center', block: 'nearest' }), 0);
+  const cur = $('games').querySelector(`[data-g="${game}"]`); if (cur) setTimeout(() => cur.scrollIntoView({ inline: 'center', block: 'nearest' }), 0);
 }
-document.querySelectorAll('.rk-tabs button').forEach((b) => b.addEventListener('click', () => { if (b.dataset.mode === mode) return; blip(); mode = b.dataset.mode; render(); }));
+document.querySelectorAll('.rk-seg button').forEach((b) => b.addEventListener('click', () => { if (b.dataset.mode === mode) return; blip(); mode = b.dataset.mode; render(); }));
 buildGames(); render();

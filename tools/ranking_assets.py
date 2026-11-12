@@ -4,7 +4,8 @@
   · B02: 놀이공원 가운데 A 배경(mid4_a)의 랭킹 자리만 길바닥을 넓힌 그림. 사용자 요청대로 '그 자리만' 바꾸려고
     원본과 달라진 곳(빨간 원 둘레)만 골라 원본 위에 가장자리를 흐리게 덧붙임 → hub/park/bg/mid4_a_rank.webp (1차 B01 은 안 씀)
   · R02: 아이템샵·옷장과 한 세트인 랭킹 건물(이름표판 없음) → hub/park/ui/ranking.webp (이름은 코드의 흰 이름표)
-  · E01·H01~H09·L01~L06·M01~M03·N01·F01~F04·C01·K01: 랭킹 화면 (ranking/) → ranking/assets/
+  · E01·H01~H09·L01~L06·M01~M03·N01·F01~F04·C01·K01: 1차 랭킹 화면 그림 → ranking/assets/ (2차 화면에서는 star 만 씀)
+  · T01~T09: 2차 랭킹 화면 (사용자가 고른 시안, 2026-11-12) → ranking/assets/v2/. 분홍(은유)·파랑(은결)판 따로
 """
 import os, sys
 import numpy as np
@@ -60,5 +61,47 @@ def screen():
         print(f'{name:9s} {im.size}  폭/높이 {im.width / im.height:.3f}')
 
 
+def pieces(path):
+    """한 장에 여러 조각(2x2·위아래 줄): 초록을 빼고 빈 줄·빈 칸으로 나눠 위→아래, 왼→오른 순서로"""
+    im = key(path); al = np.asarray(im.getchannel('A')) > 40
+    def runs(v, gap=12):
+        out, s0, last = [], None, -99
+        for i in np.nonzero(v)[0]:
+            if s0 is None: s0 = i
+            elif i - last > gap: out.append((s0, last + 1)); s0 = i
+            last = i
+        if s0 is not None: out.append((s0, last + 1))
+        return out
+    res = []
+    for y0, y1 in runs(al.any(1)):
+        for x0, x1 in runs(al[y0:y1].any(0)):
+            res.append(tight(im.crop((x0, y0, x1, y1)), pad=2))
+    return res
+
+
+V2 = {  # GPT 번호 → 조각 이름들 (한 장에 하나면 이름 하나), 저장 폭
+    'T03': (['seg_pink_week', 'seg_pink_all', 'seg_blue_week', 'seg_blue_all'], 360),
+    'T04': (['num1', 'num2', 'num3', 'num'], 96),
+    'T05': (['ring_pink', 'ring_blue', 'line_pink', 'line_blue'], 120),
+    'T06': (['panel_pink'], 600), 'T07': (['panel_blue'], 600),
+    'T08': (['me_pink', 'me_blue', 'divider'], 900),
+    'T09': (['mine_pink', 'mine_blue'], 900),
+}
+
+
+def screen2():
+    out = f'{OUT}/v2'; os.makedirs(out, exist_ok=True)
+    for n, name in (('T01', 'bg_pink'), ('T02', 'bg_blue')):
+        Image.open(f'{SRC}/{n}.png').convert('RGB').resize((720, 1080), Image.LANCZOS).save(f'{out}/{name}.webp', quality=84, method=6)
+    for n, (names, w) in V2.items():
+        ps = pieces(f'{SRC}/{n}.png')
+        assert len(ps) == len(names), f'{n}: 조각 {len(ps)}개 (기대 {len(names)})'
+        for im, name in zip(ps, names):
+            im = im.resize((w, max(1, round(im.height * w / im.width))), Image.LANCZOS)
+            im.save(f'{out}/{name}.webp', 'WEBP', quality=90, alpha_quality=100, method=6)
+            print(f'{name:14s} {im.size}  폭/높이 {im.width / im.height:.3f}')
+
+
 if __name__ == '__main__':
-    background(); house(); screen()
+    if 'v2' in sys.argv: screen2()
+    else: background(); house(); screen(); screen2()
