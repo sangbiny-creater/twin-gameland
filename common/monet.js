@@ -274,9 +274,10 @@ html[data-who=eungyeol] .mn-art-x{background-image:url(${P4}x_blue.webp)}
       if (window.UI) UI.blip(1046);
       fx(); setTimeout(() => pop(`${esc(name(g))} 열림!`), 500); refreshHub(); if (opts.onOpen) opts.onOpen();
     }
-    artModal({ img: 'locked', pink: true, ar: 720 / 981, title: '잠겨 있는 게임이에요!', titleY: 39.5, titleX: 57, box: [46, 9, 12, 9], buttons: btns, onX: opts.onClose || null, xPos: [31, -1],
-      html: `<p><b>${esc(name(g))}</b></p>${opts.msg ? `<p>${opts.msg}</p>` : '<p>이 게임을 열고 더 많은 즐거움을 만나 보세요!</p>'}${haveLine()}`,
-      note: `한 번 열면 언제든지 계속 할 수 있어요!<br>다이아로 연 횟수에 따라 값이 올라요: ${PRICES.join(' → ')}` });
+    artModal({ img: 'locked', pink: true, ar: 720 / 981, title: '잠긴 게임', titleY: 39.5, titleX: 57, box: [46, 9, 12, 9], buttons: btns, onX: opts.onClose || null, xPos: [31, -1],
+      // 문구는 짧게 (사용자 요청): 제목 '잠긴 게임' + 열쇠·다이아 개수 + 아래 한 줄. 징검다리 체험 안내(opts.msg)만 따로 보여 줌
+      html: `${opts.msg ? `<p>${opts.msg}</p>` : ''}${haveLine()}`,
+      note: '한 번 열면 언제든지 계속 할 수 있어요!' });
   }
 
   // ---------- 게임 결과: 광고 보고 2배 받기 · 이어하기 (+ 10판마다 다이아) ----------

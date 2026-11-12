@@ -4904,6 +4904,10 @@ window.I18N_DATA = {
 "This Game Is Locked!"
 ],
 [
+"잠긴 게임",
+"Close"
+],
+[
 "이 게임을 열고 더 많은 즐거움을 만나 보세요!",
 "Unlock this game for more fun!"
 ],

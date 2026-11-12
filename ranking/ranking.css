@@ -1,14 +1,14 @@
 /* 주간 랭킹 (세로 전용) — 2차 화면: 사용자가 고른 시안 (GPT T01~T09 → assets/v2)
    은유 = 분홍, 은결 = 파랑 (html[data-who], common/profile.js paintWho). 그림은 두 벌, 여기서는 자리와 글자만 */
 :root { --navy: #26365A; --font: 'Jua', 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif;
-  --bg: url(assets/v2/bg_pink.webp?v=202611121949); --bgc: #FFF4F2;
-  --seg-week: url(assets/v2/seg_pink_week.webp?v=202611121949); --seg-all: url(assets/v2/seg_pink_all.webp?v=202611121949);
-  --line: url(assets/v2/line_pink.webp?v=202611121949); --panel: url(assets/v2/panel_pink.webp?v=202611121949);
-  --me: url(assets/v2/me_pink.webp?v=202611121949); --mine: url(assets/v2/mine_pink.webp?v=202611121949); }
-html[data-who=eungyeol] { --bg: url(assets/v2/bg_blue.webp?v=202611121949); --bgc: #F2F8FE;
-  --seg-week: url(assets/v2/seg_blue_week.webp?v=202611121949); --seg-all: url(assets/v2/seg_blue_all.webp?v=202611121949);
-  --line: url(assets/v2/line_blue.webp?v=202611121949); --panel: url(assets/v2/panel_blue.webp?v=202611121949);
-  --me: url(assets/v2/me_blue.webp?v=202611121949); --mine: url(assets/v2/mine_blue.webp?v=202611121949); }
+  --bg: url(assets/v2/bg_pink.webp?v=202611122012); --bgc: #FFF4F2;
+  --seg-week: url(assets/v2/seg_pink_week.webp?v=202611122012); --seg-all: url(assets/v2/seg_pink_all.webp?v=202611122012);
+  --line: url(assets/v2/line_pink.webp?v=202611122012); --panel: url(assets/v2/panel_pink.webp?v=202611122012);
+  --me: url(assets/v2/me_pink.webp?v=202611122012); --mine: url(assets/v2/mine_pink.webp?v=202611122012); }
+html[data-who=eungyeol] { --bg: url(assets/v2/bg_blue.webp?v=202611122012); --bgc: #F2F8FE;
+  --seg-week: url(assets/v2/seg_blue_week.webp?v=202611122012); --seg-all: url(assets/v2/seg_blue_all.webp?v=202611122012);
+  --line: url(assets/v2/line_blue.webp?v=202611122012); --panel: url(assets/v2/panel_blue.webp?v=202611122012);
+  --me: url(assets/v2/me_blue.webp?v=202611122012); --mine: url(assets/v2/mine_blue.webp?v=202611122012); }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html { -webkit-text-size-adjust: 100%; background: var(--bgc); }
 body { margin: 0; min-height: 100vh; font-family: var(--font); color: var(--navy); overflow-x: hidden; -webkit-user-select: none; user-select: none;
@@ -51,7 +51,7 @@ body.has-mine .rk { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 
 /* 한 줄: 숫자 동그라미 · 프로필 고리 · 이름 · 별 점수. 줄 사이 구분선 (T08 ③) */
 .rk-row { position: relative; display: flex; align-items: center; gap: 10px; height: clamp(56px, 15vw, 66px); padding: 0 12px 0 8px; }
-.rk-row + .rk-row::before { content: ''; position: absolute; left: 10px; right: 10px; top: -1px; height: 2px; background: url(assets/v2/divider.webp?v=202611121949) center / 100% 100% no-repeat; opacity: .9; }
+.rk-row + .rk-row::before { content: ''; position: absolute; left: 10px; right: 10px; top: -1px; height: 2px; background: url(assets/v2/divider.webp?v=202611122012) center / 100% 100% no-repeat; opacity: .9; }
 .rk-row.me { border: solid transparent; border-width: 0 26px; border-image: var(--me) 0 50 fill / 0 26px / 0 stretch; padding: 0 0 0 0; margin: 2px -6px; }
 .rk-row.me::before, .rk-row.me + .rk-row::before { display: none; }
 .r-num { flex: 0 0 auto; width: clamp(32px, 9vw, 38px); aspect-ratio: 1; display: grid; place-items: center; background: center / contain no-repeat; }

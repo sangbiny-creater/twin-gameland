@@ -3,7 +3,7 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html { -webkit-text-size-adjust: 100%; background: #CFE8FA; }
 body { margin: 0; min-height: 100vh; font-family: var(--font); color: var(--navy); overflow-x: hidden; -webkit-user-select: none; user-select: none;
-  background: #CFE8FA url(../ranking/assets/bg.webp?v=202611121949) center top / cover fixed; }
+  background: #CFE8FA url(../ranking/assets/bg.webp?v=202611122012) center top / cover fixed; }
 img { -webkit-user-drag: none; display: block; }
 button { font-family: var(--font); color: var(--navy); border: 0; background: none; padding: 0; cursor: pointer; touch-action: manipulation; }
 a { color: inherit; text-decoration: none; }
@@ -29,7 +29,7 @@ a { color: inherit; text-decoration: none; }
 .tr-tabs button.on b { color: #fff; text-shadow: 0 1px 2px rgba(160,30,80,.45); }
 
 /* 큰 판 (랭킹 순위표 판 그림) */
-.tr-board { border: solid transparent; border-width: 30px 24px 24px; border-image: url(../ranking/assets/ui/board.webp?v=202611121949) 92 fill / 30px 24px 24px / 0 stretch; margin: 0 -2px 8px; }
+.tr-board { border: solid transparent; border-width: 30px 24px 24px; border-image: url(../ranking/assets/ui/board.webp?v=202611122012) 92 fill / 30px 24px 24px / 0 stretch; margin: 0 -2px 8px; }
 .tr-divider { width: 92%; margin: 2px auto 8px; }
 .tr-h { margin: 0 0 8px; font-weight: normal; font-size: 19px; color: #B8336A; text-align: center; }
 .tr-h small { display: block; font-size: 12px; color: #A08A78; margin-top: 2px; }
@@ -46,22 +46,22 @@ a { color: inherit; text-decoration: none; }
 .tr-acts { display: flex; gap: 8px; margin-top: 10px; }
 .tr-acts > * { flex: 1 1 0; min-width: 0; }
 .tb { --h: 48px; height: var(--h); padding: .14em calc(var(--h) * .4) 0; display: flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; overflow: hidden;
-  font-size: 18px; line-height: 1; border: 0 solid transparent; border-image: url(../common/ui/popup/v4/btn_pink.webp?v=202611121949) 0 58 fill / 0 calc(var(--h) * .5) stretch; color: var(--who); }
-.tb.pink { border-image-source: url(../common/ui/popup/v4/fill_pink.webp?v=202611121949); color: #fff; text-shadow: 0 2px 0 var(--who-d); }
-html[data-who=eungyeol] .tb { border-image-source: url(../common/ui/popup/v4/btn_blue.webp?v=202611121949); }
-html[data-who=eungyeol] .tb.pink { border-image-source: url(../common/ui/popup/v4/fill_blue.webp?v=202611121949); }
+  font-size: 18px; line-height: 1; border: 0 solid transparent; border-image: url(../common/ui/popup/v4/btn_pink.webp?v=202611122012) 0 58 fill / 0 calc(var(--h) * .5) stretch; color: var(--who); }
+.tb.pink { border-image-source: url(../common/ui/popup/v4/fill_pink.webp?v=202611122012); color: #fff; text-shadow: 0 2px 0 var(--who-d); }
+html[data-who=eungyeol] .tb { border-image-source: url(../common/ui/popup/v4/btn_blue.webp?v=202611122012); }
+html[data-who=eungyeol] .tb.pink { border-image-source: url(../common/ui/popup/v4/fill_blue.webp?v=202611122012); }
 .tb:active { transform: translateY(2px); }
 .tb.small { --h: 36px; font-size: 15px; flex: 0 0 auto; padding: .14em 14px 0; }
 .tb .pt { width: 20px; height: 20px; }
 
 /* 줄 (랭킹 줄 그림) */
 .tr-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
-.tr-row { position: relative; display: flex; align-items: center; gap: 6px; padding: 0 6% 2px 3.5%; min-height: 64px; aspect-ratio: 900 / 160; background: url(../ranking/assets/ui/row.webp?v=202611121949) center / 100% 100% no-repeat; }
+.tr-row { position: relative; display: flex; align-items: center; gap: 6px; padding: 0 6% 2px 3.5%; min-height: 64px; aspect-ratio: 900 / 160; background: url(../ranking/assets/ui/row.webp?v=202611122012) center / 100% 100% no-repeat; }
 .tr-row.top1, .tr-row.top2, .tr-row.top3 { aspect-ratio: 900 / 176; padding-left: 6%; padding-right: 11%; }
-.tr-row.top1 { background-image: url(../ranking/assets/ui/row1.webp?v=202611121949); }
-.tr-row.top2 { background-image: url(../ranking/assets/ui/row2.webp?v=202611121949); }
-.tr-row.top3 { background-image: url(../ranking/assets/ui/row3.webp?v=202611121949); }
-.tr-row.me { aspect-ratio: 900 / 165; background-image: url(../ranking/assets/ui/row_me.webp?v=202611121949); padding-left: 10.5%; padding-right: 15%; }
+.tr-row.top1 { background-image: url(../ranking/assets/ui/row1.webp?v=202611122012); }
+.tr-row.top2 { background-image: url(../ranking/assets/ui/row2.webp?v=202611122012); }
+.tr-row.top3 { background-image: url(../ranking/assets/ui/row3.webp?v=202611122012); }
+.tr-row.me { aspect-ratio: 900 / 165; background-image: url(../ranking/assets/ui/row_me.webp?v=202611122012); padding-left: 10.5%; padding-right: 15%; }
 .tr-row.tap { cursor: pointer; }
 .r-rank { flex: 0 0 auto; position: relative; display: grid; place-items: center; background: center / contain no-repeat; }
 .r-rank.medal { width: 12%; aspect-ratio: 1; }
@@ -112,7 +112,7 @@ html[data-who=eungyeol] .tb.pink { border-image-source: url(../common/ui/popup/v
 
 /* 이벤트 */
 .ev-top { display: flex; align-items: center; gap: 10px; }
-.ev-ride { flex: 0 0 96px; width: 96px; height: 96px; display: grid; place-items: center; background: url(../ranking/assets/ui/game_on.webp?v=202611121949) center / 100% 100% no-repeat; }
+.ev-ride { flex: 0 0 96px; width: 96px; height: 96px; display: grid; place-items: center; background: url(../ranking/assets/ui/game_on.webp?v=202611122012) center / 100% 100% no-repeat; }
 .ev-ride img { width: 78%; height: 78%; object-fit: contain; }
 .ev-top > div { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .ev-top small { font-size: 13px; color: #9A7E68; }

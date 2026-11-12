@@ -272,6 +272,7 @@ EXTRA = {
     '캐릭터 선택': 'Select Character',
     '함께 떠날 캐릭터를 선택해 주세요!': 'Choose your character!',
     '잠겨 있는 게임이에요!': 'This Game Is Locked!',
+    '잠긴 게임': 'Close',
     '이 게임을 열고 더 많은 즐거움을 만나 보세요!': 'Unlock this game for more fun!',
     '열쇠 1개로 열기': 'Unlock with 1 Key',
     '한 번 열면 언제든지 계속 할 수 있어요!': 'Once unlocked, you can play any time!',
