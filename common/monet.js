@@ -488,6 +488,30 @@ html[data-who=eungyeol] .mn-art-x{background-image:url(${P4}x_blue.webp)}
       unlockBox(m[1], { msg: '체험은 쉬움 1-1, 1-2까지예요.<br>열면 모든 판을 할 수 있어요!', onOpen: () => {} });
     }, true);
   }
+  // 출석 체크 창: 첫 화면(하루 한 번 저절로)과 아이템샵 '출석 보상' 판(누르면)이 같이 씀
+  //  오늘 아직이면 '출석하기'로 받고, 이미 받았으면 오늘 칸까지 체크된 모습으로 보여 주고 닫기만
+  function attend(done) {
+    ensure();
+    const s = st(), claimed = s.att.last === today();
+    // 1~9일차 다이아 2개, 10일차 열쇠 1개 (10일마다 되풀이). 빠진 날이 있어도 누적
+    const n = claimed ? s.att.count : s.att.count + 1, isKey = n % 10 === 0, base = Math.floor((Math.max(n, 1) - 1) / 10) * 10, who = document.documentElement.dataset.who === 'eungyeol' ? 'eungyeol' : 'eunyu';
+    const cells = Array.from({ length: 10 }, (_, i) => {
+      const d = base + i + 1, last = d % 10 === 0, got = claimed ? d <= n : d < n, now = !claimed && d === n;
+      const bg = got ? 'done' : last ? 'd10' : now ? (who === 'eungyeol' ? 'today_blue' : 'today_pink') : 'normal';
+      return `<div class="mn-cell${got ? ' got' : ''}${now ? ' now' : ''}" style="background-image:url(${IMG}cell_${bg}.webp)"><i>${d}일차</i><img src="${IMG}${last ? 'ico_key' : 'ico_gem'}.webp" alt=""><b>${last ? '1개' : `${ATT_DAILY}개`}</b></div>`;
+    }).join('');
+    const pass = s.bm && s.bm.pass > 0;
+    const claim = () => {
+      let passGems = 0;
+      Hub.mutate((c) => { const v = c.v3; if (v.att.last === today()) return; v.att.last = today(); v.att.count = n; if (isKey) v.tickets += 1; else c.gems = (c.gems || 0) + ATT_DAILY;
+        const B = bmOf(v); if (B.pass > 0) { B.pass--; passGems = OFFERS[1].daily; c.gems += passGems; } });
+      pop(isKey ? `${I('ico_key')} +1${passGems ? ` ${I('ico_gem')} +${passGems}` : ''}` : `${I('ico_gem')} +${ATT_DAILY + passGems}`); refreshHub(); if (done) done();
+    };
+    artModal({ img: `attend_${who}`, ar: 720 / 1047, title: '출석 체크', titleY: 35.5, box: [44, 8.5, 9, 8.5], onX: () => { if (done) done(); }, xPos: [1, 1],
+      buttons: [claimed ? { text: '내일 또 만나요!', cls: 'pink', on: () => { if (done) done(); } } : { text: '출석하기', cls: 'pink', on: claim }],
+      html: `<div class="mn-cells">${cells}</div>${pass ? `<p>월 다이아 패스: ${I('ico_gem')} +${OFFERS[1].daily} (${s.bm.pass}일 남음)</p>` : ''}`, note: '누적 출석이에요 (빠진 날이 있어도 이어져요)' });
+  }
+  window.Monet.attend = attend;
   // 환영 선물 + 출석 (첫 화면 로비가 보일 때 하루 한 번)
   const lobby = document.getElementById('scrLobby');
   if (lobby) {
@@ -502,25 +526,7 @@ html[data-who=eungyeol] .mn-art-x{background-image:url(${P4}x_blue.webp)}
           html: `<p>처음에는 <b>${OPEN.map(name).join(' · ')}</b>이 열려 있어요.<br>잠긴 게임 하나를 열 수 있는 <b>${I('ico_key')} 열쇠 1개</b>를 줄게요!</p>` });
         return;
       }
-      if (s.att.last !== today()) {
-        busy = true;
-        // 1~9일차 다이아 2개, 10일차 열쇠 1개 (10일마다 되풀이). 빠진 날이 있어도 누적
-        const n = s.att.count + 1, isKey = n % 10 === 0, base = Math.floor((n - 1) / 10) * 10, who = document.documentElement.dataset.who === 'eungyeol' ? 'eungyeol' : 'eunyu';
-        const cells = Array.from({ length: 10 }, (_, i) => {
-          const d = base + i + 1, last = d % 10 === 0, got = d < n, now = d === n;
-          const bg = got ? 'done' : last ? 'd10' : now ? (who === 'eungyeol' ? 'today_blue' : 'today_pink') : 'normal';
-          return `<div class="mn-cell${got ? ' got' : ''}${now ? ' now' : ''}" style="background-image:url(${IMG}cell_${bg}.webp)"><i>${d}일차</i><img src="${IMG}${last ? 'ico_key' : 'ico_gem'}.webp" alt=""><b>${last ? '1개' : `${ATT_DAILY}개`}</b></div>`;
-        }).join('');
-        const pass = s.bm && s.bm.pass > 0;
-        const claim = () => {
-          let passGems = 0;
-          Hub.mutate((c) => { const v = c.v3; if (v.att.last === today()) return; v.att.last = today(); v.att.count = n; if (isKey) v.tickets += 1; else c.gems = (c.gems || 0) + ATT_DAILY;
-            const B = bmOf(v); if (B.pass > 0) { B.pass--; passGems = OFFERS[1].daily; c.gems += passGems; } });
-          pop(isKey ? `${I('ico_key')} +1${passGems ? ` ${I('ico_gem')} +${passGems}` : ''}` : `${I('ico_gem')} +${ATT_DAILY + passGems}`); busy = false; refreshHub();
-        };
-        artModal({ img: `attend_${who}`, ar: 720 / 1047, title: '출석 체크', titleY: 35.5, box: [44, 8.5, 9, 8.5], onX: () => { busy = false; }, xPos: [1, 1], buttons: [{ text: '출석하기', cls: 'pink', on: claim }],
-          html: `<div class="mn-cells">${cells}</div>${pass ? `<p>월 다이아 패스: ${I('ico_gem')} +${OFFERS[1].daily} (${s.bm.pass}일 남음)</p>` : ''}`, note: '누적 출석이에요 (빠진 날이 있어도 이어져요)' });
-      }
+      if (s.att.last !== today()) { busy = true; attend(() => { busy = false; }); }
     };
     new MutationObserver(check).observe(lobby, { attributes: true, attributeFilter: ['class'] });
     setTimeout(check, 600);

@@ -29,15 +29,16 @@ a { color: inherit; text-decoration: none; }
 .plus::before { width: 10px; height: 2.5px; } .plus::after { width: 2.5px; height: 10px; }
 .sh-cards { position: absolute; left: 6px; right: 6px; bottom: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; align-items: end; }
 /* 출석·광고 버튼판: GPT 그림 한 장(아이콘·화살표·흰 작은 칸까지, making_GPT/아이템샵_버튼 P01~P04 → tools/ui_assets.py shop)
-   위에 제목과 작은 칸 글자만 얹음. --px·--py·--pw·--ph = 그림 속 흰 작은 칸 자리(%), 제목은 그 위 같은 폭
+   위에 제목과 작은 칸 글자만 얹음. --px·--py·--pw·--ph = 그림 속 흰 작은 칸 자리(%), --ty = 판 색칠이 시작되는 위쪽(%)
+   제목은 --ty ~ 작은 칸 위쪽 사이의 한가운데 (사용자 요청)
    은유 = 출석 분홍 + 광고 파랑, 은결 = 둘 다 파랑 (광고 분홍 card_ad_pink 은 예비) */
-.sh-card { --img: url(assets/ui/card_att_pink.webp); --ar: 560 / 204; --px: 41.2%; --py: 62.7%; --pw: 41.8%; --ph: 23.1%; --d: #D23C72;
+.sh-card { --img: url(assets/ui/card_att_pink.webp); --ar: 560 / 204; --px: 41.2%; --py: 62.7%; --pw: 41.8%; --ph: 23.1%; --ty: 16.7%; --d: #D23C72;
   position: relative; display: block; min-width: 0; width: 100%; aspect-ratio: var(--ar); padding: 0; border: 0; background: var(--img) center / 100% 100% no-repeat;
   filter: drop-shadow(0 4px 5px rgba(24,40,62,.28)); text-align: left; }
-html[data-who=eungyeol] .sh-card.att { --img: url(assets/ui/card_att_blue.webp); --ar: 560 / 213; --px: 45.5%; --py: 63.4%; --pw: 30.7%; --ph: 22%; --d: #1F6FCC; }
-.sh-card.ad { --img: url(assets/ui/card_ad_blue.webp); --ar: 560 / 199; --px: 38.2%; --py: 62.3%; --pw: 45.6%; --ph: 22.6%; --d: #1F6FCC; }
+html[data-who=eungyeol] .sh-card.att { --img: url(assets/ui/card_att_blue.webp); --ar: 560 / 213; --px: 45.5%; --py: 63.4%; --pw: 30.7%; --ph: 22%; --ty: 17.4%; --d: #1F6FCC; }
+.sh-card.ad { --img: url(assets/ui/card_ad_blue.webp); --ar: 560 / 199; --px: 38.2%; --py: 62.3%; --pw: 45.6%; --ph: 22.6%; --ty: 15.1%; --d: #1F6FCC; }
 .sh-card:disabled { opacity: .75; }
-.sc-t { position: absolute; left: var(--px); right: 15%; top: 21%; height: 38%; display: flex; align-items: center; font-weight: normal; font-size: 17px; line-height: 1; white-space: nowrap; overflow: hidden;
+.sc-t { position: absolute; left: var(--px); right: 15%; top: var(--ty); height: calc(var(--py) - var(--ty)); display: flex; align-items: center; font-weight: normal; font-size: 17px; line-height: 1; white-space: nowrap; overflow: hidden;
   color: #FFF4B8; text-shadow: 0 2px 0 var(--d), 2px 0 0 var(--d), -2px 0 0 var(--d), 0 -2px 0 var(--d), 1.5px 1.5px 0 var(--d), -1.5px 1.5px 0 var(--d), 0 3px 3px rgba(0,0,0,.2); padding: 0 2px; }
 .sh-card.ad .sc-t, html[data-who=eungyeol] .sh-card .sc-t { color: #fff; }
 .sc-pill { position: absolute; left: var(--px); top: var(--py); width: var(--pw); height: var(--ph); margin: 0; display: flex; align-items: center; justify-content: center;

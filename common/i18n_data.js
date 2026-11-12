@@ -372,6 +372,10 @@ window.I18N_DATA = {
 "{0} Diamonds ({1}/{2})"
 ],
 [
+"내일 또 만나요!",
+"See you tomorrow!"
+],
+[
 "{}일",
 "Day {0}"
 ],

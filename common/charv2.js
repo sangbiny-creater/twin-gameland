@@ -13,9 +13,9 @@
   const atlas = {};
   // 입은 옷에 게임 안 포즈 묶음(common/chars/<look>_<옷>)이 있으면 그 포즈는 묶음에서, 나머지는 기본 묶음에서
   function open(file, t) {
-    return fetch(`${base}common/chars/${file}.json?v=202611121829`).then((r) => r.json()).then((j) => new Promise((done, fail) => {
+    return fetch(`${base}common/chars/${file}.json?v=202611121837`).then((r) => r.json()).then((j) => new Promise((done, fail) => {
       t.f = j.frames; t.img.onload = () => { const on = () => { t.ok = true; done(); }; if (t.img.decode) t.img.decode().then(on, on); else on(); }; // 미리 풀어 둠: 처음 그릴 때 화면이 잠깐 멈추지 않게
-      t.img.onerror = fail; t.img.src = `${base}common/chars/${file}.webp?v=202611121829`;
+      t.img.onerror = fail; t.img.src = `${base}common/chars/${file}.webp?v=202611121837`;
     }));
   }
   function load(look) {

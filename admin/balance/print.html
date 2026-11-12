@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>게임 난이도·보상 기준</title>
 <!-- PDF 인쇄용 화면 (tools/balance_doc.mjs 가 헤드리스 Chrome 으로 인쇄) -->
-<link rel="stylesheet" href="balance.css?v=202611121829">
+<link rel="stylesheet" href="balance.css?v=202611121837">
 <style>
   @page { size: A4; margin: 14mm 12mm; }
   body { margin: 0; padding: 16px; background: #fff; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; }
@@ -15,7 +15,7 @@
 </head>
 <body>
 <div id="doc">불러오는 중...</div>
-<script src="render.js?v=202611121829"></script>
+<script src="render.js?v=202611121837"></script>
 <script>
   fetch('balance.json?t=' + Date.now()).then((r) => r.json()).then((d) => { document.getElementById('doc').innerHTML = BalanceDoc.html(d); });
 </script>

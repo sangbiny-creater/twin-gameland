@@ -4,7 +4,7 @@
 //  · 탭: 꾸미기(놀이공원 꾸미기) / 아이템(코인, 모든 게임 공통 수량) / 다이아 구매(common/monet.js 결제 흐름을 그대로 씀)
 //  · 옷장은 별도 화면 (closet/)
 const $ = (id) => document.getElementById(id);
-const V = '?v=202611121829'; // bump when images change so phones don't show old cached ones
+const V = '?v=202611121837'; // bump when images change so phones don't show old cached ones
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 
 const q = new URLSearchParams(location.search);
@@ -43,6 +43,7 @@ function renderHeader(bump) {
   $('adCard').disabled = left <= 0;
 }
 $('adCard').onclick = () => { blip(); M().watchAd(); };
+$('attCard').onclick = () => { blip(); if (M() && M().attend) M().attend(); }; // 출석 체크 창 (첫 화면과 같은 창, common/monet.js)
 
 // ---------- 탭 ----------
 let tab = 'deco';
