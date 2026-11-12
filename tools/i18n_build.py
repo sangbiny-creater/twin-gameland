@@ -20,6 +20,7 @@ OUT = f'{ROOT}/common/i18n_data.js'
 # 조사가 붙는 문장: 코드 모양(앞뒤 {} 포함) → 영어 완성 문장
 WHOLE = {
     '광고보고 다이아 {}개 ({}/{})': 'Watch ad: {0} Diamonds ({1}/{2})',
+    '다이아 {}개 ({}/{})': '{0} Diamonds ({1}/{2})',
     '{}일': 'Day {0}',
     '선물 {}종류 · 카트 {}대{}': '{0} gift types · {1} carts{2}',
     '카트를 {}대 더 완성하면 리본이 풀려요!': 'Complete {0} more cart to untie the ribbon!',

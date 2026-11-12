@@ -4,7 +4,7 @@
 //  · 탭: 꾸미기(놀이공원 꾸미기) / 아이템(코인, 모든 게임 공통 수량) / 다이아 구매(common/monet.js 결제 흐름을 그대로 씀)
 //  · 옷장은 별도 화면 (closet/)
 const $ = (id) => document.getElementById(id);
-const V = '?v=202611111943'; // bump when images change so phones don't show old cached ones
+const V = '?v=202611121724'; // bump when images change so phones don't show old cached ones
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 
 const q = new URLSearchParams(location.search);
@@ -39,7 +39,7 @@ function renderHeader(bump) {
   $('topCards').classList.remove('hidden');
   $('attDays').textContent = `${(M().st().att || { count: 0 }).count}일`; // 누적 출석
   const left = M().adLeft(), max = M().AD_GEMS_DAY;
-  $('adMsg').textContent = `광고보고 다이아 ${M().AD_GEMS}개 (${max - left}/${max})`;
+  $('adMsg').textContent = `다이아 ${M().AD_GEMS}개 (${max - left}/${max})`;
   $('adCard').disabled = left <= 0;
 }
 $('adCard').onclick = () => { blip(); M().watchAd(); };

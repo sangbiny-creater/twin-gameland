@@ -18,7 +18,7 @@ const UNDO_FREE = 3, HINT_FREE = 1, UNDO_ITEM = 5; // 판마다 무료 되돌리
 const CART_COIN = 3, GOLD_COIN = 10;              // 카트 완성 코인 / 황금 선물 카트 완성 코인
 const label = (i) => `${isHard(i) ? '어려움 ' : ''}${worldOf(i) + 1}-${(i % PER_WORLD) + 1}`;
 const stageName = (i) => `${WORLDS[worldOf(i)]} ${(i % PER_WORLD) + 1}`;
-const ASSET_V = '202611111943';
+const ASSET_V = '202611121724';
 const giftSrc = (n) => `assets/gifts/${n}.webp?v=${ASSET_V}`;
 // 별: 옮긴 횟수가 par 에 가까울수록 (컴퓨터 풀이도 가장 짧은 풀이는 아니라서 넉넉하게)
 const starLimits = (par) => [par + 2 + Math.floor(par * 0.1), Math.ceil(par * 1.5) + 4];
