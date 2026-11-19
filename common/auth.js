@@ -203,15 +203,15 @@
   .au-wrap.dim .au-box{margin-top:auto}
   .au-box{box-sizing:border-box;flex:none;width:440px;max-width:calc(100% - 16px);margin:58px 0 auto;padding:22px 26px 24px;text-align:center;border:0 solid transparent;border-image:url(${P4}panel_pink.webp) 130 fill / calc(130px * .7333) stretch;filter:drop-shadow(0 10px 22px rgba(0,0,0,.35))}
   html[data-who=eungyeol] .au-box{border-image-source:url(${P4}panel_blue.webp)}
-  .au-h{display:flex;align-items:center;justify-content:center;box-sizing:border-box;width:350px;max-width:100%;height:131px;margin:-80px auto -6px;padding:8px 58px 0;background:url(${P4}ribbon_pink.webp) center/100% 100% no-repeat;color:#fff;font-size:26px;line-height:1;text-shadow:0 2px 0 var(--who-d,#B92C62),0 0 3px var(--who-d,#B92C62);white-space:nowrap;overflow:hidden}
+  .au-h{display:flex;align-items:center;justify-content:center;box-sizing:border-box;width:350px;max-width:100%;height:auto;aspect-ratio:680/254;margin:-80px auto -6px;padding:calc(41px + .08em) 57px 42px;background:url(${P4}ribbon_pink.webp) center/100% 100% no-repeat;color:#fff;font-size:26px;line-height:1;text-shadow:0 2px 0 var(--who-d,#B92C62),0 0 3px var(--who-d,#B92C62);white-space:nowrap;overflow:hidden}
   html[data-who=eungyeol] .au-h{background-image:url(${P4}ribbon_blue.webp)}
   .au-p{font-size:16px;line-height:1.5;color:#6B4A3A;margin:0 0 12px;white-space:pre-line}
-  .au-b{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:58px;margin:10px 0 0;padding:.14em 20px 0;box-sizing:border-box;font-family:inherit;font-size:20px;line-height:1;cursor:pointer;background:none;white-space:nowrap;border:0 solid transparent;border-image:url(${P4}btn_pink.webp) 0 58 fill / 0 29px stretch;color:var(--who,#E8457F)}
+  .au-b{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:58px;margin:10px 0 0;padding:.08em 20px 0;box-sizing:border-box;font-family:inherit;font-size:20px;line-height:1;cursor:pointer;background:none;white-space:nowrap;border:0 solid transparent;border-image:url(${P4}btn_pink.webp) 0 58 fill / 0 29px stretch;color:var(--who,#E8457F)}
   .au-b:active{transform:translateY(2px)}
   .au-b.e{height:64px;border-image-source:url(${P4}fill_pink.webp);color:#fff;text-shadow:0 2px 0 var(--who-d,#B92C62)}
   html[data-who=eungyeol] .au-b{border-image-source:url(${P4}btn_blue.webp)}
   html[data-who=eungyeol] .au-b.e{border-image-source:url(${P4}fill_blue.webp)}
-  .au-b.g{height:64px;padding-top:0;border:2px solid #DADCE0;border-image:none;border-radius:32px;background:#fff;color:#3C4043;font-size:20px;box-shadow:0 3px 0 #D5D9DE}
+  .au-b.g,html[data-who=eungyeol] .au-b.g{height:64px;padding-top:0;border:2px solid #DADCE0;border-image:none;border-radius:32px;background:#fff;color:#3C4043;font-size:20px;box-shadow:0 3px 0 #D5D9DE}
   .au-b.g svg{width:26px;height:26px;flex:none}
   .au-in{display:block;width:100%;min-width:0;max-width:100%;height:54px;margin:0;border-radius:16px;border:2px solid #EBD9C8;padding:0 14px;font-size:20px;font-family:inherit;box-sizing:border-box;text-align:center;color:#5A3B22;background:#fff;-webkit-appearance:none;appearance:none}
   .au-in[type=date]{line-height:50px}

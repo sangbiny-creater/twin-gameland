@@ -30,15 +30,15 @@ a { color: inherit; text-decoration: none; }
 .sh-cards { position: absolute; left: 6px; right: 6px; bottom: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; align-items: end; }
 /* 출석·광고 버튼판: GPT 그림 한 장(아이콘·화살표·흰 작은 칸까지, making_GPT/아이템샵_버튼 P01~P04 → tools/ui_assets.py shop)
    위에 제목과 작은 칸 글자만 얹음. --px·--py·--pw·--ph = 그림 속 흰 작은 칸 자리(%), --ty = 판 색칠이 시작되는 위쪽(%)
-   제목은 --ty ~ 작은 칸 위쪽 사이의 한가운데 (사용자 요청)
+   제목은 --ty ~ 작은 칸 위쪽 사이의 한가운데 (사용자 요청), 좌우는 작은 칸 가운데를 중심으로 --tl·--tw (아이콘 ~ 화살표 사이) 가운데. 길면 글자를 줄이고 그래도 길면 두 줄 (common/textfit.js)
    은유 = 출석 분홍 + 광고 파랑, 은결 = 둘 다 파랑 (광고 분홍 card_ad_pink 은 예비) */
-.sh-card { --img: url(assets/ui/card_att_pink.webp); --ar: 560 / 204; --px: 41.2%; --py: 62.7%; --pw: 41.8%; --ph: 23.1%; --ty: 16.7%; --d: #D23C72;
+.sh-card { --img: url(assets/ui/card_att_pink.webp); --ar: 560 / 204; --px: 41.2%; --py: 62.7%; --pw: 41.8%; --ph: 23.1%; --ty: 16.7%; --tl: 40.2%; --tw: 43.8%; --d: #D23C72;
   position: relative; display: block; min-width: 0; width: 100%; aspect-ratio: var(--ar); padding: 0; border: 0; background: var(--img) center / 100% 100% no-repeat;
   filter: drop-shadow(0 4px 5px rgba(24,40,62,.28)); text-align: left; }
-html[data-who=eungyeol] .sh-card.att { --img: url(assets/ui/card_att_blue.webp); --ar: 560 / 213; --px: 45.5%; --py: 63.4%; --pw: 30.7%; --ph: 22%; --ty: 17.4%; --d: #1F6FCC; }
-.sh-card.ad { --img: url(assets/ui/card_ad_blue.webp); --ar: 560 / 199; --px: 38.2%; --py: 62.3%; --pw: 45.6%; --ph: 22.6%; --ty: 15.1%; --d: #1F6FCC; }
+html[data-who=eungyeol] .sh-card.att { --img: url(assets/ui/card_att_blue.webp); --ar: 560 / 213; --px: 45.5%; --py: 63.4%; --pw: 30.7%; --ph: 22%; --ty: 17.4%; --tl: 41%; --tw: 39.7%; --d: #1F6FCC; }
+.sh-card.ad { --img: url(assets/ui/card_ad_blue.webp); --ar: 560 / 199; --px: 38.2%; --py: 62.3%; --pw: 45.6%; --ph: 22.6%; --ty: 15.1%; --tl: 38%; --tw: 46%; --d: #1F6FCC; }
 .sh-card:disabled { opacity: .75; }
-.sc-t { position: absolute; left: var(--px); right: 15%; top: var(--ty); height: calc(var(--py) - var(--ty)); display: flex; align-items: center; font-weight: normal; font-size: 17px; line-height: 1; white-space: nowrap; overflow: hidden;
+.sc-t { position: absolute; left: var(--tl); width: var(--tw); top: var(--ty); height: calc(var(--py) - var(--ty)); display: flex; align-items: center; justify-content: center; text-align: center; font-weight: normal; font-size: 17px; line-height: 1; white-space: nowrap; overflow: hidden;
   color: #FFF4B8; text-shadow: 0 2px 0 var(--d), 2px 0 0 var(--d), -2px 0 0 var(--d), 0 -2px 0 var(--d), 1.5px 1.5px 0 var(--d), -1.5px 1.5px 0 var(--d), 0 3px 3px rgba(0,0,0,.2); padding: 0 2px; }
 .sh-card.ad .sc-t, html[data-who=eungyeol] .sh-card .sc-t { color: #fff; }
 .sc-pill { position: absolute; left: var(--px); top: var(--py); width: var(--pw); height: var(--ph); margin: 0; display: flex; align-items: center; justify-content: center;
@@ -49,12 +49,14 @@ html[data-who=eungyeol] .sh-card.att { --img: url(assets/ui/card_att_blue.webp);
 /* 탭: GPT 탭 그림(P05~P08) — 고른 탭 = 진한 분홍/파랑, 나머지 = 흰 탭(은유 분홍 테두리 / 은결 파랑 테두리).
    그림 원래 가로:세로(360x100) 그대로 (늘리지 않음, 사용자 요청) */
 .sh-tabs button { --tab: url(assets/ui/tab_off_pink.webp); aspect-ratio: 360 / 100; height: auto; display: flex; align-items: center; justify-content: center; gap: 4px; min-width: 0;
-  font-size: 15px; color: var(--who-d); border: 0; background: var(--tab) center / 100% 100% no-repeat; padding: 6% 6% 2%; }
+  font-size: 15px; color: var(--who-d); border: 0; background: var(--tab) center / 100% 100% no-repeat; padding: calc(1.7% + .08em) 6% 2%; line-height: 1; }
+/* 글자 칸 = 탭 그림 속 판 (흰 탭은 위아래 거의 끝까지, 진한 탭은 위 밝은 테두리 아래부터) — tools/text_probe.js FACES */
+.sh-tabs button.on { padding-top: calc(4% + .08em); }
 html[data-who=eungyeol] .sh-tabs button { --tab: url(assets/ui/tab_off_blue.webp); }
 .sh-tabs button.on { --tab: url(assets/ui/tab_on_pink.webp); color: #fff; text-shadow: 0 2px 0 var(--who-d), 0 0 3px var(--who-d); }
 html[data-who=eungyeol] .sh-tabs button.on { --tab: url(assets/ui/tab_on_blue.webp); }
 .sh-tabs button img { width: 22px; height: 22px; flex: none; object-fit: contain; filter: drop-shadow(0 1px 1px rgba(24,40,62,.25)); }
-.sh-tabs button span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sh-tabs button span { white-space: nowrap; overflow: hidden; min-width: 0; }
 .sh-tabs button.on img { filter: drop-shadow(0 0 2px #fff) drop-shadow(0 1px 1px rgba(0,0,0,.2)); }
 .sh-body { background: #fff; border-top: 3px solid var(--who); padding: 12px 10px; }
 .sh-tab { display: flex; flex-direction: column; gap: 12px; }
@@ -68,7 +70,7 @@ html[data-who=eungyeol] .sh-tabs button.on { --tab: url(assets/ui/tab_on_blue.we
 .bgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .bcard { position: relative; background: #fff; border-radius: 16px; padding: 8px 4px; display: flex; flex-direction: column; align-items: center; gap: 3px; box-shadow: 0 3px 8px rgba(24,59,91,.1); border: 2px solid #fff; min-width: 0; text-align: center; }
 .bcard .bi { width: 52px; height: 52px; object-fit: contain; }
-.bcard .bn { font-size: 13px; line-height: 17px; height: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.bcard .bn { font-size: 13px; line-height: 17px; height: 17px; white-space: nowrap; overflow: hidden; max-width: 100%; } /* 길면 common/textfit.js 가 글자를 줄임 (… 로 자르지 않음) */
 .bcard .bd { font-size: 11px; line-height: 14px; height: 28px; color: #7A8796; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: keep-all; padding: 0 2px; }
 .price-pill { display: flex; align-items: center; justify-content: center; gap: 4px; min-width: 76%; height: 30px; padding: 0 10px; border-radius: 15px; background: linear-gradient(#FFF4D2, #FFE3A0); border: 2px solid #F5C860; font-size: 16px; color: #6A3A00; font-variant-numeric: tabular-nums; margin-top: 2px; }
 .price-pill img { width: 20px; height: 20px; }
