@@ -261,7 +261,7 @@ EXTRA = {
     '지금은 점검 중이에요. 잠시 뒤에 다시 와 주세요!': 'We are under maintenance. Please come back soon!',
     '보내는 중...': 'Sending...',
     # 옷장·아이템샵 새 구성 (2026-11-07, Claude 번역 — 사용자 확인 필요)
-    '상점': 'Shop', '꾸미기': 'Decorate', '다이아 구매': 'Diamonds', '출석 보상': 'Attendance Reward', '오늘의 무료 다이아': 'Free Diamonds', '광고보기': 'Watch Ad',
+    '상점': 'Shop', '꾸미기': 'Decorate', '다이아 구매': 'Diamonds', '출석 보상': 'Check-in', '오늘의 무료 다이아': 'Free Diamonds', '광고보기': 'Watch Ad',
     '놀이공원 꾸미기': 'Park Decorations',
     '앱에서는 여기서 구글 결제 창이 떠요 (값은 임시). 지금은 진짜 결제가 없어요.': 'In the app, Google Play payment opens here (prices are temporary). No real payment right now.',
     '첫 구매 2배': 'First Purchase ×2', '인기': 'Popular', '구매함': 'Purchased', '가지고 있어요': 'Owned', '착용 중': 'Wearing', '착용하기': 'Wear', '기본 옷': 'Default Outfit', '옷 구매': 'Buy Outfit',

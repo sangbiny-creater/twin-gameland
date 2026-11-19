@@ -4801,7 +4801,7 @@ window.I18N_DATA = {
 ],
 [
 "출석 보상",
-"Attendance Reward"
+"Check-in"
 ],
 [
 "오늘의 무료 다이아",
