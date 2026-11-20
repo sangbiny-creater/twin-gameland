@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="다운힐 러너">
+<meta name="application-name" content="다운힐 러너">
+<meta name="theme-color" content="#5CA9E6">
+<meta name="description" content="은유·은결과 함께 눈 덮인 산을 내려가요!">
+<!-- 친구에게 링크를 보냈을 때 카카오톡·문자에 보이는 미리보기 -->
+<meta property="og:title" content="다운힐 러너 — 내 기록을 넘어 볼래?">
+<meta property="og:description" content="은유·은결과 함께 눈 덮인 산을 내려가요!">
+<meta property="og:image" content="https://sangbiny-creater.github.io/twin-gameland/downhill-app/assets/app/share.jpg">
+<meta property="og:type" content="website">
+<title>다운힐 러너</title>
+<link rel="manifest" href="manifest.json?v=202611201846">
+<link rel="apple-touch-icon" href="assets/app/icons/icon-180.png?v=202611201846">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/app/icons/favicon-32.png?v=202611201846">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/app/icons/icon-192.png?v=202611201846">
+<link rel="preload" href="lib/fonts/jua.woff2?v=202611201846" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="style.css?v=202611201846">
+<link rel="stylesheet" href="app.css?v=202611201846">
+</head>
+<body>
+<div id="safe"></div>
+<div id="app">
+  <!-- 맨 위 광고 자리 (지금은 자리만. 나중에 배너 광고가 여기 들어감) -->
+  <div id="adBar" class="hidden"><div class="ad-slot">광고 자리</div></div>
+
+  <!-- 게임 칸: 광고 자리 아래 -->
+  <div id="stage" class="hidden">
+  <div id="root">
+    <canvas id="game"></canvas>
+
+    <!-- 터치 영역: 화면 왼쪽 = 왼쪽으로, 오른쪽 = 오른쪽으로 -->
+    <div id="touch" class="hidden">
+      <div id="padL" class="pad"><img src="assets/ui/btn_left.webp?v=202611201846" alt=""></div>
+      <div id="padR" class="pad"><img src="assets/ui/btn_right.webp?v=202611201846" alt=""></div>
+      <button id="btnJump" class="jump hidden" aria-label="점프하기"><i id="jumpN">0</i><span>점프</span></button>
+    </div>
+
+    <!-- HUD -->
+    <div id="hud" class="hidden">
+      <div class="hud-top">
+        <button id="btnPause" class="img-btn" aria-label="일시정지"><img data-icon="pause" alt=""></button>
+        <div class="pill dist"><span class="ico ico-crown"></span><b id="hudDist">0</b>m</div>
+        <div class="pill coins"><img data-icon="coin" alt=""><b id="hudCoin">0</b></div>
+        <div id="hudHearts" class="hearts"></div>
+      </div>
+      <div class="hud-sub">
+        <div class="best">BEST <b id="hudBest">0</b>m</div>
+        <div id="buffs" class="buffs"></div>
+      </div>
+    </div>
+
+    <!-- 시작 상자: 단순한 네모 상자 + 버튼 2개 -->
+    <div id="startBox" class="screen dim hidden">
+      <div class="sq">
+        <img class="sq-logo" src="assets/ui/logo.webp?v=202611201846" alt="다운힐 러너">
+        <div class="sq-best">BEST <b id="sbBest">0</b>m</div>
+        <div id="sbFriend" class="sq-friend hidden"></div>
+        <button id="btnGo" class="sq-btn main">시작하기</button>
+        <button id="btnGoFrom" class="sq-btn">3판부터 시작</button>
+        <div class="sq-links"><button id="btnChar">캐릭터 바꾸기</button><span>·</span><button id="btnAccount">계정</button><span>·</span><button id="btnSound2">소리 켬</button></div>
+      </div>
+    </div>
+
+    <!-- PAUSE -->
+    <div id="pause" class="screen dim hidden">
+      <div class="sq">
+        <div class="sq-title">잠깐 쉬어요</div>
+        <button id="btnResume" class="sq-btn main">계속하기</button>
+        <div class="sq-row">
+          <button id="btnRetryP" class="sq-btn">다시하기</button>
+          <button id="btnHomeP" class="sq-btn">처음으로</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULT: 광고 보고 이어하기 · 다시하기 · 자랑하기 · 오른쪽 위 X -->
+    <div id="result" class="screen dim hidden">
+      <div class="sq res">
+        <button id="btnCloseR" class="sq-x" aria-label="닫기"></button>
+        <div class="sq-title">GAME OVER</div>
+        <img id="resFace" class="res-face" alt="">
+        <div class="res-table">
+          <div><span>이동 거리</span><b><i id="resDist">0</i>m</b></div>
+          <div><span>획득 코인</span><b><img data-icon="coin" alt=""><i id="resCoin">0</i></b></div>
+          <div><span>최대 콤보</span><b><img data-icon="star" alt=""><i id="resCombo">0</i></b></div>
+          <div><span>BEST 기록</span><b><span class="ico ico-crown"></span><i id="resBestVal">0</i>m</b></div>
+        </div>
+        <i id="resBest" class="badge hidden">NEW RECORD!</i>
+        <div id="resFriend" class="sq-friend hidden"></div>
+        <button id="btnCont" class="sq-btn ad">광고 보고 이어하기</button>
+        <div class="sq-row">
+          <button id="btnRetry" class="sq-btn">다시하기</button>
+          <button id="btnShare" class="sq-btn pink">자랑하기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 자랑하기: 공유 창이 없는 기기에서 (문자·링크 복사) -->
+    <div id="shareBox" class="screen dim hidden">
+      <div class="sq">
+        <div class="sq-title small">친구에게 자랑하기</div>
+        <p id="shareText" class="sq-p"></p>
+        <a id="btnSms" class="sq-btn main" href="#">문자로 보내기</a>
+        <div class="sq-row">
+          <button id="btnCopy" class="sq-btn">링크 복사</button>
+          <button id="btnShareClose" class="sq-btn">닫기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- 인트로: 세로 그림만, 화면을 누르거나 잠깐 뒤 다음으로 -->
+  <div id="intro" class="scr"><img src="assets/app/intro.webp?v=202611201846" alt="다운힐 러너"><div class="intro-tap">화면을 눌러 주세요</div></div>
+
+  <!-- 로그인: 구글 · 이메일 · 게스트 -->
+  <div id="login" class="scr bg hidden">
+    <img class="scr-logo" src="assets/ui/logo.webp?v=202611201846" alt="다운힐 러너">
+    <div id="loginMain" class="sq">
+      <div class="sq-title small">어서 와요!</div>
+      <p class="sq-p">로그인하면 다른 기기에서도 이어서 할 수 있어요.</p>
+      <button id="btnGoogle" class="sq-btn google"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg><span>구글로 로그인</span></button>
+      <button id="btnEmail" class="sq-btn main">이메일로 로그인</button>
+      <button id="btnGuest" class="sq-btn">게스트로 시작</button>
+      <p class="sq-terms">로그인하면 <a href="https://sangbiny-creater.github.io/twin-gameland/legal/terms.html" target="_blank" rel="noopener">이용약관</a>과 <a href="https://sangbiny-creater.github.io/twin-gameland/legal/privacy.html" target="_blank" rel="noopener">개인정보 처리방침</a>에 동의하는 거예요.</p>
+    </div>
+    <div id="loginEmail" class="sq hidden">
+      <div class="sq-title small">이메일 로그인</div>
+      <input id="inEmail" class="sq-in" type="email" inputmode="email" autocomplete="email" placeholder="email@example.com">
+      <input id="inPw" class="sq-in" type="password" autocomplete="current-password" placeholder="비밀번호">
+      <p id="emailErr" class="sq-err"></p>
+      <div class="sq-row">
+        <button id="btnEmailBack" class="sq-btn">뒤로</button>
+        <button id="btnEmailGo" class="sq-btn main">로그인</button>
+      </div>
+      <p class="sq-terms">이메일 가입은 아직 준비 중이에요. 처음이면 구글이나 게스트로 시작해 주세요.</p>
+    </div>
+    <div id="accountBox" class="sq hidden">
+      <div class="sq-title small">계정</div>
+      <p id="accountText" class="sq-p"></p>
+      <button id="btnLink" class="sq-btn main">구글로 로그인</button>
+      <div class="sq-row">
+        <button id="btnLogout" class="sq-btn">로그아웃</button>
+        <button id="btnAccountClose" class="sq-btn">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 캐릭터 고르기: 겨울옷 은유·은결 -->
+  <div id="select" class="scr bg hidden">
+    <div class="sel-title">누구랑 내려갈까?</div>
+    <div class="sel-chars">
+      <button class="sel-char" data-char="eunyu"><img alt=""><span>은유</span></button>
+      <button class="sel-char" data-char="eungyeol"><img alt=""><span>은결</span></button>
+    </div>
+  </div>
+
+  <!-- 광고 보고 이어하기: 지금은 테스트용 가짜 광고 -->
+  <div id="adFake" class="scr hidden"><div class="ad-fake"><b>광고 (테스트)</b><span id="adCount">3</span><small>진짜 광고는 앱 출시 때 들어가요</small></div></div>
+
+  <div id="toast" class="toast hidden"></div>
+</div>
+
+<!-- 가로 화면은 지원하지 않아요 -->
+<div id="rotate"><div class="rot-phone"></div><b>세로로 돌려 주세요</b></div>
+
+<script src="lib/charv2.js?v=202611201846"></script>
+<script src="lib/firebase_config.js?v=202611201846"></script>
+<script src="game.js?v=202611201846"></script>
+<script src="app.js?v=202611201846"></script>
+</body>
+</html>

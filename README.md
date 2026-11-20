@@ -76,6 +76,7 @@ python3 -m http.server 8080 --bind 0.0.0.0
 | `common/worlds/` | 징검다리 10개 월드 배경 `w1~w10.webp` (지도·스카이훅·사천성) |
 | `shop/` | 아이템 샵 (`assets/games`, `assets/skins`, `assets/ui`) |
 | `skyhook/` · `helicopter/` · `stairs/` · `shisen/` · `downhill/` · `memory/` | 게임마다 `index.html`, `game.js`, `style.css`, `assets/` |
+| `downhill-app/` | **다운힐 러너 단독 앱** (앱스토어·플레이스토어 출시용, 세로 전용) — 인트로 → 로그인 → 캐릭터 고르기 → 시작 상자 → 게임 → 결과·자랑하기. 사이트와 따로 동작, 자세한 건 `downhill-app/README.md` |
 | `<게임>/assets/` | `sprites/`(그림 묶음 webp+json) · `bg/`(배경) · `ui/`(버튼·로고·키아트) · `chars/`(캐릭터별 결과 그림) · `cards/`(메모리 카드) |
 | `tools/` | 캐릭터 그림 자동 도구(`char_pipeline.py`), 캐시 버전 올리기(`bump_version.py`) |
 | `_archive/` | 지금 게임에서 안 쓰는 예전 그림·파일 보관 (원래 위치 그대로, 게임은 안 불러옴) |
