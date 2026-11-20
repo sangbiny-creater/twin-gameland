@@ -44,9 +44,9 @@
 
 - 이 기기 저장: `localStorage` 의 `downhill_app_v1` (로그인 상태·약관 동의·이름·캐릭터·BEST·코인·마지막 판).
 - 사이트 저장(`twin_gameland_v1`)·사이트 다운힐 저장(`downhill_v1`)은 읽지도 쓰지도 않아요.
-- 서버(사이트와 같은 Firebase 프로젝트 `twin-gameland`, 규칙은 `server/firestore.rules` 그대로):
+- 서버: **BROWN CRAB 전용 Firebase 프로젝트 `brown-crab-downhill`** (주인 browncrab0213, 2026-11-21부터 트윈 게임랜드 `twin-gameland` 와 완전히 따로). 규칙은 `downhill-admin/server/firestore.rules` 를 콘솔 → Firestore → 규칙에 붙여 넣어 게시:
   - `users/{uid}.dh` = { name, char, best, plays, lastZone, agreedAt, agreeVer, createdAt, lastAt } — 다른 기기에서 로그인하면 이걸로 이어 해요
-  - `names/{이름}` = { uid, name, app: 'downhill' } — 같은 이름은 하나만
+  - `names/{이름}` = { uid, name, app: 'downhill' } — 같은 이름은 하나만 (트윈 게임랜드 이름과는 상관없음)
   - `records` (game `downhill-app`) — 한 판 기록 · `config/downhill` — 공지·점검 (백오피스에서 씀)
 - 게스트도 서버에는 익명 계정으로 들어가요 (이름 중복 확인 때문). 게스트가 로그아웃하면 이름을 놓아줘요.
 
@@ -58,7 +58,7 @@
 ## 백오피스
 
 `downhill-admin/` (앱 폴더 밖이라 앱으로 묶을 때 들어가지 않음) — https://downhill.brown-crab.com/admin/
-사이트 백오피스와 같은 관리자 구글 계정(Firestore `admins/{이메일}`)으로 로그인. 대시보드 · 사용자(정지·메모·기록·이름 다시 정하게) · 기록·순위 · 이름 · 운영(공지·점검).
+관리자 = 새 프로젝트 Firestore `admins/{이메일}` 문서가 있는 구글 계정 (지금 browncrab0213). 대시보드 · 사용자(정지·메모·기록·이름 다시 정하게) · 기록·순위 · 이름 · 운영(공지·점검).
 
 ## 아직 임시인 것 / 나중에 할 것
 

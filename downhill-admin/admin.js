@@ -153,7 +153,7 @@ const VIEWS = {
     };
     const def = async (url, sel) => { try { const t = await (await fetch(url)).text(), el = new DOMParser().parseFromString(t, 'text/html').querySelector(sel); return el ? htmlText(el) : ''; } catch (e) { return ''; } };
     const COLLECT = '모으는 것: 게임 이름, 게임 기록, 이메일 주소(구글·이메일로 로그인할 때만)\n쓰는 곳: 계정·이름 확인, 기록 보관, 다른 기기에서 이어 하기\n보관 기간: 계정을 지울 때까지';
-    m.innerHTML = `<h2>약관·개인정보</h2><p class="note">여기서 고쳐 저장하면 앱의 '이용약관'·'개인정보 처리방침' 화면(설정·약관 동의에서 '보기')에 바로 보여요. 저장 전에는 기본 글(이용약관 = 트윈 게임랜드 약관, 개인정보 처리방침 = brown-crab.com/privacy.html)을 보여 줘요.<br>
+    m.innerHTML = `<h2>약관·개인정보</h2><p class="note">여기서 고쳐 저장하면 앱의 '이용약관'·'개인정보 처리방침' 화면(설정·약관 동의에서 '보기')에 바로 보여요. 저장 전에는 기본 글(이용약관 = 앱 안 legal/terms.txt, 개인정보 처리방침 = brown-crab.com/privacy.html)을 보여 줘요.<br>
       구글 플레이에 넣는 개인정보 처리방침 주소(https://brown-crab.com/privacy.html)는 회사 홈페이지 글이라 따로 고쳐야 해요.</p>
       <div class="panel"><h3>개인정보 수집·이용 동의 (약관 동의 화면에서 '보기'를 누르면 펼쳐지는 짧은 글)</h3><textarea id="tc" style="min-height:90px"></textarea>
       <h3>개인정보 처리방침</h3><textarea id="tp" style="min-height:320px"></textarea>
@@ -161,7 +161,7 @@ const VIEWS = {
       <div class="row" style="margin-top:10px"><button class="btn" id="tSave">저장</button><span class="note" style="margin:0">${T.updatedAt ? '마지막 저장 ' + fmtD(T.updatedAt) : '아직 저장 안 함 (기본 글이 들어가 있어요)'}</span></div></div>`;
     $('tc').value = T.collect || COLLECT;
     $('tp').value = T.privacy || await def('https://brown-crab.com/privacy.html', 'main');
-    $('tt').value = T.terms || await def('https://sangbiny-creater.github.io/twin-gameland/legal/terms.html', '#doc');
+    $('tt').value = T.terms || await (await fetch('../legal/terms.txt')).text().catch(() => '');
     $('tSave').onclick = async () => {
       const d = { collect: $('tc').value.trim(), privacy: $('tp').value.trim(), terms: $('tt').value.trim(), updatedAt: Date.now() };
       if (!d.privacy || !d.terms) { toast('처리방침·약관이 비어 있어요'); return; }

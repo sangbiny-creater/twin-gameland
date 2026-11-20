@@ -27,6 +27,14 @@
   const cleanName = (n) => fitW(String(n || '').replace(/[<>"'`]/g, '').replace(/\s+/g, ' ').trim()).trim();
   const keyOf = (n) => String(n || '').normalize('NFC').replace(/\s+/g, '').toLowerCase().replace(/\//g, '_').replace(/^\.+$/, '_');
 
+  // ---------- Firebase 프로젝트가 바뀌면 (트윈 게임랜드 twin-gameland → BROWN CRAB brown-crab-downhill, 2026-11-21) 계정을 처음부터 ----------
+  //  예전 프로젝트의 로그인·이름·기록은 새 프로젝트에 없어서, 이 기기에 남은 계정 정보는 지우고 로그인부터 다시 (언어·소리는 그대로)
+  const PID = (window.FIREBASE_CONFIG || {}).projectId || '';
+  if (Save.data.pid !== PID) {
+    if (Save.data.auth) Object.assign(Save.data, { auth: null, agreed: null, name: null, nameKey: null, nameReg: false, char: null, best: 0, lastZone: 1, totalCoin: 0 });
+    Save.data.pid = PID; Save.store();
+  }
+
   // ---------- 친구 링크 ----------
   const q = new URLSearchParams(location.search);
   // 친구 기록은 이번 접속 동안 기억 (언어를 바꿔 다시 읽어도 그대로)
@@ -287,9 +295,12 @@
     const f = await firebase(); if (!f) return 'offline';
     try { const s = await timeout(f.db.collection('names').doc(keyOf(name)).get(), 6000); if (!s) return 'offline'; return !s.exists || (me(f) && s.data().uid === me(f).uid) ? 'ok' : 'taken'; } catch (e) { return 'offline'; }
   }
+  // 내 이름 놓아주기: 이 기기에 적힌 이름 + 서버에서 내 계정으로 등록된 이름을 모두 지움 (계정 삭제·게스트 로그아웃)
   async function releaseName() {
-    const f = await firebase(), u = me(f); if (!u || !Save.data.nameKey || !Save.data.nameReg) return;
-    try { await f.db.collection('names').doc(Save.data.nameKey).delete(); } catch (e) { /* 내 이름이 아니면 못 지움 */ }
+    const f = await firebase(), u = me(f); if (!u) return;
+    const keys = new Set(); if (Save.data.nameKey) keys.add(Save.data.nameKey);
+    try { (await f.db.collection('names').where('uid', '==', u.uid).get()).forEach((d) => keys.add(d.id)); } catch (e) { /* 그대로 */ }
+    for (const k of keys) { try { await f.db.collection('names').doc(k).delete(); } catch (e) { /* 내 이름이 아니면 못 지움 */ } }
   }
   $('btnNameOk').onclick = async () => {
     ui();
@@ -391,8 +402,8 @@
 
   // ---------- 이용약관 · 개인정보 처리방침: 게임 안 화면으로 (뒤로 버튼으로 돌아옴) ----------
   //  글 = 서버 config/downhill_terms { terms, privacy, collect } (백오피스 '약관·개인정보' 탭에서 고침)
-  //  아직 안 고쳤으면 기본 글: 이용약관 = 트윈 게임랜드 legal/terms.html, 개인정보 처리방침 = brown-crab.com/privacy.html
-  const DOC_DEF = { terms: ['https://sangbiny-creater.github.io/twin-gameland/legal/terms.html', '#doc'], privacy: ['https://brown-crab.com/privacy.html', 'main'] };
+  //  아직 안 고쳤으면 기본 글: 이용약관 = 앱 안 legal/terms.txt (BROWN CRAB), 개인정보 처리방침 = brown-crab.com/privacy.html
+  const DOC_DEF = { terms: ['legal/terms.txt', null], privacy: ['https://brown-crab.com/privacy.html', 'main'] }; // 기본 글 (백오피스에서 저장하면 그 글)
   let docsP = null;
   const htmlText = (el) => { // 화면에 안 그린 문서라 innerText 가 줄을 안 바꿈 → 문단·제목·목록마다 줄바꿈
     let out = ''; const BLOCK = /^(P|DIV|H[1-6]|LI|UL|OL|SECTION|ARTICLE|HEADER|FOOTER|TR|TABLE|BLOCKQUOTE)$/;
@@ -405,7 +416,7 @@
       const out = {};
       try { const f = await firebase(); if (f) { const d = await timeout(f.db.collection('config').doc('downhill_terms').get(), 6000); if (d && d.exists) Object.assign(out, d.data()); } } catch (e) { /* 기본 글 */ }
       for (const k of ['terms', 'privacy']) if (!out[k]) {
-        try { const t = await (await fetch(DOC_DEF[k][0])).text(), el = new DOMParser().parseFromString(t, 'text/html').querySelector(DOC_DEF[k][1]); out[k] = el ? htmlText(el) : ''; } catch (e) { out[k] = ''; }
+        try { const t = await (await fetch(DOC_DEF[k][0])).text(); if (!DOC_DEF[k][1]) { out[k] = t.trim(); continue; } const el = new DOMParser().parseFromString(t, 'text/html').querySelector(DOC_DEF[k][1]); out[k] = el ? htmlText(el) : ''; } catch (e) { out[k] = ''; }
       }
       if (out.collect) $('privacyDetail').textContent = out.collect;
       return out;

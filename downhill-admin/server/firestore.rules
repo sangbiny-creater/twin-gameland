@@ -1,0 +1,35 @@
+rules_version = '2';
+// 다운힐 러너 (BROWN CRAB) Firestore 규칙 — Firebase 프로젝트: BROWN CRAB 전용 (트윈 게임랜드와 따로)
+//  Firebase 콘솔 → Firestore → 규칙 에 이 글을 그대로 붙여 넣고 '게시'
+//  관리자 = admins/{이메일} 문서가 있는 구글 계정 (콘솔에서 직접 만듦)
+service cloud.firestore {
+  match /databases/{db}/documents {
+    function signedIn() { return request.auth != null; }
+    function isAdmin() { return signedIn() && request.auth.token.email_verified == true && exists(/databases/$(db)/documents/admins/$(request.auth.token.email)); }
+    function mine(uid) { return signedIn() && request.auth.uid == uid; }
+
+    // 계정: users/{uid}.dh = 다운힐 칸. 내 문서만 읽고 씀, 정지(status)·메모·가입일은 못 바꿈
+    match /users/{uid} {
+      allow read: if mine(uid) || isAdmin();
+      allow create: if mine(uid) && request.resource.data.status == 'active';
+      allow update: if (mine(uid) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'memo', 'createdAt'])) || isAdmin();
+      allow delete: if isAdmin();
+    }
+    // 한 판 기록: 내 이름으로 추가만, 읽기는 로그인한 사람(랭킹), 지우기는 관리자(계정 삭제 처리)
+    match /records/{id} {
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow read: if signedIn();
+      allow delete: if isAdmin();
+    }
+    // 게임 이름: 같은 이름은 하나만. 비어 있으면 누구나 내 이름으로, 그 뒤로는 주인만 고치고 지움
+    match /names/{key} {
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid && key.size() <= 40;
+      allow update: if signedIn() && resource.data.uid == request.auth.uid && request.resource.data.uid == request.auth.uid;
+      allow delete: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
+    }
+    // 공지·점검(config/downhill) · 약관(config/downhill_terms): 누구나 읽고 관리자만 씀
+    match /config/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /admins/{email} { allow read: if signedIn() && request.auth.token.email == email; allow write: if false; }
+  }
+}
