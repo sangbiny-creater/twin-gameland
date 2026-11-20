@@ -21,13 +21,13 @@
 // 예전 주소(GitHub 기본 주소)로 들어오면 새 주소로 (친구 링크 ?from= 그대로)
 if (location.hostname === 'sangbiny-creater.github.io') location.replace('https://downhill.brown-crab.com/' + location.search);
 </script>
-<link rel="manifest" href="manifest.json?v=202611202144">
-<link rel="apple-touch-icon" href="assets/app/icons/icon-180.png?v=202611202144">
-<link rel="icon" type="image/png" sizes="32x32" href="assets/app/icons/favicon-32.png?v=202611202144">
-<link rel="icon" type="image/png" sizes="192x192" href="assets/app/icons/icon-192.png?v=202611202144">
-<link rel="preload" href="lib/fonts/jua.woff2?v=202611202144" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="style.css?v=202611202144">
-<link rel="stylesheet" href="app.css?v=202611202144">
+<link rel="manifest" href="manifest.json?v=202611202345">
+<link rel="apple-touch-icon" href="assets/app/icons/icon-180.png?v=202611202345">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/app/icons/favicon-32.png?v=202611202345">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/app/icons/icon-192.png?v=202611202345">
+<link rel="preload" href="lib/fonts/jua.woff2?v=202611202345" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="style.css?v=202611202345">
+<link rel="stylesheet" href="app.css?v=202611202345">
 </head>
 <body>
 <div id="safe"></div>
@@ -42,8 +42,8 @@ if (location.hostname === 'sangbiny-creater.github.io') location.replace('https:
 
     <!-- 터치 영역: 화면 왼쪽 = 왼쪽으로, 오른쪽 = 오른쪽으로 -->
     <div id="touch" class="hidden">
-      <div id="padL" class="pad"><img src="assets/ui/btn_left.webp?v=202611202144" alt=""></div>
-      <div id="padR" class="pad"><img src="assets/ui/btn_right.webp?v=202611202144" alt=""></div>
+      <div id="padL" class="pad"><img src="assets/ui/btn_left.webp?v=202611202345" alt=""></div>
+      <div id="padR" class="pad"><img src="assets/ui/btn_right.webp?v=202611202345" alt=""></div>
       <button id="btnJump" class="jump hidden" aria-label="점프하기"><i id="jumpN">0</i><span>점프</span></button>
     </div>
 
@@ -64,12 +64,29 @@ if (location.hostname === 'sangbiny-creater.github.io') location.replace('https:
     <!-- 시작 상자: 단순한 네모 상자 + 버튼 2개 -->
     <div id="startBox" class="screen dim hidden">
       <div class="sq">
-        <img class="sq-logo" src="assets/ui/logo.webp?v=202611202144" alt="다운힐 러너">
-        <div class="sq-best"><span id="sbName"></span> · BEST <b id="sbBest">0</b>m</div>
+        <img class="sq-logo" src="assets/ui/logo.webp?v=202611202345" alt="다운힐 러너">
+        <div class="sq-best"><span id="sbName" translate="no"></span> · BEST <b id="sbBest">0</b>m</div>
         <div id="sbFriend" class="sq-friend hidden"></div>
         <button id="btnGo" class="sq-btn main">시작하기</button>
         <button id="btnGoFrom" class="sq-btn">3판부터 시작</button>
-        <div class="sq-links"><button id="btnChar">캐릭터 바꾸기</button><span>·</span><button id="btnAccount">계정</button><span>·</span><button id="btnSound2">소리 켬</button></div>
+        <button id="btnRank" class="sq-btn"><img class="sq-ico" src="lib/ui/ranking.webp?v=202611202345" alt="">랭킹보기</button>
+      </div>
+    </div>
+    <!-- 오른쪽 위 설정 (시작 창이 떠 있을 때) -->
+    <button id="btnSettings" class="set-btn hidden" aria-label="설정"><img src="lib/ui/settings.webp?v=202611202345" alt=""></button>
+    <!-- 설정 (트윈 게임랜드 설정 창과 같은 줄 모양) -->
+    <div id="setBox" class="screen dim hidden">
+      <div class="sq">
+        <div class="sq-title">설정</div>
+        <div class="set-list">
+          <button id="setAccount" class="set-row"><span>🔐 계정</span><b id="setAccountVal">게스트</b></button>
+          <button id="setSound" class="set-row"><span>🔊 소리</span><b id="setSoundVal">켜짐</b></button>
+          <button id="setLang" class="set-row"><span>🌐 언어</span><b id="setLangVal" translate="no">한국어</b></button>
+          <button id="setChar" class="set-row"><span>👦 캐릭터 바꾸기</span><b>›</b></button>
+          <a class="set-row" href="https://sangbiny-creater.github.io/twin-gameland/legal/terms.html" target="_blank" rel="noopener"><span>📄 이용약관</span><b>›</b></a>
+          <a class="set-row" href="https://brown-crab.com/privacy.html" target="_blank" rel="noopener"><span>🔒 개인정보 처리방침</span><b>›</b></a>
+        </div>
+        <button id="setClose" class="sq-btn main">닫기</button>
       </div>
     </div>
 
@@ -78,10 +95,7 @@ if (location.hostname === 'sangbiny-creater.github.io') location.replace('https:
       <div class="sq">
         <div class="sq-title">잠깐 쉬어요</div>
         <button id="btnResume" class="sq-btn main">계속하기</button>
-        <div class="sq-row">
-          <button id="btnRetryP" class="sq-btn">다시하기</button>
-          <button id="btnHomeP" class="sq-btn">처음으로</button>
-        </div>
+        <button id="btnRetryP" class="sq-btn">다시하기</button>
       </div>
     </div>
 
@@ -89,14 +103,14 @@ if (location.hostname === 'sangbiny-creater.github.io') location.replace('https:
     <div id="result" class="screen dim hidden">
       <div class="sq res">
         <button id="btnCloseR" class="sq-x" aria-label="닫기"></button>
-        <div class="sq-title">GAME OVER</div>
+        <div id="resTitle" class="sq-title">게임 끝</div>
+        <span id="resBest" class="gp-new hidden" translate="no">NEW BEST!</span>
         <div class="res-table">
           <div><span>이동 거리</span><b><i id="resDist">0</i>m</b></div>
           <div><span>획득 코인</span><b><img data-icon="coin" alt=""><i id="resCoin">0</i></b></div>
           <div><span>최대 콤보</span><b><img data-icon="star" alt=""><i id="resCombo">0</i></b></div>
           <div><span>BEST 기록</span><b><span class="ico ico-crown"></span><i id="resBestVal">0</i>m</b></div>
         </div>
-        <i id="resBest" class="badge hidden">NEW RECORD!</i>
         <div id="resFriend" class="sq-friend hidden"></div>
         <button id="btnCont" class="sq-btn ad">광고 보고 이어하기</button>
         <div class="sq-row">
@@ -106,27 +120,17 @@ if (location.hostname === 'sangbiny-creater.github.io') location.replace('https:
       </div>
     </div>
 
-    <!-- 자랑하기: 공유 창이 없는 기기에서 (문자·링크 복사) -->
-    <div id="shareBox" class="screen dim hidden">
-      <div class="sq">
-        <div class="sq-title">친구에게 자랑하기</div>
-        <p id="shareText" class="sq-p"></p>
-        <a id="btnSms" class="sq-btn main" href="#">문자로 보내기</a>
-        <div class="sq-row">
-          <button id="btnCopy" class="sq-btn">링크 복사</button>
-          <button id="btnShareClose" class="sq-btn">닫기</button>
-        </div>
       </div>
     </div>
   </div>
   </div>
 
   <!-- 인트로: 세로 그림만, 화면을 누르거나 잠깐 뒤 다음으로 -->
-  <div id="intro" class="scr"><img src="assets/app/intro.webp?v=202611202144" alt="다운힐 러너"><div class="intro-tap">화면을 눌러 주세요</div></div>
+  <div id="intro" class="scr"><img src="assets/app/intro.webp?v=202611202345" alt="다운힐 러너"><div class="intro-tap">화면을 눌러 주세요</div></div>
 
   <!-- 로그인: 구글 · 이메일 · 게스트 -->
   <div id="login" class="scr bg hidden">
-    <img class="scr-logo" src="assets/ui/logo.webp?v=202611202144" alt="다운힐 러너">
+    <img class="scr-logo" src="assets/ui/logo.webp?v=202611202345" alt="다운힐 러너">
     <div id="loginMain" class="sq">
       <div class="sq-title">어서 와요!</div>
       <p class="sq-p">로그인하면 다른 기기에서도 이어서 할 수 있어요.</p>
@@ -137,14 +141,32 @@ if (location.hostname === 'sangbiny-creater.github.io') location.replace('https:
     </div>
     <div id="loginEmail" class="sq hidden">
       <div class="sq-title">이메일 로그인</div>
-      <input id="inEmail" class="sq-in" type="email" inputmode="email" autocomplete="email" placeholder="email@example.com">
+      <input id="inEmail" class="sq-in" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="email@example.com">
       <input id="inPw" class="sq-in" type="password" autocomplete="current-password" placeholder="비밀번호">
       <p id="emailErr" class="sq-err"></p>
       <div class="sq-row">
         <button id="btnEmailBack" class="sq-btn">뒤로</button>
         <button id="btnEmailGo" class="sq-btn main">로그인</button>
       </div>
-      <p class="sq-terms">이메일 가입은 아직 준비 중이에요. 처음이면 구글이나 게스트로 시작해 주세요.</p>
+      <div class="sq-links"><button id="btnToSignup">가입하기</button><span>·</span><button id="btnPwReset">비밀번호 재설정</button></div>
+    </div>
+    <!-- 이메일로 가입하기 (Firebase: 가입하면 확인 메일을 보냄) -->
+    <div id="signupBox" class="sq hidden">
+      <div class="sq-title">이메일로 가입하기</div>
+      <input id="suEmail" class="sq-in" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="email@example.com">
+      <input id="suPw" class="sq-in" type="password" autocomplete="new-password" placeholder="비밀번호 (6자 이상)">
+      <input id="suPw2" class="sq-in" type="password" autocomplete="new-password" placeholder="비밀번호 한 번 더">
+      <p id="suErr" class="sq-err"></p>
+      <div class="sq-row">
+        <button id="btnSuBack" class="sq-btn">뒤로</button>
+        <button id="btnSuGo" class="sq-btn main">가입하기</button>
+      </div>
+    </div>
+    <!-- 처음 접속: 언어 고르기 -->
+    <div id="langBox" class="sq hidden">
+      <div class="sq-title" translate="no">언어 · Language</div>
+      <button class="sq-btn main" data-lang="ko" translate="no">한국어</button>
+      <button class="sq-btn main" data-lang="en" translate="no">English</button>
     </div>
     <!-- 약관 동의 (처음 한 번): 위 두 개는 체크해야 다음으로, 개인정보 처리방침은 보기만 -->
     <div id="termsBox" class="sq hidden">
@@ -179,7 +201,7 @@ if (location.hostname === 'sangbiny-creater.github.io') location.replace('https:
     </div>
     <div id="accountBox" class="sq hidden">
       <div class="sq-title">계정</div>
-      <p id="accountText" class="sq-p"></p>
+      <p id="accountText" class="sq-p" translate="no"></p>
       <button id="btnLink" class="sq-btn main">구글 계정 연결하기</button>
       <div class="sq-row">
         <button id="btnLogout" class="sq-btn">로그아웃</button>
@@ -189,13 +211,48 @@ if (location.hostname === 'sangbiny-creater.github.io') location.replace('https:
   </div>
 
   <!-- 캐릭터 고르기: 겨울옷 은유·은결 -->
-  <div id="select" class="scr bg hidden">
-    <div class="sel-title">캐릭터를 골라 주세요</div>
-    <div class="sel-chars">
-      <button class="sel-char" data-char="eunyu" aria-label="여자 캐릭터"><img alt=""></button>
-      <button class="sel-char" data-char="eungyeol" aria-label="남자 캐릭터"><img alt=""></button>
+  <!-- 캐릭터 고르기: 트윈 게임랜드 첫 화면(캐릭터 선택)과 같은 자리·같은 비율 (540 기준으로 그리고 화면 폭에 맞춰 키움, app.js layoutSelect) -->
+  <div id="select" class="scr hidden">
+    <div id="selWrap" class="sel-wrap">
+      <img class="sel-bg" src="assets/app/bg.webp?v=202611202345" alt="">
+      <img class="sel-logo" src="assets/ui/logo.webp?v=202611202345" alt="다운힐 러너">
+      <div class="sel-ask"><b>캐릭터 선택</b><small>함께 떠날 캐릭터를 선택해 주세요!</small></div>
+      <div id="selChars" class="sel-chars">
+        <button class="sel-char" data-char="eunyu" aria-label="여자 캐릭터"><span class="sc-frame"></span><span class="sc-clip"><img alt=""></span></button>
+        <button class="sel-char" data-char="eungyeol" aria-label="남자 캐릭터"><span class="sc-frame"></span><span class="sc-clip"><img alt=""></span></button>
+      </div>
+      <button id="btnLang" class="sel-lang" aria-label="언어"><span translate="no">한국어</span></button>
     </div>
   </div>
+
+  <!-- 랭킹: 트윈 게임랜드 주간 랭킹 화면과 같은 모양 (게임 아이콘 줄 대신 거리·코인 탭) -->
+  <div id="rank" class="rk-scr hidden">
+    <div class="rk">
+      <header class="rk-head">
+        <button id="rkBack" class="rk-back" aria-label="뒤로"><img src="lib/ui/back.svg?v=202611202345" alt=""></button>
+        <div class="rk-seg" id="rkSeg" data-mode="week"><button data-mode="week" class="on"><b>주간</b></button><button data-mode="all"><b>전체</b></button></div>
+      </header>
+      <p id="rkPeriod" class="rk-period"></p>
+      <nav class="rk-tabs" id="rkTabs">
+        <button data-kind="dist" class="on"><img src="lib/ui/crown.webp?v=202611202345" alt=""><span>거리</span></button>
+        <button data-kind="coin"><img src="lib/ui/coin.webp?v=202611202345" alt=""><span>코인</span></button>
+      </nav>
+      <main class="rk-panel"><ol id="rkList" class="rk-list"></ol><p class="rk-note" id="rkNote"></p></main>
+    </div>
+    <div id="rkMine" class="rk-mine hidden"></div>
+  </div>
+
+  <!-- 자랑하기 창은 랭킹 화면 위에서도 보이게 앱 맨 위 칸에 -->
+    <!-- 자랑하기: 공유 창이 없는 기기에서 (문자·링크 복사) -->
+  <div id="shareBox" class="scr share-scr hidden">
+    <div class="sq">
+      <div class="sq-title">친구에게 자랑하기</div>
+      <p id="shareText" class="sq-p" translate="no"></p>
+      <a id="btnSms" class="sq-btn main" href="#">문자로 보내기</a>
+      <div class="sq-row">
+        <button id="btnCopy" class="sq-btn">링크 복사</button>
+        <button id="btnShareClose" class="sq-btn">닫기</button>
+      </div>
 
   <!-- 광고 보고 이어하기: 지금은 테스트용 가짜 광고 -->
   <div id="adFake" class="scr hidden"><div class="ad-fake"><b>광고 (테스트)</b><span id="adCount">3</span><small>진짜 광고는 앱 출시 때 들어가요</small></div></div>
@@ -206,9 +263,11 @@ if (location.hostname === 'sangbiny-creater.github.io') location.replace('https:
 <!-- 가로 화면은 지원하지 않아요 -->
 <div id="rotate"><div class="rot-phone"></div><b>세로로 돌려 주세요</b></div>
 
-<script src="lib/charv2.js?v=202611202144"></script>
-<script src="lib/firebase_config.js?v=202611202144"></script>
-<script src="game.js?v=202611202144"></script>
-<script src="app.js?v=202611202144"></script>
+<script src="lib/i18n_data.js?v=202611202345"></script>
+<script src="lib/i18n.js?v=202611202345"></script>
+<script src="lib/charv2.js?v=202611202345"></script>
+<script src="lib/firebase_config.js?v=202611202345"></script>
+<script src="game.js?v=202611202345"></script>
+<script src="app.js?v=202611202345"></script>
 </body>
 </html>

@@ -67,7 +67,7 @@ const $ = (id) => document.getElementById(id);
 const rng = (seed) => { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let x = s; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; };
 
 // ---------- sprites ----------
-const ASSET_V = '202611202144';
+const ASSET_V = '202611202345';
 const SP = { img: new Image(), f: null, ready: false };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -961,8 +961,7 @@ window.addEventListener('blur', () => pauseGame());
 const click = (id, fn) => $(id).addEventListener('click', () => { Audio.unlock(); Audio.sfx('ui'); fn(); });
 click('btnPause', pauseGame);
 click('btnResume', resumeGame);
-click('btnRetryP', () => startRun(G.startZone || 1));
-click('btnHomeP', goHome);
+click('btnRetryP', goHome); // 앱: 다시하기 = 시작 창(시작하기 · N판부터 시작)
 // 결과 화면 버튼(이어하기·다시하기·자랑하기·X)은 app.js
 
 // ---------- layout ----------
