@@ -1,5 +1,5 @@
 /* 다운힐 앱 화면 (인트로 · 로그인 · 캐릭터 고르기 · 시작 상자 · 결과 · 자랑하기 · 광고 자리) */
-@font-face { font-family: Jua; src: url(lib/fonts/jua.woff2?v=202611202057) format('woff2'); font-display: block; }
+@font-face { font-family: Jua; src: url(lib/fonts/jua.woff2?v=202611202134) format('woff2'); font-display: block; }
 :root { --ad-h: 60px; --pink: #FF6F9E; --blue: #3C8EE6; }
 html, body { background: #DDEFFC; }
 
@@ -14,7 +14,7 @@ html, body { background: #DDEFFC; }
 
 /* 인트로·로그인·고르기 (화면 전체) */
 .scr { position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom)); overflow: auto; }
-.scr.bg { background: #EAF6FF url(assets/app/bg.webp?v=202611202057) center bottom / cover no-repeat; }
+.scr.bg { background: #EAF6FF url(assets/app/bg.webp?v=202611202134) center bottom / cover no-repeat; }
 #intro { padding: 0; background: #CFE8F8; cursor: pointer; }
 #intro img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 40%; }
 .intro-tap { position: absolute; left: 50%; bottom: calc(26px + env(safe-area-inset-bottom)); transform: translateX(-50%); padding: 6px 18px; border-radius: 18px; background: rgba(24,40,62,.55); color: #fff; font-size: 17px; white-space: nowrap; animation: blink 1.4s infinite alternate; }
@@ -27,15 +27,15 @@ html, body { background: #DDEFFC; }
 :root { --who: #E8457F; --who-d: #B92C62; --who-bg: #FFF1F6; --z: 1; }
 html[data-who=eungyeol] { --who: #2C84DC; --who-d: #1F62AE; --who-bg: #EEF6FF; }
 .sq { position: relative; box-sizing: border-box; width: 440px; max-width: none; padding: 22px 26px 24px; display: flex; flex-direction: column; align-items: stretch; gap: 10px; text-align: center; color: #5A3B22;
-  border: 0 solid transparent; border-image: url(lib/ui/popup/panel_pink.webp?v=202611202057) 130 fill / calc(130px * .7333) stretch; filter: drop-shadow(0 10px 22px rgba(0,0,0,.35)); }
-html[data-who=eungyeol] .sq { border-image-source: url(lib/ui/popup/panel_blue.webp?v=202611202057); }
+  border: 0 solid transparent; border-image: url(lib/ui/popup/panel_pink.webp?v=202611202134) 130 fill / calc(130px * .7333) stretch; filter: drop-shadow(0 10px 22px rgba(0,0,0,.35)); }
+html[data-who=eungyeol] .sq { border-image-source: url(lib/ui/popup/panel_blue.webp?v=202611202134); }
 .scr .sq { zoom: var(--z); }
 .sq > .sq-title:first-child, .sq > .sq-x + .sq-title { margin-top: -78px; }
 .scr .sq:has(> .sq-title) { margin-top: 60px; }
 /* 제목 리본 */
 .sq-title { display: flex; align-items: center; justify-content: center; box-sizing: border-box; flex: none; width: 350px; max-width: 100%; aspect-ratio: 680 / 254; margin: 0 auto -2px; padding: calc(41px + .08em) 57px 42px;
-  background: url(lib/ui/popup/ribbon_pink.webp?v=202611202057) center / 100% 100% no-repeat; color: #fff; font-size: 26px; line-height: 1; text-shadow: 0 2px 0 var(--who-d), 0 0 3px var(--who-d); white-space: nowrap; overflow: hidden; }
-html[data-who=eungyeol] .sq-title { background-image: url(lib/ui/popup/ribbon_blue.webp?v=202611202057); }
+  background: url(lib/ui/popup/ribbon_pink.webp?v=202611202134) center / 100% 100% no-repeat; color: #fff; font-size: 26px; line-height: 1; text-shadow: 0 2px 0 var(--who-d), 0 0 3px var(--who-d); white-space: nowrap; overflow: hidden; }
+html[data-who=eungyeol] .sq-title { background-image: url(lib/ui/popup/ribbon_blue.webp?v=202611202134); }
 .sq-logo { width: 300px; max-width: 100%; margin: 0 auto -4px; }
 .sq-best { font-size: 22px; color: #5A3B22; }
 .sq-best b { font-weight: normal; color: var(--who); }
@@ -43,10 +43,10 @@ html[data-who=eungyeol] .sq-title { background-image: url(lib/ui/popup/ribbon_bl
 .sq-p { margin: 0; font-size: 17px; line-height: 1.5; color: #6B4A3A; white-space: pre-line; word-break: keep-all; }
 /* 버튼: 흰 버튼(테두리) · 큰 버튼은 채운 버튼 (높이 64 = 아래 버튼 58의 1.1배) */
 .sq-btn { display: flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; height: 58px; padding: .08em 29px 0; font-family: var(--font); font-size: 22px; line-height: 1; white-space: nowrap; overflow: hidden; text-decoration: none; background: none; border-radius: 0;
-  border: 0 solid transparent; border-image: url(lib/ui/popup/btn_pink.webp?v=202611202057) 0 58 fill / 0 29px stretch; color: var(--who); }
-html[data-who=eungyeol] .sq-btn { border-image-source: url(lib/ui/popup/btn_blue.webp?v=202611202057); }
-.sq-btn.main, .sq-btn.ad { height: 64px; padding: .08em 32px 0; font-size: 24px; border-image-source: url(lib/ui/popup/fill_pink.webp?v=202611202057); border-image-width: 0 32px; color: #fff; text-shadow: 0 2px 0 var(--who-d); }
-html[data-who=eungyeol] .sq-btn.main, html[data-who=eungyeol] .sq-btn.ad { border-image-source: url(lib/ui/popup/fill_blue.webp?v=202611202057); }
+  border: 0 solid transparent; border-image: url(lib/ui/popup/btn_pink.webp?v=202611202134) 0 58 fill / 0 29px stretch; color: var(--who); }
+html[data-who=eungyeol] .sq-btn { border-image-source: url(lib/ui/popup/btn_blue.webp?v=202611202134); }
+.sq-btn.main, .sq-btn.ad { height: 64px; padding: .08em 32px 0; font-size: 24px; border-image-source: url(lib/ui/popup/fill_pink.webp?v=202611202134); border-image-width: 0 32px; color: #fff; text-shadow: 0 2px 0 var(--who-d); }
+html[data-who=eungyeol] .sq-btn.main, html[data-who=eungyeol] .sq-btn.ad { border-image-source: url(lib/ui/popup/fill_blue.webp?v=202611202134); }
 .sq-btn.google, html[data-who=eungyeol] .sq-btn.google { height: 64px; border: 2px solid #DADCE0; border-image: none; border-radius: 32px; background: #fff; color: #3C4043; box-shadow: 0 3px 0 #D5D9DE; }
 .sq-btn.google svg { width: 26px; height: 26px; flex: none; }
 .sq-btn:disabled { opacity: .5; }
@@ -59,8 +59,8 @@ html[data-who=eungyeol] .sq-btn.main, html[data-who=eungyeol] .sq-btn.ad { borde
 .sq-in:focus { outline: none; border-color: var(--who); }
 .sq-err { margin: -2px 0 0; min-height: 18px; font-size: 14px; line-height: 1.4; color: #E0457B; }
 /* 오른쪽 위 X (닫기) */
-.sq-x { position: absolute; right: -4px; top: -6px; z-index: 3; width: 46px; height: 46px; background: url(lib/ui/popup/x_pink.webp?v=202611202057) center / contain no-repeat; filter: drop-shadow(0 2px 3px rgba(0,0,0,.25)); }
-html[data-who=eungyeol] .sq-x { background-image: url(lib/ui/popup/x_blue.webp?v=202611202057); }
+.sq-x { position: absolute; right: -4px; top: -6px; z-index: 3; width: 46px; height: 46px; background: url(lib/ui/popup/x_pink.webp?v=202611202134) center / contain no-repeat; filter: drop-shadow(0 2px 3px rgba(0,0,0,.25)); }
+html[data-who=eungyeol] .sq-x { background-image: url(lib/ui/popup/x_blue.webp?v=202611202134); }
 .sq.res .res-table { width: 100%; box-shadow: inset 0 0 0 2px #F0DCCB; }
 /* 약관 체크 칸 */
 .ck-list { display: flex; flex-direction: column; gap: 4px; padding: 0 4px; }
@@ -78,8 +78,8 @@ html[data-who=eungyeol] .sq-x { background-image: url(lib/ui/popup/x_blue.webp?v
 .sel-title { font-size: 34px; color: #fff; text-shadow: 0 3px 0 #2E6EA8, 0 0 8px rgba(24,59,91,.4); }
 .sel-chars { display: flex; gap: 14px; width: 100%; max-width: 420px; }
 /* 캐릭터 카드: 팝업 창 틀 그림 (여자 = 분홍, 남자 = 파랑) */
-.sel-char { flex: 1 1 0; min-width: 0; padding: 26px 10px 22px; display: flex; flex-direction: column; align-items: center; border: 0 solid transparent; border-image: url(lib/ui/popup/panel_pink.webp?v=202611202057) 130 fill / 54px stretch; filter: drop-shadow(0 6px 12px rgba(24,59,91,.3)); transition: transform .15s; }
-.sel-char[data-char="eungyeol"] { border-image-source: url(lib/ui/popup/panel_blue.webp?v=202611202057); }
+.sel-char { flex: 1 1 0; min-width: 0; padding: 26px 10px 22px; display: flex; flex-direction: column; align-items: center; border: 0 solid transparent; border-image: url(lib/ui/popup/panel_pink.webp?v=202611202134) 130 fill / 54px stretch; filter: drop-shadow(0 6px 12px rgba(24,59,91,.3)); transition: transform .15s; }
+.sel-char[data-char="eungyeol"] { border-image-source: url(lib/ui/popup/panel_blue.webp?v=202611202134); }
 .sel-char img { width: 100%; height: min(42vh, 300px); object-fit: contain; }
 .sel-char.on { transform: scale(1.06); }
 .sel-chars, .sel-title { zoom: max(1, var(--z)); }

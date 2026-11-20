@@ -18,8 +18,8 @@
   const appUrl = () => (/^https?:$/.test(location.protocol) ? location.origin + location.pathname.replace(/index\.html$/, '') : WEB);
   const dayOf = (ms) => { const d = new Date(ms); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 
-  // 이름: 사이트 common/names.js 와 같은 규칙 (8자까지, 띄어쓰기·영어 대소문자는 같은 이름으로 봄)
-  const cleanName = (n) => String(n || '').replace(/[<>"'`]/g, '').replace(/\s+/g, ' ').trim().slice(0, 8);
+  // 이름: 사이트 common/names.js 와 같은 규칙(띄어쓰기·영어 대소문자는 같은 이름으로 봄), 길이만 앱은 12자까지 (영어 이름 browncrab 등이 들어가게)
+  const cleanName = (n) => String(n || '').replace(/[<>"'`]/g, '').replace(/\s+/g, ' ').trim().slice(0, 12);
   const keyOf = (n) => String(n || '').normalize('NFC').replace(/\s+/g, '').toLowerCase().replace(/\//g, '_').replace(/^\.+$/, '_');
 
   // ---------- 친구 링크 ----------
