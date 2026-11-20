@@ -426,7 +426,7 @@
   async function docView(k) {
     $('docTitle').textContent = k === 'terms' ? '이용약관' : '개인정보 처리방침';
     $('docBody').textContent = T('불러오는 중이에요…');
-    show('docView'); $('docView').scrollTop = 0;
+    show('docView'); $('docView').querySelector('.rk-panel').scrollTop = 0;
     const d = await docs();
     $('docBody').textContent = d[k] || T('글을 불러오지 못했어요. 인터넷 연결을 확인해 주세요');
   }

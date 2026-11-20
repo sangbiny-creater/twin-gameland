@@ -67,7 +67,7 @@ const $ = (id) => document.getElementById(id);
 const rng = (seed) => { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let x = s; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; };
 
 // ---------- sprites ----------
-const ASSET_V = '202611210122';
+const ASSET_V = '202611210141';
 const SP = { img: new Image(), f: null, ready: false };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -816,7 +816,7 @@ function drawPlayer() {
   else if (G.lean < -0.35) pose = 'left';
   else if (G.lean > 0.35) pose = 'right';
   const running = G.state === 'play';
-  const bob = running ? -Math.abs(Math.sin(G.t * 8 * Math.PI)) * 6 : Math.sin(G.t * 3) * 2; // 앱: 걸음(1/8초)마다 한 번 튐 — 그림 바뀌는 박자와 같게
+  const bob = running ? -Math.abs(Math.sin(G.t * 5 * Math.PI)) * 2 : Math.sin(G.t * 3) * 2; // 앱: 달리기 그림 자체에 뜨는 장면이 있어서 아주 조금만 (걸음 0.2초마다)
   const sway = running ? Math.sin(G.t * 7) * 0.03 : 0;
   const h = 132;
   const cos = HUB ? HUB.costume() : null;
@@ -824,11 +824,10 @@ function drawPlayer() {
   ctx.save(); ctx.translate(p.x, p.y + 4 + (air ? -air : bob));
   if (G.wingT > 0) { spr(ctx, 'wing', -38, -h * 0.7, 56, { flip: true, alpha: 0.9, rot: Math.sin(G.t * 10) * 0.2 }); spr(ctx, 'wing', 38, -h * 0.7, 56, { alpha: 0.9, rot: -Math.sin(G.t * 10) * 0.2 }); }
   if (window.CharV2 && CharV2.is(who) && CharV2.ready(who)) { // 새 캐릭터(v2) 뒷모습
-    // 앱: 겨울옷 달리기 그림 2장이 같은 다리라서 한 장(back_run_0)만 쓰고 걸음마다 좌우로 살짝 기울여 뛰는 느낌 (새 달리기 그림을 받으면 바꾸기)
-    const name = { idle: 'back_run_0', left: 'back_left', right: 'back_right', hit: 'back_hit', dead: 'back_dead', boost: 'back_boost', happy: 'back_happy' }[pose] || 'back_run_0';
-    const stepRot = running && pose === 'idle' ? Math.sin(G.t * 4 * Math.PI) * 0.06 : 0; // 0.25초에 왼쪽·오른쪽 한 번씩
-    if (stepRot) ctx.translate(Math.sin(G.t * 4 * Math.PI) * 3, 0);
-    CharV2.draw(ctx, who, name, { h: h * 0.96, rot: pose === 'idle' ? sway + stepRot : 0 });
+    // 앱: 뒷모습 달리기 4장(오른발 → 모임 → 왼발 → 모임, 1장 = 0.1초). 그림이 아직 없으면 back_run_0
+    const run4 = `back_run4_${Math.floor(G.t * 10) % 4}`;
+    const name = { idle: running ? (CharV2.has(who, run4) ? run4 : 'back_run_0') : (CharV2.has(who, 'back_run4_0') ? 'back_run4_0' : 'back_run_0'), left: 'back_left', right: 'back_right', hit: 'back_hit', dead: 'back_dead', boost: 'back_boost', happy: 'back_happy' }[pose] || 'back_run_0';
+    CharV2.draw(ctx, who, name, { h: h * 0.96, rot: pose === 'idle' ? sway : 0 });
   } else if (back) { // 코스튬 뒷모습: 기울여서 좌우 이동 표현
     const rot = pose === 'dead' ? 0.5 : pose === 'hit' ? Math.sin(G.t * 40) * 0.15 : G.lean * 0.16 + sway;
     drawFit(back, h * 0.92, rot);

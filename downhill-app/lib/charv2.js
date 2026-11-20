@@ -7,18 +7,22 @@
   const atlas = {};
   function load(look) {
     if (!LOOKS[look] || atlas[look]) return atlas[look] && atlas[look].p;
-    const a = atlas[look] = { img: new Image(), f: null, ok: false };
-    a.p = fetch(`lib/chars/${look}_winter.json?v=202611210122`).then((r) => r.json()).then((j) => new Promise((done, fail) => {
+    const a = atlas[look] = { img: new Image(), f: null, ok: false }; loadRun(look, a);
+    a.p = fetch(`lib/chars/${look}_winter.json?v=202611210141`).then((r) => r.json()).then((j) => new Promise((done, fail) => {
       a.f = j.frames;
       a.img.onload = () => { const on = () => { a.ok = true; done(); }; if (a.img.decode) a.img.decode().then(on, on); else on(); };
-      a.img.onerror = fail; a.img.src = `lib/chars/${look}_winter.webp?v=202611210122`;
+      a.img.onerror = fail; a.img.src = `lib/chars/${look}_winter.webp?v=202611210141`;
     })).catch(() => { /* 그림이 없으면 예전 그림으로 */ });
     return a.p;
   }
-  // (2026-11-21) 다리만 뒤집어 만든 두 번째 달리기 그림은 어색해서 뺌 — 새 달리기 그림(GPT 요청 글 making_GPT/다운힐앱/GPT_요청_뒷모습_달리기.txt)을 받으면 넣기
+  // 뒷모습 달리기 4장 (GPT R01~R08 → tools/downhill_run_frames.py → lib/chars/<look>_run): back_run4_0~3 = 오른발 → 모임 → 왼발 → 모임
+  function loadRun(look, a) {
+    const r = { img: new Image(), f: null, ok: false }; a.run = r;
+    fetch(`lib/chars/${look}_run.json?v=202611210141`).then((x) => x.json()).then((j) => { r.f = j.frames; r.img.onload = () => { r.ok = true; }; r.img.src = `lib/chars/${look}_run.webp?v=202611210141`; }).catch(() => { /* 없으면 back_run_0 */ });
+  }
   const get = (look, name) => {
     const a = atlas[look]; if (!a || !a.ok) return null;
-    if (a.extra && a.extra[name]) return [a.extra[name], a.extra[name].f];
+    if (a.run && a.run.ok && a.run.f[name]) return [a.run, a.run.f[name]];
     return a.f[name] ? [a, a.f[name]] : null;
   };
   window.CharV2 = {
