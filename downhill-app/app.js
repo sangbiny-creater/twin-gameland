@@ -51,6 +51,29 @@
     root.querySelectorAll('.sq-title').forEach((t) => { t.style.fontSize = ''; let f = 26; while (t.scrollWidth > t.clientWidth + 1 && f > 16) t.style.fontSize = (--f) + 'px'; });
   }
   addEventListener('resize', fitZoom);
+  // 모든 글자 칸: 글자가 칸 안쪽 여백(padding, 최소 MINPAD) 안에 들어가게 — 넘으면 글자만 조금씩 줄임 (영어처럼 긴 글자)
+  const MINPAD = 6;
+  const FIT = '.sq-btn, .sq-title, .sel-ask b, .sel-lang, .rk-seg button, .rk-tabs button, .set-row, .sq-best, .sq-friend, .ck, .sq-links button, .gp-new';
+  function textW(el) { let L = Infinity, R = -Infinity; const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); while (w.nextNode()) { const n = w.currentNode; if (!n.nodeValue.trim()) continue; const r = document.createRange(); r.selectNodeContents(n); for (const q of r.getClientRects()) if (q.width) { L = Math.min(L, q.left); R = Math.max(R, q.right); } } return L === Infinity ? null : [L, R]; }
+  function fitAll(root = document) {
+    root.querySelectorAll(FIT).forEach((el) => {
+      if (!el.offsetParent && getComputedStyle(el).position !== 'fixed') return;
+      el.style.fontSize = '';
+      let fs = parseFloat(getComputedStyle(el).fontSize); const min = fs * 0.6;
+      for (let i = 0; i < 30; i++) {
+        const t = textW(el); if (!t) break;
+        const b = el.getBoundingClientRect(), cs = getComputedStyle(el), k = b.width / (el.offsetWidth || b.width || 1);
+        const pl = Math.max(parseFloat(cs.paddingLeft) || 0, MINPAD) * k, pr = Math.max(parseFloat(cs.paddingRight) || 0, MINPAD) * k;
+        if (t[0] >= b.left + pl - 0.5 && t[1] <= b.right - pr + 0.5 && el.scrollWidth <= el.clientWidth + 1) break;
+        if (fs <= min) break;
+        el.style.fontSize = (fs -= 0.5) + 'px';
+      }
+    });
+  }
+  let fitT = 0; const fitSoon = () => { clearTimeout(fitT); fitT = setTimeout(() => fitAll(), 60); };
+  new MutationObserver(fitSoon).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class'] });
+  addEventListener('resize', fitSoon);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitSoon);
 
   // ---------- 화면 바꾸기 ----------
   const SCR = ['intro', 'login', 'select', 'rank'];
@@ -366,6 +389,40 @@
   $('setLang').onclick = () => { ui(); show('setBox', false); langScreen(true); };
   $('setChar').onclick = () => { ui(); show('setBox', false); selectScreen(); };
 
+  // ---------- 이용약관 · 개인정보 처리방침: 게임 안 화면으로 (뒤로 버튼으로 돌아옴) ----------
+  //  글 = 서버 config/downhill_terms { terms, privacy, collect } (백오피스 '약관·개인정보' 탭에서 고침)
+  //  아직 안 고쳤으면 기본 글: 이용약관 = 트윈 게임랜드 legal/terms.html, 개인정보 처리방침 = brown-crab.com/privacy.html
+  const DOC_DEF = { terms: ['https://sangbiny-creater.github.io/twin-gameland/legal/terms.html', '#doc'], privacy: ['https://brown-crab.com/privacy.html', 'main'] };
+  let docsP = null;
+  const htmlText = (el) => { // 화면에 안 그린 문서라 innerText 가 줄을 안 바꿈 → 문단·제목·목록마다 줄바꿈
+    let out = ''; const BLOCK = /^(P|DIV|H[1-6]|LI|UL|OL|SECTION|ARTICLE|HEADER|FOOTER|TR|TABLE|BLOCKQUOTE)$/;
+    const walk = (n) => { for (const c of n.childNodes) { if (c.nodeType === 3) out += c.nodeValue.replace(/\s+/g, ' '); else if (c.nodeType === 1) { if (c.tagName === 'BR') { out += '\n'; continue; } const b = BLOCK.test(c.tagName); if (b) out += '\n'; if (c.tagName === 'LI') out += '· '; walk(c); if (b) out += '\n'; } } };
+    if (el.querySelector('p, h1, h2, h3, li, div, br')) walk(el); else out = el.textContent;
+    return out.split('\n').map((l) => l.trim()).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  };
+  function docs() {
+    if (!docsP) docsP = (async () => {
+      const out = {};
+      try { const f = await firebase(); if (f) { const d = await timeout(f.db.collection('config').doc('downhill_terms').get(), 6000); if (d && d.exists) Object.assign(out, d.data()); } } catch (e) { /* 기본 글 */ }
+      for (const k of ['terms', 'privacy']) if (!out[k]) {
+        try { const t = await (await fetch(DOC_DEF[k][0])).text(), el = new DOMParser().parseFromString(t, 'text/html').querySelector(DOC_DEF[k][1]); out[k] = el ? htmlText(el) : ''; } catch (e) { out[k] = ''; }
+      }
+      if (out.collect) $('privacyDetail').textContent = out.collect;
+      return out;
+    })();
+    return docsP;
+  }
+  async function docView(k) {
+    $('docTitle').textContent = k === 'terms' ? '이용약관' : '개인정보 처리방침';
+    $('docBody').textContent = T('불러오는 중이에요…');
+    show('docView'); $('docView').scrollTop = 0;
+    const d = await docs();
+    $('docBody').textContent = d[k] || T('글을 불러오지 못했어요. 인터넷 연결을 확인해 주세요');
+  }
+  document.querySelectorAll('[data-doc]').forEach((b) => b.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); ui(); docView(b.dataset.doc); }));
+  $('docBack').onclick = () => { ui(); show('docView', false); };
+  setTimeout(() => docs(), 3000); // 약관 동의 화면의 '모으는 것' 글을 미리 서버 글로
+
   // ---------- 언어: 처음 접속 때 한 번 (그 뒤로는 설정·캐릭터 고르기의 언어 버튼) ----------
   let langBack = false;
   function langScreen(back) { langBack = back; box('langBox'); }
@@ -394,6 +451,36 @@
     Save.store(); if (!silent) toast('로그아웃했어요'); next();
   }
   $('btnLink').onclick = () => { ui(); google(); };
+  // 계정 삭제: 이름을 놓아주고, 서버 계정 문서에 삭제 요청 표시(이메일·이름 지움) → 로그인 계정 자체를 지움 → 이 기기 기록도 지움
+  //  남은 게임 기록(records)과 계정 문서는 백오피스 '사용자' 탭에서 '데이터 지우기'로 지움 (규칙상 관리자만 지울 수 있어서)
+  async function deleteAccount() {
+    if (!confirm('계정을 지우면 이름과 기록이 모두 사라지고 되돌릴 수 없어요. 계정을 삭제할까요?')) return;
+    const a = Save.data.auth || {}, f = await firebase(), u = me(f);
+    if (a.mode !== 'guest' && !u) { toast('인터넷 연결을 확인해 주세요'); return; }
+    if (u) {
+      try {
+        await releaseName();
+        const ref = f.db.collection('users').doc(u.uid), sn = await ref.get(), now = Date.now();
+        const mark = { email: '', deleteRequested: now, dh: { deleted: true, deletedAt: now, name: '' } };
+        if (sn.exists) await ref.set(mark, { merge: true }); else await ref.set({ ...mark, provider: a.mode || 'guest', createdAt: now, status: 'active', totalSec: 0, app: 'downhill' });
+      } catch (e) { console.warn('delete mark', e); }
+      try { await u.delete(); }
+      catch (e) {
+        if (e.code !== 'auth/requires-recent-login') { toast(T('계정을 지우지 못했어요') + ' (' + (e.code || e.message) + ')'); return; }
+        // 오래전에 로그인했으면 한 번 더 로그인한 뒤 지움
+        try {
+          if (a.mode === 'google') await u.reauthenticateWithPopup(new f.F.auth.GoogleAuthProvider());
+          else if (a.mode === 'email') { const pw = prompt(T('비밀번호를 한 번 더 넣어 주세요')); if (!pw) return; await u.reauthenticateWithCredential(f.F.auth.EmailAuthProvider.credential(u.email, pw)); }
+          await u.delete();
+        } catch (x) { toast(T('계정을 지우지 못했어요') + ' (' + (x.code || x.message) + ')'); return; }
+      }
+    }
+    const keep = { lang: Save.data.lang, sound: Save.data.sound };
+    Object.keys(Save.data).forEach((k) => { delete Save.data[k]; });
+    Object.assign(Save.data, { char: null, best: 0, totalCoin: 0, lastZone: 1, auth: null, agreed: null, name: null, nameKey: null, nameReg: false }, keep);
+    Save.store(); toast('계정을 삭제했어요'); next();
+  }
+  $('btnDelete').onclick = () => { ui(); deleteAccount(); };
   $('btnLogout').onclick = () => { ui(); logout(); };
   $('btnAccountClose').onclick = () => { ui(); home(); };
 
@@ -571,7 +658,8 @@
   // 입력 칸 안내 글자 (lib/i18n.js 는 입력 칸을 건너뛰어서 여기서)
   document.querySelectorAll('input[placeholder]').forEach((i) => { i.placeholder = T(i.placeholder); });
 
-  window.App = { onResult, home, screen, share, friend, checkName };
+  window.App = { onResult, home, screen, share, friend, checkName,
+    __show: box, __go: (n) => ({ select: selectScreen, home, rank: rankScreen })[n]() }; // __show·__go = 검사 도구용
   paintWho(); fitZoom();
   screen('intro');
 })();

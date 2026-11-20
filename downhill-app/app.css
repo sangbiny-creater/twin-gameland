@@ -1,5 +1,5 @@
 /* 다운힐 앱 화면 (인트로 · 로그인 · 캐릭터 고르기 · 시작 상자 · 결과 · 자랑하기 · 광고 자리) */
-@font-face { font-family: Jua; src: url(lib/fonts/jua.woff2?v=202611202345) format('woff2'); font-display: block; }
+@font-face { font-family: Jua; src: url(lib/fonts/jua.woff2?v=202611210024) format('woff2'); font-display: block; }
 :root { --ad-h: 60px; --pink: #FF6F9E; --blue: #3C8EE6; }
 html, body { background: #DDEFFC; }
 
@@ -14,7 +14,7 @@ html, body { background: #DDEFFC; }
 
 /* 인트로·로그인·고르기 (화면 전체) */
 .scr { position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom)); overflow: auto; }
-.scr.bg { background: #EAF6FF url(assets/app/bg.webp?v=202611202345) center bottom / cover no-repeat; }
+.scr.bg { background: #EAF6FF url(assets/app/bg.webp?v=202611210024) center bottom / cover no-repeat; }
 #intro { padding: 0; background: #CFE8F8; cursor: pointer; }
 #intro img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 40%; }
 .intro-tap { position: absolute; left: 50%; bottom: calc(26px + env(safe-area-inset-bottom)); transform: translateX(-50%); padding: 6px 18px; border-radius: 18px; background: rgba(24,40,62,.55); color: #fff; font-size: 17px; white-space: nowrap; animation: blink 1.4s infinite alternate; }
@@ -27,15 +27,15 @@ html, body { background: #DDEFFC; }
 :root { --who: #E8457F; --who-d: #B92C62; --who-bg: #FFF1F6; --z: 1; }
 html[data-who=eungyeol] { --who: #2C84DC; --who-d: #1F62AE; --who-bg: #EEF6FF; }
 .sq { position: relative; box-sizing: border-box; width: 440px; max-width: none; padding: 22px 26px 24px; display: flex; flex-direction: column; align-items: stretch; gap: 10px; text-align: center; color: #5A3B22;
-  border: 0 solid transparent; border-image: url(lib/ui/popup/panel_pink.webp?v=202611202345) 130 fill / calc(130px * .7333) stretch; filter: drop-shadow(0 10px 22px rgba(0,0,0,.35)); }
-html[data-who=eungyeol] .sq { border-image-source: url(lib/ui/popup/panel_blue.webp?v=202611202345); }
+  border: 0 solid transparent; border-image: url(lib/ui/popup/panel_pink.webp?v=202611210024) 130 fill / calc(130px * .7333) stretch; filter: drop-shadow(0 10px 22px rgba(0,0,0,.35)); }
+html[data-who=eungyeol] .sq { border-image-source: url(lib/ui/popup/panel_blue.webp?v=202611210024); }
 .scr .sq { zoom: var(--z); }
 .sq > .sq-title:first-child, .sq > .sq-x + .sq-title { margin-top: -78px; }
 .scr .sq:has(> .sq-title) { margin-top: 60px; }
 /* 제목 리본 */
 .sq-title { display: flex; align-items: center; justify-content: center; box-sizing: border-box; flex: none; width: 350px; max-width: 100%; aspect-ratio: 680 / 254; margin: 0 auto -2px; padding: calc(41px + .08em) 57px 42px;
-  background: url(lib/ui/popup/ribbon_pink.webp?v=202611202345) center / 100% 100% no-repeat; color: #fff; font-size: 26px; line-height: 1; text-shadow: 0 2px 0 var(--who-d), 0 0 3px var(--who-d); white-space: nowrap; overflow: hidden; }
-html[data-who=eungyeol] .sq-title { background-image: url(lib/ui/popup/ribbon_blue.webp?v=202611202345); }
+  background: url(lib/ui/popup/ribbon_pink.webp?v=202611210024) center / 100% 100% no-repeat; color: #fff; font-size: 26px; line-height: 1; text-shadow: 0 2px 0 var(--who-d), 0 0 3px var(--who-d); white-space: nowrap; overflow: hidden; }
+html[data-who=eungyeol] .sq-title { background-image: url(lib/ui/popup/ribbon_blue.webp?v=202611210024); }
 .sq-logo { width: 300px; max-width: 100%; margin: 0 auto -4px; }
 .sq-best { font-size: 22px; color: #5A3B22; }
 .sq-best b { font-weight: normal; color: var(--who); }
@@ -43,35 +43,36 @@ html[data-who=eungyeol] .sq-title { background-image: url(lib/ui/popup/ribbon_bl
 .sq-p { margin: 0; font-size: 17px; line-height: 1.5; color: #6B4A3A; white-space: pre-line; word-break: keep-all; }
 /* 버튼: 흰 버튼(테두리) · 큰 버튼은 채운 버튼 (높이 64 = 아래 버튼 58의 1.1배) */
 .sq-btn { display: flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; height: 58px; padding: .08em 29px 0; font-family: var(--font); font-size: 22px; line-height: 1; white-space: nowrap; overflow: hidden; text-decoration: none; background: none; border-radius: 0;
-  border: 0 solid transparent; border-image: url(lib/ui/popup/btn_pink.webp?v=202611202345) 0 58 fill / 0 29px stretch; color: var(--who); }
-html[data-who=eungyeol] .sq-btn { border-image-source: url(lib/ui/popup/btn_blue.webp?v=202611202345); }
-.sq-btn.main, .sq-btn.ad { height: 64px; padding: .08em 32px 0; font-size: 24px; border-image-source: url(lib/ui/popup/fill_pink.webp?v=202611202345); border-image-width: 0 32px; color: #fff; text-shadow: 0 2px 0 var(--who-d); }
-html[data-who=eungyeol] .sq-btn.main, html[data-who=eungyeol] .sq-btn.ad { border-image-source: url(lib/ui/popup/fill_blue.webp?v=202611202345); }
+  border: 0 solid transparent; border-image: url(lib/ui/popup/btn_pink.webp?v=202611210024) 0 58 fill / 0 29px stretch; color: var(--who); }
+html[data-who=eungyeol] .sq-btn { border-image-source: url(lib/ui/popup/btn_blue.webp?v=202611210024); }
+.sq-btn.main, .sq-btn.ad { height: 64px; padding: .08em 32px 0; font-size: 24px; border-image-source: url(lib/ui/popup/fill_pink.webp?v=202611210024); border-image-width: 0 32px; color: #fff; text-shadow: 0 2px 0 var(--who-d); }
+html[data-who=eungyeol] .sq-btn.main, html[data-who=eungyeol] .sq-btn.ad { border-image-source: url(lib/ui/popup/fill_blue.webp?v=202611210024); }
 .sq-btn.google, html[data-who=eungyeol] .sq-btn.google { height: 64px; border: 2px solid #DADCE0; border-image: none; border-radius: 32px; background: #fff; color: #3C4043; box-shadow: 0 3px 0 #D5D9DE; }
 .sq-btn.google svg { width: 26px; height: 26px; flex: none; }
 .sq-btn:disabled { opacity: .5; }
 .sq-row { display: flex; gap: 12px; }
 .sq-row .sq-btn { flex: 1 1 0; min-width: 0; }
 .sq-links { display: flex; justify-content: center; align-items: center; gap: 8px; color: #C4A994; font-size: 17px; }
-.sq-links button { font-size: 17px; color: #7A5A44; text-decoration: underline; padding: 4px 2px; }
+.sq-links button { font-size: 17px; color: #7A5A44; text-decoration: underline; padding: 4px 6px; }
+.sq-links button.del-link { color: #C0392B; }
 .sq-terms { margin: 0; font-size: 13px; line-height: 1.5; color: #9A8070; word-break: keep-all; }
 .sq-in { height: 54px; border-radius: 16px; border: 2px solid #EBD9C8; padding: 0 14px; font-size: 20px; font-family: var(--font); color: #5A3B22; background: #fff; text-align: center; -webkit-appearance: none; appearance: none; }
 .sq-in:focus { outline: none; border-color: var(--who); }
 .sq-err { margin: -2px 0 0; min-height: 18px; font-size: 14px; line-height: 1.4; color: #E0457B; }
 /* 오른쪽 위 X (닫기) */
-.sq-x { position: absolute; right: -4px; top: -6px; z-index: 3; width: 46px; height: 46px; background: url(lib/ui/popup/x_pink.webp?v=202611202345) center / contain no-repeat; filter: drop-shadow(0 2px 3px rgba(0,0,0,.25)); }
-html[data-who=eungyeol] .sq-x { background-image: url(lib/ui/popup/x_blue.webp?v=202611202345); }
+.sq-x { position: absolute; right: -4px; top: -6px; z-index: 3; width: 46px; height: 46px; background: url(lib/ui/popup/x_pink.webp?v=202611210024) center / contain no-repeat; filter: drop-shadow(0 2px 3px rgba(0,0,0,.25)); }
+html[data-who=eungyeol] .sq-x { background-image: url(lib/ui/popup/x_blue.webp?v=202611210024); }
 .sq.res .res-table { width: 100%; box-shadow: inset 0 0 0 2px #F0DCCB; }
 /* 약관 체크 칸 */
 .ck-list { display: flex; flex-direction: column; gap: 4px; padding: 0 4px; }
-.ck { display: flex; align-items: center; gap: 10px; min-height: 46px; text-align: left; font-size: 17px; line-height: 1.3; color: #5A3B22; cursor: pointer; }
+.ck { display: flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 4px; text-align: left; font-size: 17px; line-height: 1.3; color: #5A3B22; cursor: pointer; }
 .ck input { position: absolute; opacity: 0; pointer-events: none; }
 .ck i { flex: none; width: 26px; height: 26px; border-radius: 8px; border: 2px solid #E3CBB6; background: #fff; box-sizing: border-box; }
 .ck input:checked + i { background: var(--who) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8.5l3.2 3L13 4.5' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/18px no-repeat; border-color: var(--who); }
 .ck span { flex: 1; min-width: 0; }
 .ck b { font-weight: normal; color: var(--who); }
 .ck.plain { cursor: default; padding-left: 36px; color: #7A5A44; }
-.ck-more { flex: none; font-family: var(--font); font-size: 15px; color: #8A6E58; text-decoration: underline; padding: 6px 2px; }
+.ck-more { flex: none; font-family: var(--font); font-size: 15px; color: #8A6E58; text-decoration: underline; padding: 6px 6px; }
 .ck-detail { margin: -4px 0 4px 36px; padding: 8px 10px; border-radius: 12px; background: #FFF8F1; font-size: 13px; line-height: 1.5; color: #7A5A44; text-align: left; white-space: pre-line; }
 
 /* 캐릭터 고르기: 트윈 게임랜드 첫 화면(hub/hub.css #scrSelect)과 같은 숫자 — 540 기준 화면(#selWrap)을 앱 폭에 맞춰 키움 (app.js layoutSelect)
@@ -82,8 +83,8 @@ html[data-who=eungyeol] .sq-x { background-image: url(lib/ui/popup/x_blue.webp?v
 .sel-logo { position: absolute; left: 12px; top: calc(8px + var(--safe-t, 0px)); width: 190px; filter: drop-shadow(0 4px 6px rgba(24,59,91,.35)); }
 .sel-ask { position: relative; display: flex; flex-direction: column; align-items: center; margin-top: calc(118px + var(--safe-t, 0px)); }
 .sel-ask b { display: flex; align-items: center; justify-content: center; box-sizing: border-box; overflow: hidden; width: 400px; aspect-ratio: 680 / 254; padding: calc(47px + .08em) 65px 48px;
-  background: url(lib/ui/popup/ribbon_pink.webp?v=202611202345) center / 100% 100% no-repeat; font-weight: normal; font-size: 30px; color: #fff; text-shadow: 0 2px 0 var(--who-d), 0 0 3px var(--who-d); white-space: nowrap; }
-html[data-who=eungyeol] .sel-ask b { background-image: url(lib/ui/popup/ribbon_blue.webp?v=202611202345); }
+  background: url(lib/ui/popup/ribbon_pink.webp?v=202611210024) center / 100% 100% no-repeat; font-weight: normal; font-size: 30px; color: #fff; text-shadow: 0 2px 0 var(--who-d), 0 0 3px var(--who-d); white-space: nowrap; }
+html[data-who=eungyeol] .sel-ask b { background-image: url(lib/ui/popup/ribbon_blue.webp?v=202611210024); }
 .sel-ask small { margin-top: -38px; padding: 2px 14px; border-radius: 11px; background: rgba(255,255,255,.9); font-size: 15px; color: #6B4A5E; }
 .sel-chars { position: absolute; left: 0; right: 0; display: flex; align-items: flex-end; justify-content: center; gap: 14px; pointer-events: none; }
 .sel-char { position: relative; flex: none; width: var(--cw, 220px); padding: 0; pointer-events: auto; filter: drop-shadow(0 6px 8px rgba(24,59,91,.28)); }
@@ -91,14 +92,14 @@ html[data-who=eungyeol] .sel-ask b { background-image: url(lib/ui/popup/ribbon_b
 .sel-char[data-char=eungyeol] { aspect-ratio: 480 / 640; }
 .sel-char:active { transform: scale(.97); }
 .sel-char::before { content: ''; position: absolute; left: 4%; right: 4%; bottom: -3.5%; height: 7%; border-radius: 50%; background: rgba(90,60,40,.32); filter: blur(5px); }
-.sc-frame { position: absolute; left: 1.5%; right: 1.5%; bottom: 0; border: 0 solid transparent; border-image: url(lib/ui/popup/panel_pink.webp?v=202611202345) 130 fill / calc(var(--cw, 220px) * .2) stretch; }
+.sc-frame { position: absolute; left: 1.5%; right: 1.5%; bottom: 0; border: 0 solid transparent; border-image: url(lib/ui/popup/panel_pink.webp?v=202611210024) 130 fill / calc(var(--cw, 220px) * .2) stretch; }
 .sel-char[data-char=eunyu] .sc-frame { top: 6.5%; }
-.sel-char[data-char=eungyeol] .sc-frame { top: 8.1%; border-image-source: url(lib/ui/popup/panel_blue.webp?v=202611202345); }
+.sel-char[data-char=eungyeol] .sc-frame { top: 8.1%; border-image-source: url(lib/ui/popup/panel_blue.webp?v=202611210024); }
 .sc-clip { position: absolute; inset: 0; overflow: hidden; }
 .sc-clip img { position: absolute; max-width: none; }
 .sel-lang { position: absolute; right: 10px; top: calc(10px + var(--safe-t, 0px)); width: 172px; height: 52px; padding: .08em 41px 0 43px; overflow: hidden; white-space: nowrap; line-height: 1;
-  background: url(lib/ui/lang_pink.webp?v=202611202345) center / 100% 100% no-repeat; color: var(--who); font-size: 18px; filter: drop-shadow(0 3px 5px rgba(24,59,91,.25)); }
-html[data-who=eungyeol] .sel-lang { background-image: url(lib/ui/lang_blue.webp?v=202611202345); }
+  background: url(lib/ui/lang_pink.webp?v=202611210024) center / 100% 100% no-repeat; color: var(--who); font-size: 18px; filter: drop-shadow(0 3px 5px rgba(24,59,91,.25)); }
+html[data-who=eungyeol] .sel-lang { background-image: url(lib/ui/lang_blue.webp?v=202611210024); }
 .sel-lang:active { transform: translateY(2px); }
 
 /* 시작 창 아이콘 · 오른쪽 위 설정 버튼 · 설정 창 (트윈 게임랜드 .set-row 와 같은 모양) */
@@ -113,11 +114,11 @@ html[data-who=eungyeol] .sel-lang { background-image: url(lib/ui/lang_blue.webp?
 
 /* 랭킹: 트윈 게임랜드 ranking/ranking.css 그대로 (그림 lib/rank = ranking/assets/v2) + 거리·코인 탭(아이템샵 탭 그림) */
 .rk-scr { position: absolute; inset: 0; z-index: 12; overflow-y: auto; -webkit-overflow-scrolling: touch; color: #26365A;
-  --bg: url(lib/rank/bg_pink.webp?v=202611202345); --bgc: #FFF4F2; --seg-week: url(lib/rank/seg_pink_week.webp?v=202611202345); --seg-all: url(lib/rank/seg_pink_all.webp?v=202611202345);
-  --panel: url(lib/rank/panel_pink.webp?v=202611202345); --me: url(lib/rank/me_pink.webp?v=202611202345); --mine: url(lib/rank/mine_pink.webp?v=202611202345);
+  --bg: url(lib/rank/bg_pink.webp?v=202611210024); --bgc: #FFF4F2; --seg-week: url(lib/rank/seg_pink_week.webp?v=202611210024); --seg-all: url(lib/rank/seg_pink_all.webp?v=202611210024);
+  --panel: url(lib/rank/panel_pink.webp?v=202611210024); --me: url(lib/rank/me_pink.webp?v=202611210024); --mine: url(lib/rank/mine_pink.webp?v=202611210024);
   background: var(--bgc) var(--bg) center top / 100% auto no-repeat; }
-html[data-who=eungyeol] .rk-scr { --bg: url(lib/rank/bg_blue.webp?v=202611202345); --bgc: #F2F8FE; --seg-week: url(lib/rank/seg_blue_week.webp?v=202611202345); --seg-all: url(lib/rank/seg_blue_all.webp?v=202611202345);
-  --panel: url(lib/rank/panel_blue.webp?v=202611202345); --me: url(lib/rank/me_blue.webp?v=202611202345); --mine: url(lib/rank/mine_blue.webp?v=202611202345); }
+html[data-who=eungyeol] .rk-scr { --bg: url(lib/rank/bg_blue.webp?v=202611210024); --bgc: #F2F8FE; --seg-week: url(lib/rank/seg_blue_week.webp?v=202611210024); --seg-all: url(lib/rank/seg_blue_all.webp?v=202611210024);
+  --panel: url(lib/rank/panel_blue.webp?v=202611210024); --me: url(lib/rank/me_blue.webp?v=202611210024); --mine: url(lib/rank/mine_blue.webp?v=202611210024); }
 .rk { max-width: 520px; margin: 0 auto; padding: 0 12px calc(16px + env(safe-area-inset-bottom)); }
 .rk-scr.has-mine .rk { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 .rk-head { position: relative; height: calc(70px + env(safe-area-inset-top)); }
@@ -125,22 +126,22 @@ html[data-who=eungyeol] .rk-scr { --bg: url(lib/rank/bg_blue.webp?v=202611202345
 .rk-back img { width: 24px; height: 24px; }
 .rk-seg { position: absolute; right: -2px; top: calc(10px + env(safe-area-inset-top)); width: clamp(150px, 40vw, 172px); aspect-ratio: 360 / 125; display: grid; grid-template-columns: 1fr 1fr; padding: 0 3%; background: var(--seg-week) center / 100% 100% no-repeat; }
 .rk-seg[data-mode=all] { background-image: var(--seg-all); }
-.rk-seg button { display: flex; align-items: center; justify-content: center; font-size: clamp(16px, 4.6vw, 19px); color: var(--who-d); }
+.rk-seg button { display: flex; align-items: center; justify-content: center; min-width: 0; padding: 0 9px; overflow: hidden; white-space: nowrap; font-size: clamp(16px, 4.6vw, 19px); color: var(--who-d); }
 .rk-seg button.on { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.18); }
 .rk-seg button b { font-weight: normal; }
 .rk-period { margin: 2px 0 0; text-align: center; font-size: clamp(14px, 3.9vw, 16px); color: #5E6B88; min-height: 1.2em; }
 .rk-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 10px 0 0; }
-.rk-tabs button { --tab: url(lib/ui/tab_off_pink.webp?v=202611202345); aspect-ratio: 360 / 100; display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; font-size: 17px; color: var(--who-d);
+.rk-tabs button { overflow: hidden; white-space: nowrap; --tab: url(lib/ui/tab_off_pink.webp?v=202611210024); aspect-ratio: 360 / 100; display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; font-size: 17px; color: var(--who-d);
   background: var(--tab) center / 100% 100% no-repeat; padding: calc(1.7% + .08em) 6% 2%; line-height: 1; }
-html[data-who=eungyeol] .rk-tabs button { --tab: url(lib/ui/tab_off_blue.webp?v=202611202345); }
-.rk-tabs button.on { --tab: url(lib/ui/tab_on_pink.webp?v=202611202345); color: #fff; text-shadow: 0 2px 0 var(--who-d), 0 0 3px var(--who-d); padding-top: calc(4% + .08em); }
-html[data-who=eungyeol] .rk-tabs button.on { --tab: url(lib/ui/tab_on_blue.webp?v=202611202345); }
+html[data-who=eungyeol] .rk-tabs button { overflow: hidden; white-space: nowrap; --tab: url(lib/ui/tab_off_blue.webp?v=202611210024); }
+.rk-tabs button.on { --tab: url(lib/ui/tab_on_pink.webp?v=202611210024); color: #fff; text-shadow: 0 2px 0 var(--who-d), 0 0 3px var(--who-d); padding-top: calc(4% + .08em); }
+html[data-who=eungyeol] .rk-tabs button.on { --tab: url(lib/ui/tab_on_blue.webp?v=202611210024); }
 .rk-tabs img { width: 24px; height: 24px; object-fit: contain; filter: drop-shadow(0 1px 1px rgba(24,40,62,.25)); }
 .rk-panel { margin-top: 8px; border: solid transparent; border-width: 16px 12px; border-image: var(--panel) 44 fill / 16px 12px / 0 stretch; }
 .rk-list { list-style: none; margin: 0; padding: 0; }
 .rk-note { margin: 10px 0 4px; text-align: center; font-size: 13px; color: #8A94AA; }
 .rk-row { position: relative; display: flex; align-items: center; gap: 10px; height: clamp(56px, 15vw, 66px); padding: 0 12px 0 8px; }
-.rk-row + .rk-row::before { content: ''; position: absolute; left: 10px; right: 10px; top: -1px; height: 2px; background: url(lib/rank/divider.webp?v=202611202345) center / 100% 100% no-repeat; opacity: .9; }
+.rk-row + .rk-row::before { content: ''; position: absolute; left: 10px; right: 10px; top: -1px; height: 2px; background: url(lib/rank/divider.webp?v=202611210024) center / 100% 100% no-repeat; opacity: .9; }
 .rk-row.me { border: solid transparent; border-width: 0 26px; border-image: var(--me) 0 50 fill / 0 26px / 0 stretch; padding: 0; margin: 2px -6px; cursor: pointer; }
 .rk-row.me::before, .rk-row.me + .rk-row::before { display: none; }
 .r-num { flex: 0 0 auto; width: clamp(32px, 9vw, 38px); aspect-ratio: 1; display: grid; place-items: center; background: center / contain no-repeat; }
@@ -156,6 +157,10 @@ html[data-who=eungyeol] .rk-tabs button.on { --tab: url(lib/ui/tab_on_blue.webp?
 .rk-mine .rk-list { max-width: 504px; margin: 0 auto; }
 .rk-row.mine { height: clamp(62px, 17vw, 74px); border: solid transparent; border-width: 0 30px; border-image: var(--mine) 0 62 fill / 0 30px / 0 stretch; padding: 0; cursor: pointer; }
 
+.doc-scr { z-index: 22; }
+.doc-head { display: flex; align-items: center; justify-content: center; }
+.doc-title { font-weight: normal; font-size: 22px; color: var(--who-d); padding: calc(10px + env(safe-area-inset-top)) 56px 0; text-align: center; }
+.doc-body { padding: 6px 10px 12px; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif; font-size: 15px; line-height: 1.65; color: #3A4454; white-space: pre-line; word-break: keep-all; overflow-wrap: anywhere; user-select: text; -webkit-user-select: text; }
 .share-scr { z-index: 25; background: rgba(24,40,62,.5); }
 /* 가짜 광고 · 알림 */
 #adFake { z-index: 30; background: rgba(10,20,35,.92); }

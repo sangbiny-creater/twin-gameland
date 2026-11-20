@@ -67,7 +67,7 @@ const $ = (id) => document.getElementById(id);
 const rng = (seed) => { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let x = s; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; };
 
 // ---------- sprites ----------
-const ASSET_V = '202611202345';
+const ASSET_V = '202611210024';
 const SP = { img: new Image(), f: null, ready: false };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -816,7 +816,7 @@ function drawPlayer() {
   else if (G.lean < -0.35) pose = 'left';
   else if (G.lean > 0.35) pose = 'right';
   const running = G.state === 'play';
-  const bob = running ? -Math.abs(Math.sin(G.t * 14)) * 5 : Math.sin(G.t * 3) * 2;
+  const bob = running ? -Math.abs(Math.sin(G.t * 8 * Math.PI)) * 6 : Math.sin(G.t * 3) * 2; // 앱: 걸음(1/8초)마다 한 번 튐 — 그림 바뀌는 박자와 같게
   const sway = running ? Math.sin(G.t * 7) * 0.03 : 0;
   const h = 132;
   const cos = HUB ? HUB.costume() : null;

@@ -622,6 +622,14 @@ window.I18N_DATA = {
 [
 "한국어",
 "한국어"
-]
+],
+["불러오는 중이에요…","Loading…"],
+["글을 불러오지 못했어요. 인터넷 연결을 확인해 주세요","Couldn't load. Please check your internet connection."],
+["이용약관","Terms of Service"],
+["계정 삭제","Delete account"],
+["계정을 지우면 이름과 기록이 모두 사라지고 되돌릴 수 없어요. 계정을 삭제할까요?","Deleting your account removes your name and records and cannot be undone. Delete your account?"],
+["계정을 지우지 못했어요","Couldn't delete the account"],
+["비밀번호를 한 번 더 넣어 주세요","Please enter your password again"],
+["계정을 삭제했어요","Account deleted"]
 ]
 };

@@ -55,7 +55,7 @@ $('btnLogin').onclick = () => { if (!fb) return; const p = new firebase.auth.Goo
 $('btnLogout').onclick = () => fb && fb.auth.signOut();
 
 // ---------- 탭 ----------
-const TABS = [['dash', '대시보드'], ['users', '사용자'], ['rank', '기록·순위'], ['names', '이름'], ['ops', '운영 (공지·점검)']];
+const TABS = [['dash', '대시보드'], ['users', '사용자'], ['rank', '기록·순위'], ['names', '이름'], ['terms', '약관·개인정보'], ['ops', '운영 (공지·점검)']];
 let tab = (location.hash || '#dash').slice(1);
 function renderTabs() {
   $('tabs').innerHTML = TABS.map(([k, n]) => `<button data-t="${k}" class="${k === tab ? 'on' : ''}">${n}</button>`).join('') + '<button data-t="reload">새로고침</button>';
@@ -86,26 +86,39 @@ const VIEWS = {
       <div class="panel"><h3>고른 캐릭터</h3>${hbars(Object.entries(CHAR).map(([k, n]) => [n, U.filter((u) => u.dh.char === k).length]))}</div></div>`;
   },
   users(m) {
-    m.innerHTML = `<h2>사용자 (${fmtN(DB.users.length)}명)</h2><p class="note">정지하면 다음 접속부터 게임을 못 해요. '이름 다시 정하게'를 누르면 이름을 놓아주고, 그 사람은 다음 접속 때 새 이름을 정해요.</p>
+    m.innerHTML = `<h2>사용자 (${fmtN(DB.users.length)}명${DB.users.some((u) => u.deleteRequested) ? ` · <span style="color:#D9364F">계정 삭제 요청 ${DB.users.filter((u) => u.deleteRequested).length}명</span>` : ''})</h2><p class="note">앱에서 '계정 삭제'를 누르면 로그인 계정은 바로 지워지고, 남은 계정 문서·게임 기록은 여기서 '데이터 지우기'로 지워요. 정지하면 다음 접속부터 게임을 못 해요. '이름 다시 정하게'를 누르면 이름을 놓아주고, 그 사람은 다음 접속 때 새 이름을 정해요.</p>
       <div class="row"><input id="uq" type="text" placeholder="이름·이메일·uid 찾기"><select id="up"><option value="">모든 방식</option>${Object.entries(PROV).map(([k, n]) => `<option value="${k}">${n}</option>`).join('')}</select>
-      <select id="us"><option value="lastAt">최근 접속순</option><option value="createdAt">가입순</option><option value="best">기록순</option><option value="plays">판 수순</option></select></div>
+      <select id="ud"><option value="">모든 사용자</option><option value="del">계정 삭제 요청만</option></select><select id="us"><option value="lastAt">최근 접속순</option><option value="createdAt">가입순</option><option value="best">기록순</option><option value="plays">판 수순</option></select></div>
       <div class="panel"><table><thead><tr><th>이름</th><th>캐릭터</th><th>방식</th><th>이메일</th><th class="num">BEST</th><th class="num">판 수</th><th>가입</th><th>최근 접속</th><th>상태</th><th></th></tr></thead><tbody id="ub"></tbody></table></div>`;
     const draw = () => {
-      const q = $('uq').value.trim().toLowerCase(), p = $('up').value, k = $('us').value;
-      $('ub').innerHTML = DB.users.filter((u) => (!q || nameOf(u).toLowerCase().includes(q) || (u.email || '').includes(q) || u.id.toLowerCase().includes(q)) && (!p || u.provider === p))
+      const q = $('uq').value.trim().toLowerCase(), p = $('up').value, k = $('us').value, dl = $('ud').value;
+      $('ub').innerHTML = DB.users.filter((u) => (!q || nameOf(u).toLowerCase().includes(q) || (u.email || '').includes(q) || u.id.toLowerCase().includes(q)) && (!p || u.provider === p) && (!dl || u.deleteRequested))
         .sort((a, b) => (b.dh[k] || 0) - (a.dh[k] || 0)).slice(0, 500)
         .map((u) => `<tr><td><b>${H(nameOf(u))}</b><br><small style="color:#aaa">${H(u.id)}</small></td><td>${u.dh.char ? `<span class="tag ${u.dh.char}">${CHAR[u.dh.char]}</span>` : '-'}</td>
           <td><span class="tag ${u.provider}">${PROV[u.provider] || H(u.provider)}</span></td><td>${H(u.email || '-')}</td><td class="num">${fmtN(u.dh.best)}m</td><td class="num">${fmtN(u.dh.plays)}</td>
-          <td>${fmtD(u.dh.createdAt)}</td><td>${fmtD(u.dh.lastAt)}</td><td>${u.status === 'banned' ? '<span class="tag banned">정지</span>' : '정상'}${u.memo ? `<br><small>${H(u.memo)}</small>` : ''}</td>
-          <td><button class="btn small ${u.status === 'banned' ? 'gray' : 'red'}" data-ban="${H(u.id)}">${u.status === 'banned' ? '정지 풀기' : '정지'}</button> <button class="btn small gray" data-memo="${H(u.id)}">메모</button> <button class="btn small gray" data-rec="${H(u.id)}">기록</button> <button class="btn small gray" data-rename="${H(u.id)}">이름 다시 정하게</button></td></tr>`).join('') || '<tr><td colspan="10">아직 사용자가 없어요</td></tr>';
+          <td>${fmtD(u.dh.createdAt)}</td><td>${fmtD(u.dh.lastAt)}</td><td>${u.deleteRequested ? `<span class="tag banned">계정 삭제 요청</span><br><small>${fmtD(u.deleteRequested)}</small>` : u.status === 'banned' ? '<span class="tag banned">정지</span>' : '정상'}${u.memo ? `<br><small>${H(u.memo)}</small>` : ''}</td>
+          <td><button class="btn small ${u.status === 'banned' ? 'gray' : 'red'}" data-ban="${H(u.id)}">${u.status === 'banned' ? '정지 풀기' : '정지'}</button> <button class="btn small gray" data-memo="${H(u.id)}">메모</button> <button class="btn small gray" data-rec="${H(u.id)}">기록</button> <button class="btn small gray" data-rename="${H(u.id)}">이름 다시 정하게</button> <button class="btn small red" data-wipe="${H(u.id)}">데이터 지우기</button></td></tr>`).join('') || '<tr><td colspan="10">아직 사용자가 없어요</td></tr>';
     };
     m.oninput = draw; draw();
     m.onclick = async (e) => {
       const b = e.target.closest('button'); if (!b) return;
-      const u = DB.users.find((x) => x.id === (b.dataset.ban || b.dataset.memo || b.dataset.rec || b.dataset.rename)); if (!u) return;
+      const u = DB.users.find((x) => x.id === (b.dataset.ban || b.dataset.memo || b.dataset.rec || b.dataset.rename || b.dataset.wipe)); if (!u) return;
       if (b.dataset.ban) { const st = u.status === 'banned' ? 'active' : 'banned'; if (st === 'banned' && !confirm(`${nameOf(u)} 계정을 정지할까요?`)) return; await save('users', u.id, { status: st }); u.status = st; draw(); }
       if (b.dataset.memo) { const t = prompt('메모 (관리자만 보여요)', u.memo || ''); if (t !== null) { await save('users', u.id, { memo: t }); u.memo = t; draw(); } }
       if (b.dataset.rec) { const R = DB.records.filter((x) => x.uid === u.id).sort((a, c) => c.at - a.at).slice(0, 50); alert(R.length ? R.map((x) => `${fmtD(x.at)}  ${fmtN(x.score)}m  (${x.zone || 1}판까지)`).join('\n') : '최근 30일 기록이 없어요'); }
+      // 계정 삭제 요청 처리: 그 사람의 게임 기록(records)·이름·계정 문서를 모두 지움 (로그인 계정은 앱에서 이미 지워짐)
+      if (b.dataset.wipe) {
+        if (!confirm(`${nameOf(u)} (${u.id}) 의 계정 문서와 게임 기록을 모두 지울까요? 되돌릴 수 없어요.`)) return;
+        try {
+          const rs = await fb.db.collection('records').where('uid', '==', u.id).get();
+          for (let i = 0; i < rs.docs.length; i += 400) { const bt = fb.db.batch(); rs.docs.slice(i, i + 400).forEach((d) => bt.delete(d.ref)); await bt.commit(); }
+          const ns = await fb.db.collection('names').where('uid', '==', u.id).get(); for (const d of ns.docs) await d.ref.delete();
+          await fb.db.collection('users').doc(u.id).delete();
+          DB.users = DB.users.filter((x) => x.id !== u.id); DB.records = DB.records.filter((x) => x.uid !== u.id);
+          toast(`지웠어요 (기록 ${rs.size}개)`); draw();
+        } catch (x) { alert('지우지 못했어요: ' + x.message); }
+        return;
+      }
       if (b.dataset.rename) {
         if (!u.dh.name || !confirm(`'${u.dh.name}' 이름을 놓아주고, 다음 접속 때 새 이름을 정하게 할까요?`)) return;
         const key = String(u.dh.name).normalize('NFC').replace(/\s+/g, '').toLowerCase().replace(/\//g, '_');
@@ -128,6 +141,32 @@ const VIEWS = {
     m.innerHTML = `<h2>이름 (${fmtN(DB.names.length)}개)</h2><p class="note">다운힐 앱에서 만든 이름이에요. 같은 이름은 하나만 쓸 수 있어요 (트윈 게임랜드 사이트 이름과도 겹치지 않게 같은 목록을 써요).</p>
       <div class="panel"><table><thead><tr><th>이름</th><th>주인 uid</th><th>방식</th><th>만든 때</th></tr></thead><tbody>
       ${[...DB.names].sort((a, b) => (b.at || 0) - (a.at || 0)).map((n) => `<tr><td>${H(n.name)}</td><td><small>${H(n.uid)}</small></td><td>${by[n.uid] ? PROV[by[n.uid].provider] || '' : '-'}</td><td>${fmtD(n.at)}</td></tr>`).join('') || '<tr><td colspan="4">아직 이름이 없어요</td></tr>'}</tbody></table></div>`;
+  },
+  // 앱의 '이용약관'·'개인정보 처리방침' 화면과 약관 동의 화면의 '개인정보 수집·이용 동의' 글 (Firestore config/downhill_terms)
+  async terms(m) {
+    let T = {}; try { const d = await fb.db.collection('config').doc('downhill_terms').get(); if (d.exists) T = d.data(); } catch (e) { /* 처음 */ }
+    const htmlText = (el) => { // 화면에 안 그린 문서라 innerText 가 줄을 안 바꿈 → 문단·제목·목록마다 줄바꿈
+      let out = ''; const BLOCK = /^(P|DIV|H[1-6]|LI|UL|OL|SECTION|ARTICLE|HEADER|FOOTER|TR|TABLE|BLOCKQUOTE)$/;
+      const walk = (n) => { for (const c of n.childNodes) { if (c.nodeType === 3) out += c.nodeValue.replace(/\s+/g, ' '); else if (c.nodeType === 1) { if (c.tagName === 'BR') { out += '\n'; continue; } const b = BLOCK.test(c.tagName); if (b) out += '\n'; if (c.tagName === 'LI') out += '· '; walk(c); if (b) out += '\n'; } } };
+      if (el.querySelector('p, h1, h2, h3, li, div, br')) walk(el); else out = el.textContent;
+      return out.split('\n').map((l) => l.trim()).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+    };
+    const def = async (url, sel) => { try { const t = await (await fetch(url)).text(), el = new DOMParser().parseFromString(t, 'text/html').querySelector(sel); return el ? htmlText(el) : ''; } catch (e) { return ''; } };
+    const COLLECT = '모으는 것: 게임 이름, 게임 기록, 이메일 주소(구글·이메일로 로그인할 때만)\n쓰는 곳: 계정·이름 확인, 기록 보관, 다른 기기에서 이어 하기\n보관 기간: 계정을 지울 때까지';
+    m.innerHTML = `<h2>약관·개인정보</h2><p class="note">여기서 고쳐 저장하면 앱의 '이용약관'·'개인정보 처리방침' 화면(설정·약관 동의에서 '보기')에 바로 보여요. 저장 전에는 기본 글(이용약관 = 트윈 게임랜드 약관, 개인정보 처리방침 = brown-crab.com/privacy.html)을 보여 줘요.<br>
+      구글 플레이에 넣는 개인정보 처리방침 주소(https://brown-crab.com/privacy.html)는 회사 홈페이지 글이라 따로 고쳐야 해요.</p>
+      <div class="panel"><h3>개인정보 수집·이용 동의 (약관 동의 화면에서 '보기'를 누르면 펼쳐지는 짧은 글)</h3><textarea id="tc" style="min-height:90px"></textarea>
+      <h3>개인정보 처리방침</h3><textarea id="tp" style="min-height:320px"></textarea>
+      <h3>이용약관</h3><textarea id="tt" style="min-height:320px"></textarea>
+      <div class="row" style="margin-top:10px"><button class="btn" id="tSave">저장</button><span class="note" style="margin:0">${T.updatedAt ? '마지막 저장 ' + fmtD(T.updatedAt) : '아직 저장 안 함 (기본 글이 들어가 있어요)'}</span></div></div>`;
+    $('tc').value = T.collect || COLLECT;
+    $('tp').value = T.privacy || await def('https://brown-crab.com/privacy.html', 'main');
+    $('tt').value = T.terms || await def('https://sangbiny-creater.github.io/twin-gameland/legal/terms.html', '#doc');
+    $('tSave').onclick = async () => {
+      const d = { collect: $('tc').value.trim(), privacy: $('tp').value.trim(), terms: $('tt').value.trim(), updatedAt: Date.now() };
+      if (!d.privacy || !d.terms) { toast('처리방침·약관이 비어 있어요'); return; }
+      await fb.db.collection('config').doc('downhill_terms').set(d); toast('저장했어요'); renderTabs();
+    };
   },
   ops(m) {
     const o = DB.ops;
