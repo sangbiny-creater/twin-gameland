@@ -8,10 +8,10 @@
   function load(look) {
     if (!LOOKS[look] || atlas[look]) return atlas[look] && atlas[look].p;
     const a = atlas[look] = { img: new Image(), f: null, ok: false };
-    a.p = fetch(`lib/chars/${look}_winter.json?v=202611202020`).then((r) => r.json()).then((j) => new Promise((done, fail) => {
+    a.p = fetch(`lib/chars/${look}_winter.json?v=202611202057`).then((r) => r.json()).then((j) => new Promise((done, fail) => {
       a.f = j.frames;
       a.img.onload = () => { const on = () => { a.ok = true; done(); }; if (a.img.decode) a.img.decode().then(on, on); else on(); };
-      a.img.onerror = fail; a.img.src = `lib/chars/${look}_winter.webp?v=202611202020`;
+      a.img.onerror = fail; a.img.src = `lib/chars/${look}_winter.webp?v=202611202057`;
     })).catch(() => { /* 그림이 없으면 예전 그림으로 */ });
     return a.p;
   }

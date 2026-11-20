@@ -13,9 +13,9 @@
   const fmt = (n) => Number(n || 0).toLocaleString('ko-KR');
   const ui = () => { D.Audio.unlock(); D.Audio.sfx('ui'); };
   const GAME = 'downhill-app', TERMS_VER = '2026-11';
-  const WEB = 'https://sangbiny-creater.github.io/twin-gameland/';
+  const WEB = 'https://downhill.brown-crab.com/'; // 앱 주소 (GitHub 저장소 sangbiny-creater/downhill, tools/publish_downhill.sh 로 올림)
   // 앱 주소 (자랑하기 링크). 웹에서 열면 지금 주소, 앱(파일로 묶은 것)에서는 사이트 주소
-  const appUrl = () => (/^https?:$/.test(location.protocol) ? location.origin + location.pathname.replace(/index\.html$/, '') : WEB + 'downhill-app/');
+  const appUrl = () => (/^https?:$/.test(location.protocol) ? location.origin + location.pathname.replace(/index\.html$/, '') : WEB);
   const dayOf = (ms) => { const d = new Date(ms); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 
   // 이름: 사이트 common/names.js 와 같은 규칙 (8자까지, 띄어쓰기·영어 대소문자는 같은 이름으로 봄)

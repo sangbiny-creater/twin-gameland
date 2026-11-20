@@ -3,7 +3,9 @@
 다운힐 러너 한 게임만 하는 **단독 앱**이에요. 나중에 앱스토어·플레이스토어에 올릴 앱의 바탕이에요.
 트윈 게임랜드 사이트(`index.html`, `hub/`, 다른 게임)와는 따로 동작하고, 사이트 파일을 건드리지 않아요.
 
-- 주소: https://sangbiny-creater.github.io/twin-gameland/downhill-app/
+- 주소: **https://downhill.brown-crab.com/** (백오피스 https://downhill.brown-crab.com/admin/)
+- 올리기: 여기서 고치고 커밋한 뒤 `bash tools/publish_downhill.sh` → GitHub 저장소 `sangbiny-creater/downhill`(GitHub Pages + 도메인 downhill.brown-crab.com)로 복사해서 올라가요.
+  예전 주소(sangbiny-creater.github.io/twin-gameland/downhill-app/)로 들어오면 새 주소로 넘겨요.
 - 로컬: 저장소 맨 위 폴더에서 `python3 -m http.server 8080` → http://localhost:8080/downhill-app/
 
 ## 화면 흐름
@@ -48,7 +50,7 @@
 
 ## 백오피스
 
-`downhill-admin/` (앱 폴더 밖이라 앱으로 묶을 때 들어가지 않음) — https://sangbiny-creater.github.io/twin-gameland/downhill-admin/
+`downhill-admin/` (앱 폴더 밖이라 앱으로 묶을 때 들어가지 않음) — https://downhill.brown-crab.com/admin/
 사이트 백오피스와 같은 관리자 구글 계정(Firestore `admins/{이메일}`)으로 로그인. 대시보드 · 사용자(정지·메모·기록·이름 다시 정하게) · 기록·순위 · 이름 · 운영(공지·점검).
 
 ## 아직 임시인 것 / 나중에 할 것

@@ -1,5 +1,5 @@
 'use strict';
-// 다운힐 러너 앱 백오피스 (https://sangbiny-creater.github.io/twin-gameland/downhill-admin/)
+// 다운힐 러너 앱 백오피스 (https://downhill.brown-crab.com/admin/)
 //  · 트윈 게임랜드 백오피스(admin/)와 따로. 같은 Firebase 프로젝트, 같은 관리자(Firestore admins/{이메일})
 //  · 보는 것: users/{uid}.dh(다운힐 앱 칸) · records(game 'downhill-app') · names(app 'downhill') · config/downhill(공지·점검)
 //  · 데이터 보호는 server/firestore.rules 가 함 (이 화면은 공개돼도 관리자가 아니면 아무것도 못 읽음)

@@ -13,16 +13,21 @@
 <!-- 친구에게 링크를 보냈을 때 카카오톡·문자에 보이는 미리보기 -->
 <meta property="og:title" content="다운힐 러너 — 내 기록을 넘어 볼래?">
 <meta property="og:description" content="눈 덮인 산을 신나게 달려 내려가요!">
-<meta property="og:image" content="https://sangbiny-creater.github.io/twin-gameland/downhill-app/assets/app/share.jpg">
+<meta property="og:image" content="https://downhill.brown-crab.com/assets/app/share.jpg">
+<meta property="og:url" content="https://downhill.brown-crab.com/">
 <meta property="og:type" content="website">
 <title>다운힐 러너</title>
-<link rel="manifest" href="manifest.json?v=202611202020">
-<link rel="apple-touch-icon" href="assets/app/icons/icon-180.png?v=202611202020">
-<link rel="icon" type="image/png" sizes="32x32" href="assets/app/icons/favicon-32.png?v=202611202020">
-<link rel="icon" type="image/png" sizes="192x192" href="assets/app/icons/icon-192.png?v=202611202020">
-<link rel="preload" href="lib/fonts/jua.woff2?v=202611202020" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="style.css?v=202611202020">
-<link rel="stylesheet" href="app.css?v=202611202020">
+<script>
+// 예전 주소(GitHub 기본 주소)로 들어오면 새 주소로 (친구 링크 ?from= 그대로)
+if (location.hostname === 'sangbiny-creater.github.io') location.replace('https://downhill.brown-crab.com/' + location.search);
+</script>
+<link rel="manifest" href="manifest.json?v=202611202057">
+<link rel="apple-touch-icon" href="assets/app/icons/icon-180.png?v=202611202057">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/app/icons/favicon-32.png?v=202611202057">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/app/icons/icon-192.png?v=202611202057">
+<link rel="preload" href="lib/fonts/jua.woff2?v=202611202057" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="style.css?v=202611202057">
+<link rel="stylesheet" href="app.css?v=202611202057">
 </head>
 <body>
 <div id="safe"></div>
@@ -37,8 +42,8 @@
 
     <!-- 터치 영역: 화면 왼쪽 = 왼쪽으로, 오른쪽 = 오른쪽으로 -->
     <div id="touch" class="hidden">
-      <div id="padL" class="pad"><img src="assets/ui/btn_left.webp?v=202611202020" alt=""></div>
-      <div id="padR" class="pad"><img src="assets/ui/btn_right.webp?v=202611202020" alt=""></div>
+      <div id="padL" class="pad"><img src="assets/ui/btn_left.webp?v=202611202057" alt=""></div>
+      <div id="padR" class="pad"><img src="assets/ui/btn_right.webp?v=202611202057" alt=""></div>
       <button id="btnJump" class="jump hidden" aria-label="점프하기"><i id="jumpN">0</i><span>점프</span></button>
     </div>
 
@@ -59,7 +64,7 @@
     <!-- 시작 상자: 단순한 네모 상자 + 버튼 2개 -->
     <div id="startBox" class="screen dim hidden">
       <div class="sq">
-        <img class="sq-logo" src="assets/ui/logo.webp?v=202611202020" alt="다운힐 러너">
+        <img class="sq-logo" src="assets/ui/logo.webp?v=202611202057" alt="다운힐 러너">
         <div class="sq-best"><span id="sbName"></span> · BEST <b id="sbBest">0</b>m</div>
         <div id="sbFriend" class="sq-friend hidden"></div>
         <button id="btnGo" class="sq-btn main">시작하기</button>
@@ -117,11 +122,11 @@
   </div>
 
   <!-- 인트로: 세로 그림만, 화면을 누르거나 잠깐 뒤 다음으로 -->
-  <div id="intro" class="scr"><img src="assets/app/intro.webp?v=202611202020" alt="다운힐 러너"><div class="intro-tap">화면을 눌러 주세요</div></div>
+  <div id="intro" class="scr"><img src="assets/app/intro.webp?v=202611202057" alt="다운힐 러너"><div class="intro-tap">화면을 눌러 주세요</div></div>
 
   <!-- 로그인: 구글 · 이메일 · 게스트 -->
   <div id="login" class="scr bg hidden">
-    <img class="scr-logo" src="assets/ui/logo.webp?v=202611202020" alt="다운힐 러너">
+    <img class="scr-logo" src="assets/ui/logo.webp?v=202611202057" alt="다운힐 러너">
     <div id="loginMain" class="sq">
       <div class="sq-title">어서 와요!</div>
       <p class="sq-p">로그인하면 다른 기기에서도 이어서 할 수 있어요.</p>
@@ -150,7 +155,7 @@
 쓰는 곳: 계정·이름 확인, 기록 보관, 다른 기기에서 이어 하기
 보관 기간: 계정을 지울 때까지</div>
         <label class="ck"><input type="checkbox" id="ckTerms"><i></i><span><b>[필수]</b> 이용약관 동의</span><a class="ck-more" href="https://sangbiny-creater.github.io/twin-gameland/legal/terms.html" target="_blank" rel="noopener">보기</a></label>
-        <div class="ck plain"><span>개인정보 처리방침</span><a class="ck-more" href="https://sangbiny-creater.github.io/twin-gameland/legal/privacy.html" target="_blank" rel="noopener">보기</a></div>
+        <div class="ck plain"><span>개인정보 처리방침</span><a class="ck-more" href="https://brown-crab.com/privacy.html" target="_blank" rel="noopener">보기</a></div>
       </div>
       <p id="termsErr" class="sq-err"></p>
       <div class="sq-row">
@@ -201,9 +206,9 @@
 <!-- 가로 화면은 지원하지 않아요 -->
 <div id="rotate"><div class="rot-phone"></div><b>세로로 돌려 주세요</b></div>
 
-<script src="lib/charv2.js?v=202611202020"></script>
-<script src="lib/firebase_config.js?v=202611202020"></script>
-<script src="game.js?v=202611202020"></script>
-<script src="app.js?v=202611202020"></script>
+<script src="lib/charv2.js?v=202611202057"></script>
+<script src="lib/firebase_config.js?v=202611202057"></script>
+<script src="game.js?v=202611202057"></script>
+<script src="app.js?v=202611202057"></script>
 </body>
 </html>
