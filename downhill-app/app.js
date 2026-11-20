@@ -18,8 +18,12 @@
   const appUrl = () => (/^https?:$/.test(location.protocol) ? location.origin + location.pathname.replace(/index\.html$/, '') : WEB);
   const dayOf = (ms) => { const d = new Date(ms); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 
-  // 이름: 사이트 common/names.js 와 같은 규칙(띄어쓰기·영어 대소문자는 같은 이름으로 봄), 길이만 앱은 12자까지 (영어 이름 browncrab 등이 들어가게)
-  const cleanName = (n) => String(n || '').replace(/[<>"'`]/g, '').replace(/\s+/g, ' ').trim().slice(0, 12);
+  // 이름: 사이트 common/names.js 와 같은 규칙(띄어쓰기·영어 대소문자는 같은 이름으로 봄). 길이는 폭으로 셈:
+  //  영어·숫자·기호 = 1칸, 한글 등 = 2칸, 15칸까지 (영어 15자 = 한글 7자)
+  const NAME_W = 15;
+  const charW = (c) => (c.codePointAt(0) < 0x80 ? 1 : 2);
+  const fitW = (s) => { let w = 0, out = ''; for (const c of s) { if (w + charW(c) > NAME_W) break; w += charW(c); out += c; } return out; };
+  const cleanName = (n) => fitW(String(n || '').replace(/[<>"'`]/g, '').replace(/\s+/g, ' ').trim()).trim();
   const keyOf = (n) => String(n || '').normalize('NFC').replace(/\s+/g, '').toLowerCase().replace(/\//g, '_').replace(/^\.+$/, '_');
 
   // ---------- 친구 링크 ----------
@@ -232,6 +236,10 @@
     saveUser(); next();
   };
   $('inName').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('btnNameOk').click(); });
+  // 쓰는 동안 15칸을 넘으면 넘은 글자만 뺌 (한글 조합 중에는 기다렸다가)
+  const trimName = () => { const el = $('inName'), v = fitW(el.value); if (v !== el.value) el.value = v; };
+  $('inName').addEventListener('input', (e) => { if (!e.isComposing) trimName(); });
+  $('inName').addEventListener('compositionend', trimName);
 
   // ---------- 캐릭터 고르기 (다운힐 겨울옷 그림, 이름 없이) ----------
   function selectScreen() {
