@@ -20,7 +20,7 @@ const asset = (p) => `assets/${p}.webp?v=${ASSET_V}`;
 
 // ---------- 난이도: 게임한 시간(초) pt 로 정함 — 갈수록 절대 쉬워지지 않음 ----------
 //  stay 일반 두더지가 머무는 시간 2.1초 → 0.55초 쪽으로 / gap 새 두더지 간격 1.3초 → 0.42초 쪽으로
-//  maxOn 한꺼번에 나와 있는 최대 수 1 → 4 / fast·tough·trap 나오는 비율 / both 함정 캐릭터 은유·은결 둘 다 (90초부터)
+//  maxOn 한꺼번에 나와 있는 최대 수 1 → 4 / fast·tough·trap 나오는 비율
 function diff(pt) {
   return {
     stay: 0.55 + 1.55 * Math.exp(-pt / 75),
@@ -29,7 +29,6 @@ function diff(pt) {
     fast: pt < 8 ? 0 : Math.min(0.32, 0.12 + pt / 500),
     tough: pt < 20 ? 0 : Math.min(0.25, 0.08 + pt / 700),
     trap: Math.min(0.22, 0.07 + pt / 800),
-    both: pt >= 90,
     rise: 0.6 + 0.4 * Math.exp(-pt / 150), // 올라오고 숨는 움직임도 조금씩 빨라짐
   };
 }
@@ -37,13 +36,12 @@ const levelOf = (pt) => 1 + Math.floor(pt / LEVEL_SEC);
 
 // ---------- save ----------
 const Save = {
-  // char: 'eunyu'|'eungyeol' (null = 아직 안 고름) · best: 최고 점수 · auth·agreed·name… : app.js
-  data: { char: null, best: 0, plays: 0, totalCaught: 0, sound: true, auth: null, agreed: null, name: null, nameKey: null, nameReg: false },
+  // best: 최고 점수 · auth·agreed·name·pid… : app.js (캐릭터 고르기 없음)
+  data: { best: 0, plays: 0, totalCaught: 0, sound: true, auth: null, agreed: null, name: null, nameKey: null, nameReg: false },
   load() { try { Object.assign(this.data, JSON.parse(localStorage.getItem('mole_app_v1') || '{}')); } catch (e) { /* private mode */ } },
   store() { try { localStorage.setItem('mole_app_v1', JSON.stringify(this.data)); } catch (e) { /* ignore */ } },
 };
 Save.load();
-const lookOf = (c) => (c === 'eungyeol' ? 'eungyeol3' : 'eunyu3'); // 캐릭터 고르기 그림 (은유 v3·은결 v3)
 
 // ---------- utils ----------
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -68,11 +66,9 @@ const MOLE_AR = 432 / 456, MOLE_FOOT = 0.956;
 const HOLE = { ar: 164 / 401, cx: 0.503, cy: 0.475, ry: 0.267 };
 const HAMMER = { ar: 294 / 284, head: [0.25, 0.24], end: [0.93, 0.94] };
 const BG = img(asset('bg/port')), BG_GRASS = 0.38; // 배경 그림에서 울타리 아래 잔디가 시작하는 높이
-// 함정 캐릭터: 구멍에서 나온 은유·은결 그림 (두더지와 같은 틀). 처음엔 내 캐릭터, 90초부터 둘 다
+// 함정 캐릭터: 구멍에서 나온 은유·은결 그림 (두더지와 같은 틀). 캐릭터 고르기가 없어서 처음부터 둘 다
 const TRAP_SPR = {};
 for (const lk of ['eunyu', 'eungyeol']) TRAP_SPR[lk] = { base: img(asset(`chars/${lk}`)), hit: img(asset(`chars/${lk}_hit`)) };
-const myChar = () => (Save.data.char === 'eungyeol' ? 'eungyeol' : 'eunyu');
-const twinChar = () => (myChar() === 'eungyeol' ? 'eunyu' : 'eungyeol');
 
 // ---------- audio ----------
 const Audio = {
@@ -185,7 +181,7 @@ function spawn() {
   if (isTrap) type = 'trap';
   else { const r = Math.random(); if (r < st.fast) type = 'fast'; else if (r < st.fast + st.tough) type = 'tough'; }
   const stay = { normal: st.stay, fast: st.stay * 0.62, tough: st.stay * 1.4, trap: st.stay * 1.25 }[type];
-  h.m = { type, who: type === 'trap' ? (st.both && Math.random() < 0.5 ? twinChar() : myChar()) : null, ph: 'up', t: 0, stay, hp: type === 'tough' ? 2 : 1, u: 0, shake: 0, rise: st.rise };
+  h.m = { type, who: type === 'trap' ? (Math.random() < 0.5 ? 'eunyu' : 'eungyeol') : null, ph: 'up', t: 0, stay, hp: type === 'tough' ? 2 : 1, u: 0, shake: 0, rise: st.rise };
   Audio.sfx('pop');
 }
 const RISE = { normal: 0.16, fast: 0.1, tough: 0.2, trap: 0.18, heart: 0.08 };
@@ -587,4 +583,4 @@ setState('home'); // 처음 화면(인트로·로그인·캐릭터 고르기·�
 requestAnimationFrame(frame);
 
 // debug/test hook
-window.__mole = { G, step, diff, levelOf, startRun, resetRun, setState, tapAt, hitMole, spawn, showResult, endRun, Save, Audio, resize, lookOf, goHome };
+window.__mole = { G, step, diff, levelOf, startRun, resetRun, setState, tapAt, hitMole, spawn, showResult, endRun, Save, Audio, resize, goHome };

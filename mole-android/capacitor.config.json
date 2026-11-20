@@ -1,0 +1,14 @@
+{
+  "appId": "com.browncrab.mole",
+  "appName": "두더지 게임",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#BCDA52"
+  },
+  "plugins": {
+    "FirebaseAuthentication": {
+      "skipNativeAuth": true,
+      "providers": ["google.com"]
+    }
+  }
+}

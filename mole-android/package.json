@@ -1,0 +1,23 @@
+{
+  "name": "mole-android",
+  "private": true,
+  "version": "1.0.0",
+  "description": "두더지 게임 안드로이드 앱 (Capacitor 포장: mole-app/ 을 www/ 로 복사해서 앱에 넣음)",
+  "scripts": {
+    "copy": "node tools/copy-web.mjs",
+    "sync": "node tools/copy-web.mjs && npx cap sync android",
+    "apk": "npm run sync && cd android && ./gradlew assembleDebug",
+    "aab": "npm run sync && cd android && ./gradlew bundleRelease"
+  },
+  "dependencies": {
+    "@capacitor-community/admob": "^8.4.2",
+    "@capacitor-firebase/authentication": "^8.6.0",
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.6.2",
+    "firebase": "^12.19.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.6.2"
+  }
+}

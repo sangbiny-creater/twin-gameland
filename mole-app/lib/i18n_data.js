@@ -3,6 +3,8 @@
 window.I18N_DATA = {
 "ko": [],
 "en": [
+["지금은 광고를 불러오지 못해서 그냥 이어서 해요", "Couldn't load an ad, so you can continue anyway"],
+["광고를 끝까지 보면 이어서 할 수 있어요", "Watch the whole ad to continue"],
 ["두더지 게임","Whack-A-Mole"],
 ["두더지 게임 — 내 점수를 넘어 볼래?","Whack-A-Mole — Can you beat my score?"],
 ["튀어나오는 두더지를 톡톡! 점점 빨라져요","Bop the moles as they pop up! It gets faster and faster"],

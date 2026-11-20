@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">두더지 게임</string>
+    <string name="title_activity_main">두더지 게임</string>
+    <string name="package_name">com.browncrab.mole</string>
+    <string name="custom_url_scheme">com.browncrab.mole</string>
+    <!-- AdMob 앱 ID: 지금은 구글이 주는 테스트 ID (진짜 광고 X). AdMob 에 앱을 등록하면 받은 'ca-app-pub-…~…' 로 바꾸기 (mole-app/lib/ads_config.js 의 광고 단위 ID 도) -->
+    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
+</resources>

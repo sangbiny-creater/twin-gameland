@@ -1,12 +1,13 @@
 'use strict';
 // [두더지 앱] downhill-app/app.js 를 복사해서 두더지(끝없이 이어지는 방식)에 맞게 고친 것
-// 흐름: 인트로 → 언어(처음 한 번) → 로그인(구글·이메일·게스트) → 약관 동의 → 이름 만들기 → 캐릭터 고르기 → 시작 창 → 게임 → 결과(이어하기·다시하기·자랑하기·X)
+// 흐름: 인트로 → 언어(처음 한 번) → 로그인(구글·이메일·게스트) → 약관 동의 → 이름 만들기 → 시작 창 (캐릭터 고르기 없음) → 게임 → 결과(이어하기·다시하기·자랑하기·X)
 //  · 계정 하나에 이름 하나 (예전 사이트처럼 캐릭터마다 이름 X). 이름은 모든 사람 통틀어 하나만 — 서버 names/{이름 열쇠} (사이트 common/names.js 와 같은 모음·같은 규칙)
 //    인터넷이 안 될 때 만든 이름은 다음 접속 때 등록하고, 그새 다른 사람이 쓰고 있으면 이름을 다시 정하게 함
 //  · 저장: localStorage 'mole_app_v1' (game.js 의 Save). 트윈 게임랜드 사이트 저장(twin_gameland_v1)·다운힐 앱 저장은 읽지도 쓰지도 않음
-//  · 서버(Firestore, 백오피스 mole-admin/ 에서 봄): users/{uid}.mo = { name, char, best, plays, agreedAt, agreeVer, createdAt, lastAt }
+//  · 서버: 두더지 전용 Firebase 프로젝트 (lib/firebase_config.js, BROWN CRAB — 트윈 게임랜드·다운힐과 계정·이름·기록 완전 분리)
+//    Firestore 규칙 mole-admin/server/firestore.rules · 백오피스 mole-admin/
+//    users/{uid}.mo = { name, best, plays, agreedAt, agreeVer, createdAt, lastAt }
 //    records(game 'mole-app') = 한 판 기록 (score = 점수, coins = 잡은 두더지, zone = 레벨) · config/mole = { notice, maintenance, maintenanceMsg }
-//    다운힐 앱(users.dh · game 'downhill-app' · config/downhill)과 섞이지 않음. 이름(names)만 같은 목록 — 같은 계정이면 다운힐 앱 이름을 그대로 씀
 //  · 친구 링크: ?from=12300&by=이름 → 시작 창에 "OOO님 점수 12,300점을 넘어 보세요!"
 (function () {
   const D = window.__mole, Save = D.Save, G = D.G;
@@ -29,6 +30,14 @@
   const cleanName = (n) => fitW(String(n || '').replace(/[<>"'`]/g, '').replace(/\s+/g, ' ').trim()).trim();
   const keyOf = (n) => String(n || '').normalize('NFC').replace(/\s+/g, '').toLowerCase().replace(/\//g, '_').replace(/^\.+$/, '_');
 
+  // ---------- Firebase 프로젝트가 바뀌면 (트윈 게임랜드 twin-gameland → 두더지 전용 프로젝트) 계정을 처음부터 ----------
+  //  예전 프로젝트의 로그인·이름·기록은 새 프로젝트에 없어서, 이 기기에 남은 계정 정보는 지우고 로그인부터 다시 (언어·소리는 그대로)
+  const PID = (window.FIREBASE_CONFIG || {}).projectId || '';
+  if (Save.data.pid !== PID) {
+    if (Save.data.auth) Object.assign(Save.data, { auth: null, agreed: null, name: null, nameKey: null, nameReg: false, best: 0, plays: 0, totalCaught: 0 });
+    Save.data.pid = PID; Save.store();
+  }
+
   // ---------- 친구 링크 ----------
   const q = new URLSearchParams(location.search);
   // 친구 기록은 이번 접속 동안 기억 (언어를 바꿔 다시 읽어도 그대로)
@@ -44,7 +53,7 @@
   function toast(msg, ms = 2400) { const t = $('toast'); t.textContent = msg; show('toast'); clearTimeout(toastT); toastT = setTimeout(() => show('toast', false), ms); }
 
   // ---------- 색(여자 분홍·남자 파랑) · 창 크기 ----------
-  const paintWho = () => { document.documentElement.dataset.who = Save.data.char === 'eungyeol' ? 'eungyeol' : 'eunyu'; };
+  const paintWho = () => { document.documentElement.dataset.who = 'eunyu'; }; // 두더지 앱은 캐릭터 고르기가 없어서 창 색은 늘 분홍
   function fitZoom() { // 화면 전체 창(440 기준)을 앱 폭에 맞춤
     const w = $('app').clientWidth, h = $('app').clientHeight;
     document.documentElement.style.setProperty('--z', Math.max(0.6, Math.min(1.15, (w - 24) / 440, (h - 40) / 640)).toFixed(3));
@@ -79,14 +88,14 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitSoon);
 
   // ---------- 화면 바꾸기 ----------
-  const SCR = ['intro', 'login', 'select', 'rank'];
+  const SCR = ['intro', 'login', 'rank'];
   const BOX = ['loginMain', 'loginEmail', 'signupBox', 'langBox', 'termsBox', 'nameBox', 'blockBox', 'accountBox'];
   function screen(id) {
     SCR.forEach((s) => show(s, s === id));
     const game = !id; show('stage', game); show('adBar', game);
+    if (window.Native && Native.on) Native.banner(game); // 앱: 맨 위 진짜 배너 광고는 게임 화면(시작 창 포함)에서만
     if (game) requestAnimationFrame(D.resize);
     paintWho(); fitZoom();
-    if (id === 'select') requestAnimationFrame(layoutSelect);
   }
   function box(id) { screen('login'); BOX.forEach((b) => show(b, b === id)); fitTitles($(id)); }
   let blocked = false;
@@ -96,7 +105,6 @@
     if (!Save.data.auth) return box('loginMain');
     if (!Save.data.agreed) return termsScreen();
     if (!Save.data.name) return nameScreen();
-    if (!Save.data.char) return selectScreen();
     home();
   }
   function block(msg) { blocked = true; $('blockText').textContent = msg; box('blockBox'); }
@@ -134,7 +142,7 @@
     const f = await firebase(), u = me(f); if (!u) return;
     try {
       const ref = f.db.collection('users').doc(u.uid), s = await ref.get(), now = Date.now();
-      const base = { name: Save.data.name || '', char: Save.data.char || '', lastAt: now, ...mo };
+      const base = { name: Save.data.name || '', lastAt: now, ...mo };
       const first = { createdAt: now, best: Save.data.best || 0, plays: 0, agreedAt: (Save.data.agreed || {}).at || now, agreeVer: TERMS_VER, ...base };
       if (!s.exists) await ref.set({ provider: Save.data.auth.mode, email: u.email || '', createdAt: now, lastAt: now, status: 'active', totalSec: 0, app: 'mole', mo: first });
       else await ref.set({ lastAt: now, mo: s.data().mo ? base : first }, { merge: true });
@@ -144,7 +152,7 @@
   // 로그인 뒤: 서버에 이 계정의 이름·캐릭터·기록이 있으면 가져옴 (다른 기기에서 이어 하기)
   async function afterAuth(mode, u) {
     const prev = Save.data.auth;
-    if (prev && prev.uid !== u.uid) Object.assign(Save.data, { agreed: null, name: null, nameKey: null, nameReg: false, char: null, best: 0, plays: 0, totalCaught: 0 });
+    if (prev && prev.uid !== u.uid) Object.assign(Save.data, { agreed: null, name: null, nameKey: null, nameReg: false, best: 0, plays: 0, totalCaught: 0 });
     Save.data.auth = { mode, uid: u.uid, email: u.email || '', at: Date.now() };
     const f = await firebase();
     if (f && me(f)) {
@@ -155,11 +163,7 @@
         if (mo) {
           if (mo.agreedAt) Save.data.agreed = { at: mo.agreedAt, ver: mo.agreeVer || TERMS_VER };
           if (mo.name) Object.assign(Save.data, { name: mo.name, nameKey: keyOf(mo.name), nameReg: true });
-          if (mo.char) Save.data.char = mo.char;
           Save.data.best = Math.max(Save.data.best || 0, mo.best || 0);
-        } else if (d && d.dh && d.dh.name && !Save.data.name) {
-          // 같은 계정으로 다운힐 앱에서 만든 이름이 있으면 그 이름을 그대로 (계정 하나에 이름 하나)
-          Object.assign(Save.data, { name: d.dh.name, nameKey: keyOf(d.dh.name), nameReg: true });
         }
       } catch (e) { console.warn('user', e); }
     }
@@ -171,6 +175,24 @@
     const f = await firebase(); if (!f) { toast('인터넷 연결을 확인해 주세요.\n지금은 게스트로 시작할 수 있어요!'); return; }
     const p = new f.F.auth.GoogleAuthProvider(); p.setCustomParameters({ prompt: 'select_account' });
     const cur = me(f);
+    if (window.Native && Native.on) { // 앱 안: 웹 팝업 대신 휴대폰의 구글 계정 고르기 → 받은 토큰으로 Firebase 로그인
+      try {
+        const cred = f.F.auth.GoogleAuthProvider.credential(await Native.googleIdToken());
+        let r;
+        if (cur && cur.isAnonymous) { // 게스트가 구글 계정 연결: 같은 계정(uid)이라 이름·기록이 그대로
+          try { r = await cur.linkWithCredential(cred); } catch (e) {
+            if (e.code !== 'auth/credential-already-in-use') throw e;
+            await releaseName(); r = await f.auth.signInWithCredential(e.credential || cred);
+          }
+        } else r = await f.auth.signInWithCredential(cred);
+        toast('구글 계정으로 로그인했어요!');
+        await afterAuth('google', r.user);
+      } catch (e) {
+        if (/cancel/i.test((e && (e.code || e.message)) || '')) return;
+        toast('구글 로그인을 못 했어요 (' + ((e && (e.code || e.message)) || '') + ')');
+      }
+      return;
+    }
     try {
       let r;
       if (cur && cur.isAnonymous) { // 게스트가 구글 계정 연결: 같은 계정(uid)이라 이름·기록이 그대로
@@ -254,6 +276,8 @@
     await afterAuth('guest', u || { uid: 'local-' + Math.random().toString(36).slice(2, 10), email: '' });
   }
   $('btnGoogle').onclick = () => { ui(); google(); };
+  // 서버(Firebase) 설정이 아직 없으면 구글·이메일 로그인은 숨기고 게스트만 (lib/firebase_config.js)
+  if (!window.FIREBASE_CONFIG) ['btnGoogle', 'btnEmail', 'btnLink'].forEach((id) => $(id).classList.add('hidden'));
   $('btnEmail').onclick = () => { ui(); box('loginEmail'); $('emailErr').textContent = ''; };
   $('btnEmailBack').onclick = () => { ui(); box('loginMain'); };
   $('btnEmailGo').onclick = () => { ui(); emailLogin(); };
@@ -283,7 +307,6 @@
       return await timeout(f.db.runTransaction(async (x) => {
         const s = await x.get(ref);
         if (s.exists && s.data().uid !== u.uid) return 'taken';
-        if (s.exists) return 'ok'; // 이미 내 이름 (다운힐 앱 등에서 만든 것) — 그대로 둠
         x.set(ref, { uid: u.uid, cid: 'mo', pid: '', name, app: 'mole', at: Date.now() });
         return 'ok';
       }), 8000) || 'offline';
@@ -294,9 +317,12 @@
     const f = await firebase(); if (!f) return 'offline';
     try { const s = await timeout(f.db.collection('names').doc(keyOf(name)).get(), 6000); if (!s) return 'offline'; return !s.exists || (me(f) && s.data().uid === me(f).uid) ? 'ok' : 'taken'; } catch (e) { return 'offline'; }
   }
+  // 내 이름 놓아주기: 이 기기에 적힌 이름 + 서버에서 내 계정으로 등록된 이름을 모두 지움 (계정 삭제·게스트 로그아웃)
   async function releaseName() {
-    const f = await firebase(), u = me(f); if (!u || !Save.data.nameKey || !Save.data.nameReg) return;
-    try { await f.db.collection('names').doc(Save.data.nameKey).delete(); } catch (e) { /* 내 이름이 아니면 못 지움 */ }
+    const f = await firebase(), u = me(f); if (!u) return;
+    const keys = new Set(); if (Save.data.nameKey) keys.add(Save.data.nameKey);
+    try { (await f.db.collection('names').where('uid', '==', u.uid).get()).forEach((d) => keys.add(d.id)); } catch (e) { /* 그대로 */ }
+    for (const k of keys) { try { await f.db.collection('names').doc(k).delete(); } catch (e) { /* 내 이름이 아니면 못 지움 */ } }
   }
   $('btnNameOk').onclick = async () => {
     ui();
@@ -317,44 +343,6 @@
   const trimName = () => { const el = $('inName'), v = fitW(el.value); if (v !== el.value) el.value = v; };
   $('inName').addEventListener('input', (e) => { if (!e.isComposing) trimName(); });
   $('inName').addEventListener('compositionend', trimName);
-
-  // ---------- 캐릭터 고르기: 트윈 게임랜드 첫 화면과 같은 자리·같은 비율 (은유 v3·은결 v3 기본 옷 그림 lib/chars/<look>_idle.webp, 이름·코인 칸 없음) ----------
-  //  카드 = 트윈 게임랜드 카드 그림(폭 480) 비율: 여자 높이 597 · 남자 640 (아래 이름 칸을 뺀 높이), 틀은 위 39 · 52 부터
-  //  캐릭터: 머리끝 = 카드 맨 위, 얼굴 크기 = 트윈 게임랜드 카드와 같게, 카드 아래 끝에서 잘림 (여자 그림 y 209 · 남자 y 237)
-  const CARD = { eunyu: { h: 597, cut: 209 }, eungyeol: { h: 640, cut: 237 } }; // 얼굴 크기를 트윈 게임랜드 카드와 같게 (나란히 캡처해서 맞춤)
-  function paintCard(b) {
-    const who = b.dataset.char, look = D.lookOf(who), im = b.querySelector('img'), c = CARD[who];
-    im.onload = () => { const s = c.h / c.cut, w = im.naturalWidth * s; Object.assign(im.style, { width: (w / 480 * 100) + '%', left: ((240 - w / 2) / 480 * 100) + '%', top: '0', height: 'auto' }); };
-    if (!im.getAttribute('src')) im.src = `lib/chars/${look}_idle.webp?v=202611210047`;
-  }
-  // 540 기준 화면 (트윈 게임랜드 hub.js layoutSelect 와 같은 계산)
-  const SEL_BG = { w: 900, h: 1600 };
-  function layoutSelect() {
-    if ($('select').classList.contains('hidden')) return;
-    const AW = $('app').clientWidth, AH = $('app').clientHeight, k = AW / 540, W = 540, H = AH / k, wrap = $('selWrap');
-    Object.assign(wrap.style, { height: H + 'px', transform: `scale(${k})` });
-    wrap.style.setProperty('--safe-t', ($('safe').getBoundingClientRect().top / k) + 'px');
-    const s = Math.max(W / SEL_BG.w, H / SEL_BG.h), bg = wrap.querySelector('.sel-bg');
-    Object.assign(bg.style, { left: (W - SEL_BG.w * s) / 2 + 'px', top: (H - SEL_BG.h * s) / 2 + 'px', width: SEL_BG.w * s + 'px', height: SEL_BG.h * s + 'px' });
-    const ask = wrap.querySelector('.sel-ask'), top = ask.offsetTop + ask.offsetHeight + 8;
-    const room = H - top - 14, cw = Math.min((W - 54) / 2, room / 1.72, 300), ch = cw * 1.72;
-    const foot = Math.max(top + ch, Math.min(H - 14, H * 0.8)), cardH = cw * 640 / 480; // 트윈 게임랜드 카드 아래 끝(이름 칸 포함) = 화면 80%
-    const bottom = foot - cw * 0.38; // 이름 칸만큼 위 (캐릭터는 같은 자리)
-    const g = $('selChars'); g.style.top = (bottom - cardH) + 'px'; g.style.height = cardH + 'px'; g.style.setProperty('--cw', cw + 'px');
-    const t = wrap.querySelector('.sel-ask b'); t.style.fontSize = ''; let fs = 30; while (t.scrollWidth > t.clientWidth + 0.5 && fs > 12) t.style.fontSize = (fs -= 0.5) + 'px';
-  }
-  addEventListener('resize', layoutSelect);
-  function selectScreen() {
-    screen('select');
-    $('btnLang').querySelector('span').textContent = LANGS[Save.data.lang || 'ko'];
-    document.querySelectorAll('.sel-char').forEach(paintCard);
-    layoutSelect();
-  }
-  document.querySelectorAll('.sel-char').forEach((b) => b.addEventListener('click', () => {
-    ui(); Save.data.char = b.dataset.char; Save.store(); paintWho();
-    saveUser();
-    setTimeout(next, 200);
-  }));
 
   // ---------- 시작 창 (무한 방식이라 'N판부터'는 없음) ----------
   function home() {
@@ -385,12 +373,11 @@
   $('setAccount').onclick = () => { ui(); show('setBox', false); accountScreen(); };
   $('setSound').onclick = () => { Save.data.sound = !Save.data.sound; Save.store(); D.Audio.applyMute(); ui(); paintSettings(); };
   $('setLang').onclick = () => { ui(); show('setBox', false); langScreen(true); };
-  $('setChar').onclick = () => { ui(); show('setBox', false); selectScreen(); };
 
   // ---------- 이용약관 · 개인정보 처리방침: 게임 안 화면으로 (뒤로 버튼으로 돌아옴) ----------
   //  글 = 서버 config/mole_terms { terms, privacy, collect } (백오피스 '약관·개인정보' 탭에서 고침)
-  //  아직 안 고쳤으면 기본 글: 이용약관 = 트윈 게임랜드 legal/terms.html, 개인정보 처리방침 = brown-crab.com/privacy.html
-  const DOC_DEF = { terms: ['https://sangbiny-creater.github.io/twin-gameland/legal/terms.html', '#doc'], privacy: ['https://brown-crab.com/privacy.html', 'main'] };
+  //  아직 안 고쳤으면 기본 글: 이용약관 = 앱 안 legal/terms.txt (BROWN CRAB), 개인정보 처리방침 = brown-crab.com/privacy.html
+  const DOC_DEF = { terms: ['legal/terms.txt', null], privacy: ['https://brown-crab.com/privacy.html', 'main'] }; // 기본 글 (백오피스에서 저장하면 그 글)
   let docsP = null;
   const htmlText = (el) => { // 화면에 안 그린 문서라 innerText 가 줄을 안 바꿈 → 문단·제목·목록마다 줄바꿈
     let out = ''; const BLOCK = /^(P|DIV|H[1-6]|LI|UL|OL|SECTION|ARTICLE|HEADER|FOOTER|TR|TABLE|BLOCKQUOTE)$/;
@@ -403,7 +390,7 @@
       const out = {};
       try { const f = await firebase(); if (f) { const d = await timeout(f.db.collection('config').doc('mole_terms').get(), 6000); if (d && d.exists) Object.assign(out, d.data()); } } catch (e) { /* 기본 글 */ }
       for (const k of ['terms', 'privacy']) if (!out[k]) {
-        try { const t = await (await fetch(DOC_DEF[k][0])).text(), el = new DOMParser().parseFromString(t, 'text/html').querySelector(DOC_DEF[k][1]); out[k] = el ? htmlText(el) : ''; } catch (e) { out[k] = ''; }
+        try { const t = await (await fetch(DOC_DEF[k][0])).text(); if (!DOC_DEF[k][1]) { out[k] = t.trim(); continue; } const el = new DOMParser().parseFromString(t, 'text/html').querySelector(DOC_DEF[k][1]); out[k] = el ? htmlText(el) : ''; } catch (e) { out[k] = ''; }
       }
       if (out.collect) $('privacyDetail').textContent = out.collect;
       return out;
@@ -428,15 +415,14 @@
     ui(); const was = (window.I18N && I18N.lang) || 'ko', v = b.dataset.lang;
     Save.data.lang = v; Save.store();
     if (v !== was) { try { sessionStorage.setItem('mo_skip_intro', '1'); } catch (e) { /* ignore */ } location.reload(); return; } // 화면 글자를 고른 언어로 다시 읽음 (lib/i18n.js)
-    if (langBack) { langBack = false; if (Save.data.char && Save.data.name) home(); else next(); } else next();
+    if (langBack) { langBack = false; if (Save.data.name) home(); else next(); } else next();
   }));
-  $('btnLang').onclick = () => { ui(); langScreen(true); };
 
   // ---------- 계정 ----------
   function accountScreen() {
     const a = Save.data.auth || {};
     $('accountText').textContent = `${Save.data.name || ''}\n` + (a.mode === 'guest' ? T('게스트로 하고 있어요.') + '\n' + T('구글 계정을 연결하면 다른 기기에서도 이어서 할 수 있어요.') : `${T(a.mode === 'google' ? '구글 계정' : '이메일 계정')}${a.email ? '\n' + a.email : ''}`);
-    show('btnLink', a.mode === 'guest');
+    show('btnLink', a.mode === 'guest' && !!window.FIREBASE_CONFIG);
     box('accountBox');
   }
   async function logout(silent) {
@@ -445,7 +431,8 @@
     const f = await firebase();
     if (a.mode === 'guest') await releaseName(); // 게스트 이름은 다른 사람이 쓸 수 있게 놓아줌
     if (f && me(f)) { try { await f.auth.signOut(); } catch (e) { /* ignore */ } }
-    Object.assign(Save.data, { auth: null, agreed: null, name: null, nameKey: null, nameReg: false, char: null, best: 0, plays: 0, totalCaught: 0 });
+    if (window.Native && Native.on) Native.googleSignOut(); // 앱: 다음에 구글 계정을 다시 고를 수 있게
+    Object.assign(Save.data, { auth: null, agreed: null, name: null, nameKey: null, nameReg: false, best: 0, plays: 0, totalCaught: 0 });
     Save.store(); if (!silent) toast('로그아웃했어요'); next();
   }
   $('btnLink').onclick = () => { ui(); google(); };
@@ -475,7 +462,7 @@
     }
     const keep = { lang: Save.data.lang, sound: Save.data.sound };
     Object.keys(Save.data).forEach((k) => { delete Save.data[k]; });
-    Object.assign(Save.data, { char: null, best: 0, plays: 0, totalCaught: 0, auth: null, agreed: null, name: null, nameKey: null, nameReg: false }, keep);
+    Object.assign(Save.data, { best: 0, plays: 0, totalCaught: 0, auth: null, agreed: null, name: null, nameKey: null, nameReg: false }, keep);
     Save.store(); toast('계정을 삭제했어요'); next();
   }
   $('btnDelete').onclick = () => { ui(); deleteAccount(); };
@@ -500,7 +487,7 @@
     const f = await firebase(), u = me(f); if (!u || !r.score) return;
     const now = Date.now();
     try {
-      await f.db.collection('records').add({ uid: u.uid, game: GAME, score: r.score, coins: r.caught || 0, combo: r.combo || 0, sec: r.sec || 0, stage: null, cleared: false, stars: 0, zone: r.level || 1, name: Save.data.name || '', cid: 'mo', look: Save.data.char || '', at: now, day: dayOf(now), month: dayOf(now).slice(0, 7), sat: f.F.firestore.FieldValue.serverTimestamp() });
+      await f.db.collection('records').add({ uid: u.uid, game: GAME, score: r.score, coins: r.caught || 0, combo: r.combo || 0, sec: r.sec || 0, stage: null, cleared: false, stars: 0, zone: r.level || 1, name: Save.data.name || '', cid: 'mo', look: '', at: now, day: dayOf(now), month: dayOf(now).slice(0, 7), sat: f.F.firestore.FieldValue.serverTimestamp() });
       await saveUser({ best: Save.data.best || 0, plays: f.F.firestore.FieldValue.increment(1) });
     } catch (e) { console.warn('record', e); }
   }
@@ -510,7 +497,13 @@
   $('btnShare').onclick = () => { ui(); share(); };
 
   // ---------- 광고 (지금은 가짜. 앱으로 묶을 때 AdMob 보상형 광고로 바꿈) ----------
-  function rewardedAd() {
+  async function rewardedAd() {
+    if (window.Native && Native.on) { // 앱: 진짜 보상형 광고 (lib/native.js). 광고를 못 불러오면 그냥 이어하게 해 줌
+      const r = await Native.rewarded();
+      if (r === 'none') { toast('지금은 광고를 불러오지 못해서 그냥 이어서 해요'); return true; }
+      if (!r) toast('광고를 끝까지 보면 이어서 할 수 있어요');
+      return !!r;
+    }
     return new Promise((done) => {
       show('adFake'); let n = 3; $('adCount').textContent = n;
       const t = setInterval(() => { n--; $('adCount').textContent = n; if (n <= 0) { clearInterval(t); show('adFake', false); done(true); } }, 1000);
@@ -603,7 +596,7 @@
     const key = rkMode;
     if (!rkCache[key]) rkCache[key] = fetchBoard(rkMode).catch((e) => { console.warn('rank', e); delete rkCache[key]; return null; });
     const got = await rkCache[key];
-    const meRow = { name: Save.data.name || '', look: Save.data.char || 'eunyu', me: true, score: 0, rank: '-' };
+    const meRow = { name: Save.data.name || '', look: '', me: true, score: 0, rank: '-' };
     if (!got) return { ok: false, list: [], me: meRow };
     const mine = got.list.find((x) => x.uid === got.uid);
     meRow.score = Math.max(mine ? mine[rkKind] : 0, rkKind === 'score' && rkMode === 'all' ? Save.data.best || 0 : 0);
@@ -614,12 +607,12 @@
     return { ok: true, list: all, me: meRow };
   }
   const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const faceOf = (look) => `lib/faces/${look === 'eungyeol' ? 'eungyeol3' : 'eunyu3'}_base.webp`;
+  const faceOf = () => 'assets/sprites/normal.webp'; // 캐릭터 고르기가 없어서 모두 노란 안전모 두더지 얼굴
   function rowHTML(x, cls) {
     const n = typeof x.rank === 'number' && x.rank <= 3 ? x.rank : '';
     const ico = rkKind === 'score' ? 'lib/ui/crown.webp' : 'assets/sprites/normal.webp';
     return `<li class="rk-row ${cls}"${x.me ? ' data-me="1"' : ''}><span class="r-num" style="background-image:url(lib/rank/num${n}.webp)"><b>${x.rank}</b></span>`
-      + `<span class="r-face"><img class="ph" src="${faceOf(x.look)}" alt=""><img class="ring" src="lib/rank/ring_${x.look === 'eungyeol' ? 'blue' : 'pink'}.webp" alt=""></span>`
+      + `<span class="r-face"><img class="ph" src="${faceOf(x.look)}" alt=""><img class="ring" src="lib/rank/ring_pink.webp" alt=""></span>`
       + `<span class="r-name" translate="no">${esc(x.name)}</span><span class="r-score"><img src="${ico}" alt="">${x.score ? fmt(x.score) : '-'}</span></li>`;
   }
   let rkMe = null;
@@ -657,8 +650,26 @@
   // 입력 칸 안내 글자 (lib/i18n.js 는 입력 칸을 건너뛰어서 여기서)
   document.querySelectorAll('input[placeholder]').forEach((i) => { i.placeholder = T(i.placeholder); });
 
+  // ---------- 안드로이드 뒤로 가기 버튼 (앱에서만): 게임 중이면 일시정지, 떠 있는 창은 닫기, 아니면 앱을 내림 ----------
+  if (window.Native) Native.onBack(() => {
+    const open = (id) => !$(id).classList.contains('hidden');
+    if (open('adFake')) return true;
+    if (open('docView')) { show('docView', false); return true; }
+    if (open('shareBox')) { show('shareBox', false); return true; }
+    if (open('rank')) { show('rkMine', false); home(); return true; }
+    if (G.state === 'play' || G.state === 'count') { $('btnPause').click(); return true; }
+    if (G.state === 'pause') { $('btnResume').click(); return true; }
+    if (open('setBox')) { show('setBox', false); return true; }
+    if (open('login')) {
+      if (open('loginEmail')) { box('loginMain'); return true; }
+      if (open('signupBox')) { box('loginEmail'); return true; }
+      if (open('accountBox')) { home(); return true; }
+    }
+    return false;
+  });
+
   window.App = { onResult, home, screen, share, friend, checkName,
-    __show: box, __go: (n) => ({ select: selectScreen, home, rank: rankScreen })[n]() }; // __show·__go = 검사 도구용
+    __show: box, __go: (n) => ({ home, rank: rankScreen })[n]() }; // __show·__go = 검사 도구용
   paintWho(); fitZoom();
   screen('intro');
 })();
