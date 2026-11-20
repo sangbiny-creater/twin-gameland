@@ -1,0 +1,18 @@
+{
+  "name": "두더지 게임",
+  "short_name": "두더지 게임",
+  "description": "튀어나오는 두더지를 톡톡! 점점 빨라져요",
+  "id": "./",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#BCDA52",
+  "theme_color": "#7CC56A",
+  "lang": "ko",
+  "icons": [
+    { "src": "assets/app/icons/icon-192.png?v=202611210047", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/app/icons/icon-512.png?v=202611210047", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/app/icons/icon-maskable-512.png?v=202611210047", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
