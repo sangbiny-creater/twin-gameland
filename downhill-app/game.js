@@ -41,7 +41,8 @@ const SMALL = ['snowman', 'ice', 'snowpile', 'penguin', 'snowball', 'rock']; // 
 // ---------- save ----------
 const Save = {
   // char: 'eunyu'|'eungyeol' (null = 아직 안 고름) · lastZone: 마지막 판이 끝난 판 번호 ('N판부터 시작') · auth: 로그인 상태 (app.js)
-  data: { char: null, best: 0, totalCoin: 0, sound: true, lastZone: 1, auth: null },
+  // agreed: 약관 동의 · name/nameKey/nameReg: 계정 이름(서버 등록됨?) — app.js
+  data: { char: null, best: 0, totalCoin: 0, sound: true, lastZone: 1, auth: null, agreed: null, name: null, nameKey: null, nameReg: false },
   load() { try { Object.assign(this.data, JSON.parse(localStorage.getItem('downhill_app_v1') || '{}')); } catch (e) { /* private mode */ } },
   store() { try { localStorage.setItem('downhill_app_v1', JSON.stringify(this.data)); } catch (e) { /* ignore */ } },
 };
@@ -66,7 +67,7 @@ const $ = (id) => document.getElementById(id);
 const rng = (seed) => { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let x = s; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; };
 
 // ---------- sprites ----------
-const ASSET_V = '202611201846';
+const ASSET_V = '202611202020';
 const SP = { img: new Image(), f: null, ready: false };
 fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => {
   SP.f = j;
@@ -910,7 +911,6 @@ function showResult() {
   G.coinBase = G.coins;
   Save.data.lastZone = Math.max(1, zoneOf(G.d)); // 다음에 'N판부터 시작'
   Save.store();
-  $('resFace').src = window.CharV2 && CharV2.is(lookOf(Save.data.char)) ? CharV2.url(lookOf(Save.data.char), isBest ? 'back_happy' : 'back_dead') : iconURL(`${Save.data.char}_${isBest ? 'happy' : 'dead'}`);
   $('resDist').textContent = m.toLocaleString(); $('resCoin').textContent = G.coins; $('resCombo').textContent = G.maxCombo;
   $('resBestVal').textContent = (Save.data.best || 0).toLocaleString();
   $('resBest').classList.toggle('hidden', !isBest);
