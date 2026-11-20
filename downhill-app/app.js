@@ -43,7 +43,7 @@
   const friend = Math.max(0, Math.min(999999, parseInt(fq.from, 10) || 0));
   const friendBy = cleanName(fq.by);
   if (friend && history.replaceState) history.replaceState(null, '', location.pathname); // 새로고침해도 주소에 남지 않게 (기록은 이번 접속 동안 기억)
-  const friendWho = friendBy ? `${friendBy}님` : '친구';
+  const friendWho = friendBy ? (Save.data.lang === 'en' ? friendBy : `${friendBy}님`) : '친구'; // 영어판은 '님' 없이
 
   let toastT = 0;
   function toast(msg, ms = 2400) { const t = $('toast'); t.textContent = msg; show('toast'); clearTimeout(toastT); toastT = setTimeout(() => show('toast', false), ms); }
@@ -89,6 +89,7 @@
   function screen(id) {
     SCR.forEach((s) => show(s, s === id));
     const game = !id; show('stage', game); show('adBar', game);
+    if (window.Native && Native.on) Native.banner(game); // 앱: 맨 위 진짜 배너 광고는 게임 화면(시작 창 포함)에서만
     if (game) requestAnimationFrame(D.resize);
     paintWho(); fitZoom();
     if (id === 'select') requestAnimationFrame(layoutSelect);
@@ -173,6 +174,24 @@
     const f = await firebase(); if (!f) { toast('인터넷 연결을 확인해 주세요.\n지금은 게스트로 시작할 수 있어요!'); return; }
     const p = new f.F.auth.GoogleAuthProvider(); p.setCustomParameters({ prompt: 'select_account' });
     const cur = me(f);
+    if (window.Native && Native.on) { // 앱 안: 웹 팝업 대신 휴대폰의 구글 계정 고르기 → 받은 토큰으로 Firebase 로그인 (lib/native.js)
+      try {
+        const cred = f.F.auth.GoogleAuthProvider.credential(await Native.googleIdToken());
+        let r;
+        if (cur && cur.isAnonymous) {
+          try { r = await cur.linkWithCredential(cred); } catch (e) {
+            if (e.code !== 'auth/credential-already-in-use') throw e;
+            await releaseName(); r = await f.auth.signInWithCredential(e.credential || cred);
+          }
+        } else r = await f.auth.signInWithCredential(cred);
+        toast('구글 계정으로 로그인했어요!');
+        await afterAuth('google', r.user);
+      } catch (e) {
+        if (/cancel/i.test((e && (e.code || e.message)) || '')) return;
+        toast(T('구글 로그인을 못 했어요 ({})'.replace('{}', (e && (e.code || e.message)) || '')));
+      }
+      return;
+    }
     try {
       let r;
       if (cur && cur.isAnonymous) { // 게스트가 구글 계정 연결: 같은 계정(uid)이라 이름·기록이 그대로
@@ -458,6 +477,7 @@
     const f = await firebase();
     if (a.mode === 'guest') await releaseName(); // 게스트 이름은 다른 사람이 쓸 수 있게 놓아줌
     if (f && me(f)) { try { await f.auth.signOut(); } catch (e) { /* ignore */ } }
+    if (window.Native && Native.on) Native.googleSignOut(); // 앱: 다음에 구글 계정을 다시 고를 수 있게
     Object.assign(Save.data, { auth: null, agreed: null, name: null, nameKey: null, nameReg: false, char: null, best: 0, lastZone: 1, totalCoin: 0 });
     Save.store(); if (!silent) toast('로그아웃했어요'); next();
   }
@@ -522,7 +542,13 @@
   $('btnShare').onclick = () => { ui(); share(); };
 
   // ---------- 광고 (지금은 가짜. 앱으로 묶을 때 AdMob 보상형 광고로 바꿈) ----------
-  function rewardedAd() {
+  async function rewardedAd() {
+    if (window.Native && Native.on) { // 앱: 진짜 보상형 광고 (lib/native.js). 광고를 못 불러오면 그냥 이어하게 해 줌
+      const r = await Native.rewarded();
+      if (r === 'none') { toast('지금은 광고를 불러오지 못해서 그냥 이어서 해요'); return true; }
+      if (!r) toast('광고를 끝까지 보면 이어서 할 수 있어요');
+      return !!r;
+    }
     return new Promise((done) => {
       show('adFake'); let n = 3; $('adCount').textContent = n;
       const t = setInterval(() => { n--; $('adCount').textContent = n; if (n <= 0) { clearInterval(t); show('adFake', false); done(true); } }, 1000);
@@ -668,6 +694,25 @@
 
   // 입력 칸 안내 글자 (lib/i18n.js 는 입력 칸을 건너뛰어서 여기서)
   document.querySelectorAll('input[placeholder]').forEach((i) => { i.placeholder = T(i.placeholder); });
+
+  // ---------- 안드로이드 뒤로 가기 버튼 (앱에서만): 게임 중이면 일시정지, 떠 있는 창은 닫기, 아니면 앱을 내림 ----------
+  if (window.Native) Native.onBack(() => {
+    const open = (id) => !$(id).classList.contains('hidden');
+    if (open('adFake')) return true;
+    if (open('docView')) { show('docView', false); return true; }
+    if (open('shareBox')) { show('shareBox', false); return true; }
+    if (open('rank')) { show('rkMine', false); home(); return true; }
+    if (open('select') && Save.data.char) { home(); return true; }
+    if (G.state === 'play' || G.state === 'ready') { $('btnPause').click(); return true; }
+    if (G.state === 'pause') { $('btnResume').click(); return true; }
+    if (open('setBox')) { show('setBox', false); return true; }
+    if (open('login')) {
+      if (open('loginEmail')) { box('loginMain'); return true; }
+      if (open('signupBox')) { box('loginEmail'); return true; }
+      if (open('accountBox')) { home(); return true; }
+    }
+    return false;
+  });
 
   window.App = { onResult, home, screen, share, friend, checkName,
     __show: box, __go: (n) => ({ select: selectScreen, home, rank: rankScreen })[n]() }; // __show·__go = 검사 도구용

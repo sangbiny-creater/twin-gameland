@@ -630,6 +630,8 @@ window.I18N_DATA = {
 ["계정을 지우면 이름과 기록이 모두 사라지고 되돌릴 수 없어요. 계정을 삭제할까요?","Deleting your account removes your name and records and cannot be undone. Delete your account?"],
 ["계정을 지우지 못했어요","Couldn't delete the account"],
 ["비밀번호를 한 번 더 넣어 주세요","Please enter your password again"],
-["계정을 삭제했어요","Account deleted"]
+["계정을 삭제했어요","Account deleted"],
+["지금은 광고를 불러오지 못해서 그냥 이어서 해요","Couldn't load an ad, so you can continue anyway"],
+["광고를 끝까지 보면 이어서 할 수 있어요","Watch the whole ad to continue"]
 ]
 };
