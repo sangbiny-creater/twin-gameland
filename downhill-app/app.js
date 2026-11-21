@@ -16,7 +16,7 @@
   const GAME = 'downhill-app', TERMS_VER = '2026-11';
   const WEB = 'https://downhill.brown-crab.com/'; // 앱 주소 (GitHub 저장소 sangbiny-creater/downhill, tools/publish_downhill.sh 로 올림)
   // 앱 주소 (자랑하기 링크). 웹에서 열면 지금 주소, 앱(파일로 묶은 것)에서는 사이트 주소
-  const appUrl = () => (/^https?:$/.test(location.protocol) ? location.origin + location.pathname.replace(/index\.html$/, '') : WEB);
+  const appUrl = () => (/^https?:$/.test(location.protocol) && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? location.origin + location.pathname.replace(/index\.html$/, '') : WEB);
   const dayOf = (ms) => { const d = new Date(ms); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 
   // 이름: 사이트 common/names.js 와 같은 규칙(띄어쓰기·영어 대소문자는 같은 이름으로 봄). 길이는 폭으로 셈:
@@ -565,6 +565,7 @@
   let lastShare = {};
   async function share(o = {}) {
     lastShare = o; const d = shareData(o);
+    if (window.Native && Native.on && (await Native.share(d))) return; // 앱: 안드로이드 공유 창 (카카오톡 바로 보내기)
     if (navigator.share) {
       try { await navigator.share(d); return; } catch (e) { if (e && e.name === 'AbortError') return; }
     }
