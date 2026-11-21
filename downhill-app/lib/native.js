@@ -8,6 +8,8 @@
   const P = (n) => (C && C.Plugins && C.Plugins[n]) || null;
   const cfg = window.ADS_CONFIG || {};
   let ready = null, bannerOn = false, bannerWant = false, bannerH = 0;
+  let lastErr = ''; // 광고가 안 나올 때 이유 (화면에 보여 주고 고칠 때 씀)
+  const errText = (e) => { if (!e) return ''; if (typeof e === 'string') return e; return [e.code, e.message].filter((x) => x != null && x !== '').join(' ') || JSON.stringify(e); };
   // 휴대폰 쪽이 답을 안 주면 마냥 기다리지 않게 (광고 준비가 멈추면 이어하기 버튼이 아무 반응 없던 문제)
   const wait = (p, ms, v) => Promise.race([p, new Promise((r) => setTimeout(() => r(v), ms))]);
   // 광고 준비: 동의(유럽 등 필요한 곳만 창이 뜸) → 시작
@@ -17,9 +19,10 @@
       const A = P('AdMob');
       try { const ci = await wait(A.requestConsentInfo(), 5000, null); if (ci && ci.isConsentFormAvailable && ci.status === 'REQUIRED') await A.showConsentForm(); } catch (e) { /* 동의 설정이 없으면 그냥 */ }
       await wait(A.initialize({ initializeForTesting: !!cfg.test }), 8000);
+      A.addListener('bannerAdFailedToLoad', (e) => { lastErr = 'banner ' + errText(e); bannerOn = false; console.warn(lastErr); });
       A.addListener('bannerAdSizeChanged', (s) => { bannerH = (s && s.height) || 0; document.documentElement.style.setProperty('--ad-h', Math.max(50, bannerH) + 'px'); });
       return true;
-    })().catch((e) => { console.warn('admob', e); return false; });
+    })().catch((e) => { lastErr = 'init ' + errText(e); console.warn('admob', e); ready = null; return false; });
     return ready;
   }
   // 맨 위 배너: 게임 화면(시작 창 포함)에서만 보이기
@@ -31,7 +34,7 @@
     try {
       if (bannerWant && !bannerOn) { await A.showBanner({ adId: cfg.banner, adSize: 'ADAPTIVE_BANNER', position: 'TOP_CENTER', margin: 0, isTesting: !!cfg.test }); bannerOn = true; }
       else if (!bannerWant && bannerOn) { await A.removeBanner(); bannerOn = false; }
-    } catch (e) { console.warn('banner', e); }
+    } catch (e) { lastErr = 'banner ' + errText(e); bannerOn = false; console.warn('banner', e); }
   }
   // 보상형 광고: 끝까지 보면 true. 광고를 못 불러오면 'none' (그때는 그냥 이어하게 해 줌 — app.js)
   async function rewarded() {
@@ -39,19 +42,28 @@
     const A = P('AdMob');
     let got = false; const hs = [];
     try {
-      const ok = await wait(A.prepareRewardVideoAd({ adId: cfg.rewarded, isTesting: !!cfg.test }).then(() => true), 12000, false);
+      const ok = await wait(A.prepareRewardVideoAd({ adId: cfg.rewarded, isTesting: !!cfg.test }).then(() => true, (e) => { lastErr = 'reward ' + errText(e); return false; }), 20000, null);
+      if (ok === null) lastErr = 'reward timeout';
       if (!ok) return 'none';
       hs.push(await A.addListener('onRewardedVideoAdReward', () => { got = true; }));
       const item = await A.showRewardVideoAd();
       return got || !!(item && (item.amount || item.type)); // 끝까지 봐서 보상을 받았으면 true, 중간에 닫으면 false
-    } catch (e) { console.warn('rewarded', e); return got ? true : 'none'; }
+    } catch (e) { lastErr = 'reward ' + errText(e); console.warn('rewarded', e); return got ? true : 'none'; }
     finally { hs.forEach((h) => h && h.remove && h.remove()); }
   }
   // 앱 안 구글 로그인: 구글 계정 고르기 → idToken
   async function googleIdToken() {
     const F = P('FirebaseAuthentication'); if (!F) throw new Error('no-plugin');
-    const r = await F.signInWithGoogle();
-    const t = r && r.credential && r.credential.idToken; if (!t) throw new Error('no-token');
+    const tok = (r) => r && r.credential && r.credential.idToken;
+    let r;
+    try { r = await F.signInWithGoogle(); } // 새 방식 (Credential Manager)
+    catch (e) {
+      const m = errText(e);
+      if (/cancelled by the user|canceled by the user|user cancel/i.test(m)) throw e; // 사용자가 닫음
+      // 일부 기기에서 '[16] Account reauth failed' 등으로 실패 → 예전 방식(구글 계정 고르기 창)으로 한 번 더
+      r = await F.signInWithGoogle({ useCredentialManager: false });
+    }
+    const t = tok(r); if (!t) throw new Error('no-token');
     return t;
   }
   async function googleSignOut() { const F = P('FirebaseAuthentication'); if (F) { try { await F.signOut(); } catch (e) { /* ignore */ } } }
@@ -67,5 +79,5 @@
     A.addListener('backButton', () => { let done = false; try { done = handler(); } catch (e) { /* ignore */ } if (!done) A.minimizeApp(); });
   }
   if (on) document.documentElement.classList.add('native');
-  window.Native = { on, init, banner, rewarded, googleIdToken, googleSignOut, share, onBack };
+  window.Native = { on, init, banner, rewarded, googleIdToken, googleSignOut, share, onBack, lastError: () => lastErr };
 })();

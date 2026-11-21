@@ -545,7 +545,7 @@
   async function rewardedAd() {
     if (window.Native && Native.on) { // 앱: 진짜 보상형 광고 (lib/native.js). 광고를 못 불러오면 그냥 이어하게 해 줌
       const r = await Native.rewarded();
-      if (r === 'none') { toast('지금은 광고를 불러오지 못해서 그냥 이어서 해요'); return true; }
+      if (r === 'none') { const why = Native.lastError ? Native.lastError() : ''; toast('지금은 광고를 불러오지 못해서 그냥 이어서 해요' + (why ? '\n(' + why + ')' : ''), 4000); return true; }
       if (!r) toast('광고를 끝까지 보면 이어서 할 수 있어요');
       return !!r;
     }
