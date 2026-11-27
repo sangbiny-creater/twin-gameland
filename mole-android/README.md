@@ -5,7 +5,7 @@
 
 - 앱 이름(임시): 두더지 게임 · 패키지 이름: `com.browncrab.mole` (한 번 올리면 못 바꿈)
 - 광고: AdMob 맨 위 배너 + 광고 보고 이어하기(보상형) — 지금은 **구글 테스트 광고 ID**
-- 로그인: 구글·이메일·게스트 — Firebase `brown-crab-mole`(browncrab0213). 앱 안 구글 로그인에는 `android/app/google-services.json` 이 필요(아직 없음)
+- 로그인: 구글·이메일·게스트 — Firebase `brown-crab-mole`(browncrab0213). 앱 안 구글 로그인 설정 `android/app/google-services.json` 넣음(2026-11-27, 공개돼도 되는 값), `variables.gradle` 의 `rgcfaIncludeGoogle = true`
 - 뒤로 가기 버튼: 게임 중이면 일시정지, 창이 떠 있으면 닫기, 아니면 앱을 내림
 - 세로 고정, 시작 화면은 풀색 바탕 + 로고
 
@@ -26,7 +26,7 @@ python3 tools/make_icons.py        # 아이콘·시작 화면 그림을 바꿨�
 
 ## 사용자가 해야 할 일 (계정이 필요해서 Claude가 대신 못 함)
 
-### 1. 두더지 전용 Firebase 만들기 — ✅ 2026-11-27 Claude가 만듦 (`brown-crab-mole`, 웹 앱·Android 앱·SHA-1 두 개 등록까지). 남은 것: `google-services.json` 넣기, 플레이 '앱 서명 키' SHA-1 추가
+### 1. 두더지 전용 Firebase 만들기 — ✅ 2026-11-27 Claude가 만듦 (`brown-crab-mole`, 웹 앱·Android 앱·SHA-1 두 개 등록까지). 남은 것: 플레이에 올린 뒤 '앱 서명 키' SHA-1 추가하고 `google-services.json` 다시 받기
 1. https://console.firebase.google.com → 프로젝트 추가 → 이름 `brown-crab-mole` (애널리틱스는 꺼도 돼요)
 2. **Authentication** → 시작하기 → 로그인 방법: `Google`·`이메일/비밀번호`·`익명` 세 개 사용 설정
    - 설정 → 승인된 도메인에 `sangbiny-creater.github.io` 추가

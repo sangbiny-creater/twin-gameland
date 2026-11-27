@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "238034370971",
+    "project_id": "brown-crab-mole",
+    "storage_bucket": "brown-crab-mole.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:238034370971:android:6acf576cd4333f8966613e",
+        "android_client_info": {
+          "package_name": "com.browncrab.mole"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "238034370971-4p5p23dob9aq6kdnm7cb1rc89gqas74q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.browncrab.mole",
+            "certificate_hash": "1688ddff5bb5eee73dcfa1c703f44531fe51c56a"
+          }
+        },
+        {
+          "client_id": "238034370971-bfapj379s8qf4raedg6o5s849famt9o4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.browncrab.mole",
+            "certificate_hash": "e695dbdbb0f4148322240fb49577fbc98f72b937"
+          }
+        },
+        {
+          "client_id": "238034370971-pbv25uufmkc6dq6marl1ho0dciblg7l3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCijbwVMUwmigQ5QLD3hNmSsJ8I4btLo4k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "238034370971-pbv25uufmkc6dq6marl1ho0dciblg7l3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
