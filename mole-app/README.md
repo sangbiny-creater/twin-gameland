@@ -52,8 +52,8 @@
 ## 저장
 
 - 이 기기: `localStorage` 의 `mole_app_v1` (로그인·약관·이름·캐릭터·BEST·판 수·언어·소리). 사이트(`twin_gameland_v1`)·다운힐 앱(`downhill_app_v1`) 저장은 안 건드림.
-- 서버: **두더지 전용 Firebase 프로젝트** (BROWN CRAB — 트윈 게임랜드·다운힐과 계정·이름·기록 완전 분리). 아직 안 만들어서 `lib/firebase_config.js` 가 비어 있고,
-  그동안은 게스트만·이 기기 기록만 (구글·이메일 로그인 버튼 숨김, 랭킹 안 보임). 만드는 법은 `mole-android/README.md` 1번.
+- 서버: **두더지 전용 Firebase 프로젝트 `brown-crab-mole`** (주인 browncrab0213 — 트윈 게임랜드·다운힐과 계정·이름·기록 완전 분리, 2026-11-27 만듦).
+  로그인: 구글·이메일/비밀번호·게스트(익명) 켜짐, 승인 도메인 `sangbiny-creater.github.io`, Firestore 서울(asia-northeast3), 관리자 `admins/browncrab0213@gmail.com`.
   규칙 `mole-admin/server/firestore.rules`. 프로젝트가 바뀌면 기기에 남은 예전 로그인은 지우고 로그인부터 다시 (`Save.data.pid`).
   - `users/{uid}.mo` = { name, best, plays, agreedAt, agreeVer, createdAt, lastAt }
   - `records` (game `mole-app`) — score = 점수, coins = 잡은 두더지, zone = 레벨, combo, sec
@@ -67,7 +67,7 @@
 
 ## 아직 임시인 것 / 정할 것
 
-- 앱 이름 "두더지 게임 / Whack-A-Mole" (임시 — 사이트 로고 그대로), 아이콘·배경 (임시 — GPT 요청 글 `making_GPT/두더지앱/`).
+- 앱 이름 "두더지 게임 / Whack-A-Mole" (임시 — 사이트 로고 그대로). 아이콘은 GPT A03(두더지+뿅망치) — 바꾸려면 `python3 mole-android/tools/icon_from_gpt.py A0? A04` 뒤 `make_icons.py`. 배경은 아직 임시.
 - 주소: 지금은 트윈 게임랜드 저장소 안. 따로 주소를 쓰면 `app.js` WEB · `index.html` og: 주소 · `tools/publish_mole.sh` DOMAIN 을 바꾸기.
 - 광고: 웹에서는 가짜(3초). **안드로이드 앱(`mole-android/`)에서는 AdMob 진짜 광고** — 맨 위 배너 + 광고 보고 이어하기(보상형). 지금은 구글 테스트 광고 ID (`lib/ads_config.js`).
 - 앱 전용 코드: `lib/native.js` (광고·앱 안 구글 로그인·뒤로 가기 버튼). 웹에서는 아무것도 안 함.

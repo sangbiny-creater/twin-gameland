@@ -5,7 +5,7 @@
 
 - 앱 이름(임시): 두더지 게임 · 패키지 이름: `com.browncrab.mole` (한 번 올리면 못 바꿈)
 - 광고: AdMob 맨 위 배너 + 광고 보고 이어하기(보상형) — 지금은 **구글 테스트 광고 ID**
-- 로그인: 게스트 (구글·이메일은 두더지 전용 Firebase를 만들면 켜짐)
+- 로그인: 구글·이메일·게스트 — Firebase `brown-crab-mole`(browncrab0213). 앱 안 구글 로그인에는 `android/app/google-services.json` 이 필요(아직 없음)
 - 뒤로 가기 버튼: 게임 중이면 일시정지, 창이 떠 있으면 닫기, 아니면 앱을 내림
 - 세로 고정, 시작 화면은 풀색 바탕 + 로고
 
@@ -26,7 +26,7 @@ python3 tools/make_icons.py        # 아이콘·시작 화면 그림을 바꿨�
 
 ## 사용자가 해야 할 일 (계정이 필요해서 Claude가 대신 못 함)
 
-### 1. 두더지 전용 Firebase 만들기 (로그인·이름·랭킹 서버) — browncrab0213 계정으로
+### 1. 두더지 전용 Firebase 만들기 — ✅ 2026-11-27 Claude가 만듦 (`brown-crab-mole`, 웹 앱·Android 앱·SHA-1 두 개 등록까지). 남은 것: `google-services.json` 넣기, 플레이 '앱 서명 키' SHA-1 추가
 1. https://console.firebase.google.com → 프로젝트 추가 → 이름 `brown-crab-mole` (애널리틱스는 꺼도 돼요)
 2. **Authentication** → 시작하기 → 로그인 방법: `Google`·`이메일/비밀번호`·`익명` 세 개 사용 설정
    - 설정 → 승인된 도메인에 `sangbiny-creater.github.io` 추가
@@ -52,6 +52,9 @@ python3 tools/make_icons.py        # 아이콘·시작 화면 그림을 바꿨�
 3. 앱 콘텐츠: 개인정보처리방침 `https://brown-crab.com/privacy.html` (**AdMob 광고·광고 ID 항목 추가 필요** — Claude가 글 고쳐 드릴 수 있음),
    광고 포함 '예', 데이터 보안(이름·게임 기록·이메일 수집, 광고 ID 사용), 콘텐츠 등급 설문, 대상 연령(어린이 대상이면 광고 설정이 달라짐 — 정해서 알려 주기),
    계정 삭제 주소 `https://brown-crab.com/delete.html`
+
+## 플레이 스토어 그림 (`store/`)
+- `play_icon_512.png` (앱 아이콘 512) · `feature_1024x500.png` (그래픽 이미지) — `tools/icon_from_gpt.py` 로 GPT 그림에서 만듦
 
 ## 디버그 열쇠 SHA-1 (시험용 앱의 구글 로그인용)
 (빌드하면 `~/.android/debug.keystore` 로 생김 — 아래 줄은 Claude가 채움)

@@ -18,7 +18,7 @@ img { -webkit-user-drag: none; pointer-events: none; }
 button { font-family: var(--font); border: 0; cursor: pointer; color: var(--navy); background: none; padding: 0; touch-action: manipulation; transition: transform 70ms, filter 70ms; }
 button:active { transform: translateY(3px); }
 .ico { display: inline-block; width: 26px; height: 26px; background: center/contain no-repeat; vertical-align: -4px; }
-.ico-crown { background-image: url("lib/ui/crown.webp?v=202611271648"); }
+.ico-crown { background-image: url("lib/ui/crown.webp?v=202611271713"); }
 
 /* HUD: 위 줄 = 일시정지 · 점수 · 하트 / 아래 줄 = BEST · 콤보 · 레벨 */
 #hud { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
@@ -41,8 +41,8 @@ button:active { transform: translateY(3px); }
 .best { font-size: 18px; padding: 3px 10px; border-radius: 12px; background: rgba(20,16,40,.6); color: #FFE45C; text-shadow: 0 2px 0 #7A3E00, 0 0 6px rgba(0,0,0,.35); white-space: nowrap; }
 .best b { font-weight: normal; }
 .hearts { margin-left: auto; display: flex; gap: 2px; }
-.heart { width: 36px; height: 34px; background: url("lib/ui/heart.webp?v=202611271648") center/contain no-repeat; filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); }
-.heart.empty { background-image: url("lib/ui/heart_empty.webp?v=202611271648"); }
+.heart { width: 36px; height: 34px; background: url("lib/ui/heart.webp?v=202611271713") center/contain no-repeat; filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); }
+.heart.empty { background-image: url("lib/ui/heart_empty.webp?v=202611271713"); }
 .heart.pop { animation: pop 380ms; }
 @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
 

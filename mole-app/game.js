@@ -15,7 +15,7 @@ const HEART_CHANCE = 0.1;   // 그 뒤 새 두더지가 나올 때마다 이 확
 const HEART_STAY = 0.6;     // 하트 두더지가 다 올라와 머무는 시간 (초) — 아주 빨리 숨음
 const HEART_FULL_PTS = 300; // 하트가 꽉 찼을 때 하트 두더지를 잡으면 받는 점수
 const LEVEL_SEC = 20;       // 이 시간마다 레벨 +1 ("빨라져요!")
-const ASSET_V = '202611271648';
+const ASSET_V = '202611271713';
 const asset = (p) => `assets/${p}.webp?v=${ASSET_V}`;
 
 // ---------- 난이도: 게임한 시간(초) pt 로 정함 — 갈수록 절대 쉬워지지 않음 ----------
