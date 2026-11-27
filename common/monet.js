@@ -219,11 +219,10 @@ html[data-who=eungyeol] .mn-art-x{background-image:url(${P4}x_blue.webp)}
     const m = modal(`<h3>다이아 상점</h3><span class="mn-tag">검수용 · 진짜 결제 없음</span>${haveLine()}
       <button class="mn-pack offer ad" data-ad="1"${adLeft() > 0 ? '' : ' disabled'}><img src="${IMG}ico_ad.webp" alt=""><b>광고 보고 받기</b><small>${I('ico_gem')} ${AD_GEMS}개 · 오늘 ${adLeft()}번 남음</small><span class="mn-btn gold">${adLeft() > 0 ? '받기' : '내일 또'}</span></button>
       <div class="mn-packs">${PACKS.map((p, i) => `<button class="mn-pack" data-i="${i}">${first ? '<i class="mn-flag">첫 구매 2배</i>' : p.hot ? '<i class="mn-flag">인기</i>' : ''}<img src="${IMG}pack_${i + 1}.webp" alt=""><span class="mn-btn gold">${I('ico_gem')}${first ? p.gems * 2 : p.gems}</span><small class="mn-won">${won(p.won)}</small></button>`).join('')}</div>
-      ${OFFERS.map(offer).join('')}
-      <button class="mn-pack offer cont" data-i="cont"><img src="${IMG}pack_continue.webp" alt=""><b>${CONT_PACK.name}</b><small>지금 ${st().conts || 0}장</small><span class="mn-btn gold">${I('ico_gem')}${CONT_PACK.gems}</span></button>
+      ${OFFERS.filter((o) => o.id === 'unlock_all').map(offer).join('')}
       <p style="font-size:12px;margin:6px 0 0">앱에서는 여기서 구글 결제 창이 떠요 (값은 🟡 임시).</p>`,
       [{ text: '닫기', cls: 'gray', on: after }],
-      '상품 ID: ' + PACKS.map((p) => p.id).concat(OFFERS.map((o) => o.id)).join(' · '));
+      '상품 ID: ' + PACKS.map((p) => p.id).concat(['unlock_all']).join(' · '));
     const reopen = () => gemShop(after);
     m.querySelectorAll('.mn-pack').forEach((b) => b.addEventListener('click', (e) => {
       e.stopPropagation(); if (b.disabled) return; if (window.UI) UI.blip(); m.remove();

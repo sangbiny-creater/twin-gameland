@@ -1376,10 +1376,6 @@ window.I18N_DATA = {
 "Watch Ad{} · Get {} · {} left today"
 ],
 [
-"{}지금 {}장",
-"{} You have {}"
-],
-[
 "지금 {}장",
 "You have {}"
 ],
@@ -4906,6 +4902,10 @@ window.I18N_DATA = {
 [
 "잠긴 게임",
 "Close"
+],
+[
+"준비 중입니다.",
+"Coming soon."
 ],
 [
 "이 게임을 열고 더 많은 즐거움을 만나 보세요!",
