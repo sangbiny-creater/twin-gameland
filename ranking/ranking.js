@@ -6,10 +6,11 @@
 //  · 화면 색: 은유 = 분홍, 은결 = 파랑 (html data-who, common/profile.js paintWho) — 배경·버튼·밑줄·판·내 줄·맨 아래 칸 모두 두 벌
 //  · 내 줄은 연한 색 줄, 내가 20등 밖(또는 기록 없음)이면 화면 맨 아래에 내 등수 칸을 따로
 //  · 순위 = 서버(Firebase Firestore records: 게임이 끝날 때마다 common/auth.js 가 올림)에서 캐릭터마다 가장 좋은 기록
-//    끝없는 게임 = 한 판 최고 점수(score), 징검다리 게임 = 판마다 가장 많이 받은 별을 모두 더한 것
+//    기준 (사용자 결정 2026-11-27): 거리 = 한 판 최고 거리 m(스카이 라이더·계단·다운힐), 점수 = 한 판 최고 점수(베이커리·멍멍이·다트),
+//    모은 별 = 모든 판(쉬움·어려움)에서 판마다 가장 많이 받은 별을 모두 더한 것(사천성·메모리·두더지·버거·선물가게). 서버 기록 이름은 모두 score/stars
 //    주간 = 이번 주 일요일~토요일(records.day 7일), 전체 = 그 게임 기록 전부. 지금은 화면에서 계산 (사람이 많아지면 서버에서 미리 계산하기)
 const $ = (id) => document.getElementById(id);
-const V = '?v=202611271601';
+const V = '?v=202611271615';
 if (!window.Hub || !Hub.active()) location.replace('../index.html');
 const { blip } = window.UI;
 const EN = window.I18N && I18N.lang === 'en';
@@ -21,6 +22,8 @@ const NAME = { skyhook: ['스카이훅 러너', 'Sky Hook Runner'], helicopter: 
   shisen: ['사천성', 'Mahjong Connect'], downhill: ['다운힐 러너', 'Downhill Runner'], memory: ['메모리 게임', 'Memory Match'], mole: ['두더지 게임', 'Whack-a-Mole'],
   bakery: ['달콤 베이커리', 'Sweet Bakery'], dogsnack: ['멍멍이 간식 타임', 'Feed the Puppy'], darts: ['다트게임', 'Darts'], giftsort: ['선물가게 정리', 'Gift Sort'], burger: ['버거 러시', 'Burger Rush'] };
 const gname = (g) => NAME[g][EN ? 1 : 0];
+// 순위 줄 단위: 거리 = m, 점수 = 점(영어 pts), 그 밖(징검다리 게임) = 별 그림
+const KIND = { helicopter: 'm', stairs: 'm', downhill: 'm', bakery: 'pt', dogsnack: 'pt', darts: 'pt' };
 const TOP = 20;
 
 const q = new URLSearchParams(location.search);
@@ -116,11 +119,17 @@ async function board(g, m) {
 const esc = (s) => String(s).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 const A2 = (n) => `assets/v2/${n}.webp${V}`;
 const ringOf = (x) => (/eungyeol/.test(x.face || '') ? 'blue' : 'pink'); // 얼굴 그림 이름으로 은유·은결
+function scoreHTML(v) {
+  const n = v ? v.toLocaleString() : '-', k = KIND[game];
+  if (k === 'm') return `<span class="r-score">${n}${v ? '<small>m</small>' : ''}</span>`;
+  if (k === 'pt') return `<span class="r-score">${n}${v ? `<small>${EN ? ' pts' : '점'}</small>` : ''}</span>`;
+  return `<span class="r-score"><img src="assets/ui/star.webp${V}" alt="">${n}</span>`;
+}
 function rowHTML(x, cls) {
   const n = typeof x.rank === 'number' && x.rank <= 3 ? x.rank : '';
   return `<li class="rk-row ${cls}"><span class="r-num" style="background-image:url(${A2('num' + n)})"><b>${x.rank}</b></span>`
     + `<span class="r-face"><img class="ph" src="${x.face}" alt=""><img class="ring" src="${A2('ring_' + ringOf(x))}" alt=""></span>`
-    + `<span class="r-name">${esc(x.name)}</span><span class="r-score"><img src="assets/ui/star.webp${V}" alt="">${x.score ? x.score.toLocaleString() : '-'}</span></li>`;
+    + `<span class="r-name">${esc(x.name)}</span>${scoreHTML(x.score)}</li>`;
 }
 // '오후 3시 기준 · 매시 정각에 새로 매겨요'
 function snapText(at) {

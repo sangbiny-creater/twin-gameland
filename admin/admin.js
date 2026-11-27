@@ -147,20 +147,20 @@ const VIEWS = {
   },
   rank(m) {
     const weeks = [...new Set(DB.records.map((x) => x.week))].sort().reverse(), months = [...new Set(DB.records.map((x) => x.month))].sort().reverse();
-    m.innerHTML = `<h2>주간·월간 순위</h2><p class="note">게임마다 한 사람의 가장 높은 점수로 줄 세워요. (스테이지 게임은 깬 판 수 → 별 순)</p>
+    m.innerHTML = `<h2>주간·월간 순위</h2><p class="note">게임 랭킹과 같은 기준: 스카이 라이더·계단·다운힐 = 최고 거리(m), 베이커리·멍멍이·다트 = 최고 점수, 사천성·메모리·두더지·버거·선물가게 = 판마다 가장 많이 받은 별을 모두 더한 것.</p>
       <div class="row"><select id="rk"><option value="week">주간</option><option value="month">월간</option></select><select id="rp"></select><select id="rg">${Object.keys(GAMES).filter((g) => g !== 'hub' && g !== 'skyhook').sort((x, y) => DB.records.filter((r) => r.game === y).length - DB.records.filter((r) => r.game === x).length).map((g) => `<option value="${g}">${gname(g)}</option>`).join('')}</select></div>
-      <div class="panel"><table><thead><tr><th>순위</th><th>계정</th><th>캐릭터</th><th class="num">점수</th><th class="num">판 수</th></tr></thead><tbody id="rb"></tbody></table></div>`;
+      <div class="panel"><table><thead><tr><th>순위</th><th>계정</th><th>캐릭터</th><th class="num">기록</th><th class="num">판 수</th></tr></thead><tbody id="rb"></tbody></table></div>`;
     const draw = () => {
       const k = $('rk').value, list = k === 'week' ? weeks : months;
       if (!list.includes($('rp').value)) $('rp').innerHTML = list.map((p) => `<option>${p}</option>`).join('');
       const p = $('rp').value, g = $('rg').value, staged = !!(Hub.GAMES[g] && Hub.GAMES[g].stages), by = {};
       for (const x of DB.records.filter((r) => r[k] === p && r.game === g)) {
-        const b = by[x.uid] || (by[x.uid] = { uid: x.uid, name: x.name, best: 0, plays: 0, clears: new Set(), stars: 0 });
-        b.plays++; b.best = Math.max(b.best, x.score || 0); if (x.cleared) { b.clears.add(x.stage); b.stars += x.stars || 0; }
+        const key = x.uid + '|' + (x.cid || x.name || ''), b = by[key] || (by[key] = { uid: x.uid, name: x.name, best: 0, plays: 0, st: {} });
+        b.plays++; b.best = Math.max(b.best, x.score || 0); if (x.stage != null && (x.stars || 0) > (b.st[x.stage] || 0)) b.st[x.stage] = x.stars || 0;
       }
       const users = Object.fromEntries(DB.users.map((u) => [u.id, u]));
-      const L = Object.values(by).map((b) => ({ ...b, val: staged ? b.clears.size * 1000 + b.stars : b.best })).sort((a, b) => b.val - a.val).slice(0, 100);
-      $('rb').innerHTML = L.map((b, i) => `<tr><td>${i + 1}</td><td>${H((users[b.uid] || {}).email || '(게스트)')}</td><td>${H(b.name || '')}</td><td class="num">${staged ? `${b.clears.size}판 · 별 ${b.stars}` : fmtN(b.best)}</td><td class="num">${b.plays}</td></tr>`).join('') || '<tr><td colspan="5">기록이 없어요</td></tr>';
+      const L = Object.values(by).map((b) => ({ ...b, stars: Object.values(b.st).reduce((n, v) => n + v, 0) })).map((b) => ({ ...b, val: staged ? b.stars : b.best })).sort((a, b) => b.val - a.val).slice(0, 100);
+      $('rb').innerHTML = L.map((b, i) => `<tr><td>${i + 1}</td><td>${H((users[b.uid] || {}).email || '(게스트)')}</td><td>${H(b.name || '')}</td><td class="num">${staged ? `별 ${fmtN(b.stars)}` : ['helicopter', 'stairs', 'downhill'].includes(g) ? `${fmtN(b.best)}m` : `${fmtN(b.best)}점`}</td><td class="num">${b.plays}</td></tr>`).join('') || '<tr><td colspan="5">기록이 없어요</td></tr>';
     };
     m.onchange = draw; draw();
   },
