@@ -17,13 +17,13 @@
 <meta property="og:url" content="https://sangbiny-creater.github.io/twin-gameland/mole-app/">
 <meta property="og:type" content="website">
 <title>두더지 게임</title>
-<link rel="manifest" href="manifest.json?v=202611210825">
-<link rel="apple-touch-icon" href="assets/app/icons/icon-180.png?v=202611210825">
-<link rel="icon" type="image/png" sizes="32x32" href="assets/app/icons/favicon-32.png?v=202611210825">
-<link rel="icon" type="image/png" sizes="192x192" href="assets/app/icons/icon-192.png?v=202611210825">
-<link rel="preload" href="lib/fonts/jua.woff2?v=202611210825" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="style.css?v=202611210825">
-<link rel="stylesheet" href="app.css?v=202611210825">
+<link rel="manifest" href="manifest.json?v=202611271648">
+<link rel="apple-touch-icon" href="assets/app/icons/icon-180.png?v=202611271648">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/app/icons/favicon-32.png?v=202611271648">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/app/icons/icon-192.png?v=202611271648">
+<link rel="preload" href="lib/fonts/jua.woff2?v=202611271648" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="style.css?v=202611271648">
+<link rel="stylesheet" href="app.css?v=202611271648">
 </head>
 <body>
 <div id="safe"></div>
@@ -39,7 +39,7 @@
     <!-- HUD -->
     <div id="hud" class="hidden">
       <div class="hud-top">
-        <button id="btnPause" class="img-btn" aria-label="일시정지"><img src="lib/ui/pause.webp?v=202611210825" alt=""></button>
+        <button id="btnPause" class="img-btn" aria-label="일시정지"><img src="lib/ui/pause.webp?v=202611271648" alt=""></button>
         <div class="pill score"><span class="ico ico-crown"></span><b id="hudScore">0</b></div>
         <div id="hudHearts" class="hearts"></div>
       </div>
@@ -54,16 +54,16 @@
     <!-- 시작 창: 이름·BEST · 시작하기 · 랭킹보기 -->
     <div id="startBox" class="screen dim hidden">
       <div class="sq">
-        <img class="sq-logo" src="assets/ui/logo.webp?v=202611210825" alt="두더지 게임">
+        <img class="sq-logo" src="assets/ui/logo.webp?v=202611271648" alt="두더지 게임">
         <div class="sq-best"><span id="sbName" translate="no"></span> · BEST <b id="sbBest">0</b></div>
         <div id="sbFriend" class="sq-friend hidden"></div>
         <p class="sq-how">두더지를 놓치거나 은유·은결을 누르면 하트 -1<br>갈수록 빨라져요!</p>
         <button id="btnGo" class="sq-btn main">시작하기</button>
-        <button id="btnRank" class="sq-btn"><img class="sq-ico" src="lib/ui/ranking.webp?v=202611210825" alt="">랭킹보기</button>
+        <button id="btnRank" class="sq-btn"><img class="sq-ico" src="lib/ui/ranking.webp?v=202611271648" alt="">랭킹보기</button>
       </div>
     </div>
     <!-- 오른쪽 위 설정 (시작 창이 떠 있을 때) -->
-    <button id="btnSettings" class="set-btn hidden" aria-label="설정"><img src="lib/ui/settings.webp?v=202611210825" alt=""></button>
+    <button id="btnSettings" class="set-btn hidden" aria-label="설정"><img src="lib/ui/settings.webp?v=202611271648" alt=""></button>
     <!-- 설정 (트윈 게임랜드 설정 창과 같은 줄 모양) -->
     <div id="setBox" class="screen dim hidden">
       <div class="sq">
@@ -113,11 +113,11 @@
   </div>
 
   <!-- 인트로: 세로 그림만, 화면을 누르거나 잠깐 뒤 다음으로 -->
-  <div id="intro" class="scr"><img src="assets/app/intro.webp?v=202611210825" alt="두더지 게임"><div class="intro-tap">화면을 눌러 주세요</div></div>
+  <div id="intro" class="scr"><img src="assets/app/intro.webp?v=202611271648" alt="두더지 게임"><div class="intro-tap">화면을 눌러 주세요</div></div>
 
   <!-- 로그인: 구글 · 이메일 · 게스트 -->
   <div id="login" class="scr bg hidden">
-    <img class="scr-logo" src="assets/ui/logo.webp?v=202611210825" alt="두더지 게임">
+    <img class="scr-logo" src="assets/ui/logo.webp?v=202611271648" alt="두더지 게임">
     <div id="loginMain" class="sq">
       <div class="sq-title">어서 와요!</div>
       <p class="sq-p">로그인하면 다른 기기에서도 이어서 할 수 있어요.</p>
@@ -202,13 +202,13 @@
   <div id="rank" class="rk-scr hidden">
     <div class="rk">
       <header class="rk-head">
-        <button id="rkBack" class="rk-back" aria-label="뒤로"><img src="lib/ui/back.svg?v=202611210825" alt=""></button>
+        <button id="rkBack" class="rk-back" aria-label="뒤로"><img src="lib/ui/back.svg?v=202611271648" alt=""></button>
         <div class="rk-seg" id="rkSeg" data-mode="week"><button data-mode="week" class="on"><b>주간</b></button><button data-mode="all"><b>전체</b></button></div>
       </header>
       <p id="rkPeriod" class="rk-period"></p>
       <nav class="rk-tabs" id="rkTabs">
-        <button data-kind="score" class="on"><img src="lib/ui/crown.webp?v=202611210825" alt=""><span>점수</span></button>
-        <button data-kind="caught"><img src="assets/sprites/normal.webp?v=202611210825" alt=""><span>잡은 두더지</span></button>
+        <button data-kind="score" class="on"><img src="lib/ui/crown.webp?v=202611271648" alt=""><span>점수</span></button>
+        <button data-kind="caught"><img src="assets/sprites/normal.webp?v=202611271648" alt=""><span>잡은 두더지</span></button>
       </nav>
       <main class="rk-panel"><ol id="rkList" class="rk-list"></ol><p class="rk-note" id="rkNote"></p></main>
     </div>
@@ -219,7 +219,7 @@
   <div id="docView" class="rk-scr doc-scr hidden">
     <div class="rk">
       <header class="rk-head doc-head">
-        <button id="docBack" class="rk-back" aria-label="뒤로"><img src="lib/ui/back.svg?v=202611210825" alt=""></button>
+        <button id="docBack" class="rk-back" aria-label="뒤로"><img src="lib/ui/back.svg?v=202611271648" alt=""></button>
         <b id="docTitle" class="doc-title">이용약관</b>
       </header>
       <main class="rk-panel"><div id="docBody" class="doc-body" translate="no"></div></main>
@@ -248,12 +248,12 @@
 <!-- 가로 화면은 지원하지 않아요 -->
 <div id="rotate"><div class="rot-phone"></div><b>세로로 돌려 주세요</b></div>
 
-<script src="lib/i18n_data.js?v=202611210825"></script>
-<script src="lib/i18n.js?v=202611210825"></script>
-<script src="lib/ads_config.js?v=202611210825"></script>
-<script src="lib/native.js?v=202611210825"></script>
-<script src="lib/firebase_config.js?v=202611210825"></script>
-<script src="game.js?v=202611210825"></script>
-<script src="app.js?v=202611210825"></script>
+<script src="lib/i18n_data.js?v=202611271648"></script>
+<script src="lib/i18n.js?v=202611271648"></script>
+<script src="lib/ads_config.js?v=202611271648"></script>
+<script src="lib/native.js?v=202611271648"></script>
+<script src="lib/firebase_config.js?v=202611271648"></script>
+<script src="game.js?v=202611271648"></script>
+<script src="app.js?v=202611271648"></script>
 </body>
 </html>

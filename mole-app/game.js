@@ -15,7 +15,7 @@ const HEART_CHANCE = 0.1;   // 그 뒤 새 두더지가 나올 때마다 이 확
 const HEART_STAY = 0.6;     // 하트 두더지가 다 올라와 머무는 시간 (초) — 아주 빨리 숨음
 const HEART_FULL_PTS = 300; // 하트가 꽉 찼을 때 하트 두더지를 잡으면 받는 점수
 const LEVEL_SEC = 20;       // 이 시간마다 레벨 +1 ("빨라져요!")
-const ASSET_V = '202611210047';
+const ASSET_V = '202611271648';
 const asset = (p) => `assets/${p}.webp?v=${ASSET_V}`;
 
 // ---------- 난이도: 게임한 시간(초) pt 로 정함 — 갈수록 절대 쉬워지지 않음 ----------
@@ -67,8 +67,10 @@ const HOLE = { ar: 164 / 401, cx: 0.503, cy: 0.475, ry: 0.267 };
 const HAMMER = { ar: 294 / 284, head: [0.25, 0.24], end: [0.93, 0.94] };
 const BG = img(asset('bg/port')), BG_GRASS = 0.38; // 배경 그림에서 울타리 아래 잔디가 시작하는 높이
 // 함정 캐릭터: 구멍에서 나온 은유·은결 그림 (두더지와 같은 틀). 캐릭터 고르기가 없어서 처음부터 둘 다
+// 함정 캐릭터: 어른 은유·은결 + 어린이 은유·은결(예전 사이트 v0.3 그림) 넷 중 하나가 무작위로 나와요
+const TRAP_WHO = ['eunyu', 'eungyeol', 'eunyu_kid', 'eungyeol_kid'];
 const TRAP_SPR = {};
-for (const lk of ['eunyu', 'eungyeol']) TRAP_SPR[lk] = { base: img(asset(`chars/${lk}`)), hit: img(asset(`chars/${lk}_hit`)) };
+for (const lk of TRAP_WHO) TRAP_SPR[lk] = { base: img(asset(`chars/${lk}`)), hit: img(asset(`chars/${lk}_hit`)) };
 
 // ---------- audio ----------
 const Audio = {
@@ -181,7 +183,7 @@ function spawn() {
   if (isTrap) type = 'trap';
   else { const r = Math.random(); if (r < st.fast) type = 'fast'; else if (r < st.fast + st.tough) type = 'tough'; }
   const stay = { normal: st.stay, fast: st.stay * 0.62, tough: st.stay * 1.4, trap: st.stay * 1.25 }[type];
-  h.m = { type, who: type === 'trap' ? (Math.random() < 0.5 ? 'eunyu' : 'eungyeol') : null, ph: 'up', t: 0, stay, hp: type === 'tough' ? 2 : 1, u: 0, shake: 0, rise: st.rise };
+  h.m = { type, who: type === 'trap' ? TRAP_WHO[Math.floor(Math.random() * TRAP_WHO.length)] : null, ph: 'up', t: 0, stay, hp: type === 'tough' ? 2 : 1, u: 0, shake: 0, rise: st.rise };
   Audio.sfx('pop');
 }
 const RISE = { normal: 0.16, fast: 0.1, tough: 0.2, trap: 0.18, heart: 0.08 };
