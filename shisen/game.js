@@ -17,7 +17,9 @@ const worldOf = (i) => Math.floor((i % HARD) / PER_WORLD); // 어려움도 같�
 function tilePool(si) {
   const w = worldOf(si);
   const themed = w >= 4 ? GameImages.list('shisen', `w${w + 1}`) : [];
-  return ['t_eunyu', 't_eungyeol', ...shuffleArr(themed), ...shuffleArr(GameImages.list('shisen', 'common'))];
+  const all = ['t_eunyu', 't_eungyeol', ...shuffleArr(themed), ...shuffleArr(GameImages.list('shisen', 'common'))];
+  // 그림 묶음에 없는 이름은 빼고 뒤의 다른 그림이 그 자리를 채움 (빈 타일 방지). 겹치는 이름도 뺌
+  return [...new Set(all)].filter((n) => hasFrame(n) !== false);
 }
 const COMBO_WINDOW = 4;  // 초: 이 안에 다음 짝을 없애면 콤보
 const label = (i) => `${isHard(i) ? '어려움 ' : ''}${worldOf(i) + 1}-${(i % PER_WORLD) + 1}`;
@@ -48,12 +50,25 @@ const mmss = (t) => { t = Math.max(0, Math.ceil(t)); return `${String(Math.floor
 function shuffleArr(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 // ---------- sprites ----------
-const ASSET_V = '202611271601';
+const ASSET_V = '202611271619';
 const SP = { img: new Image(), f: null, ready: false };
-fetch(`assets/sprites/sprites.json?v=${ASSET_V}`).then((r) => r.json()).then((j) => { SP.f = j; SP.img.onload = () => { SP.ready = true; }; SP.img.src = `assets/sprites/sprites.webp?v=${ASSET_V}`; });
 const EXTRA_V = '20261027a';
 SP.ex = { img: new Image(), f: null, ready: false };
-fetch(`assets/sprites/extra.json?v=${EXTRA_V}`).then((r) => r.json()).then((j) => { SP.ex.f = j; SP.ex.img.onload = () => { SP.ex.ready = true; }; SP.ex.img.src = `assets/sprites/extra.webp?v=${EXTRA_V}`; });
+// 그림 묶음 불러오기: 인터넷이 잠깐 끊겨 실패해도 다시 시도 (못 불러오면 타일 그림이 빈 칸이 되므로)
+function loadSheet(o, json, webp, tries = 0) {
+  const again = () => setTimeout(() => loadSheet(o, json, webp, tries + 1), Math.min(8000, 800 * (tries + 1)));
+  const img = () => { o.img.onload = () => { o.ready = true; }; o.img.onerror = () => { o.img = new Image(); again(); }; o.img.src = webp + (tries ? `&r=${tries}` : ''); };
+  if (o.f) { img(); return; }
+  fetch(json).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); }).then((j) => { o.f = j; img(); }).catch(again);
+}
+loadSheet(SP, `assets/sprites/sprites.json?v=${ASSET_V}`, `assets/sprites/sprites.webp?v=${ASSET_V}`);
+loadSheet(SP.ex, `assets/sprites/extra.json?v=${EXTRA_V}`, `assets/sprites/extra.webp?v=${EXTRA_V}`);
+// 그림 이름이 그림 묶음에 실제로 있는지 (목록 파일을 아직 못 받았으면 알 수 없음 → null)
+function hasFrame(name) {
+  if (!name) return false;
+  if ((SP.f && SP.f[name]) || (SP.ex.f && SP.ex.f[name])) return true;
+  return SP.f && SP.ex.f ? false : null;
+}
 // 그림 이름 → [묶음 그림, x, y, w, h] (기본 묶음 또는 추가 묶음), 아직 안 불러왔으면 null
 function frameOf(name) {
   if (SP.ready && SP.f[name]) return [SP.img, ...SP.f[name]];
@@ -105,7 +120,18 @@ function upperSprite(name, z) {
     }
     c.putImageData(im, 0, 0);
   } catch (e) { /* 그림을 읽을 수 없으면 그대로 */ }
-  return (UP_SPR[key] = cv);
+  UP_SPR[key] = cv;
+  // 아이폰 Safari는 화면 밖 캔버스 속을 메모리 정리 때 비워 버릴 수 있음(→ 그림 없는 회색 타일).
+  //  만든 그림을 webp/png 파일로 바꿔 보통 그림(Image)으로 들고 있으면, 지워져도 다시 풀어서 그려짐
+  try {
+    cv.toBlob((b) => {
+      if (!b) return;
+      const img = new Image();
+      img.onload = () => { if (img.naturalWidth) UP_SPR[key] = img; };
+      img.src = URL.createObjectURL(b);
+    });
+  } catch (e) { /* 그대로 캔버스 사용 */ }
+  return cv;
 }
 // 시작 창이 떠 있는 동안 위층 타일 그림을 조금씩 미리 만듦 (판 첫 화면에서 한꺼번에 만들면 잠깐 멈춤)
 let warmId = 0;
@@ -117,7 +143,15 @@ function warmUpper(si) {
 }
 // z: 그 타일의 층 (2·3층이면 바탕을 층 색으로)
 function drawTile(name, x, y, w, h, alpha = 1, z = 1) {
+  if (!frameOf(name)) { // 그림 묶음을 아직 못 불러옴: 빈 회색 대신 층 색 타일로 (불러오면 다음 화면부터 그림이 나옴)
+    ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = LAYER_BG[z] || LAYER_BG[1];
+    ctx.beginPath(); ctx.roundRect(x - w * 0.45, y - h * 0.45, w * 0.9, h * 0.9, w * 0.14); ctx.fill(); ctx.restore();
+    return;
+  }
   const up = z > 1 && upperSprite(name, z);
+  // 위층 타일은 원래 그림을 먼저 깔고 층 색 그림을 그 위에 덮음 — 층 색 그림이 어떤 이유로 비어 있어도 그림은 항상 보임
+  //  (사라지는 중인 반투명 타일은 두 번 겹치면 색이 섞여서 덮는 그림만)
+  if (up && alpha >= 1) spr(name, x, y, w, h, 1);
   if (up) { ctx.globalAlpha = alpha; ctx.drawImage(up, x - w / 2, y - h / 2, w, h); ctx.globalAlpha = 1; } else spr(name, x, y, w, h, alpha);
   if (name === MY_TILE && window.CharV2 && CharV2.is(MY_LOOK) && CharV2.ready(MY_LOOK)) {
     ctx.save(); ctx.globalAlpha = alpha;
